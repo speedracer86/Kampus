@@ -1,7 +1,7 @@
 {
-  "name": "math-miner",
+  "name": "kampus",
   "version": "1.0.0",
-  "description": "ADHD-first math practice game for homeschooled kids, grades 3-8. Single-file web app.",
-  "scripts": { "test": "node tests/test_game.js" },
+  "description": "Kampus — ADHD-first math practice for homeschooled kids, grades 3-8. Single-file web app with a real-world reward economy.",
+  "scripts": { "test": "node tests/test_kampus.js" },
   "devDependencies": { "playwright": "^1.45.0" }
 }
