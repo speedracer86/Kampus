@@ -1,0 +1,7 @@
+{
+  "name": "math-miner",
+  "version": "1.0.0",
+  "description": "ADHD-first math practice game for homeschooled kids, grades 3-8. Single-file web app.",
+  "scripts": { "test": "node tests/test_game.js" },
+  "devDependencies": { "playwright": "^1.45.0" }
+}

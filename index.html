@@ -1,0 +1,2414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Math Miner ⛏️</title>
+<style>
+:root{
+  --bg:#F7F5F1; --surface:#FFFFFF; --surface2:#F1EFE8; --ink:#23252B; --ink2:#6E7280; --ink3:#9CA0AB; --line:#E5E2DA;
+  --lav:#8F97DE; --peach:#F4BE93; --sage:#7CBF8B; --sky:#5E9FE0;
+  --success:#58B372; --error:#E4766C; --gold:#E8C94F; --goldink:#B08F1D;
+  --cream:#FBF3E4; --creamline:#EFDDBA;
+  --green:var(--success); --red:var(--error); --blue:var(--sky); --purple:var(--lav);
+  --glass:var(--surface); --glass2:var(--surface2); --edge:var(--line); --accent:var(--lav);
+  --grad-primary:var(--ink); --grad-gold:linear-gradient(180deg,#F0D468,#E4BE3D); --grad-good:linear-gradient(180deg,#5FBD7B,#47A566); --grad-bad:linear-gradient(180deg,#EC8078,#DD6058);
+  --eq:27px; --blob:96px; --anspad:15px; --ansfs:21px;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Inter Tight', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background:var(--bg); color:var(--ink); display:flex; justify-content:center; min-height:100%;
+  overflow-x:hidden; user-select:none; -webkit-user-select:none;
+}
+/* themes: shop-purchasable vibes. cave = the unlockable dark theme (teens live here) */
+body.theme-overworld{--bg:#F7F5F1;}
+body.theme-nether{--bg:#F8EFE6;}
+body.theme-cherry{--bg:#F9EEF3;}
+body.theme-end{--bg:#EDF3EE;}
+body.theme-cave{
+  --bg:#17181B; --surface:#232527; --surface2:#2B2D31; --ink:#F2F3F5; --ink2:#9BA0AA; --ink3:#6E727C; --line:#3A3D42;
+  --cream:#2E2A20; --creamline:#4A4232; --goldink:#E8C94F;
+}
+/* grade bands: same components, different dials */
+body.band-a{--eq:34px; --blob:120px; --anspad:19px; --ansfs:24px;}
+body.band-c{--eq:24px; --blob:72px; --anspad:13px; --ansfs:19px;}
+#app{width:100%; max-width:520px; min-height:100vh; padding:16px 16px 34px; position:relative;}
+.screen{display:none; animation:fadein .25s ease;}
+.screen.on{display:block;}
+@keyframes fadein{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+
+/* ------- surfaces & buttons ------- */
+.card{
+  background:var(--surface); border:1px solid var(--line); border-radius:20px;
+  box-shadow:0 2px 10px rgba(35,37,43,.05); padding:16px; margin-bottom:14px;
+}
+.btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:inherit; font-weight:800; font-size:15px;
+  color:var(--ink); background:var(--surface2); border:1px solid var(--line);
+  border-radius:14px; padding:12px 17px; cursor:pointer; transition:transform .08s;
+  text-align:center;
+}
+.btn:active{transform:scale(.96);}
+.btn.primary{background:var(--ink); color:var(--bg); border:none;}
+body.theme-cave .btn.primary{background:#F2F3F5; color:#17181B;}
+.btn.play{background:var(--grad-good); color:#fff; border:none; box-shadow:0 2px 10px rgba(88,179,114,.25);}
+.btn.gold{background:var(--grad-gold); color:#3A2F09; border:none;}
+.btn.big{width:100%; font-size:19px; padding:16px; border-radius:16px;}
+.btn.small{font-size:13px; padding:8px 13px; border-radius:12px;}
+.btn:disabled{opacity:.4; cursor:default;}
+.chip{
+  display:inline-flex; align-items:center; gap:7px; font-family:inherit; font-weight:700; font-size:13px;
+  color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:999px;
+  padding:8px 14px; cursor:pointer; transition:transform .08s;
+}
+.chip:active{transform:scale(.94);}
+.row{display:flex; gap:10px; align-items:center;}
+.spread{justify-content:space-between;}
+.title{font-size:34px; font-weight:900; letter-spacing:-1.5px; text-align:center; color:var(--ink);}
+.subtitle{text-align:center; color:var(--ink2); font-size:13.5px; margin-top:4px; font-weight:600;}
+.pill{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--surface); border:1px solid var(--line); border-radius:999px;
+  padding:7px 13px; font-weight:800; font-size:13.5px;
+}
+.muted{color:var(--ink2); font-size:13px;}
+.tiny{color:var(--ink3); font-size:11px;}
+.micro{font-size:10px; font-weight:800; letter-spacing:1.8px; text-transform:uppercase; color:var(--ink3);}
+
+/* ------- topbar / home ------- */
+.topbar{display:flex; align-items:center; gap:9px; margin-bottom:14px;}
+.avatar{
+  width:40px; height:40px; border-radius:50%; flex-shrink:0; overflow:hidden;
+  background:var(--surface2); border:1px solid var(--line);
+  display:inline-flex; align-items:center; justify-content:center; font-size:20px;
+}
+.avatar svg{width:30px; height:30px;}
+.wordmark{font-weight:900; font-size:17px; letter-spacing:-.5px; flex:1; white-space:nowrap;}
+.gemchip{
+  display:inline-flex; align-items:center; gap:7px; font-family:inherit; color:var(--ink);
+  background:var(--surface); border:1px solid var(--line); border-radius:999px;
+  padding:5px 5px 5px 12px; font-size:13.5px; font-weight:800; cursor:pointer; transition:transform .08s;
+}
+.gemchip:active{transform:scale(.94);}
+.gemchip .plus{
+  width:22px; height:22px; border-radius:50%; background:var(--grad-good); color:#fff;
+  display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:15px;
+}
+.sectionh{font-size:14px; font-weight:900; letter-spacing:.1px; margin:4px 0 9px 2px;}
+.contcard{
+  display:flex; align-items:center; gap:13px; width:100%; text-align:left; color:var(--ink);
+  background:var(--surface); border:1px solid var(--line); border-radius:18px;
+  padding:12px 14px; margin-bottom:16px; font-family:inherit; cursor:pointer; transition:transform .1s;
+  box-shadow:0 2px 10px rgba(35,37,43,.05);
+}
+.contcard:active{transform:scale(.97);}
+.contthumb{width:56px; height:56px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;}
+.contthumb svg{width:44px; height:44px;}
+.contname{font-weight:900; font-size:16.5px; letter-spacing:-.2px;}
+.contsub{text-transform:uppercase; font-size:9.5px; letter-spacing:1.5px; color:var(--ink3); font-weight:700;}
+.contplay{margin-left:auto; position:relative; background:var(--grad-good); border-radius:12px; padding:10px 16px; font-weight:900; font-size:13px; color:#fff; flex-shrink:0;}
+.contplay::after{content:''; position:absolute; left:14px; bottom:-4px; width:9px; height:9px; background:#47A566; transform:rotate(45deg); border-radius:2px;}
+.modewrap{display:flex; background:var(--surface); border:1px solid var(--line); border-radius:15px; overflow:hidden; margin-bottom:14px;}
+.modewrap button{
+  flex:1; font-family:inherit; font-weight:800; font-size:13.5px; padding:11px 6px;
+  background:transparent; color:var(--ink2); border:none; cursor:pointer; transition:all .15s;
+}
+.modewrap button.on{background:var(--ink); color:var(--bg); border-radius:12px; margin:3px; padding:8px 6px;}
+body.theme-cave .modewrap button.on{background:#F2F3F5; color:#17181B;}
+.gradelbl{display:none;}
+.gradewrap{display:flex; background:var(--surface); border:1px solid var(--line); border-radius:15px; overflow:hidden; margin-bottom:14px;}
+.gradewrap button{
+  flex:1; font-family:inherit; font-weight:800; font-size:14px; padding:10px 0;
+  background:transparent; color:var(--ink2); border:none; cursor:pointer;
+}
+.gradewrap button.on{background:var(--ink); color:var(--bg); border-radius:11px; margin:3px; padding:7px 0;}
+
+/* grade route path */
+.gradestrip{position:relative; display:flex; justify-content:space-between; align-items:center; padding:4px 2px 6px; gap:0; margin-bottom:14px;}
+.gradestrip::before{content:''; position:absolute; left:18px; right:18px; top:50%; transform:translateY(-50%); border-top:2px dashed var(--line); z-index:0;}
+.gbadge{
+  position:relative; z-index:1; flex:0 0 auto; width:40px; height:40px; border-radius:50%;
+  font-family:inherit; font-weight:800; font-size:15px;
+  background:var(--surface); border:2px solid var(--line); color:var(--ink2); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:transform .08s;
+}
+.gbadge:active{transform:scale(.93);}
+.gbadge.cur{width:46px; height:46px; background:var(--ink); color:var(--bg); border-color:var(--ink);}
+body.theme-cave .gbadge.cur{background:#F2F3F5; color:#17181B; border-color:#F2F3F5;}
+.gbadge.done{background:var(--sage); border-color:var(--sage); color:#fff;}
+.gbadge.lock{opacity:.45; cursor:default;}
+
+/* world tiles */
+#worlds{display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:14px;}
+.wtile{
+  display:flex; flex-direction:column; padding:0; overflow:hidden; text-align:left;
+  background:var(--surface); border:1px solid var(--line); border-radius:16px;
+  cursor:pointer; transition:transform .1s; color:var(--ink); font-family:inherit;
+  box-shadow:0 2px 10px rgba(35,37,43,.05);
+}
+.wtile:active{transform:scale(.96);}
+.wthumb{position:relative; display:flex; align-items:center; justify-content:center; height:96px; border-radius:12px; margin:7px;}
+.wthumb svg{width:72px; height:72px;}
+.tchip{position:absolute; top:8px; left:8px; background:rgba(255,255,255,.82); border-radius:999px; padding:3px 9px; font-size:9px; font-weight:800; letter-spacing:.6px; color:#23252B;}
+.wtbody{display:flex; flex-direction:column; padding:4px 12px 12px; gap:2px;}
+.wtile .wname{font-weight:800; font-size:14px; letter-spacing:-.1px;}
+.wtile .wdesc{display:none;}
+.wfoot{display:flex; align-items:center; justify-content:space-between; margin-top:4px;}
+.wfoot .tierlbl{font-size:8.5px; color:var(--ink3); letter-spacing:1px; font-weight:700;}
+.wstars{display:flex; gap:4px;}
+.tdot{width:8px; height:8px; border-radius:50%; background:var(--line);}
+.tdot.lit{background:var(--gold);}
+.stars .s{display:none;}
+
+/* ------- game ------- */
+#timerbar{height:10px; background:var(--surface2); border:1px solid var(--line); border-radius:999px; overflow:hidden; flex:1;}
+#timerfill{height:100%; width:100%; background:var(--sage); border-radius:999px; transition:width .95s linear;}
+#timerfill.low{background:var(--error);}
+#combo{font-weight:900; font-size:14px; min-width:72px; text-align:right; color:var(--goldink);}
+.scene{position:relative; height:calc(var(--blob) + 44px); display:flex; align-items:center; justify-content:center; margin:4px 0 6px;}
+.block{
+  width:var(--blob); height:var(--blob); position:relative; transition:transform .1s;
+  display:flex; align-items:center; justify-content:center; border-radius:0; background:none !important; box-shadow:none !important;
+}
+.block svg{width:100%; height:100%; filter:drop-shadow(0 4px 10px rgba(35,37,43,.12));}
+.block.hit{animation:hitanim .3s ease;}
+@keyframes hitanim{0%{transform:scale(1);}35%{transform:scale(1.12) rotate(-3deg);}65%{transform:scale(.92) rotate(2deg);}100%{transform:scale(1);}}
+.block.bursting{animation:burstout .2s ease-in forwards;}
+@keyframes burstout{to{transform:scale(.6) rotate(6deg); opacity:0;}}
+.block.spawn{animation:spawnin .3s cubic-bezier(.2,1.7,.4,1);}
+@keyframes spawnin{from{transform:scale(0);}to{transform:scale(1);}}
+.block.cracked{animation:jitter .12s linear;}
+@keyframes jitter{0%,100%{transform:none;}25%{transform:translate(2px,-1px) rotate(-2deg);}75%{transform:translate(-2px,1px) rotate(2deg);}}
+.cracks{display:none;}
+.blocklbl{
+  position:absolute; bottom:-16px; left:50%; transform:translateX(-50%);
+  background:var(--surface); border:1px solid var(--line); color:var(--ink2); border-radius:999px; padding:2px 10px;
+  font-size:9px; font-weight:800; white-space:nowrap; letter-spacing:1.4px;
+}
+#pick{display:none;}
+#petbox{position:absolute; left:calc(50% - 118px); bottom:2px; font-size:32px;}
+#petbox.cheer{animation:cheer .5s ease;}
+@keyframes cheer{0%,100%{transform:none;}30%{transform:translateY(-16px) rotate(-8deg);}60%{transform:translateY(-4px) rotate(6deg);}}
+#qcard{
+  background:var(--surface); border:1px solid var(--line); border-radius:20px;
+  box-shadow:0 2px 10px rgba(35,37,43,.05); padding:18px 16px 14px; text-align:center;
+  min-height:104px; display:flex; flex-direction:column; justify-content:center; margin-bottom:12px;
+}
+#qcard.shake{animation:shake .35s ease;}
+@keyframes shake{0%,100%{transform:none;}20%{transform:translateX(-8px);}40%{transform:translateX(7px);}60%{transform:translateX(-5px);}80%{transform:translateX(3px);}}
+#qprompt{
+  display:inline-flex; align-items:center; gap:7px; margin:0 auto 9px; padding:5px 12px;
+  border:1px solid var(--line); border-radius:999px; font-size:10px; font-weight:800;
+  letter-spacing:1.2px; text-transform:uppercase; color:var(--ink2); width:fit-content;
+}
+#qprompt::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--lav); flex-shrink:0;}
+#qtext{font-size:var(--eq); font-weight:900; letter-spacing:-.5px; line-height:1.35;}
+.helprow{display:flex; gap:8px; justify-content:center; margin-top:13px;}
+.helprow .chip{background:var(--surface2);}
+#teach{
+  background:var(--cream); border:1px solid var(--creamline);
+  border-radius:18px; padding:15px 16px; margin-bottom:12px; animation:fadein .22s ease;
+}
+.tstep{display:flex; align-items:flex-start; gap:10px; padding:6px 0; font-size:15px; line-height:1.5; text-align:left;}
+.tstep.dim{opacity:.42; font-size:13px;}
+.tstep.dim svg{display:none;}
+.tstep.cur{font-size:16px;}
+.tstep .fr{font-size:14px;}
+.stepnum{
+  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
+  width:23px; height:23px; border-radius:50%; background:var(--surface); border:2px solid var(--gold); color:var(--goldink);
+  font-weight:900; font-size:12px; margin-top:2px;
+}
+body.teaching #answers{opacity:.45;}
+body.teaching .scene{opacity:.55;}
+.pulse{animation:pulseanim 1.1s ease infinite;}
+@keyframes pulseanim{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+#answers{display:grid; grid-template-columns:1fr 1fr; gap:10px; transition:opacity .2s;}
+.ans{
+  font-family:inherit; font-size:var(--ansfs); font-weight:800; color:var(--ink);
+  background:var(--surface); border:1.5px solid var(--line); border-radius:16px;
+  padding:var(--anspad) 8px; cursor:pointer; min-height:58px;
+  transition:transform .08s, border-color .12s, background .12s;
+  box-shadow:0 2px 8px rgba(35,37,43,.04);
+}
+.ans:active{transform:scale(.95);}
+.ans.good{background:var(--grad-good); border-color:transparent; color:#fff;}
+.ans.bad{background:var(--grad-bad); border-color:transparent; color:#fff;}
+.ans .key{font-size:9.5px; color:var(--ink3); display:block; margin-bottom:2px; font-weight:700;}
+.ans.good .key,.ans.bad .key{color:rgba(255,255,255,.7);}
+
+/* fractions */
+.fr{display:inline-flex; flex-direction:column; vertical-align:middle; margin:0 3px; line-height:1.05;}
+.fr .fn{padding:0 5px;}
+.fr .fd{padding:0 5px; border-top:2.5px solid currentColor;}
+.ans .fr{font-size:17px;}
+.vizrow{display:flex; align-items:center; gap:8px; margin-top:7px;}
+.vizrow svg{flex:1; min-width:0;}
+.vizrow b{font-weight:900; flex-shrink:0;}
+
+/* toast + particles */
+#toast{
+  position:fixed; top:16px; left:50%; transform:translateX(-50%) translateY(-90px);
+  background:var(--ink); color:var(--bg); font-weight:800; font-size:14px;
+  border-radius:14px; padding:12px 18px; box-shadow:0 10px 30px rgba(35,37,43,.25);
+  transition:transform .3s cubic-bezier(.2,1.6,.4,1); z-index:50; text-align:center; max-width:90vw;
+}
+#toast.show{transform:translateX(-50%) translateY(0);}
+.particle{position:fixed; font-size:17px; pointer-events:none; z-index:40; animation:pfly .8s ease-out forwards;}
+@keyframes pfly{0%{opacity:1; transform:translate(0,0) scale(1) rotate(0);}100%{opacity:0; transform:translate(var(--dx),var(--dy)) scale(.4) rotate(var(--rot));}}
+.sq{width:11px; height:11px; border-radius:50%;}
+.gain{
+  position:absolute; top:4px; left:50%; transform:translateX(-50%);
+  font-weight:900; font-size:18px; color:var(--goldink); pointer-events:none; z-index:6;
+  animation:gainfly .85s ease-out forwards; white-space:nowrap;
+}
+@keyframes gainfly{0%{opacity:0; transform:translateX(-50%) translateY(10px) scale(.7);}18%{opacity:1; transform:translateX(-50%) translateY(0) scale(1.1);}100%{opacity:0; transform:translateX(-50%) translateY(-36px) scale(1);}}
+
+/* ------- end screen ------- */
+.bigstat{font-size:48px; font-weight:900; letter-spacing:-1.5px; text-align:center; color:var(--goldink);}
+.endgrid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:14px 0;}
+.endcell{background:var(--surface2); border:1px solid var(--line); border-radius:14px; padding:11px 4px; text-align:center;}
+.endcell .v{font-size:21px; font-weight:900;}
+.endcell .l{font-size:9px; color:var(--ink2); font-weight:800; margin-top:2px; letter-spacing:1px;}
+
+/* ------- shop / rewards ------- */
+.shoptabs{display:flex; gap:8px; margin-bottom:14px;}
+.shoptabs .btn{flex:1; font-size:13.5px; padding:10px 4px;}
+.shoptabs .btn.on{background:var(--ink); color:var(--bg); border-color:var(--ink);}
+body.theme-cave .shoptabs .btn.on{background:#F2F3F5; color:#17181B;}
+.item{
+  display:flex; align-items:center; gap:12px; background:var(--surface);
+  border:1px solid var(--line); border-radius:16px;
+  padding:12px 14px; margin-bottom:10px; box-shadow:0 2px 8px rgba(35,37,43,.04);
+}
+.item .icon{font-size:26px; width:42px; text-align:center; flex-shrink:0;}
+.item .iname{font-weight:800; font-size:15px;}
+.item .idesc{color:var(--ink2); font-size:12px;}
+.item .act{margin-left:auto; flex-shrink:0;}
+.tkbadge{background:var(--surface2); border:1px solid var(--line); color:var(--ink); border-radius:999px; padding:2px 8px; font-size:12px; margin-left:3px;}
+.mrow{display:flex; align-items:center; gap:9px; padding:6px 0; font-size:13.5px;}
+.mrow .mchk{width:20px; flex-shrink:0; text-align:center;}
+.mrow .mval{margin-left:auto; font-weight:800; color:var(--goldink); flex-shrink:0;}
+.statuschip{font-size:10.5px; font-weight:800; border-radius:999px; padding:3px 9px;}
+.statuschip.req{background:rgba(232,201,79,.18); color:var(--goldink);}
+.statuschip.done{background:rgba(88,179,114,.16); color:var(--success);}
+
+/* ------- parent ------- */
+.tiles{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;}
+.tile{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:13px; box-shadow:0 2px 8px rgba(35,37,43,.04);}
+.tile .v{font-size:24px; font-weight:900; letter-spacing:-.5px;}
+.tile .l{font-size:10px; color:var(--ink2); font-weight:800; margin-top:3px; letter-spacing:.6px;}
+.h2{font-size:15.5px; font-weight:900; margin:18px 0 9px; letter-spacing:.1px;}
+.barrow{display:flex; align-items:center; gap:10px; margin-bottom:9px;}
+.barlbl{width:118px; font-size:12.5px; font-weight:700; color:var(--ink2); flex-shrink:0;}
+.bartrack{flex:1; height:12px; background:var(--surface2); border:1px solid var(--line); border-radius:999px; overflow:hidden;}
+.barfill{height:100%; background:var(--lav); border-radius:999px;}
+.barval{width:74px; font-size:12px; font-weight:800; text-align:right; flex-shrink:0;}
+table.sk{width:100%; border-collapse:collapse; font-size:12.5px;}
+table.sk th{color:var(--ink3); font-size:10px; text-align:left; padding:4px 6px; text-transform:uppercase; letter-spacing:.6px;}
+table.sk td{padding:7px 6px; border-top:1px solid var(--surface2);}
+table.sk td:last-child, table.sk th:last-child{text-align:right;}
+.focus{background:var(--cream); border:1px solid var(--creamline); border-radius:16px; padding:13px;}
+.focus .fi{font-size:13.5px; padding:3px 0;}
+.sessrow{display:flex; justify-content:space-between; font-size:12.5px; padding:7px 2px; border-top:1px solid var(--surface2);}
+.linkbtn{background:none; border:none; color:var(--ink3); font-family:inherit; font-size:12px; text-decoration:underline; cursor:pointer; padding:8px;}
+.center{text-align:center;}
+.headerbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;}
+.sel{
+  width:100%; margin-top:10px; font-family:inherit; font-size:13.5px; font-weight:600;
+  color:var(--ink); background:var(--surface2); border:1px solid var(--line); border-radius:12px;
+  padding:10px 12px; outline:none; cursor:pointer;
+}
+.sel option{background:var(--surface); color:var(--ink);}
+.hintline{font-size:12.5px; color:var(--ink2); padding:3px 0; font-weight:600;}
+.inp{
+  font-family:inherit; font-size:13.5px; font-weight:600; color:var(--ink);
+  background:var(--surface2); border:1px solid var(--line); border-radius:10px;
+  padding:8px 10px; outline:none;
+}
+#blobwrap{display:flex; width:100%; height:100%; align-items:center; justify-content:center;}
+/* ------- desktop layer: sidebar menu + grade hero + level-up CTA + piggy ------- */
+#sidenav{display:none;}
+#gradehero{display:none;}
+#homepiggy{display:none;}
+@media(min-width:1000px){
+  body{justify-content:center;}
+  #sidenav{
+    display:flex; flex-direction:column; width:225px; gap:4px; flex-shrink:0;
+    padding:30px 14px; border-right:1px dashed var(--line);
+    position:sticky; top:0; align-self:flex-start; min-height:100vh;
+  }
+  #app{max-width:620px;}
+  #gradehero{display:block;}
+  #homepiggy{display:flex;}
+  .gradestrip{display:none;}   /* the hero module replaces the strip on desktop */
+  .topbar .wordmark{visibility:hidden;}  /* brand lives in the sidebar */
+}
+.snbrand{display:flex; align-items:center; gap:9px; padding:0 8px 16px; font-weight:900; font-size:16px; letter-spacing:-.4px;}
+.snbrand svg{width:28px; height:28px; display:block;}
+.snav{
+  display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:12px;
+  font-size:14px; font-weight:700; color:var(--ink2); cursor:pointer;
+  font-family:inherit; background:none; border:none; text-align:left; transition:background .12s;
+}
+.snav.on{background:var(--surface2); color:var(--ink);}
+.lvlcard{margin-top:auto; background:#F4BE93; border-radius:16px; padding:15px 13px; text-align:center; color:#23252B;}
+.lvlcard b{font-size:13.5px; display:block;}
+.lvlcard span{font-size:11px; color:rgba(35,37,43,.75); display:block; margin-top:3px;}
+.lvlbtn{
+  display:inline-block; margin-top:10px; background:#23252B; color:#fff; border-radius:999px;
+  padding:8px 15px; font-size:12px; font-weight:800; border:none; font-family:inherit; cursor:pointer;
+}
+#gradehero{background:#F3E9DE; border-radius:20px; padding:22px 24px; margin-bottom:14px;}
+body.theme-cave #gradehero{background:#2E2A20;}
+#gradehero h3{font-size:23px; font-weight:900; letter-spacing:-.7px; line-height:1.15; margin-top:4px;}
+#gradehero .gcards{display:flex; gap:10px; margin-top:14px;}
+.gcard{flex:1; border-radius:14px; background:var(--surface); border:1px solid var(--line); padding:10px 12px; text-align:left;}
+.gcard .gn{font-size:9px; font-weight:800; color:var(--ink3); letter-spacing:1.2px;}
+.gcard b{font-size:16px; display:block;}
+.gcard .st{font-size:10px; font-weight:700; margin-top:4px; display:block; color:var(--success);}
+.gcard.now{background:#AFB5E6; border-color:#AFB5E6;}
+.gcard.now .gn, .gcard.now b{color:#23252B;}
+.gcard.now .st{color:#2C3670;}
+.gcard.lock{opacity:.5;}
+.gcard.lock .st{color:var(--ink3);}
+#homepiggy{
+  align-items:center; gap:12px; width:100%; background:var(--surface); border:1px solid var(--line);
+  border-radius:16px; padding:12px 14px; margin-bottom:14px; cursor:pointer;
+  font-family:inherit; color:var(--ink); text-align:left; transition:transform .1s;
+}
+#homepiggy:active{transform:scale(.98);}
+#homepiggy .pw{width:54px; flex-shrink:0;}
+#homepiggy .pw svg{width:100%; height:auto; display:block;}
+.wthumb svg, .contthumb svg, .avatar svg{display:block;}
+#rewardsbody .piggy svg{width:100%; height:auto; display:block;}
+.tiltchar{display:none;}
+
+</style>
+</head>
+<body class="theme-overworld">
+<div id="sidenav">
+  <div class="snbrand"><span id="sn-avatar"></span><span>math miner</span></div>
+  <button class="snav on" id="nav-home"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 13 L3 7 L8 3 L13 7 L13 13" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Play</button>
+  <button class="snav" id="nav-shop"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M6 5 V4 a2 2 0 0 1 4 0 V5" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>Shop</button>
+  <button class="snav" id="nav-rew"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2.5" y="5" width="11" height="7" rx="2" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="8" cy="8.5" r="1.6" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>Rewards</button>
+  <button class="snav" id="nav-par"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 13 a5 5 0 0 1 10 0 M8 7 a2.4 2.4 0 1 0 0-4.8 A2.4 2.4 0 0 0 8 7" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>Grown-ups</button>
+  <div class="lvlcard" id="sn-lvl"></div>
+</div>
+<div id="app">
+
+  <!-- ============ HOME ============ -->
+  <div class="screen on" id="scr-home">
+    <div class="topbar">
+      <span class="avatar" id="h-avatar"></span>
+      <span class="wordmark">math miner</span>
+      <span class="pill" style="font-size:12px; padding:6px 11px;"><span style="width:7px; height:7px; border-radius:50%; background:#EE8A55; display:inline-block;"></span><b id="h-daily">0</b>&nbsp;day streak</span>
+      <button class="gemchip" id="h-gemchip"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4.2 L6 1.2 L10 4.2 L6 10.8 Z" fill="#8F97DE"/></svg><b id="h-ore">0</b><span class="plus">+</span></button>
+    </div>
+    <div class="modewrap">
+      <button id="mode-chill">🧘 Chill · no timer</button>
+      <button id="mode-timed">⚡ Blitz · 90 sec</button>
+    </div>
+    <div id="gradehero"></div>
+    <div class="gradestrip" id="gradestrip"></div>
+    <div id="contbox"></div>
+    <div class="sectionh" id="worlds-h">🎮 Your worlds</div>
+    <div id="worlds"></div>
+    <div id="testcard"></div>
+    <button id="homepiggy"></button>
+    <div class="row" style="margin-top:4px;">
+      <button class="btn gold" style="flex:1;" id="btn-shop">shop</button>
+      <button class="btn primary" style="flex:1;" id="btn-rewards">rewards <span id="h-tk" class="tkbadge">0</span></button>
+    </div>
+    <div class="center" style="margin-top:14px;">
+      <button class="linkbtn" id="btn-parent">for grown-ups</button>
+    </div>
+  </div>
+
+  <!-- ============ GAME ============ -->
+  <div class="screen" id="scr-game">
+    <div class="row" style="margin-bottom:4px;">
+      <button class="btn small" id="btn-quit">✕</button>
+      <div id="timerbar"><div id="timerfill"></div></div>
+      <span class="pill" style="font-size:13px;">💎 <span id="g-ore">0</span></span>
+    </div>
+    <div class="row spread" style="margin-top:8px;">
+      <span class="muted" id="g-topic"></span>
+      <span id="combo"></span>
+    </div>
+    <div class="scene">
+      <div id="petbox"></div>
+      <div class="block" id="block"><span id="blobwrap"></span><div class="blocklbl" id="blocklbl">STONE</div></div>
+      <div id="pick">⛏️</div>
+    </div>
+    <div id="qcard">
+      <div id="qprompt"></div>
+      <div id="qtext"></div>
+      <div class="helprow">
+        <button class="chip" id="btn-teach"><svg width="13" height="13" viewBox="0 0 16 16"><path d="M8 2 a4 4 0 0 1 2.5 7.1 c-.5.4-.8 1-.8 1.6 h-3.4 c0-.6-.3-1.2-.8-1.6 A4 4 0 0 1 8 2 Z M6.5 13.4 h3" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> teach me</button>
+        <button class="chip" id="btn-sayq"><svg width="13" height="13" viewBox="0 0 16 16"><path d="M3 6 v4 h2.5 L9 13 V3 L5.5 6 Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><path d="M11 6 a3 3 0 0 1 0 4" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg> read it</button>
+      </div>
+    </div>
+    <div id="teach" style="display:none;">
+      <div id="tsteps"></div>
+      <div class="row" style="margin-top:12px;">
+        <button class="chip" id="btn-say"><svg width="13" height="13" viewBox="0 0 16 16"><path d="M3 6 v4 h2.5 L9 13 V3 L5.5 6 Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/><path d="M11 6 a3 3 0 0 1 0 4" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg> read it</button>
+        <button class="btn small primary" id="btn-next" style="margin-left:auto;">next step →</button>
+        <button class="btn small play" id="btn-gotit" style="margin-left:auto; display:none;">got it</button>
+      </div>
+      <div class="tiny" style="margin-top:8px;">clock paused · combo safe</div>
+    </div>
+    <div id="answers"></div>
+  </div>
+
+  <!-- ============ END ============ -->
+  <div class="screen" id="scr-end">
+    <div style="height:26px;"></div>
+    <div class="title" style="font-size:26px;" id="end-head">ROUND COMPLETE!</div>
+    <div style="height:10px;"></div>
+    <div class="card center">
+      <div class="muted" style="font-weight:700;" id="e-orelbl">GEMS MINED</div>
+      <div class="bigstat"><span id="e-ore">0</span></div>
+      <div class="endgrid">
+        <div class="endcell"><div class="v" id="e-correct">0</div><div class="l">CORRECT</div></div>
+        <div class="endcell"><div class="v" id="e-acc">0%</div><div class="l">ACCURACY</div></div>
+        <div class="endcell"><div class="v" id="e-streak">0</div><div class="l">BEST COMBO</div></div>
+      </div>
+      <div id="e-msg" class="muted" style="min-height:20px;"></div>
+      <div id="e-tk" style="margin-top:4px; font-weight:800; color:var(--gold);"></div>
+    </div>
+    <button class="btn play big" id="btn-again">play again</button>
+    <div style="height:10px;"></div>
+    <div class="row">
+      <button class="btn" style="flex:1;" id="btn-end-shop">shop</button>
+      <button class="btn" style="flex:1;" id="btn-end-home">home</button>
+    </div>
+  </div>
+
+  <!-- ============ SHOP ============ -->
+  <div class="screen" id="scr-shop">
+    <div class="headerbar">
+      <button class="btn small" id="btn-shop-back">← Back</button>
+      <span class="pill">💎 <span id="s-ore">0</span></span>
+    </div>
+    <div class="title" style="font-size:24px;">SHOP</div>
+    <div class="subtitle" style="font-size:12.5px;">picks &amp; pets pay bonus 💎 on every right answer · worlds change the look</div>
+    <div style="height:12px;"></div>
+    <div class="shoptabs">
+      <button class="btn" data-tab="pickaxes">⚒️ Gear</button>
+      <button class="btn" data-tab="pets">🐾 Pets</button>
+      <button class="btn" data-tab="themes">🌍 Worlds</button>
+    </div>
+    <div id="shopitems"></div>
+  </div>
+
+  <!-- ============ REWARDS ============ -->
+  <div class="screen" id="scr-rewards">
+    <div class="headerbar">
+      <button class="btn small" id="btn-rewards-back">← Back</button>
+      <span class="pill">🎟️ <span id="r-tk">0</span></span>
+    </div>
+    <div class="title" style="font-size:24px;">REWARDS</div>
+    <div class="subtitle" style="font-size:12.5px;">earn tickets with real effort · trade them in with your grown-up</div>
+    <div style="height:12px;"></div>
+    <div id="rewardsbody"></div>
+  </div>
+
+  <!-- ============ PARENT ============ -->
+  <div class="screen" id="scr-parent">
+    <div class="headerbar">
+      <button class="btn small" id="btn-parent-back">← Back</button>
+      <span class="muted" style="font-weight:700;">Grown-up dashboard</span>
+    </div>
+    <div id="parentbody"></div>
+  </div>
+
+</div>
+<div id="toast"></div>
+<script>
+'use strict';
+/* ================= utils ================= */
+const $ = id => document.getElementById(id);
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => { const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; };
+const gcd = (a,b) => { a=Math.abs(a); b=Math.abs(b); while(b){[a,b]=[b,a%b];} return a||1; };
+function simp(n,d){ const g=gcd(n,d); return [n/g, d/g]; }
+function frH(n,d){
+  if(d===1) return String(n);
+  return `<span class="fr"><span class="fn">${n}</span><span class="fd">${d}</span></span>`;
+}
+function sfrH(n,d){ const [a,b]=simp(n,d); return frH(a,b); }
+function fmt(x){
+  if(typeof x!=='number') return String(x);
+  return (Math.round(x*1000)/1000).toString();
+}
+/* CRA visuals: representational pictures for the teach steps */
+function numLineSVG(from, to){
+  const lo = Math.min(from, to, 0)-1, hi = Math.max(from, to, 0)+1;
+  const range = hi-lo, step = range>30?10 : range>14?5 : 1;
+  const W=280, H=48, y=30;
+  const x = v => 10 + (v-lo)/range*(W-20);
+  let marks='';
+  for(let v=Math.ceil(lo/step)*step; v<=hi; v+=step){
+    marks += `<line x1="${x(v)}" y1="${y-4}" x2="${x(v)}" y2="${y+4}" stroke="currentColor" stroke-width="1" opacity=".45"/>`;
+  }
+  for(const v of [...new Set([0, from, to])]){
+    marks += `<text x="${x(v)}" y="${y+16}" font-size="10" text-anchor="middle" fill="currentColor" font-weight="${v===to?'800':'500'}" opacity="${v===to?'1':'.75'}">${v}</text>`;
+  }
+  const mid = (x(from)+x(to))/2;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%; max-width:280px; display:block; margin-top:6px;">
+    <line x1="6" y1="${y}" x2="${W-6}" y2="${y}" stroke="currentColor" stroke-width="1.5" opacity=".65"/>
+    ${marks}
+    <path d="M ${x(from)} 16 Q ${mid} 2 ${x(to)} 16" fill="none" stroke="#ffc12e" stroke-width="2"/>
+    <path d="M ${x(to)} 16 l ${to>from?-5:5} -4 m ${to>from?5:-5} 4 l ${to>from?-2:2} -6" fill="none" stroke="#ffc12e" stroke-width="2"/>
+    <circle cx="${x(from)}" cy="${y}" r="4" fill="#59a7ff"/>
+    <circle cx="${x(to)}" cy="${y}" r="4" fill="#2db56c"/>
+  </svg>`;
+}
+function fracBar(n, d, color){
+  const W=200, H=24, cw=(W-4)/d;
+  let cells='';
+  for(let i=0;i<d;i++){
+    cells += `<rect x="${2+i*cw+1}" y="2" width="${Math.max(1,cw-2)}" height="${H-4}" rx="3" fill="${i<n?(color||'#59a7ff'):'transparent'}" stroke="currentColor" stroke-width="1" opacity="${i<n?'1':'.35'}"/>`;
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; display:block;">${cells}</svg>`;
+}
+const vizRow = (...parts) => `<span class="vizrow">${parts.join('')}</span>`;
+
+/* ================= storage ================= */
+const mem = {};
+const store = {
+  get(){ try{ const r = localStorage.getItem('mathminer_v1'); return r?JSON.parse(r):null; }catch(e){ return mem.d||null; } },
+  set(d){ try{ localStorage.setItem('mathminer_v1', JSON.stringify(d)); }catch(e){ mem.d = d; } },
+  clear(){ try{ localStorage.removeItem('mathminer_v1'); }catch(e){ delete mem.d; } }
+};
+function freshState(){
+  return {
+    ore:0, pickaxe:'wood', pet:null, theme:'overworld',
+    owned:{pickaxes:['wood'], pets:[], themes:['overworld']},
+    tiers:{frac:1, ratio:1, int:1, alg:1},
+    recent:{frac:[], ratio:[], int:[], alg:[]},
+    stats:{skills:{}, topics:{}, sessions:[], daily:{last:'', streak:0}, totalMs:0},
+    sound:true, mode:'chill', voiceName:'', grade:6, maxG:6, passed:{}, tests:{}, tiers2:{}, recent2:{},
+    tickets:0,
+    tk:{day:'', dayPlay:false, dayAcc:false, tierUps:0, week:'', weekEarned:0, weekDays:[], weekStreakGiven:false, weekCap:10},
+    rewards:[
+      {id:1, name:'30 min extra screen time', cost:3},
+      {id:2, name:'Pick what we watch tonight', cost:4},
+      {id:3, name:'$5 treat (or Robux!)', cost:10}
+    ],
+    redemptions:[], tkLog:[]
+  };
+}
+let S = Object.assign(freshState(), store.get()||{});
+// deep-merge safety for nested objects that may be missing in old saves
+for(const k of ['owned','tiers','recent','stats','tiers2','recent2','tk']) S[k] = Object.assign(freshState()[k], S[k]||{});
+if(!Array.isArray(S.rewards)) S.rewards = freshState().rewards;
+if(!Array.isArray(S.redemptions)) S.redemptions = [];
+if(!Array.isArray(S.tkLog)) S.tkLog = [];
+if(typeof S.tickets!=='number') S.tickets = 0;
+S.stats = Object.assign(freshState().stats, S.stats||{});
+if(![3,4,5,6,7,8].includes(S.grade)) S.grade = 6;
+if(typeof S.maxG!=='number') S.maxG = S.grade;
+if(!S.passed || typeof S.passed!=='object') S.passed = {};
+if(!S.tests || typeof S.tests!=='object') S.tests = {};
+// migrate pre-grade saves: everything used to be grade-6 content
+for(const k of ['frac','ratio','int','alg']){
+  if(S.tiers && S.tiers[k]>1 && !S.tiers2['6_'+k]) S.tiers2['6_'+k] = S.tiers[k];
+  if(S.stats.topics && S.stats.topics[k]){
+    if(!S.stats.topics['6_'+k]) S.stats.topics['6_'+k] = S.stats.topics[k];
+    delete S.stats.topics[k];
+  }
+}
+const save = () => store.set(S);
+
+/* ================= embedded illustrations ================= */
+const ILLOS = {
+  frac: `<svg viewBox="0 0 501 501" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M280.823 306.744C363.616 306.744 430.734 258.395 430.734 198.753C430.734 139.112 363.616 90.7627 280.823 90.7627C198.03 90.7627 130.912 139.112 130.912 198.753C130.912 258.395 198.03 306.744 280.823 306.744Z" fill="#C4B5D6"/> <path d="M199.548 211.844C200.765 205.514 207.509 195.921 217.442 199.427C227.375 202.933 223.407 212.574 221.094 218.052" stroke="black" stroke-width="5.00103"/> <path d="M199.507 211.856C199.507 211.856 222.509 220.637 244.05 220.637" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M309.78 402.155C363.399 390.522 399.032 344.835 389.368 300.11C379.703 255.385 328.402 228.558 274.783 240.191C221.164 251.824 185.532 297.511 195.196 342.236C204.86 386.961 256.161 413.788 309.78 402.155Z" fill="#C4B5D6"/> <path d="M297.907 438.716C340.404 434.921 372.922 410.107 370.537 383.294C368.152 356.48 331.767 337.82 289.27 341.615C246.772 345.411 214.255 370.224 216.64 397.038C219.025 423.851 255.409 442.511 297.907 438.716Z" fill="#C4B5D6"/> <path d="M88.6118 207.686L140.311 188.28L144.93 290.993L88.6118 207.686Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M189.335 179.753C190.875 170.983 199.14 165.137 207.892 166.68C216.643 168.223 222.478 176.505 220.938 185.274" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M256.267 191.365C257.807 182.596 266.072 176.75 274.823 178.292C283.575 179.835 289.409 188.117 287.87 196.886" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M140.31 188.28L108.059 231.395" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M99.7152 203.301L142.825 244.629" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M140.391 228.39L119.484 258.351" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M144.117 262.088L134.231 274.592" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M122.644 260.382C115.513 265.741 105.384 264.361 100.036 257.135C94.6874 249.908 96.0649 239.84 103.277 234.481L122.644 260.382Z" fill="#C4B5D6" stroke="#C4B5D6" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M96.8009 223.565C111.515 215.883 119.328 206.024 119.328 193.557C119.328 181.091 109.242 170.985 96.8009 170.985C84.3595 170.985 74.2738 181.091 74.2738 193.557C74.2738 206.024 85.7676 229.326 96.8009 223.565Z" fill="#E8A0C7"/> <path d="M124.022 198.999C136.463 198.999 146.549 188.893 146.549 176.426C146.549 163.96 136.463 153.854 124.022 153.854C111.58 153.854 101.495 163.96 101.495 176.426C101.495 188.893 111.58 198.999 124.022 198.999Z" fill="#E8A0C7"/> <path d="M94.2839 192.015C106.725 192.015 116.811 181.909 116.811 169.443C116.811 156.976 106.725 146.87 94.2839 146.87C81.8426 146.87 71.7568 156.976 71.7568 169.443C71.7568 181.909 81.8426 192.015 94.2839 192.015Z" fill="#E8A0C7"/> </svg>`,
+  ratio: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M309.515 255.452C296.491 249.6 288.414 236.494 288.496 222.234C288.496 222.152 288.496 222.07 288.496 221.987C288.496 166.35 259.647 121.345 224.039 121.345C188.431 121.345 159.582 166.432 159.582 221.987C159.582 222.07 159.582 222.152 159.582 222.234C159.582 236.494 151.505 249.6 138.564 255.452C96.9389 274.245 69.5735 306.474 69.5735 342.988C69.5735 401.016 138.729 448.081 224.122 448.081C309.515 448.081 378.67 401.016 378.67 342.988C378.587 306.474 351.14 274.245 309.515 255.452Z" fill="#70C38B"/> <path d="M194.448 179.785C194.448 179.785 94.4651 84.4183 154.883 58.5366C217.444 31.7482 211.015 174.675 211.015 174.675L194.448 179.785Z" fill="#70C38B"/> <path d="M253.052 178.466C253.052 178.466 353.035 83.0994 292.617 57.2177C230.138 30.4293 236.485 173.356 236.485 173.356L253.052 178.466Z" fill="#70C38B"/> <path d="M325.013 192.561C325.013 192.561 328.31 173.273 343.394 167.421C358.477 161.569 381.804 160.745 385.101 136.347L418.401 170.224C418.401 170.224 421.286 190.088 401.751 198.331C384.359 205.667 385.431 201.546 373.809 210.53C361.445 220.009 363.588 233.527 363.588 233.527L325.013 192.561Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M401.504 152.583C403.564 150.11 405.295 146.978 406.697 143.186L432.166 183.245C432.166 183.245 430.765 203.274 409.994 207.231C391.448 210.775 393.426 206.984 380.155 213.33C366.143 220.089 365.401 233.69 365.401 233.69" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M385.594 151.594L408.509 174.92" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M364.492 216.463L334.489 184.564" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M380.856 190.622C386.951 185.78 388.449 177.521 384.202 172.174C379.955 166.828 371.571 166.419 365.475 171.26C359.38 176.102 357.882 184.362 362.13 189.708C366.377 195.055 374.761 195.464 380.856 190.622Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M366.635 232.289C361.525 239.79 351.304 241.768 343.803 236.74C336.302 231.63 334.324 221.409 339.352 213.908L366.635 232.289Z" fill="#70C38B" stroke="#70C38B" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M164.777 304.165C164.365 291.801 174.092 281.415 186.455 281.003C198.819 280.591 209.205 290.317 209.617 302.681" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M254.21 303.753C253.798 291.389 263.524 281.003 275.888 280.591C288.251 280.179 298.637 289.905 299.049 302.269" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
+  int: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <g clip-path="url(#clip0_1_180)"> <path d="M414.442 311.652C398.829 311.652 386.479 318.291 375.527 328.773C365.623 338.324 351.991 338.324 344.185 325.046C339.292 316.777 338.593 303.732 341.505 294.647C346.748 278.108 367.021 275.546 380.187 285.446C388.809 291.968 399.878 295.928 411.995 295.928C439.259 295.928 461.279 276.128 461.279 251.553C461.279 227.094 439.259 207.177 411.995 207.177C396.149 207.177 382.051 213.933 373.08 224.415C366.322 232.335 350.011 239.906 343.137 228.259C337.544 218.824 335.097 194.016 346.632 187.727C355.137 183.068 365.507 183.534 373.196 189.241C380.886 195.064 390.906 198.558 401.742 198.558C426.209 198.558 446.133 180.738 446.133 158.609C446.133 136.596 426.326 118.659 401.742 118.659C389.741 118.659 377.507 123.085 369.002 131.704C363.176 137.528 357.001 144.865 348.147 140.439C340.224 136.363 335.214 122.852 331.369 115.282C323.563 99.558 308.999 86.8626 291.988 82.0873C272.88 76.7296 247.83 81.0391 228.023 81.0391C211.479 81.0391 194.934 80.2238 178.622 83.8344C165.34 86.7461 158.233 98.9756 151.242 110.157C141.805 125.298 142.737 146.612 118.969 146.612C113.026 146.612 107.434 144.399 102.657 140.905C94.0351 134.383 82.9665 130.423 70.8493 130.423C43.5856 130.423 21.5649 150.223 21.5649 174.798C21.5649 199.257 43.5856 219.174 70.8493 219.174C86.6948 219.174 100.793 212.419 109.764 201.936C117.92 192.385 132.6 188.425 142.038 198.675C152.174 209.623 150.776 242.235 135.746 247.709C126.425 251.203 113.259 251.436 105.22 245.263C96.5983 238.741 85.5297 234.781 73.4125 234.781C46.1489 234.781 24.1282 254.581 24.1282 279.157C24.1282 303.615 46.1489 323.532 73.4125 323.532C89.2581 323.532 103.356 316.777 112.327 306.294C118.153 299.539 129.688 296.394 137.843 301.403C148.213 307.808 146.465 322.367 146.582 332.85C146.698 340.304 140.64 346.477 133.183 346.593L127.008 346.71C121.648 346.71 116.405 344.73 112.094 341.469C104.405 335.645 94.3846 332.151 83.549 332.151C59.0816 332.151 39.1582 349.971 39.1582 372.101C39.1582 394.114 58.9651 412.05 83.549 412.05C98.4625 412.05 107.55 405.411 118.619 396.792C127.823 389.688 137.61 392.483 143.436 400.752C150.077 410.187 158.699 417.874 169.418 422.416C181.652 427.657 196.915 424.163 209.964 424.163C229.072 424.163 248.18 424.163 267.171 424.163C294.202 424.163 326.359 421.484 344.651 398.656C350.127 391.784 352.341 386.776 361.895 385.145C369.119 383.864 376.808 385.495 382.634 389.921C391.256 396.443 402.324 400.403 414.442 400.403C441.705 400.403 463.726 380.603 463.726 356.028C463.726 331.452 441.589 311.652 414.442 311.652Z" fill="#8AA4EE"/> <path d="M427.375 256.561C423.064 252.834 422.482 246.195 426.327 241.886L467.339 194.482C471.067 190.173 477.708 189.59 482.019 193.434C486.33 197.161 486.913 203.8 483.068 208.109L442.172 255.396C438.327 259.822 431.803 260.288 427.375 256.561Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M83.4342 286.145C79.8224 290.571 73.1812 291.27 68.7538 287.659L20.052 248.175C15.6245 244.565 14.9255 237.926 18.5373 233.5C22.1492 229.074 28.7903 228.375 33.2178 231.986L81.9196 271.47C86.4635 275.08 87.0461 281.603 83.4342 286.145Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M427.375 256.561C427.375 256.561 396.849 291.386 388.344 348.806C372.848 454.213 170.467 494.046 101.143 315.03L83.3165 286.145" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M214.392 210.206C212.644 225.463 223.596 239.207 238.859 240.838C254.122 242.585 267.871 231.636 269.502 216.379L214.392 210.206Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M173.73 169.674C175.128 156.279 187.129 146.496 200.528 147.894C213.927 149.291 223.714 161.288 222.315 174.682" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M270.318 182.486C271.716 169.092 283.717 159.308 297.116 160.706C310.515 162.103 320.302 174.1 318.904 187.494" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_1_180"> <rect width="476.415" height="362.575" fill="white" transform="translate(12.7114 79.5255)"/> </clipPath> </defs> </svg>`,
+  alg: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M130.907 163.594L77.2676 168.051L137.241 60.8503L265.944 60.9285L232.557 105.185" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M142.479 179.78L129.578 161.718C129.421 161.483 129.187 161.248 129.03 161.014C120.429 148.112 135.286 123.169 162.184 105.341C189.082 87.5135 217.778 83.5257 226.301 96.4274L239.202 114.411L239.75 115.193" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M206.638 170.897C233.516 153.058 248.355 128.126 239.781 115.208C231.208 102.291 202.47 106.281 175.592 124.12C148.714 141.959 133.875 166.892 142.448 179.809C151.021 192.726 179.76 188.736 206.638 170.897Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M152.564 191.353C172.659 161.327 207.22 141.075 243.267 139.433C279.391 137.791 316.063 155.228 336.628 184.941C346.48 199.172 352.501 215.592 360.007 231.152C371.501 255.157 386.436 277.52 404.342 297.302C419.198 313.801 437.182 330.769 438.199 352.975C439.059 372.054 425.063 390.664 406.609 395.433C388.156 400.203 367.044 391.054 357.661 374.478C362.118 398.561 339.364 421.471 314.968 424.051C290.573 426.71 266.959 414.043 248.584 397.857C228.41 430.385 209.644 449.776 168.124 437.266C151.391 432.262 138.411 398.483 146.152 380.89C132.391 391.915 116.439 402.08 97.6734 400.516C79.7674 399.03 62.4871 383.939 63.0344 366.033C63.5817 348.831 77.7345 338.197 87.2739 325.686C95.7186 314.661 102.99 301.603 109.715 289.405C126.839 258.05 132.469 221.378 152.564 191.353Z" fill="#959AE0"/> <path d="M233.494 284.557C236.778 296.912 249.445 304.262 261.721 300.978C274.076 297.694 281.426 285.027 278.142 272.75L233.494 284.557Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M189.706 265.402C186.735 254.611 193.146 243.43 203.937 240.458C214.727 237.487 225.909 243.899 228.88 254.689" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M268.525 246.164C265.553 235.373 271.965 224.192 282.756 221.221C293.546 218.249 304.728 224.661 307.699 235.451" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M79.5337 168.05C79.5337 168.05 69.7597 173.367 88.6039 200.969C107.448 228.571 89.855 239.909 89.855 239.909" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M84.2245 252.968C88.4134 252.968 91.8091 249.572 91.8091 245.383C91.8091 241.195 88.4134 237.799 84.2245 237.799C80.0356 237.799 76.6399 241.195 76.6399 245.383C76.6399 249.572 80.0356 252.968 84.2245 252.968Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
+  avatar: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <g clip-path="url(#clip0_1_567)"> <path d="M381.051 270.973C381.051 356.804 404.863 425.397 257.57 426.48C120.018 427.473 133.998 356.894 133.998 270.973C133.998 185.052 148.791 124.672 244.581 113.481C328.556 103.643 381.051 185.142 381.051 270.973Z" fill="#F0B327"/> <path d="M212.652 238.482C209.766 237.76 206.97 236.497 204.444 234.511L87.0965 144.167C77.5355 136.857 75.7315 123.138 83.1278 113.571C90.4338 104.005 104.144 102.2 113.705 109.6L231.143 199.944C240.704 207.255 242.508 220.973 235.112 230.54C229.7 237.58 220.77 240.378 212.652 238.482Z" fill="#F0B327"/> <path d="M85.2015 199.131C78.4366 197.507 72.4836 192.633 69.8678 185.593C65.6285 174.312 71.2208 161.676 82.4956 157.434L122.634 142.181L130.842 97.6864C133.007 85.8631 144.371 78.0111 156.278 80.1772C168.094 82.3433 175.941 93.7152 173.776 105.629L161.058 174.312L97.9194 198.319C93.7703 199.853 89.3506 200.124 85.2015 199.131Z" fill="#F0B327"/> <path d="M283.278 225.125C274.98 225.937 266.592 222.056 262.172 214.295C256.129 203.825 259.736 190.468 270.109 184.421L398.371 110.232C408.834 104.185 422.183 107.795 428.227 118.175C434.27 128.644 430.662 142.001 420.289 148.048L292.027 222.237C289.231 223.861 286.255 224.764 283.278 225.125Z" fill="#F0B327"/> <path d="M414.787 202.833C410.547 203.284 406.218 202.472 402.249 200.306L342.809 168.266L339.201 98.4997C338.569 86.496 347.86 76.2071 359.856 75.5753C371.853 74.9435 382.135 84.2396 382.766 96.2434L385.112 141.46L422.905 161.858C433.548 167.544 437.517 180.811 431.744 191.461C428.226 198.049 421.822 202.111 414.787 202.833Z" fill="#F0B327"/> <path d="M224.668 236.067C237.852 236.067 248.539 225.38 248.539 212.196C248.539 199.012 237.852 188.325 224.668 188.325C211.484 188.325 200.797 199.012 200.797 212.196C200.797 225.38 211.484 236.067 224.668 236.067Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M292.937 227.554C306.12 227.554 316.808 216.866 316.808 203.683C316.808 190.499 306.12 179.812 292.937 179.812C279.753 179.812 269.065 190.499 269.065 203.683C269.065 216.866 279.753 227.554 292.937 227.554Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M244.799 198.986C244.162 193.814 269.625 190.791 270.261 195.883" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_1_567"> <rect width="366.024" height="350.906" fill="white" transform="translate(68.4253 75.5759)"/> </clipPath> </defs> </svg>`,
+  winner: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <g clip-path="url(#clip0_1_68)"> <path d="M393.587 117.295C358.448 96.9808 313.153 104.21 273.805 131.752C259.53 141.726 240.589 141.269 226.863 130.654C189.62 102.288 145.88 93.1377 110.376 110.981C53.9163 139.256 39.5499 224.904 78.2569 302.316C115.957 377.624 190.169 417.245 246.171 393.18C300.251 416.147 373.455 380.918 414.359 310.094C457.641 235.244 448.307 148.864 393.587 117.295Z" fill="#FFCAB1"/> <path d="M173.972 206.053C174.613 192.968 185.776 182.811 198.862 183.452C211.947 184.092 222.104 195.256 221.464 208.341" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M268.593 213.374C269.233 200.289 280.397 190.132 293.482 190.772C306.568 191.413 316.725 202.576 316.084 215.662" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M251.296 375.52C279.142 375.52 301.716 352.946 301.716 325.101C301.716 297.255 279.142 274.682 251.296 274.682C223.45 274.682 200.876 297.255 200.876 325.101C200.876 352.946 223.45 375.52 251.296 375.52Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M253.31 297.009L262.094 314.761L281.768 317.597L267.584 331.414L270.879 350.996L253.31 341.754L235.832 350.996L239.126 331.414L224.943 317.597L244.616 314.761L253.31 297.009Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M296.409 298.473L433.485 158.655C433.485 158.655 447.028 180.342 443.001 200.747L302.906 313.755" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M205.634 298.473L68.5575 158.655C68.5575 158.655 55.0146 180.342 59.0408 200.747L199.137 313.755" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_1_68"> <rect width="390.914" height="298.395" fill="white" transform="translate(55.564 101.831)"/> </clipPath> </defs> </svg>`,
+  party: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M147.049 448.475C133.799 448.475 120.383 444.892 108.299 437.309C74.2994 415.892 64.0494 370.975 85.4661 336.892L134.549 258.892L112.799 225.892C90.6327 192.309 99.8827 147.142 133.466 125.059C167.049 102.892 212.216 112.142 234.299 145.726L263.883 190.559C290.549 230.975 291.133 283.559 265.299 324.559L208.633 414.475C194.883 436.392 171.216 448.475 147.049 448.475Z" fill="#F1792B"/> <path d="M306.634 448.475C294.217 448.475 281.55 445.308 270.05 438.558L165.467 377.558C130.717 357.308 119.051 312.725 139.301 277.975C159.551 243.225 204.134 231.558 238.884 251.808L343.467 312.808C378.217 333.058 389.884 377.641 369.634 412.391C356.05 435.475 331.634 448.475 306.634 448.475Z" fill="#F1792B"/> <path d="M317.632 179.809C356.2 179.809 387.466 148.543 387.466 109.975C387.466 71.4075 356.2 40.1421 317.632 40.1421C279.064 40.1421 247.799 71.4075 247.799 109.975C247.799 148.543 279.064 179.809 317.632 179.809Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M285.8 172.141C274.883 181.474 260.717 187.058 245.217 187.058C210.633 187.058 182.633 159.058 182.633 124.474C182.633 89.8911 210.633 61.8911 245.217 61.8911C251.883 61.8911 258.383 62.9744 264.383 64.8911" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M371.05 64.9744C377.133 62.9744 383.633 61.8911 390.383 61.8911C424.967 61.8911 452.967 89.8911 452.967 124.474C452.967 159.058 424.967 187.058 390.383 187.058C374.883 187.058 360.633 181.391 349.717 172.058" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M317.634 179.809L331.551 320.892" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M356.135 179.059L314.219 314.559" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M275.049 179.225L342.549 303.892" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M322.718 245.308C331.884 245.641 339.051 253.308 338.718 262.475C338.384 271.641 330.718 278.808 321.551 278.475L322.718 245.308Z" fill="#F1792B" stroke="#F1792B" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M70.4674 216.141C61.6341 218.475 52.4674 213.225 50.1341 204.391C47.8007 195.558 53.0507 186.391 61.8841 184.058L70.4674 216.141Z" fill="#F1792B" stroke="#F1792B" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M152.216 233.477C149.8 224.644 154.966 215.56 163.716 213.144C172.466 210.727 181.633 215.894 184.05 224.644" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M219.552 214.81C217.136 205.977 222.302 196.893 231.052 194.477C239.886 192.06 248.969 197.227 251.386 205.977" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
+  invest: `<svg viewBox="0 0 501 501" fill="none" xmlns="http://www.w3.org/2000/svg"> <g clip-path="url(#clip0_1_961)"> <path d="M405.477 328.889C404.681 311.454 390.588 298.079 378.885 285.103C364.872 269.579 353.088 251.985 344.012 233.117C341.703 228.261 339.474 223.245 337.244 218.309C349.665 196.416 361.846 172.533 365.35 165.846C372.834 151.595 391.225 120.865 391.623 107.411C392.101 93.3199 378.487 81.4579 364.394 80.2637C349.585 78.99 337.085 87.0307 326.257 95.7083C332.388 81.856 315.907 56.8581 296.162 53.196C271.321 48.5786 252.69 64.0231 245.763 82.3336C238.041 67.924 225.541 55.3455 201.814 58.6096C182.706 61.2367 156.432 81.856 159.935 100.724C152.531 87.6676 135.97 80.423 121.48 84.2443C106.989 88.0656 96.0022 102.714 96.6391 117.681C97.4353 135.036 106.83 146.182 119.012 162.422C119.012 162.502 140.668 194.983 140.747 194.983C151.018 209.234 159.139 222.29 165.747 232.878C159.935 248.322 155.079 264.324 147.117 278.813C141.862 288.367 136.13 298.637 129.521 307.314C121.958 317.186 110.891 325.545 110.413 339.079C109.935 353.17 123.55 365.032 137.642 366.226C152.451 367.5 164.951 359.459 175.779 350.782C169.728 364.634 179.919 391.145 193.056 395.125C225.7 404.917 240.509 389.712 256.353 364.156C270.843 376.894 289.394 386.846 308.582 384.696C327.77 382.626 345.684 364.634 342.181 345.687C349.585 358.743 366.146 365.987 380.636 362.166C395.127 358.345 406.194 343.856 405.477 328.889Z" fill="#DEDF1F"/> <path d="M195.524 176.196C195.445 165.767 203.805 157.249 214.235 157.169C224.665 157.089 233.184 165.449 233.263 175.878" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M275.303 175.478C275.223 165.049 283.583 156.531 294.013 156.451C304.443 156.372 312.962 164.731 313.042 175.16" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M254.124 408.578C254.124 408.578 268.296 336.451 250.859 329.923" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M199.823 323.235C199.823 323.235 249.504 307.87 257.864 345.685C257.864 345.685 220.523 362.881 199.823 323.235Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M261.45 363.122C261.45 363.122 251.578 312.011 290.192 307.951C290.113 307.872 303.09 346.801 261.45 363.122Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M321.962 404.013C323.695 398.89 311.66 390.193 295.081 384.588C278.503 378.983 263.659 378.592 261.926 383.715C260.194 388.838 272.229 397.535 288.808 403.14C305.386 408.745 320.23 409.136 321.962 404.013Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M261.925 383.74L257.467 397.035C255.715 402.21 267.737 410.888 284.298 416.46C300.858 422.033 315.667 422.431 317.419 417.256L321.878 403.961" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M249.189 435.17C266.681 434.605 280.719 429.765 280.545 424.359C280.37 418.954 266.048 415.031 248.556 415.596C231.064 416.161 217.026 421.002 217.2 426.407C217.375 431.812 231.697 435.736 249.189 435.17Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M217.182 426.411L217.66 440.422C217.819 445.836 232.15 449.816 249.587 449.259C267.103 448.702 281.115 443.845 280.956 438.432L280.478 424.42" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M225.909 392.429C241.73 384.948 252.681 374.92 250.369 370.031C248.057 365.142 233.357 367.244 217.536 374.725C201.716 382.206 190.765 392.233 193.077 397.122C195.389 402.011 210.089 399.91 225.909 392.429Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M193.135 397.114L199.106 409.772C201.415 414.708 216.144 412.558 231.909 405.154C247.753 397.671 258.66 387.64 256.351 382.704L250.38 370.046" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_1_961"> <rect width="308.838" height="399.249" fill="white" transform="translate(96.6387 52.4023)"/> </clipPath> </defs> </svg>`,
+  analytics: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M129.765 165.446C101.677 160.368 72.2405 175.998 56.9272 200.119C41.6138 224.239 39.3128 255.025 46.5331 282.636C53.6741 310.089 71.5264 336.431 98.2653 345.873C131.907 357.695 173.245 335.479 181.973 300.885C182.29 314.056 203.872 341.509 241.957 339.129C287.183 336.273 307.019 310.089 306.463 295.49C321.142 324.768 357.719 336.193 389.14 326.989C423.416 316.992 450.869 286.683 457.534 251.613C464.199 216.543 449.679 178.299 421.512 156.401C393.345 134.502 358.275 127.519 325.903 142.674C323.84 126.567 323.443 120.537 318.762 103.558C313.049 82.849 287.897 79.0405 275.281 95.4647C265.998 107.525 267.585 121.569 265.601 142.674C243.623 142.674 216.329 146.007 196.176 154.893C190.304 139.421 179.037 118.395 163.407 110.54C150.315 103.954 135.398 114.666 131.272 127.361C127.543 138.707 127.702 153.544 129.765 165.446Z" fill="#D1C0C0"/> <path d="M179.665 346.43H159.525C152.159 346.43 146.189 352.4 146.189 359.766V391.014C146.189 398.38 152.159 404.351 159.525 404.351H179.665C187.031 404.351 193.002 398.38 193.002 391.014V359.766C193.002 352.4 187.031 346.43 179.665 346.43Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M250.918 320.167H230.777C223.412 320.167 217.441 326.137 217.441 333.503V391.014C217.441 398.379 223.412 404.35 230.777 404.35H250.918C258.283 404.35 264.254 398.379 264.254 391.014V333.503C264.254 326.137 258.283 320.167 250.918 320.167Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M323.277 285.651H303.136C295.771 285.651 289.8 291.622 289.8 298.987V391.013C289.8 398.379 295.771 404.349 303.136 404.349H323.277C330.642 404.349 336.613 398.379 336.613 391.013V298.987C336.613 291.622 330.642 285.651 323.277 285.651Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M350.342 388.084C355.499 395.146 354.071 405.064 347.009 410.221C339.948 415.378 330.03 413.95 324.872 406.888L350.342 388.084Z" fill="#D1C0C0" stroke="#D1C0C0" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M132.699 391.497C127.541 398.559 128.969 408.477 136.031 413.634C143.093 418.791 153.011 417.363 158.168 410.302L132.699 391.497Z" fill="#D1C0C0" stroke="#D1C0C0" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M211.887 245.266C225.033 245.266 235.69 234.609 235.69 221.463C235.69 208.317 225.033 197.66 211.887 197.66C198.741 197.66 188.083 208.317 188.083 221.463C188.083 234.609 198.741 245.266 211.887 245.266Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M279.962 236.777C293.108 236.777 303.765 226.12 303.765 212.974C303.765 199.828 293.108 189.171 279.962 189.171C266.816 189.171 256.159 199.828 256.159 212.974C256.159 226.12 266.816 236.777 279.962 236.777Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M231.959 208.293C231.324 203.136 256.714 200.121 257.349 205.199" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </svg>`,
+  shop: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <g clip-path="url(#clip0_1_1032)"> <path d="M113.661 169.633L115.006 87.6671C115.427 62.4468 136.022 42.2705 161.157 42.2705C161.409 42.2705 161.661 42.2705 161.914 42.2705C187.385 42.6908 207.728 63.7078 207.392 89.2644L206.047 171.23C206.047 172.996 206.047 174.761 206.131 176.527C206.719 187.624 223.364 187.035 223.364 175.938V105.574C223.364 85.3973 239.84 68.4996 260.015 68.92C279.518 69.3403 295.237 85.2291 295.237 104.817V189.053C295.237 199.729 312.723 200.654 313.731 190.986C315.413 174.509 314.824 154.249 313.983 137.94C313.479 127.095 312.975 116.25 312.386 105.489C311.125 80.0169 330.796 58.3274 356.267 57.0664C381.738 55.8895 403.426 75.4773 404.687 100.95L408.05 170.894C409.647 204.605 396.701 237.476 372.407 260.931C366.018 267.152 358.957 272.532 351.391 277.072C329.451 290.27 314.152 312.296 310.201 337.685L296.246 426.796C293.304 445.459 277.248 459.247 258.334 459.247C239.42 459.247 223.364 445.459 220.421 426.796L206.971 340.879C202.348 311.287 186.46 284.386 162.166 266.731C155.609 262.024 149.556 256.559 144.008 250.422C123.917 228.228 113.157 199.561 113.661 169.633Z" fill="#DEDF1F"/> <path d="M290.446 299.94L251.105 296.829L214.621 406.874L114.755 398.383L94.4114 312.718L242.11 323.815" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M214.622 406.872L215.967 406.956C222.776 407.461 228.072 409.898 226.727 427.216C226.223 434.026 220.254 439.07 213.529 438.566L95.2528 429.318" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M191.421 447.562C190.916 453.783 195.624 459.247 201.845 459.752C208.065 460.256 213.529 455.548 214.034 449.327C214.538 443.106 209.831 437.642 203.61 437.137C197.305 436.717 191.841 441.341 191.421 447.562Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M99.8765 440.413C99.3721 446.634 104.08 452.099 110.3 452.603C116.521 453.107 121.985 448.4 122.489 442.179C122.994 435.958 118.286 430.493 112.066 429.989C105.761 429.484 100.297 434.192 99.8765 440.413Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M211.091 321.964L201.003 403.257" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M173.095 319.443L166.538 402.586" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M132.408 316.834L132.24 399.053" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M228.66 365.427L105.676 355.087" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M274.223 295.567C274.728 287.413 281.789 281.276 289.859 281.864C298.013 282.369 304.15 289.43 303.561 297.501L274.223 295.567Z" fill="#C5C512" stroke="#C5C512" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M308.269 216.71C307.177 232.178 293.726 243.779 278.259 242.687C262.791 241.594 251.191 228.143 252.283 212.674L308.269 216.71Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M227.736 210.321C226.643 225.789 213.193 237.391 197.725 236.298C182.258 235.205 170.657 221.754 171.75 206.286L227.736 210.321Z" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M254.046 225.119C253.542 217.721 223.531 216.376 224.12 222.681" stroke="black" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </g> <defs> <clipPath id="clip0_1_1032"> <rect width="316.245" height="420.087" fill="white" transform="translate(93.1769 40.9854)"/> </clipPath> </defs> </svg>`,
+  piggy: `<svg viewBox="0 0 501 500" fill="none" xmlns="http://www.w3.org/2000/svg"> <path d="M207.47 457.521C225.871 457.521 240.789 442.604 240.789 424.202C240.789 405.8 225.871 390.883 207.47 390.883C189.068 390.883 174.15 405.8 174.15 424.202C174.15 442.604 189.068 457.521 207.47 457.521Z" fill="#469FD0"/> <path d="M317.294 454.869C335.695 454.869 350.613 439.951 350.613 421.55C350.613 403.148 335.695 388.23 317.294 388.23C298.892 388.23 283.975 403.148 283.975 421.55C283.975 439.951 298.892 454.869 317.294 454.869Z" fill="#469FD0"/> <path d="M397.36 251.639C397.36 222.298 376.887 196.273 345.226 179.862C329.727 171.822 318.206 156.82 314.808 139.581C310.663 118.777 317.46 97.3099 311.824 76.3404C305.856 53.9618 287.124 44.4302 264.912 44.4302C205.236 44.4302 211.203 99.4649 211.203 125.822C211.203 126.071 211.203 126.319 211.203 126.568C211.037 150.19 198.356 171.739 178.133 183.923C150.615 200.417 133.21 224.702 133.21 251.722C133.21 288.688 165.7 320.35 212.198 334.357C218.248 336.18 221.812 342.563 220.155 348.696C215.099 367.51 205.733 402.902 205.733 402.902C201.091 420.556 214.436 437.796 232.67 437.796H294.335C312.984 437.796 326.411 419.727 320.941 401.907L304.862 349.027C303.121 343.391 306.519 337.507 312.155 336.098C361.968 323.085 397.36 290.18 397.36 251.639Z" fill="#469FD0"/> <path d="M323.34 374.39H387.657C400.421 374.39 409.456 362.041 405.229 350.271L391.387 311.73C388.818 304.437 381.773 299.629 373.816 299.629H337.264C329.39 299.629 322.345 304.52 319.693 311.73L305.768 350.354C301.541 362.124 310.576 374.39 323.34 374.39Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M315.552 320.184C308.922 314.631 306.849 305.348 310.413 297.474L310.911 296.396C313.977 289.683 320.691 285.373 327.985 285.29L384.18 284.627C392.22 284.544 399.513 289.517 402.248 297.06L402.497 297.805C404.901 304.353 403.575 311.73 399.016 317.034L395.369 322.007" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M347.047 280.731C351.808 280.731 355.667 276.872 355.667 272.111C355.667 267.35 351.808 263.491 347.047 263.491C342.287 263.491 338.427 267.35 338.427 272.111C338.427 276.872 342.287 280.731 347.047 280.731Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M364.702 280.731C369.462 280.731 373.322 276.872 373.322 272.111C373.322 267.35 369.462 263.491 364.702 263.491C359.941 263.491 356.082 267.35 356.082 272.111C356.082 276.872 359.941 280.731 364.702 280.731Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M397.939 372.068C397.857 380.108 391.309 386.49 383.269 386.407C375.229 386.324 368.847 379.776 368.93 371.736L397.939 372.068Z" fill="#469FD0" stroke="#469FD0" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M119.946 282.638C132.9 282.638 143.402 272.136 143.402 259.182C143.402 246.227 132.9 235.726 119.946 235.726C106.991 235.726 96.4897 246.227 96.4897 259.182C96.4897 272.136 106.991 282.638 119.946 282.638Z" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M123.838 247.578L114.638 251.142C112.483 251.888 111.24 254.209 111.903 256.447C112.566 258.933 115.301 260.259 117.705 259.265L122.76 257.276C125.33 256.198 128.314 257.607 129.225 260.259C130.137 262.746 128.811 265.481 126.324 266.476L115.301 270.371" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M116.215 245.423L124.918 272.194" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M134.45 304.519C133.953 312.558 126.991 318.609 119.034 318.112C111.077 317.614 104.944 310.652 105.441 302.695L134.45 304.519Z" fill="#469FD0" stroke="#469FD0" stroke-width="20.0041" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M270.461 281.395C270.461 281.395 255.211 287.943 246.508 274.847" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M249.908 271.034L241.785 276.836" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M214.352 237.216C214.269 228.182 221.563 220.722 230.597 220.639C239.631 220.556 247.091 227.85 247.174 236.885" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> <path d="M283.808 236.554C283.725 227.52 291.018 220.061 300.053 219.978C309.087 219.895 316.547 227.189 316.629 236.223" stroke="#010302" stroke-width="5.00103" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/> </svg>`
+};
+
+
+/* ================= audio ================= */
+let AC = null;
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(freq, dur, type, vol, when){
+  const c = ac(); if(!c || !S.sound) return;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type = type||'square'; o.frequency.value = freq;
+  g.gain.setValueAtTime(vol||0.08, c.currentTime+(when||0));
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime+(when||0)+dur);
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime+(when||0)); o.stop(c.currentTime+(when||0)+dur+0.02);
+}
+const sfx = {
+  correct(streak){
+    const base = 440 + Math.min(streak,12)*40;
+    tone(base,0.09,'square',0.07); tone(base*1.5,0.12,'square',0.06,0.07);
+  },
+  crunch(){ tone(160,0.06,'sawtooth',0.05); tone(90,0.09,'sawtooth',0.05,0.03); },
+  wrong(){ tone(200,0.2,'sawtooth',0.06); tone(140,0.25,'sawtooth',0.06,0.08); },
+  milestone(){ [523,659,784,1047].forEach((f,i)=>tone(f,0.14,'triangle',0.07,i*0.07)); },
+  tierup(){ [392,523,659,784,1047].forEach((f,i)=>tone(f,0.16,'triangle',0.08,i*0.08)); },
+  buy(){ tone(880,0.08,'triangle',0.08); tone(1320,0.14,'triangle',0.08,0.07); },
+  end(){ [659,784,880,1047,1319].forEach((f,i)=>tone(f,0.18,'triangle',0.07,i*0.09)); },
+  tick(){ tone(1000,0.03,'square',0.03); }
+};
+
+/* ================= toast & particles ================= */
+let toastT = null;
+function toast(msg, ms){
+  const t = $('toast'); t.innerHTML = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), ms||1700);
+}
+function burst(el, colors, n){
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  for(let i=0;i<(n||10);i++){
+    const p = document.createElement('div');
+    const useEmoji = typeof colors[0]==='string' && !colors[0].startsWith('#');
+    if(useEmoji){ p.className='particle'; p.textContent = pick(colors); }
+    else { p.className='particle sq'; p.style.background = pick(colors); }
+    p.style.left = cx+'px'; p.style.top = cy+'px';
+    p.style.setProperty('--dx', (ri(-90,90))+'px');
+    p.style.setProperty('--dy', (ri(-120,30))+'px');
+    p.style.setProperty('--rot', ri(-260,260)+'deg');
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 850);
+  }
+}
+
+/* ================= problem generators =================
+   each returns {q, prompt, ans, wrongs[], skill}
+   ans & wrongs are display strings (may contain fraction HTML) */
+function Q(prompt, q, ans, wrongs, skill, steps){ return {prompt, q, ans:String(ans), wrongs:wrongs.map(String), skill, steps:steps||[]}; }
+const dspN = n => n<0 ? '−'+Math.abs(n) : String(n);          // −8
+const dspP = n => n<0 ? '(−'+Math.abs(n)+')' : String(n);     // (−8)
+function valOf(s){   // numeric value of a displayed choice, or null
+  const m = String(s).match(/^<span class="fr"><span class="fn">(-?[\d.]+)<\/span><span class="fd">(-?[\d.]+)<\/span><\/span>$/);
+  if(m) return parseFloat(m[1])/parseFloat(m[2]);
+  const t = String(s).replace('x = ','').replace('$','').replace('%','').replace('−','-');
+  if(/^-?[\d.]+$/.test(t)) return parseFloat(t);
+  return null;
+}
+function pctSteps(p, base, ans){
+  if(p===50) return [`50% means <b>half</b>.`, `Half of ${base} is <b>${fmt(ans)}</b>.`];
+  if(p===25) return [`25% means a <b>quarter</b> — divide by 4.`, `${base} ÷ 4 = <b>${fmt(ans)}</b>.`];
+  if(p===75) return [`75% is <b>three quarters</b>.`, `A quarter: ${base} ÷ 4 = ${base/4}.`, `Three of them: ${base/4} × 3 = <b>${fmt(ans)}</b>.`];
+  if(p===5)  return [`Start with 10%: slide the decimal → ${fmt(base/10)}.`, `5% is half of that: <b>${fmt(ans)}</b>.`];
+  if(p===15) return [`10% of ${base} is ${fmt(base/10)}. 5% is half of that: ${fmt(base/20)}.`, `15% = 10% + 5% = ${fmt(base/10)} + ${fmt(base/20)} = <b>${fmt(ans)}</b>.`];
+  if(p%10===0) return [`10% of ${base} is ${fmt(base/10)} — just slide the decimal.`, `${p}% is ${p/10} of those: ${p/10} × ${fmt(base/10)} = <b>${fmt(ans)}</b>.`];
+  return [`${p}% means ${p} out of 100.`, `${p} ÷ 100 × ${base} = <b>${fmt(ans)}</b>.`];
+}
+
+const GEN = {frac:{1:[],2:[],3:[]}, ratio:{1:[],2:[],3:[]}, int:{1:[],2:[],3:[]}, alg:{1:[],2:[],3:[]}};
+
+/* ---------- FRACTIONS & DECIMALS ---------- */
+GEN.frac[1].push(
+  function eqFrac(){
+    const b = ri(2,6), a = ri(1,b-1), k = ri(2,5);
+    return Q('Finish the pair', `${frH(a,b)} &nbsp;=&nbsp; ${frH('?', b*k)}`,
+      a*k, [a+k, a*k+ri(1,3), a*(k+1)], 'Equivalent fractions', [
+        `The bottom went from ${b} to ${b*k} — it was multiplied by ${k}.`,
+        `Whatever happens to the bottom must happen to the top too.`,
+        `Top: ${a} × ${k} = <b>${a*k}</b>. Same amount, just cut into smaller pieces: ${vizRow(fracBar(a,b), '<b>=</b>', fracBar(a*k, b*k, '#2db56c'))}`]);
+  },
+  function cmpFrac(){
+    let a,b,c,d;
+    do{ b=ri(2,8); a=ri(1,b-1); d=ri(2,8); c=ri(1,d-1); }while(a*d===c*b);
+    const bigFirst = a*d>c*b;
+    const ans = bigFirst?frH(a,b):frH(c,d);
+    return Q('Which is bigger?', `${frH(a,b)} &nbsp;or&nbsp; ${frH(c,d)}`,
+      ans, [bigFirst?frH(c,d):frH(a,b), "they're equal"], 'Comparing fractions', [
+        `First LOOK at them side by side: ${vizRow(fracBar(a,b), '<b>vs</b>', fracBar(c,d,'#2db56c'))}`,
+        `To be sure, cross-multiply: ${a} × ${d} = ${a*d} &nbsp;and&nbsp; ${c} × ${b} = ${c*b}.`,
+        `${Math.max(a*d,c*b)} is bigger, so <b>${ans}</b> is the bigger fraction.`]);
+  },
+  function addSameDen(){
+    const d = ri(4,9), a = ri(1,d-2), c = ri(1,d-1-a);
+    const ans = sfrH(a+c,d);
+    const g = gcd(a+c,d);
+    const third = (a*c===a+c || a*c===0) ? a+c+2 : a*c;   // never equal in value to the answer
+    const w = [frH(a+c, d*2), frH(a+c+1, d), frH(third, d)].filter(x=>x!==ans);
+    const steps = [
+      `The bottoms match (both ${d}), so keep the bottom and just add the tops. ${vizRow(fracBar(a,d), '<b>+</b>', fracBar(c,d,'#2db56c'))}`,
+      `Tops: ${a} + ${c} = ${a+c}, giving ${frH(a+c,d)}. ${vizRow(fracBar(a+c,d,'#ffc12e'))}`];
+    if(g>1) steps.push(`Simplify: divide top and bottom by ${g} → <b>${ans}</b>.`);
+    return Q('Add', `${frH(a,d)} + ${frH(c,d)}`, ans, w, 'Adding fractions (same denominator)', steps);
+  }
+);
+GEN.frac[2].push(
+  function addUnlikeDen(){
+    const dens = shuffle([2,3,4,5,6,8]); const b=dens[0], d=dens[1];
+    const a=ri(1,b-1), c=ri(1,d-1);
+    const n = a*d + c*b, den = b*d;
+    const ans = sfrH(n,den);
+    const w = [frH(a+c, b+d), sfrH(n+b, den), frH(a*c, b*d)].filter(x=>x!==ans);
+    const steps = [
+      `The bottoms are different — make them match. ${b} × ${d} = ${den} works.`,
+      `${frH(a,b)} = ${frH(a*d,den)} &nbsp;and&nbsp; ${frH(c,d)} = ${frH(c*b,den)}.`,
+      `Now add the tops: ${a*d} + ${c*b} = ${n} → ${frH(n,den)}${sfrH(n,den)!==frH(n,den)? ' = <b>'+ans+'</b>' : ''}.`];
+    return Q('Add', `${frH(a,b)} + ${frH(c,d)}`, ans, w, 'Adding fractions (unlike denominators)', steps);
+  },
+  function subFrac(){
+    const dens = shuffle([2,3,4,6,8]); let b=dens[0], d=dens[1];
+    let a=ri(1,b-1), c=ri(1,d-1);
+    if(a*d < c*b){ const ta=a, tb=b; a=c; b=d; c=ta; d=tb; }   // keep first fraction the bigger one
+    const n = a*d - c*b, den = b*d;
+    const ans = sfrH(n,den);
+    const w = [frH(Math.abs(a-c)||1, Math.abs(b-d)||2), sfrH(n+b, den), frH(a*c, b*d)].filter(x=>x!==ans);
+    const steps = [
+      `The bottoms are different — make them match. ${b} × ${d} = ${den} works.`,
+      `${frH(a,b)} = ${frH(a*d,den)} &nbsp;and&nbsp; ${frH(c,d)} = ${frH(c*b,den)}.`,
+      `Subtract the tops: ${a*d} − ${c*b} = ${n} → ${frH(n,den)}${sfrH(n,den)!==frH(n,den)? ' = <b>'+ans+'</b>' : ''}.`];
+    return Q('Subtract', `${frH(a,b)} − ${frH(c,d)}`, ans, w, 'Subtracting fractions', steps);
+  },
+  function frac2dec(){
+    const opts = [[1,2,'0.5',5],[1,4,'0.25',25],[3,4,'0.75',25],[1,5,'0.2',2],[2,5,'0.4',2],[3,5,'0.6',2],[4,5,'0.8',2],[1,8,'0.125',125],[3,8,'0.375',125],[5,8,'0.625',125],[7,8,'0.875',125],[7,10,'0.7',1],[9,20,'0.45',5],[3,25,'0.12',4]];
+    const [n,d,ans,mult] = pick(opts);
+    const v = n/d;
+    const w = [fmt(v*10), fmt(Math.round((v+0.1)*100)/100), fmt(d/ (n*10))].filter(x=>x!==ans);
+    w.push(fmt(Math.round((v-0.05)*100)/100));
+    const steps = mult===1
+      ? [`The bottom is already 10, so ${frH(n,d)} means ${n} tenths.`, `${n} tenths = <b>${ans}</b>.`]
+      : [`Make the bottom a power of ten: multiply top and bottom by ${mult}.`,
+         `${frH(n,d)} = ${frH(n*mult, d*mult)}.`,
+         `${n*mult} over ${d*mult} = <b>${ans}</b>.`];
+    return Q('As a decimal', `${frH(n,d)} = ?`, ans, w.filter(x=>x!==ans), 'Fractions → decimals', steps);
+  },
+  function dec2frac(){
+    const opts = [['0.5',1,2],['0.25',1,4],['0.75',3,4],['0.2',1,5],['0.6',3,5],['0.4',2,5],['0.8',4,5],['0.1',1,10],['0.3',3,10],['0.7',7,10],['0.9',9,10]];
+    const [dec,n,d] = pick(opts);
+    const base = dec.length===4 ? 100 : 10;
+    const t = Math.round(parseFloat(dec)*base);
+    const g = gcd(t,base);
+    const ans = frH(n,d);
+    const w = [frH(n, d*10), frH(d, n===d?n+1:n), frH(n+1, d)].filter(x=>x!==ans);
+    const steps = [`${dec} means ${t} ${base===100?'hundredths':'tenths'}: ${frH(t,base)}.`];
+    if(g>1) steps.push(`Simplify: divide top and bottom by ${g} → <b>${ans}</b>.`);
+    else steps.push(`${t} and ${base} share no common factor, so it's already in simplest form: <b>${ans}</b>.`);
+    return Q('As a fraction', `${dec} = ?`, ans, w, 'Decimals → fractions', steps);
+  }
+);
+GEN.frac[3].push(
+  function mulFrac(){
+    const b=ri(2,6), a=ri(1,b-1), d=ri(2,6), c=ri(1,d-1);
+    const ans = sfrH(a*c, b*d);
+    const w = [sfrH(a*d + c*b, b*d), frH(a+c, b+d), sfrH(Math.max(1,a*d), Math.max(2,b*c))].filter(x=>x!==ans);
+    const steps = [
+      `Multiply straight across — tops together, bottoms together.`,
+      `Tops: ${a} × ${c} = ${a*c}. Bottoms: ${b} × ${d} = ${b*d}.`,
+      `${frH(a*c,b*d)}${sfrH(a*c,b*d)!==frH(a*c,b*d)? ' = <b>'+ans+'</b>' : ''}.`];
+    return Q('Multiply', `${frH(a,b)} × ${frH(c,d)}`, ans, w, 'Multiplying fractions', steps);
+  },
+  function divFrac(){
+    const b=ri(2,5), a=ri(1,b), d=ri(2,5), c=ri(1,d-1);
+    const ans = sfrH(a*d, b*c);
+    const w = [sfrH(a*c, b*d), sfrH(b*c, Math.max(1,a*d)), frH(a, b*c)].filter(x=>x!==ans);
+    const steps = [
+      `Dividing by a fraction = multiplying by its flip (the reciprocal).`,
+      `Flip ${frH(c,d)} into ${frH(d,c)}, then multiply: ${frH(a,b)} × ${frH(d,c)}.`,
+      `${frH(a*d,b*c)}${sfrH(a*d,b*c)!==frH(a*d,b*c)? ' = <b>'+ans+'</b>' : ''}.`];
+    return Q('Divide', `${frH(a,b)} ÷ ${frH(c,d)}`, ans, w, 'Dividing fractions', steps);
+  },
+  function decMul(){
+    const A = ri(2,9), B = ri(2,9);
+    const ans = fmt(A*B/100);
+    const w = [fmt(A*B/10), fmt((A+B)/10), fmt(A*B)].filter(x=>x!==ans);
+    const steps = [
+      `Ignore the decimal points first: ${A} × ${B} = ${A*B}.`,
+      `Count decimal digits in the question: 1 + 1 = 2.`,
+      `Move the point 2 places left: <b>${ans}</b>.`];
+    return Q('Multiply', `${fmt(A/10)} × ${fmt(B/10)}`, ans, w, 'Multiplying decimals', steps);
+  },
+  function frac2pct(){
+    const opts = [[1,2,50],[1,4,25],[3,4,75],[1,5,20],[2,5,40],[3,5,60],[4,5,80],[1,10,10],[7,10,70],[9,10,90],[1,8,12.5],[3,8,37.5]];
+    const [n,d,p] = pick(opts);
+    const ans = fmt(p)+'%';
+    const w = [`${n}${d}%`, fmt(p/10)+'%', fmt(100-p)+'%'].filter(x=>x!==ans);
+    const steps = [
+      `Percent means "out of 100" — make the bottom 100.`,
+      `Multiply top and bottom by ${fmt(100/d)}: ${frH(n,d)} = ${frH(fmt(p),100)}.`,
+      `So it's <b>${ans}</b>.`];
+    return Q('As a percent', `${frH(n,d)} = ?`, ans, w, 'Fractions → percents', steps);
+  }
+);
+
+/* ---------- RATIOS / PERCENTS / PROPORTIONS ---------- */
+GEN.ratio[1].push(
+  function unitRate(){
+    const n = pick([2,3,4,5,6]), p = ri(2,9);
+    const item = pick(['pets','power-ups','skins','pizza slices','speed coils']);
+    return Q('Unit rate', `${n} ${item} cost $${n*p}.<br>How much is 1?`,
+      '$'+p, ['$'+(p+1), '$'+(p-1||p+2), '$'+(p+n)], 'Unit rates', [
+        `"Unit rate" = the price of ONE. Share the total equally.`,
+        `$${n*p} ÷ ${n} = ${p}.`,
+        `One costs <b>$${p}</b>.`]);
+  },
+  function simplifyRatio(){
+    let a,b; do{ a=ri(2,9); b=ri(2,9); }while(a===b || gcd(a,b)>1);
+    const g = ri(2,6);
+    return Q('Simplify the ratio', `${a*g} : ${b*g}`,
+      `${a} : ${b}`, [`${b} : ${a}`, `${a+1} : ${b}`, `${a*g} : ${b}`], 'Simplifying ratios', [
+        `Find the biggest number that divides into both ${a*g} and ${b*g}: it's ${g}.`,
+        `${a*g} ÷ ${g} = ${a} &nbsp;and&nbsp; ${b*g} ÷ ${g} = ${b}.`,
+        `So the ratio is <b>${a} : ${b}</b>.`]);
+  },
+  function easyPct(){
+    const p = pick([10,25,50]), base = pick([20,40,60,80,120,200]);
+    const ans = base*p/100;
+    return Q('Percent', `${p}% of ${base}`, ans, [ans*10, ans/2||ans+5, ans+p/5], 'Easy percents',
+      pctSteps(p, base, ans));
+  }
+);
+GEN.ratio[2].push(
+  function pctOf(){
+    const p = pick([5,15,20,30,40,60,75]), base = pick([20,40,60,80,120,140,160,180,200]);
+    const ans = base*p/100;
+    return Q('Percent', `${p}% of ${base}`, fmt(ans), [fmt(ans*10), fmt(ans+base/20), fmt(Math.max(1,ans-base/20))].filter(x=>x!==fmt(ans)), 'Percent of a number',
+      pctSteps(p, base, ans));
+  },
+  function propSolve(){
+    const b=ri(2,6), a=ri(1,b), k=ri(2,6);
+    return Q('Solve for x', `${frH(a,b)} = ${frH('x', b*k)}`,
+      'x = '+(a*k), ['x = '+(a+k), 'x = '+(a*k+b), 'x = '+(b*k-a)], 'Proportions', [
+        `Look at the bottoms: ${b} → ${b*k}. That's × ${k}.`,
+        `The top must do the same: ${a} × ${k} = ${a*k}.`,
+        `<b>x = ${a*k}</b>.`]);
+  },
+  function ratioShare(){
+    let a,b; do{ a=ri(1,5); b=ri(2,6); }while(a>=b);
+    const u = ri(2,8), total = (a+b)*u;
+    return Q('Ratio share', `You and a friend split ${total} gems in the ratio ${a}:${b}.<br>How many is the <b>smaller</b> share?`,
+      a*u, [b*u, Math.round(total/2), u], 'Sharing in a ratio', [
+        `Ratio ${a}:${b} means ${a} + ${b} = ${a+b} equal parts.`,
+        `One part: ${total} ÷ ${a+b} = ${u}.`,
+        `The smaller share gets ${a} parts: ${a} × ${u} = <b>${a*u}</b>.`]);
+  }
+);
+GEN.ratio[3].push(
+  function pctChange(){
+    const pct = pick([10,20,25,50]), A = pick([20,40,60,80,120]);
+    const up = Math.random()<0.6;
+    const B = up ? A*(100+pct)/100 : A*(100-pct)/100;
+    const ans = pct+'%';
+    const diff = Math.abs(B-A);
+    const wrongAlt = Math.round(diff/B*100);
+    return Q('Percent change', `A trade went from ${A} to ${fmt(B)} coins.<br>What's the percent ${up?'increase':'decrease'}?`,
+      ans, [wrongAlt+'%', (pct+10)+'%', diff+'%'].filter(x=>x!==ans), 'Percent change', [
+        `Find the change: ${fmt(Math.max(A,B))} − ${fmt(Math.min(A,B))} = ${fmt(diff)}.`,
+        `Divide by the ORIGINAL number (${A}, where it started): ${fmt(diff)} ÷ ${A} = ${fmt(diff/A)}.`,
+        `${fmt(diff/A)} as a percent = <b>${ans}</b>.`]);
+  },
+  function findWhole(){
+    const p = pick([20,25,30,40,50,60,75]), W = pick([20,40,60,80,120,200]);
+    const part = W*p/100;
+    return Q('Find the whole', `${fmt(part)} is ${p}% of what number?`,
+      W, [fmt(part*p/100)===String(W)?W+10:fmt(part*p/100), W+10, fmt(part*2)].filter(x=>String(x)!==String(W)), 'Finding the whole from a percent', [
+        `${fmt(part)} is ${p}%. First find 1%: ${fmt(part)} ÷ ${p} = ${fmt(part/p)}.`,
+        `The whole thing is 100%: ${fmt(part/p)} × 100 = <b>${W}</b>.`,
+        `Check: ${p}% of ${W} = ${fmt(part)} ✓`]);
+  },
+  function scaleRecipe(){
+    const c = ri(2,6), target = pick([6,8,10]);
+    const ans = c*target/4;
+    return Q('Scale it up', `A potion for 4 players needs ${c} magic berries.<br>How many for ${target} players?`,
+      fmt(ans), [fmt(c + (target-4)), fmt(c*2)===fmt(ans)?fmt(c*3):fmt(c*2), fmt(ans+1)].filter(x=>x!==fmt(ans)), 'Scaling recipes', [
+        `Find the amount for ONE player: ${c} ÷ 4 = ${fmt(c/4)}.`,
+        `Then multiply by ${target} players: ${fmt(c/4)} × ${target} = <b>${fmt(ans)}</b>.`]);
+  }
+);
+/* ---------- INTEGERS (Frozen Depths) ---------- */
+GEN.int[1].push(
+  function addInt(){
+    const a = -ri(1,12), b = ri(1,12);
+    const ans = a+b;
+    return Q('Add', `${a} + ${b}`, ans, [Math.abs(a)+b, -(Math.abs(a)+b), ans+pick([-2,2])], 'Adding negatives', [
+      `Picture a number line. Start at ${dspN(a)}.`,
+      `Adding ${b} means walking ${b} steps to the RIGHT.`,
+      `You land on <b>${dspN(ans)}</b>. ${numLineSVG(a, ans)}`]);
+  },
+  function subToNeg(){
+    const b = ri(4,15), a = ri(1,b-1);
+    const ans = a-b;
+    return Q('Subtract', `${a} − ${b}`, ans, [b-a, -(a+b), ans-1], 'Subtracting into negatives', [
+      `You're taking away MORE than you have — the answer dips below zero.`,
+      `From ${a}, walk ${b} steps left: ${a} steps get you to 0, then ${b-a} more.`,
+      `You land on <b>${dspN(ans)}</b>. ${numLineSVG(a, ans)}`]);
+  },
+  function cmpInt(){
+    const vals = shuffle([-ri(8,15), -ri(1,7), ri(0,5), ri(6,15)]);
+    const ans = Math.min(...vals);
+    return Q('Which is smallest?', `${vals.join(' &nbsp; ')}`, ans, vals.filter(v=>v!==ans), 'Ordering negatives', [
+      `On a number line, smaller = farther LEFT.`,
+      `Negative numbers are all left of 0, and the one with the biggest size is the farthest left.`,
+      `So the smallest is <b>${dspN(ans)}</b>.`]);
+  },
+  function absVal(){
+    const n = ri(2,20);
+    return Q('Distance from zero', `|−${n}| = ?`, n, [-n, n+1, 0], 'Absolute value', [
+      `The bars |&nbsp;| ask: how FAR is this number from 0?`,
+      `${dspN(-n)} is ${n} steps from 0 — distance is never negative.`,
+      `|−${n}| = <b>${n}</b>.`]);
+  }
+);
+GEN.int[2].push(
+  function subNeg(){
+    const a = ri(-9,9), b = ri(1,12);
+    const ans = a+b;
+    return Q('Careful with signs…', `${dspN(a)} − (−${b})`, ans, [a-b, -(a+b), b-a].filter(x=>x!==ans), 'Subtracting a negative', [
+      `Two minus signs back-to-back cancel out: subtracting a negative = ADDING.`,
+      `${dspN(a)} − (−${b}) becomes ${dspN(a)} + ${b}.`,
+      `${dspN(a)} + ${b} = <b>${dspN(ans)}</b>. ${numLineSVG(a, ans)}`]);
+  },
+  function mulInt(){
+    const a = ri(2,9)*pick([-1,1]), b = ri(2,9)*pick([-1,1]);
+    const ans = a*b;
+    const same = (a>0)===(b>0);
+    return Q('Multiply', `${dspP(a)} × ${dspP(b)}`, ans, [-ans, Math.abs(a)+Math.abs(b), -(Math.abs(a)+Math.abs(b))].filter(x=>x!==ans), 'Multiplying integers', [
+      `First multiply the sizes: ${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(ans)}.`,
+      `Then the sign rule: ${same? 'the signs MATCH, so the answer is positive' : 'the signs are DIFFERENT, so the answer is negative'}.`,
+      `Answer: <b>${dspN(ans)}</b>.`]);
+  },
+  function addLarger(){
+    const a = ri(15,45)*pick([-1,1]);
+    let bm; do{ bm = ri(15,45); }while(bm===Math.abs(a));
+    const b = a>0 ? -bm : bm;
+    const ans = a+b;
+    const bigM = Math.max(Math.abs(a),Math.abs(b)), smallM = Math.min(Math.abs(a),Math.abs(b));
+    return Q('Add', `${dspN(a)} + ${dspP(b)}`, ans, [-ans, Math.abs(a)+Math.abs(b), ans+pick([-3,3])].filter(x=>x!==ans), 'Adding bigger integers', [
+      `Opposite signs? It's secretly a subtraction of sizes: ${bigM} − ${smallM} = ${bigM-smallM}.`,
+      `The answer takes the sign of the BIGGER size (${bigM} is ${ans<0?'negative':'positive'} here).`,
+      `Answer: <b>${dspN(ans)}</b>.`]);
+  }
+);
+GEN.int[3].push(
+  function divInt(){
+    const q = ri(2,9)*pick([-1,1]), b = ri(2,9)*pick([-1,1]);
+    const a = q*b, ans = q;
+    const same = (a>0)===(b>0);
+    return Q('Divide', `${dspN(a)} ÷ ${dspP(b)}`, ans, [-ans, ans+pick([-2,2]), a*b].filter(x=>x!==ans), 'Dividing integers', [
+      `First divide the sizes: ${Math.abs(a)} ÷ ${Math.abs(b)} = ${Math.abs(ans)}.`,
+      `Sign rule (same as multiplying): ${same? 'signs MATCH → positive' : 'signs DIFFER → negative'}.`,
+      `Answer: <b>${dspN(ans)}</b>.`]);
+  },
+  function mixedInt(){
+    const a = ri(-9,9), b = ri(2,6)*pick([-1,1]), c = ri(2,6)*pick([-1,1]);
+    const ans = a + b*c;
+    return Q('Order of operations', `${dspN(a)} + ${dspP(b)} × ${dspP(c)}`,
+      ans, [(a+b)*c, a + b*Math.abs(c), -ans].filter(x=>x!==ans), 'Signed order of operations', [
+      `Multiplication comes FIRST: ${dspP(b)} × ${dspP(c)} = ${dspN(b*c)}.`,
+      `Now add: ${dspN(a)} + ${dspP(b*c)}.`,
+      `Answer: <b>${dspN(ans)}</b>.`]);
+  },
+  function doubleSub(){
+    const a = ri(-10,10), b = ri(1,8), c = ri(1,8);
+    const ans = a - b - c;
+    return Q('Keep the signs straight', `${dspN(a)} − ${b} − ${c}`, ans, [a-b+c, a+(b+c), ans+pick([-2,2])].filter(x=>x!==ans), 'Chained subtraction', [
+      `Work left to right — two trips down the number line.`,
+      `${dspN(a)} − ${b} = ${dspN(a-b)}.`,
+      `${dspN(a-b)} − ${c} = <b>${dspN(ans)}</b>.`]);
+  }
+);
+
+/* ---------- PRE-ALGEBRA (Redstone Lab) ---------- */
+GEN.alg[1].push(
+  function orderOps(){
+    const a=ri(2,9), b=ri(2,9), c=ri(2,9);
+    const ans = a + b*c;
+    return Q('Order of operations', `${a} + ${b} × ${c}`, ans, [(a+b)*c, a*b+c, ans+pick([-1,1])].filter(x=>x!==ans), 'Order of operations', [
+      `PEMDAS: multiplication before addition — even though the + comes first.`,
+      `${b} × ${c} = ${b*c}.`,
+      `${a} + ${b*c} = <b>${ans}</b>.`]);
+  },
+  function evalX(){
+    const x = ri(2,9), m = ri(2,5), a = ri(1,9);
+    const ans = m*x+a;
+    return Q(`If x = ${x}`, `${m}x + ${a} = ?`, ans, [m+x+a, m*(x+a), ans+pick([-2,2])].filter(v=>v!==ans), 'Evaluating expressions', [
+      `${m}x means ${m} × x. Swap in x = ${x}: ${m} × ${x} + ${a}.`,
+      `${m} × ${x} = ${m*x}.`,
+      `${m*x} + ${a} = <b>${ans}</b>.`]);
+  },
+  function oneStepAdd(){
+    const x = ri(2,20), a = ri(2,15);
+    return Q('Solve for x', `x + ${a} = ${x+a}`, 'x = '+x, ['x = '+(x+2*a), 'x = '+(x+a), 'x = '+(x+1)], 'One-step equations (+/−)', [
+      `x has "+ ${a}" stuck to it. Undo it with the OPPOSITE: subtract ${a} from both sides.`,
+      `x = ${x+a} − ${a}.`,
+      `<b>x = ${x}</b>. Check: ${x} + ${a} = ${x+a} ✓`]);
+  }
+);
+GEN.alg[2].push(
+  function oneStepMul(){
+    const x = ri(2,12), a = ri(2,9);
+    return Q('Solve for x', `${a}x = ${a*x}`, 'x = '+x, ['x = '+(a*x-a), 'x = '+(x+a), 'x = '+(x+1)], 'One-step equations (×/÷)', [
+      `${a}x means ${a} × x. Undo "× ${a}" with the opposite: divide both sides by ${a}.`,
+      `x = ${a*x} ÷ ${a}.`,
+      `<b>x = ${x}</b>. Check: ${a} × ${x} = ${a*x} ✓`]);
+  },
+  function twoStep(){
+    const x = ri(2,9), a = ri(2,5), b = ri(1,9);
+    const c = a*x+b;
+    return Q('Solve for x', `${a}x + ${b} = ${c}`, 'x = '+x, ['x = '+(c-b), 'x = '+fmt(Math.round((c+b)/a*10)/10), 'x = '+(x+1)].filter(s=>s!=='x = '+x), 'Two-step equations', [
+      `Peel it like an onion — undo the + first, then the ×.`,
+      `Subtract ${b} from both sides: ${a}x = ${c} − ${b} = ${c-b}.`,
+      `Divide by ${a}: x = ${c-b} ÷ ${a} = <b>${x}</b>.`]);
+  },
+  function orderOpsParen(){
+    const a=ri(2,8), b=ri(2,8), c=ri(2,5), d=ri(1,10);
+    const ans = (a+b)*c - d;
+    return Q('Order of operations', `(${a} + ${b}) × ${c} − ${d}`, ans, [a + b*c - d, (a+b)*(c-d), ans+pick([-2,2])].filter(x=>x!==ans), 'Order of operations (parentheses)', [
+      `Parentheses FIRST: ${a} + ${b} = ${a+b}.`,
+      `Then multiply: ${a+b} × ${c} = ${(a+b)*c}.`,
+      `Then subtract: ${(a+b)*c} − ${d} = <b>${ans}</b>.`]);
+  }
+);
+GEN.alg[3].push(
+  function twoStepNeg(){
+    let x; do{ x = ri(-9,9); }while(x===0);
+    const a = ri(2,6), b = ri(1,12);
+    const c = a*x - b;
+    return Q('Solve for x', `${a}x − ${b} = ${dspN(c)}`, 'x = '+x, ['x = '+(c+b), 'x = '+(-x), 'x = '+(x+pick([-2,2]))].filter(s=>s!=='x = '+x), 'Two-step equations (negatives)', [
+      `Undo the "− ${b}" first: add ${b} to both sides.`,
+      `${a}x = ${dspN(c)} + ${b} = ${dspN(a*x)}.`,
+      `Divide by ${a}: x = ${dspN(a*x)} ÷ ${a} = <b>${dspN(x)}</b>.`]);
+  },
+  function distrib(){
+    const x = ri(1,9), a = ri(2,5), b = ri(1,6);
+    const c = a*(x+b);
+    return Q('Solve for x', `${a}(x + ${b}) = ${c}`, 'x = '+x, ['x = '+(c-b), 'x = '+(x+b), 'x = '+fmt(Math.round((c-b)/a*10)/10)].filter(s=>s!=='x = '+x), 'Distributing', [
+      `The whole group (x + ${b}) is multiplied by ${a}. Divide both sides by ${a} first.`,
+      `x + ${b} = ${c} ÷ ${a} = ${x+b}.`,
+      `Subtract ${b}: x = ${x+b} − ${b} = <b>${x}</b>.`]);
+  },
+  function evalTwoVar(){
+    const x=ri(2,7), y=ri(2,7), a=ri(2,5), b=ri(2,5);
+    const ans = a*x + b*y;
+    return Q(`If x = ${x} and y = ${y}`, `${a}x + ${b}y = ?`, ans, [a*x*b*y, (a+b)*(x+y), ans+pick([-2,2])].filter(v=>v!==ans), 'Two-variable expressions', [
+      `Handle each piece separately.`,
+      `${a}x = ${a} × ${x} = ${a*x} &nbsp;and&nbsp; ${b}y = ${b} × ${y} = ${b*y}.`,
+      `Add them: ${a*x} + ${b*y} = <b>${ans}</b>.`]);
+  }
+);
+
+/* ================= grade 3–8 curriculum ================= */
+/* named refs into the generator library above */
+const R = {
+  eqFrac:GEN.frac[1][0], cmpFrac:GEN.frac[1][1], addSameDen:GEN.frac[1][2],
+  addUnlikeDen:GEN.frac[2][0], subFrac:GEN.frac[2][1], frac2dec:GEN.frac[2][2], dec2frac:GEN.frac[2][3],
+  mulFrac:GEN.frac[3][0], divFrac:GEN.frac[3][1], decMul:GEN.frac[3][2], frac2pct:GEN.frac[3][3],
+  unitRate:GEN.ratio[1][0], simplifyRatio:GEN.ratio[1][1], easyPct:GEN.ratio[1][2],
+  pctOf:GEN.ratio[2][0], propSolve:GEN.ratio[2][1], ratioShare:GEN.ratio[2][2],
+  pctChange:GEN.ratio[3][0], findWhole:GEN.ratio[3][1], scaleRecipe:GEN.ratio[3][2],
+  addInt:GEN.int[1][0], subToNeg:GEN.int[1][1], cmpInt:GEN.int[1][2], absVal:GEN.int[1][3],
+  subNeg:GEN.int[2][0], mulInt:GEN.int[2][1], addLarger:GEN.int[2][2],
+  divInt:GEN.int[3][0], mixedInt:GEN.int[3][1], doubleSub:GEN.int[3][2],
+  orderOps:GEN.alg[1][0], evalX:GEN.alg[1][1], oneStepAdd:GEN.alg[1][2],
+  oneStepMul:GEN.alg[2][0], twoStep:GEN.alg[2][1], orderOpsParen:GEN.alg[2][2],
+  twoStepNeg:GEN.alg[3][0], distrib:GEN.alg[3][1], evalTwoVar:GEN.alg[3][2]
+};
+
+/* ---- elementary + grade-8 generators ---- */
+const addBigG = (lo,hi) => function addBig(){
+  const a=ri(lo,hi), b=ri(lo,hi), o=b%10, t=b-o, ans=a+b;
+  let steps;
+  if(o===0 && a%10===0) steps = [
+    `Both numbers end in 0, so just add the tens: ${a/10} tens + ${b/10} tens = ${(a+b)/10} tens.`,
+    `${(a+b)/10} tens = <b>${ans}</b>.`];
+  else if(o===0) steps = [
+    `${b} is all tens. Add the tens parts first: ${a-a%10} + ${b} = ${a-a%10+b}.`,
+    `Put back the ${a%10} ones: ${a-a%10+b} + ${a%10} = <b>${ans}</b>.`];
+  else steps = [
+    `Add ${b} in two easy jumps — the tens first, then the ones.`,
+    `${b} = ${t} + ${o}. &nbsp;Jump 1: ${a} + ${t} = ${a+t}.`,
+    `Jump 2: ${a+t} + ${o} = <b>${ans}</b>.`];
+  return Q('Add', `${a} + ${b}`, ans, [ans+10, ans-10, ans+pick([-1,1,100])].filter(x=>x!==ans), 'Multi-digit addition', steps);
+};
+const subBigG = (lo,hi) => function subBig(){
+  let a=ri(lo,hi), b=ri(lo,hi); if(b>a){const t=a;a=b;b=t;} if(a===b)a+=7;
+  const o=b%10, t=b-o, ans=a-b;
+  let steps;
+  if(o===0 && a%10===0) steps = [
+    `Both numbers end in 0, so just subtract the tens: ${a/10} tens − ${b/10} tens = ${(a-b)/10} tens.`,
+    `${(a-b)/10} tens = <b>${ans}</b>.`];
+  else if(o===0) steps = [
+    `${b} is all tens. Subtract it from the tens part: ${a-a%10} − ${b} = ${a-a%10-b}.`,
+    `Put back the ${a%10} ones: ${a-a%10-b} + ${a%10} = <b>${ans}</b>.`];
+  else steps = [
+    `Take away ${b} in two easy jumps — the tens first, then the ones.`,
+    `${b} = ${t} + ${o}. &nbsp;Jump 1: ${a} − ${t} = ${a-t}.`,
+    `Jump 2: ${a-t} − ${o} = <b>${ans}</b>.`];
+  return Q('Subtract', `${a} − ${b}`, ans, [ans+10, ans-10>0?ans-10:ans+20, ans+pick([-2,2])].filter(x=>x!==ans), 'Multi-digit subtraction', steps);
+};
+const multFactG = max => function multFact(){
+  const a=ri(2,max), b=ri(2,9), ans=a*b;
+  return Q('Multiply', `${a} × ${b}`, ans, [a*(b+1), a*(b-1), a+b].filter(x=>x!==ans), 'Multiplication facts', [
+    `${a} × ${b} means ${b} groups of ${a}.`,
+    `Build it up: ${a} × ${b-1} = ${a*(b-1)}, then one more group: ${a*(b-1)} + ${a} = <b>${ans}</b>.`]);
+};
+const divFactG = max => function divFact(){
+  const q=ri(2,max), b=ri(2,9);
+  return Q('Divide', `${q*b} ÷ ${b}`, q, [q+1, q-1||q+2, b===q?b+2:b].filter(x=>x!==q), 'Division facts', [
+    `Division asks: what × ${b} makes ${q*b}?`,
+    `${q} × ${b} = ${q*b}, so ${q*b} ÷ ${b} = <b>${q}</b>.`]);
+};
+function mulDigit(){
+  let a; do{ a=ri(12,49); }while(a%10===0);   // round numbers make the split explanation degenerate
+  const b=ri(3,9), t=Math.floor(a/10)*10, o=a%10, ans=a*b;
+  return Q('Multiply', `${a} × ${b}`, ans, [ans+b, ans-b, t*b+o].filter(x=>x!==ans), 'Multi-digit multiplication', [
+    `Too big to know by heart? Split ${a} into ${t} + ${o} and multiply each piece.`,
+    `${t} × ${b} = ${t*b} &nbsp;and&nbsp; ${o} × ${b} = ${o*b}.`,
+    `Add the pieces: ${t*b} + ${o*b} = <b>${ans}</b>.`]);
+}
+function divRem(){
+  const b=ri(3,9), q=ri(4,9), r=ri(1,b-1), a=b*q+r;
+  const ans=`${q} r ${r}`;
+  return Q('Divide (with remainder)', `${a} ÷ ${b}`, ans, [`${q+1} r ${r}`, `${q} r ${r+1===b?1:r+1}`, `${q-1} r ${r}`].filter(x=>x!==ans), 'Division with remainders', [
+    `How many ${b}s fit in ${a}? ${b} × ${q} = ${b*q} fits; ${b} × ${q+1} = ${b*(q+1)} is too big.`,
+    `Left over: ${a} − ${b*q} = ${r}.`,
+    `Answer: <b>${q} remainder ${r}</b>.`]);
+}
+function roundNumG(){
+  const place = pick([10,100]);
+  let n = ri(111,989); if(n%place===0) n += 7;
+  const digit = place===10 ? n%10 : Math.floor(n/10)%10;
+  const ans = Math.round(n/place)*place;
+  const w = [ans+place, ans-place, place===10? Math.round(n/100)*100 : Math.round(n/10)*10].filter(x=>x!==ans && x>0);
+  return Q(`Round to the nearest ${place}`, `${n}`, ans, w, 'Rounding', [
+    `Look one spot to the right of the ${place===10?'tens':'hundreds'} place: that digit is ${digit}.`,
+    digit>=5 ? `${digit} is 5 or more → round UP.` : `${digit} is less than 5 → round DOWN.`,
+    `<b>${ans}</b>.`]);
+}
+function decAddG(){
+  const A=ri(11,89), B=ri(11,89);
+  if(Math.random()<0.5){
+    const ans=fmt((A+B)/10);
+    return Q('Add', `${fmt(A/10)} + ${fmt(B/10)}`, ans, [fmt((A+B)/100), fmt((A+B+10)/10), fmt((A+B-10)/10)].filter(x=>x!==ans), 'Adding decimals', [
+      `Line up the decimal points, then add like whole numbers.`,
+      `Think in tenths: ${A} tenths + ${B} tenths = ${A+B} tenths.`,
+      `${A+B} tenths = <b>${ans}</b>.`]);
+  }
+  let hi=Math.max(A,B), lo=Math.min(A,B); if(hi===lo) lo=hi-13;
+  const ans=fmt((hi-lo)/10);
+  return Q('Subtract', `${fmt(hi/10)} − ${fmt(lo/10)}`, ans, [fmt((hi-lo)/100), fmt((hi-lo+10)/10), fmt((hi+lo)/10)].filter(x=>x!==ans), 'Subtracting decimals', [
+    `Line up the decimal points, then subtract like whole numbers.`,
+    `Think in tenths: ${hi} tenths − ${lo} tenths = ${hi-lo} tenths.`,
+    `${hi-lo} tenths = <b>${ans}</b>.`]);
+}
+function unitFracCmp(){
+  const opts=[2,3,4,5,6,8,10,12];
+  let b=pick(opts), d=pick(opts); while(d===b) d=pick(opts);
+  const sm=Math.min(b,d), lg=Math.max(b,d), ans=frH(1,sm);
+  return Q('Which is bigger?', `${frH(1,b)} &nbsp;or&nbsp; ${frH(1,d)}`, ans, [frH(1,lg), "they're equal"], 'Comparing unit fractions', [
+    `Imagine one pizza. More slices = smaller slices.`,
+    `Cut into ${sm} → big pieces. Cut into ${lg} → small pieces. ${vizRow(fracBar(1,sm), '<b>vs</b>', fracBar(1,lg,'#2db56c'))}`,
+    `So ${frH(1,sm)} is bigger.`]);
+}
+const fracOfSetG = unitOnly => function fracOfSet(){
+  const b=pick([2,3,4,5,6]), n=b*ri(2,6), a=unitOnly?1:ri(1,b-1);
+  const ans=a*(n/b);
+  return Q('Fraction of a number', `${frH(a,b)} of ${n}`, ans, [n/b===ans?ans+b:n/b, ans+a, n-ans===ans?ans-1:n-ans].filter(x=>x!==ans), 'Fraction of a number', [
+    `Split ${n} into ${b} equal groups: ${n} ÷ ${b} = ${n/b}.`,
+    a===1? `One group is <b>${ans}</b>.` : `Take ${a} groups: ${a} × ${n/b} = <b>${ans}</b>.`]);
+};
+function mixedImp(){
+  const w=ri(1,3), b=pick([2,3,4,5]), a=ri(1,b-1);
+  const ans=frH(w*b+a,b);
+  return Q('Make it improper', `${w} ${frH(a,b)} = ?`, ans, [frH(w+a,b), frH(w*b-a,b), frH(a*b+w,b)].filter(x=>x!==ans), 'Mixed ↔ improper fractions', [
+    `${w} whole${w>1?'s':''} = ${w} × ${b} = ${w*b} pieces of size ${frH(1,b)}.`,
+    `Add the extra ${a} pieces: ${w*b} + ${a} = ${w*b+a}.`,
+    `= <b>${frH(w*b+a,b)}</b>.`]);
+}
+function patternNext(){
+  const s=ri(1,12), st=ri(2,9), t=[s,s+st,s+2*st,s+3*st], ans=s+4*st;
+  return Q('What comes next?', `${t.join(', ')}, ?`, ans, [ans+1, ans-1, ans+st], 'Number patterns', [
+    `Find the jump: ${t[1]} − ${t[0]} = ${st}.`,
+    `Every number goes up by ${st}.`,
+    `${t[3]} + ${st} = <b>${ans}</b>.`]);
+}
+function boxAdd(){
+  const x=ri(2,20), a=ri(2,15);
+  return Q('Find the mystery number', `▢ + ${a} = ${x+a}`, x, [x+a, x+1, x-1||x+2].filter(v=>v!==x), 'Missing numbers (+)', [
+    `The box hides a number. Something + ${a} makes ${x+a}.`,
+    `Work backwards: ${x+a} − ${a} = <b>${x}</b>.`,
+    `Check: ${x} + ${a} = ${x+a} ✓`]);
+}
+function boxMul(){
+  const x=ri(2,9), a=ri(2,9);
+  return Q('Find the mystery number', `▢ × ${a} = ${a*x}`, x, [a*x-a, x+1, a===x?a+2:a].filter(v=>v!==x), 'Missing numbers (×)', [
+    `Something × ${a} makes ${a*x}.`,
+    `Work backwards with division: ${a*x} ÷ ${a} = <b>${x}</b>.`,
+    `Check: ${x} × ${a} = ${a*x} ✓`]);
+}
+function powersG(){
+  const kind=pick([1,1,2,3]);
+  if(kind===1){ const n=ri(2,12); return Q('Exponents', `${n}<sup>2</sup> = ?`, n*n, [n*2, n*n+n, (n+1)*(n+1)].filter(x=>x!==n*n), 'Exponents', [
+    `${n}<sup>2</sup> means ${n} × ${n} — NOT ${n} × 2.`,
+    `${n} × ${n} = <b>${n*n}</b>.`]); }
+  if(kind===2){ const n=ri(2,5); return Q('Exponents', `${n}<sup>3</sup> = ?`, n*n*n, [n*3, n*n, n*n*n+n].filter(x=>x!==n*n*n), 'Exponents', [
+    `${n}<sup>3</sup> means ${n} × ${n} × ${n}.`,
+    `${n} × ${n} = ${n*n}, then × ${n} again = <b>${n*n*n}</b>.`]); }
+  const k=ri(3,6), ans=Math.pow(2,k);
+  return Q('Exponents', `2<sup>${k}</sup> = ?`, ans, [2*k, ans/2, ans*2].filter(x=>x!==ans), 'Exponents', [
+    `2<sup>${k}</sup> means multiply 2 by itself ${k} times.`,
+    `Keep doubling: ${Array.from({length:k},(_,i)=>Math.pow(2,i+1)).join(' → ')}.`,
+    `<b>${ans}</b>.`]);
+}
+function sqrootG(){
+  const n=ri(2,15);
+  return Q('Square roots', `√${n*n} = ?`, n, [n+1, n-1||n+2, Math.round(n*n/2)].filter(x=>x!==n), 'Square roots', [
+    `√ asks: what number × itself makes ${n*n}?`,
+    `${n} × ${n} = ${n*n}.`,
+    `So √${n*n} = <b>${n}</b>.`]);
+}
+function sciNotG(){
+  const M=ri(11,89), k=ri(2,5), N=M*Math.pow(10,k-1);
+  return Q('Scientific notation', `${N} = ${fmt(M/10)} × 10<sup>?</sup>`, k, [k-1, k+1, k+2], 'Scientific notation', [
+    `Count how many places the decimal moves from ${fmt(M/10)} to reach ${N}.`,
+    `${fmt(M/10)} → ${N}: it moves ${k} places right.`,
+    `So the power is <b>${k}</b>.`]);
+}
+function combineLikeG(){
+  const a=ri(2,9), b=ri(2,9), c=ri(1,a+b-2), v=a+b-c;
+  const dx = n => n===1? 'x' : n+'x';
+  return Q('Combine like terms', `${a}x + ${b}x − ${c}x = ?`, dx(v), [dx(v+1), dx(v-1), (a+b+c)+'x'].filter(x=>x!==dx(v)), 'Combining like terms', [
+    `They're all "x" terms, so just combine the numbers in front.`,
+    `${a} + ${b} − ${c} = ${v}.`,
+    `Answer: <b>${dx(v)}</b>.`]);
+}
+function multiStepG(){
+  let x; do{ x=ri(-6,9); }while(x===0);
+  const a=ri(3,7), c=ri(1,a-2), b=ri(1,9), d=(a-c)*x+b;
+  return Q('Solve for x', `${a}x + ${b} = ${c}x ${d<0?'−':'+'} ${Math.abs(d)}`, 'x = '+x,
+    ['x = '+(-x), 'x = '+(x+1), 'x = '+(d-b)].filter(s=>s!=='x = '+x), 'Equations with x on both sides', [
+    `Get the x's together: subtract ${c}x from both sides → ${a-c}x + ${b} = ${dspN(d)}.`,
+    `Subtract ${b}: ${a-c}x = ${dspN(d-b)}.`,
+    `Divide by ${a-c}: x = <b>${dspN(x)}</b>.`]);
+}
+function slope2G(){
+  let m; do{ m=ri(-4,4); }while(m===0);
+  const x1=ri(-5,5), dx=ri(1,4), y1=ri(-5,5), x2=x1+dx, y2=y1+m*dx;
+  return Q('Find the slope', `(${x1}, ${y1}) and (${x2}, ${y2})`, m, [-m, m+1, dx===m?m-1:dx].filter(v=>v!==m), 'Slope', [
+    `Slope = rise ÷ run (how far UP per step RIGHT).`,
+    `Rise: ${dspN(y2)} − ${dspP(y1)} = ${dspN(y2-y1)}. &nbsp;Run: ${x2} − ${dspP(x1)} = ${dx}.`,
+    `${dspN(y2-y1)} ÷ ${dx} = <b>${dspN(m)}</b>.`]);
+}
+
+/* ---- per-grade worlds & problem pools ---- */
+const GRADE_WORLDS = {
+  3:{int:{name:'Number Mine',icon:'⛏️',desc:'adding & subtracting big numbers'},
+     frac:{name:'Fraction Factory',icon:'🏭',desc:'first fractions: pieces & shares'},
+     ratio:{name:'Trade Tycoon',icon:'💰',desc:'times tables & fair trades'},
+     alg:{name:'Puzzle Lab',icon:'🧩',desc:'mystery numbers & patterns'}},
+  4:{int:{name:'Number Mine',icon:'⛏️',desc:'big ×, ÷ and rounding'},
+     frac:{name:'Fraction Factory',icon:'🏭',desc:'equivalent fractions & comparing'},
+     ratio:{name:'Trade Tycoon',icon:'💰',desc:'fact fluency & money problems'},
+     alg:{name:'Puzzle Lab',icon:'🧩',desc:'mystery numbers & patterns'}},
+  5:{int:{name:'Decimal Depths',icon:'🌊',desc:'decimals & order of operations'},
+     frac:{name:'Fraction Factory',icon:'🏭',desc:'adding & multiplying fractions'},
+     ratio:{name:'Trade Tycoon',icon:'💰',desc:'unit rates & scaling up'},
+     alg:{name:'Equation Lab',icon:'🧪',desc:'order of operations & variables'}},
+  6:{int:{name:'Frozen Obby',icon:'❄️',desc:'negative numbers (below zero!)'},
+     frac:{name:'Fraction Factory',icon:'🏭',desc:'fractions ↔ decimals & percents'},
+     ratio:{name:'Trade Tycoon',icon:'💰',desc:'ratios, percents & proportions'},
+     alg:{name:'Equation Lab',icon:'🧪',desc:'one & two-step equations'}},
+  7:{int:{name:'Frozen Obby',icon:'❄️',desc:'all four operations with negatives'},
+     frac:{name:'Fraction Factory',icon:'🏭',desc:'multiply & divide fractions'},
+     ratio:{name:'Trade Tycoon',icon:'💰',desc:'proportions & percent change'},
+     alg:{name:'Equation Lab',icon:'🧪',desc:'two-step equations & distributing'}},
+  8:{int:{name:'Power Plant',icon:'⚡',desc:'exponents, roots & scientific notation'},
+     frac:{name:'Fraction Factory',icon:'🏭',desc:'fraction · decimal · percent fluency'},
+     ratio:{name:'Slope City',icon:'📈',desc:'slope & heavy-duty percents'},
+     alg:{name:'Equation Lab',icon:'🧪',desc:'x on both sides & combining terms'}}
+};
+const CURRICULUM = {
+  3:{int:{1:[addBigG(20,99), subBigG(20,99)], 2:[addBigG(100,999), subBigG(100,999)], 3:[addBigG(100,999), subBigG(100,999), multFactG(9)]},
+     ratio:{1:[multFactG(5), divFactG(5)], 2:[multFactG(9), divFactG(9)], 3:[R.unitRate, divFactG(9)]},
+     frac:{1:[unitFracCmp, fracOfSetG(true)], 2:[fracOfSetG(false), R.eqFrac], 3:[R.addSameDen, R.cmpFrac]},
+     alg:{1:[boxAdd, patternNext], 2:[boxMul, patternNext], 3:[boxMul, boxAdd, patternNext]}},
+  4:{int:{1:[addBigG(100,999), roundNumG], 2:[mulDigit, subBigG(100,999)], 3:[divRem, mulDigit]},
+     ratio:{1:[multFactG(9), divFactG(9)], 2:[R.unitRate, mulDigit], 3:[divRem, R.unitRate]},
+     frac:{1:[R.eqFrac, unitFracCmp], 2:[R.cmpFrac, R.addSameDen], 3:[mixedImp, fracOfSetG(false)]},
+     alg:{1:[boxAdd, patternNext], 2:[boxMul, R.oneStepAdd], 3:[R.orderOps, R.oneStepMul]}},
+  5:{int:{1:[decAddG, roundNumG], 2:[R.decMul, divRem], 3:[R.orderOpsParen, R.decMul]},
+     ratio:{1:[R.unitRate, R.scaleRecipe], 2:[fracOfSetG(false), R.scaleRecipe], 3:[R.easyPct, R.simplifyRatio]},
+     frac:{1:[R.addSameDen, R.eqFrac], 2:[R.addUnlikeDen, R.subFrac], 3:[R.mulFrac, mixedImp]},
+     alg:{1:[R.orderOps, R.evalX], 2:[R.orderOpsParen, R.oneStepAdd], 3:[R.oneStepMul, R.evalX]}},
+  6:{int:{1:[R.addInt, R.cmpInt, R.absVal], 2:[R.subToNeg, R.subNeg], 3:[R.mulInt, R.addLarger]},
+     ratio:{1:[R.unitRate, R.simplifyRatio, R.easyPct], 2:[R.pctOf, R.ratioShare], 3:[R.propSolve, R.findWhole]},
+     frac:{1:[R.frac2dec, R.dec2frac], 2:[R.addUnlikeDen, R.subFrac], 3:[R.divFrac, R.frac2pct]},
+     alg:{1:[R.evalX, R.oneStepAdd], 2:[R.oneStepMul, R.twoStep], 3:[R.twoStep, R.evalTwoVar]}},
+  7:{int:{1:[R.subNeg, R.mulInt], 2:[R.divInt, R.addLarger], 3:[R.mixedInt, R.doubleSub]},
+     ratio:{1:[R.pctOf, R.propSolve], 2:[R.ratioShare, R.findWhole], 3:[R.pctChange, R.scaleRecipe]},
+     frac:{1:[R.mulFrac, R.frac2pct], 2:[R.divFrac, R.decMul], 3:[R.divFrac, R.mulFrac, R.frac2pct]},
+     alg:{1:[R.twoStep, R.orderOpsParen], 2:[R.twoStepNeg, R.distrib], 3:[R.twoStepNeg, R.evalTwoVar]}},
+  8:{int:{1:[powersG, sqrootG], 2:[sciNotG, powersG], 3:[sciNotG, sqrootG]},
+     ratio:{1:[R.pctChange, R.findWhole], 2:[slope2G, R.propSolve], 3:[slope2G, R.pctChange]},
+     frac:{1:[R.decMul, R.frac2pct], 2:[R.divFrac, R.dec2frac], 3:[R.mulFrac, R.divFrac]},
+     alg:{1:[combineLikeG, R.distrib], 2:[multiStepG, R.twoStepNeg], 3:[multiStepG, combineLikeG]}}
+};
+
+/* ================= adaptive engine (per grade + topic) ================= */
+const tKey = t => S.grade+'_'+t;
+const tierOf = t => S.tiers2[tKey(t)]||1;
+const topicMeta = t => GRADE_WORLDS[S.grade][t];
+function gameLabel(topic){
+  const W = topicMeta(topic);
+  return `${W.name} · Grade ${S.grade} · Tier ${tierOf(topic)}`;
+}
+function recordAdaptive(topic, correct){
+  const k = tKey(topic);
+  const r = S.recent2[k] = S.recent2[k]||[];
+  r.push(correct?1:0);
+  if(r.length>6) r.shift();
+  if(r.length===6){
+    const c = r.reduce((s,v)=>s+v,0);
+    const t = tierOf(topic);
+    if(c>=5 && t<3){
+      S.tiers2[k]=t+1; S.recent2[k]=[];
+      sfx.tierup();
+      toast(`tier ${t+1} unlocked — bigger gems`, 2400);
+      if(G) $('g-topic').textContent = gameLabel(topic);
+      ensureTk();
+      if(S.tk.tierUps<2 && S.grade===unlockedUpTo()){ S.tk.tierUps++; awardT(1, 'tier up'); }
+    } else if(c<=2 && t>1){
+      S.tiers2[k]=t-1; S.recent2[k]=[];
+      if(G) $('g-topic').textContent = gameLabel(topic);
+    }
+  }
+}
+function makeProblem(topic, forceTier){
+  let tier = forceTier || tierOf(topic);
+  if(!forceTier && tier>1 && Math.random()<0.2) tier--;   // sprinkle easier wins
+  const gens = CURRICULUM[S.grade][topic][tier];
+  for(let tries=0; tries<10; tries++){
+    try{
+      const p = pick(gens)();
+      const av = valOf(p.ans);
+      let wrongs = [];
+      for(const w of new Set(p.wrongs)){
+        if(w===p.ans) continue;
+        const wv = valOf(w);
+        if(av!==null && wv!==null && Math.abs(av-wv)<1e-9) continue;   // a distractor must never EQUAL the answer in value
+        if(wv!==null && wrongs.some(x=>{const xv=valOf(x); return xv!==null && Math.abs(xv-wv)<1e-9;})) continue;
+        wrongs.push(w);
+      }
+      let guard = 0;
+      while(wrongs.length<3 && guard++<20){
+        const numAns = parseFloat(String(p.ans).replace('x = ','').replace('$','').replace('%',''));
+        if(!isNaN(numAns) && !/</.test(p.ans)){
+          const alt = String(p.ans).replace(/-?[\d.]+/, fmt(numAns + pick([-3,-2,2,3,4])));
+          if(alt!==p.ans && !wrongs.includes(alt)) wrongs.push(alt);
+        } else break;
+      }
+      wrongs = wrongs.slice(0,3);
+      if(wrongs.length<2) continue;
+      const choices = shuffle([p.ans, ...wrongs]);
+      return {...p, tier, choices, correctIdx: choices.indexOf(p.ans)};
+    }catch(e){ /* regenerate */ }
+  }
+  const a=ri(2,9), b=ri(2,9);
+  const ans=String(a+b);
+  const choices = shuffle([ans, String(a+b+1), String(a+b-1), String(a*b)]);
+  return {prompt:'Add', q:`${a} + ${b}`, ans, skill:'Arithmetic', tier:1, choices, correctIdx:choices.indexOf(ans)};
+}
+
+/* ================= game engine ================= */
+const BLOCKS = [
+  {min:0, name:'STONE',    p:['#BBAE9C','#D6CCBE','#9CA0AB']},
+  {min:2, name:'AMETHYST', p:['#B9A5E3','#D7CBF0','#8F97DE']},
+  {min:4, name:'TOPAZ',    p:['#F0C46B','#F6DCA5','#E8A34F']},
+  {min:6, name:'EMERALD',  p:['#7CBF8B','#B5DDBC','#58B372']},
+  {min:8, name:'RUBY',     p:['#EC8B9C','#F6BDC8','#DD6078']},
+  {min:10,name:'DIAMOND',  p:['#8FD4E8','#C5EAF4','#5E9FE0']},
+  {min:13,name:'RAINBOW',  p:['#EC8B9C','#F0C46B','#7CBF8B','#8FD4E8','#B9A5E3']}
+];
+const PICKAXES = {
+  wood:{name:'Starter Pick', icon:'⛏️', cost:0, bonus:0},
+  stone:{name:'Golden Pick', icon:'🥇', cost:150, bonus:10},
+  iron:{name:'Crystal Pick', icon:'🔮', cost:400, bonus:20},
+  gold:{name:'Laser Drill', icon:'⚡', cost:900, bonus:35},
+  diamond:{name:'Diamond Drill', icon:'💎', cost:1600, bonus:50},
+  obsidian:{name:'Quantum Drill', icon:'🌀', cost:2800, bonus:75}
+};
+const PETS = {
+  wolf:{name:'Doge', icon:'🐶', cost:500, bonus:5},
+  cat:{name:'Neon Cat', icon:'🐱', cost:800, bonus:10},
+  fox:{name:'Kitsune', icon:'🦊', cost:1200, bonus:15},
+  parrot:{name:'Unicorn', icon:'🦄', cost:1600, bonus:20},
+  dragon:{name:'Shadow Dragon', icon:'🐉', cost:3000, bonus:30}
+};
+const THEMES = {
+  overworld:{name:'Paper', icon:'🤍', cost:0}, cave:{name:'Midnight (dark mode)', icon:'🖤', cost:800},
+  nether:{name:'Peach', icon:'🧡', cost:300}, cherry:{name:'Blossom', icon:'🩷', cost:1200},
+  end:{name:'Mint', icon:'💚', cost:2000}
+};
+
+/* ================= tickets (real-world rewards) =================
+   Earned ONLY from effort milestones — never per answer — so there's
+   nothing to grind. Weekly cap keeps the cost predictable. */
+let roundTk = 0;
+const todayStr = () => new Date().toISOString().slice(0,10);
+const weekStr = () => String(Math.floor((Date.now()/86400000 + 3)/7));   // stable week bucket (starts Monday)
+function ensureTk(){
+  const d = todayStr(), w = weekStr();
+  if(S.tk.day!==d){ S.tk.day=d; S.tk.dayPlay=false; S.tk.dayAcc=false; S.tk.tierUps=0; }
+  if(S.tk.week!==w){ S.tk.week=w; S.tk.weekEarned=0; S.tk.weekDays=[]; S.tk.weekStreakGiven=false; }
+}
+function unlockedUpTo(){
+  let u = S.maxG || S.grade;
+  for(let g=3; g<8; g++) if(S.passed[g]) u = Math.max(u, g+1);
+  return Math.min(8, u);
+}
+function awardT(n, why, bypassCap){
+  ensureTk();
+  const room = bypassCap ? n : Math.max(0, (S.tk.weekCap||10) - S.tk.weekEarned);
+  const give = Math.min(n, room);
+  if(give<=0){ toast('weekly ticket max reached — resets monday', 2000); return 0; }
+  S.tickets += give; S.tk.weekEarned += give; roundTk += give;
+  S.tkLog.unshift({d:todayStr(), why, n:give});
+  if(S.tkLog.length>30) S.tkLog.length = 30;
+  toast(`+${give} ticket${give>1?'s':''} — ${why}`, 2200);
+  sfx.milestone();
+  save();
+  return give;
+}
+const TIMED_SECS = 90, CHILL_QS = 12;
+let G = null;
+let timerInt = null;
+let pendT = null;      // pending next-question timeout
+let idleT = null;      // attention-lapse nudge
+let lastTopic = 'frac';
+
+function comboMult(streak){ return streak>=10?3 : streak>=6?2 : streak>=3?1.5 : 1; }
+
+function startRound(topic){
+  ac();
+  lastTopic = topic;
+  S.lastTopic = topic;
+  G = {topic, correct:0, wrong:0, streak:0, best:0, ore:0, qCount:0, start:Date.now(), cur:null, locked:false, helped:false, helpCount:0, paused:false};
+  roundTk = 0;
+  $('btn-teach').style.display = '';
+  $('g-topic').textContent = gameLabel(topic);
+  $('g-ore').textContent = '0';
+  updateCombo(); updateBlock(); renderPet();
+  show('scr-game');
+  clearInterval(timerInt);
+  clearTimeout(pendT);
+  if(S.mode==='timed'){
+    $('timerbar').style.visibility='visible';
+    G.timeLeft = TIMED_SECS;
+    const fill = $('timerfill');
+    fill.style.transition='none'; fill.style.width='100%'; fill.classList.remove('low');
+    requestAnimationFrame(()=>{ fill.style.transition='width .95s linear'; });
+    timerInt = setInterval(()=>{
+      if(!G){ clearInterval(timerInt); return; }
+      if(G.paused) return;   // learning time is free
+      G.timeLeft--;
+      fill.style.width = Math.max(0, G.timeLeft/TIMED_SECS*100)+'%';
+      if(G.timeLeft<=15) fill.classList.add('low');   // color shift only — no ticking sound (rushing sounds amplify anxiety)
+      if(G.timeLeft<=0) endRound();
+    },1000);
+  } else {
+    // chill mode: the bar becomes a question-progress marker instead of a countdown
+    $('timerbar').style.visibility='visible';
+    const fill = $('timerfill');
+    fill.classList.remove('low');
+    fill.style.transition='width .3s ease';
+    fill.style.width='0%';
+  }
+  nextQ();
+}
+function nextQ(){
+  if(!G) return;
+  if(S.mode==='chill' && G.qCount>=CHILL_QS){ endRound(); return; }
+  if(S.mode==='chill') $('timerfill').style.width = (G.qCount/CHILL_QS*100)+'%';
+  // gentle re-engagement nudge if attention drifts (research: prompt on prolonged input delay)
+  clearTimeout(idleT);
+  $('btn-teach').classList.remove('pulse');
+  idleT = setTimeout(()=>{
+    if(G && !G.locked && !G.paused){
+      $('btn-teach').classList.add('pulse');
+      toast('stuck? teach me pauses the clock.', 2600);
+    }
+  }, 25000);
+  G.cur = makeProblem(G.topic);
+  G.locked = false;
+  G.helped = false;
+  G.paused = false;
+  hideTeach();
+  stopSpeak();
+  renderQuestion(G.cur.prompt);
+}
+function renderQuestion(promptText){
+  $('qprompt').textContent = promptText;
+  $('qtext').innerHTML = G.cur.q;
+  const box = $('answers'); box.innerHTML='';
+  G.cur.choices.forEach((c,i)=>{
+    const b = document.createElement('button');
+    b.className='ans';
+    b.innerHTML = `<span class="key">${i+1}</span>${c}`;
+    b.onclick = ()=>answer(i);
+    box.appendChild(b);
+  });
+}
+
+/* ================= grade test (pass to unlock the next grade) ================= */
+function startTest(){
+  ac();
+  const seq = shuffle(['frac','ratio','int','alg'].flatMap(t=>[t,t,t,t,t]));
+  G = {test:true, seq, idx:0, topic:seq[0], correct:0, wrong:0, perTopic:{}, start:Date.now(),
+       cur:null, locked:false, streak:0, best:0, ore:0, qCount:0, helped:false, helpCount:0, paused:false};
+  roundTk = 0;
+  clearInterval(timerInt); clearTimeout(pendT); clearTimeout(idleT);
+  $('g-topic').textContent = `Grade ${S.grade} Test`;
+  $('g-ore').textContent = '—';
+  $('btn-teach').style.display = 'none';   // no hints on the test (read-aloud stays — that's an accommodation)
+  updateCombo(); updateBlock(); renderPet();
+  $('timerbar').style.visibility='visible';
+  const fill = $('timerfill');
+  fill.classList.remove('low'); fill.style.transition='width .3s ease'; fill.style.width='0%';
+  show('scr-game');
+  nextTestQ();
+}
+function nextTestQ(){
+  if(!G || !G.test) return;
+  if(G.idx >= G.seq.length){ endTest(); return; }
+  $('timerfill').style.width = (G.idx/G.seq.length*100)+'%';
+  G.topic = G.seq[G.idx];
+  G.cur = makeProblem(G.topic, pick([2,2,3]));   // test at grade level: mostly tier 2, some tier 3
+  G.locked = false;
+  hideTeach(); stopSpeak();
+  renderQuestion(`Q${G.idx+1} of ${G.seq.length}`);
+}
+function testAnswer(i){
+  if(!G || G.locked) return;
+  G.locked = true;
+  stopSpeak();
+  const btns = [...$('answers').children];
+  const correct = (i===G.cur.correctIdx);
+  const pt = G.perTopic[G.topic] = G.perTopic[G.topic]||{c:0,w:0};
+  if(correct){
+    G.correct++; pt.c++;
+    G.streak = G.correct;   // crystal quality tracks progress through the test
+    btns[i].classList.add('good');
+    sfx.correct(Math.min(G.correct,10)); sfx.crunch();
+    swingPick(); breakBlock();
+  } else {
+    G.wrong++; pt.w++;
+    btns[i].classList.add('bad');
+    btns[G.cur.correctIdx].classList.add('good');
+    sfx.wrong();
+  }
+  G.idx++;
+  pendT = setTimeout(nextTestQ, correct?420:1200);
+}
+function endTest(){
+  clearTimeout(pendT);
+  const g = G; G = null;
+  $('btn-teach').style.display = '';
+  const total = g.seq.length, score = g.correct, pct = Math.round(score/total*100);
+  const passed = score >= 16;
+  const tst = S.tests[S.grade] = S.tests[S.grade]||{best:0, tries:0};
+  tst.tries++; tst.best = Math.max(tst.best, pct);
+  $('e-orelbl').textContent = 'TEST SCORE';
+  $('e-ore').textContent = score+'/'+total;
+  $('e-correct').textContent = score;
+  $('e-acc').textContent = pct+'%';
+  $('e-streak').textContent = tst.tries;
+  document.querySelector('#scr-end .endcell:last-child .l').textContent = 'TRIES';
+  if(passed){
+    const passedGrade = S.grade;
+    S.passed[passedGrade] = true;
+    $('end-head').textContent = `grade ${passedGrade} — passed.`;
+    if(passedGrade < 8){
+      S.maxG = Math.max(S.maxG, passedGrade+1);
+      S.grade = passedGrade+1;
+      $('e-msg').textContent = `grade ${passedGrade+1} unlocked.`;
+    } else {
+      $('e-msg').textContent = 'every grade. beaten.';
+    }
+    awardT(3, `passed the Grade ${passedGrade} test`, true);
+    $('e-tk').textContent = '+3 bonus tickets';
+    $('btn-again').textContent = 'keep playing';
+    endAgainAction = ()=>{ renderHome(); show('scr-home'); };
+    sfx.end();
+    burst($('e-ore'), ['#E8C94F','#7CBF8B','#8F97DE','#F4BE93'], 18);
+  } else {
+    $('end-head').textContent = pct>=60 ? 'so close.' : 'not yet.';
+    const weak = Object.entries(g.perTopic)
+      .filter(([,d])=>d.c+d.w>0 && d.c/(d.c+d.w)<0.7)
+      .map(([k])=>GRADE_WORLDS[S.grade][k].name);
+    $('e-msg').textContent = weak.length ? `practice ${weak.join(' & ')}, then run it back.` : 'one more practice round, then run it back.';
+    $('e-tk').textContent = '';
+    $('btn-again').textContent = 'run it back';
+    endAgainAction = startTest;
+  }
+  save();
+  show('scr-end');
+}
+let endAgainAction = null;
+function answer(i){
+  if(!G || G.locked) return;
+  if(G.test){ testAnswer(i); return; }
+  G.locked = true;
+  G.qCount++;
+  clearTimeout(idleT);
+  $('btn-teach').classList.remove('pulse');
+  const helped = G.helped;
+  G.paused = false;
+  hideTeach();
+  stopSpeak();
+  const btns = [...$('answers').children];
+  const correct = (i===G.cur.correctIdx);
+  const sk = S.stats.skills[G.cur.skill] = S.stats.skills[G.cur.skill]||{c:0,w:0,h:0,topic:G.topic};
+  const tp = S.stats.topics[tKey(G.topic)] = S.stats.topics[tKey(G.topic)]||{c:0,w:0};
+  if(helped){ sk.h = (sk.h||0)+1; G.helpCount++; }
+  if(correct){
+    sk.c++; tp.c++;
+    G.correct++; G.streak++; G.best=Math.max(G.best,G.streak);
+    const mult = comboMult(G.streak);
+    const bonus = 1 + (PICKAXES[S.pickaxe].bonus/100) + (S.pet ? PETS[S.pet].bonus/100 : 0);
+    let gained = Math.round((8 + 4*G.cur.tier) * mult * bonus);
+    if(helped) gained = Math.max(1, Math.round(gained/2));   // hints keep the combo but halve the gems
+    G.ore += gained;
+    btns[i].classList.add('good');
+    $('g-ore').textContent = G.ore;
+    sfx.correct(G.streak); sfx.crunch();
+    swingPick(); breakBlock(gained);
+    if(G.streak===3||G.streak===6||G.streak===10){ sfx.milestone(); cheerPet(); toast(`combo ×${comboMult(G.streak)}`, 1200); }
+    updateCombo();
+    if(!helped) recordAdaptive(G.topic, true);
+    pendT = setTimeout(nextQ, 420);
+  } else {
+    sk.w++; tp.w++;
+    G.wrong++; G.streak=0;
+    btns[i].classList.add('bad');
+    if(G.cur.correctIdx>=0) btns[G.cur.correctIdx].classList.add('good');
+    $('qcard').classList.remove('shake'); void $('qcard').offsetWidth; $('qcard').classList.add('shake');
+    sfx.wrong();
+    updateCombo();
+    if(!helped) recordAdaptive(G.topic, false);
+    pendT = setTimeout(nextQ, 1250);
+  }
+  save();
+}
+function updateCombo(){
+  const c = $('combo');
+  if(!G || G.test){ c.textContent=''; return; }
+  if(G.streak>=3) c.textContent = `🔥 ×${comboMult(G.streak)} (${G.streak})`;
+  else if(G.streak>0) c.textContent = '⚡ '+G.streak;
+  else c.textContent = '';
+}
+function curBlock(){
+  let b = BLOCKS[0];
+  if(G) for(const bl of BLOCKS) if(G.streak>=bl.min) b = bl;
+  return b;
+}
+function updateBlock(){
+  const b = curBlock();
+  const wrap = $('blobwrap');
+  if(wrap) wrap.innerHTML = ILLOS[(G && G.topic) || 'frac'] || ILLOS.frac;
+  $('blocklbl').textContent = b.name;
+}
+function swingPick(){
+  const p = $('pick');
+  p.classList.remove('swing'); void p.offsetWidth; p.classList.add('swing');
+}
+function breakBlock(gained){
+  const el = $('block');
+  el.classList.remove('hit','cracked','bursting','spawn'); void el.offsetWidth;
+  el.classList.add('cracked');                       // 1. cracks flash across the crystal
+  setTimeout(()=>{
+    el.classList.remove('cracked');
+    el.classList.add('bursting');                    // 2. it shatters…
+    burst(el, curBlock().p, 16);
+  }, 110);
+  setTimeout(()=>{
+    el.classList.remove('bursting');
+    updateBlock();
+    el.classList.add('spawn');                       // 3. …and a fresh one pops in
+  }, 310);
+  if(gained){                                        // floating "+N 💎"
+    const g = document.createElement('div');
+    g.className = 'gain'; g.textContent = '+'+gained;
+    document.querySelector('.scene').appendChild(g);
+    setTimeout(()=>g.remove(), 900);
+  }
+}
+function renderPet(){
+  $('petbox').textContent = S.pet ? PETS[S.pet].icon : '';
+}
+function cheerPet(){
+  if(!S.pet) return;
+  const p = $('petbox');
+  p.classList.remove('cheer'); void p.offsetWidth; p.classList.add('cheer');
+}
+function endRound(){
+  clearInterval(timerInt);
+  clearTimeout(pendT);
+  clearTimeout(idleT);
+  stopSpeak(); hideTeach();
+  if(!G) return;
+  const g = G; G = null;
+  if(g.test){ $('btn-teach').style.display=''; renderHome(); show('scr-home'); return; }   // quitting a test abandons it, nothing recorded
+  if(g.correct + g.wrong === 0){ renderHome(); show('scr-home'); return; }   // quit before answering: nothing to record
+  const durSec = Math.round((Date.now()-g.start)/1000);
+  S.ore += g.ore;
+  S.stats.totalMs += durSec*1000;
+  const today = new Date().toISOString().slice(0,10);
+  if(S.stats.daily.last !== today){
+    const y = new Date(Date.now()-86400000).toISOString().slice(0,10);
+    S.stats.daily.streak = (S.stats.daily.last===y) ? S.stats.daily.streak+1 : 1;
+    S.stats.daily.last = today;
+  }
+  S.stats.sessions.push({d:today, t:g.topic, g:S.grade, c:g.correct, w:g.wrong, ore:g.ore, best:g.best, sec:durSec, mode:S.mode, h:g.helpCount});
+  if(S.stats.sessions.length>60) S.stats.sessions = S.stats.sessions.slice(-60);
+  save();
+  const total = g.correct+g.wrong;
+  // ticket milestones (effort-shaped, never per answer)
+  ensureTk();
+  const acc = total ? g.correct/total : 0;
+  if(total>=10 && acc>=0.6 && !S.tk.dayPlay){
+    S.tk.dayPlay = true;
+    if(!S.tk.weekDays.includes(today)) S.tk.weekDays.push(today);
+    awardT(1, 'daily session done');
+    if(S.tk.weekDays.length>=5 && !S.tk.weekStreakGiven){
+      S.tk.weekStreakGiven = true;
+      awardT(3, '5 days this week');
+    }
+  }
+  if(total>=12 && acc>=0.8 && !S.tk.dayAcc && S.grade===unlockedUpTo()){
+    S.tk.dayAcc = true;
+    awardT(1, 'sharp round: 80%+ accuracy');
+  }
+  save();
+  $('e-correct').textContent = g.correct;
+  $('e-acc').textContent = total? Math.round(g.correct/total*100)+'%' : '—';
+  $('e-streak').textContent = g.best;
+  $('end-head').textContent = g.best>=10 ? 'unreal. ×3 combo.' : g.best>=6 ? 'on fire.' : total>0 ? (acc>=0.8 ? 'clean run.' : 'round done.') : 'round over';
+  let hint = '';
+  for(const [k,v] of Object.entries(PICKAXES)) if(!S.owned.pickaxes.includes(k) && S.ore>=v.cost){ hint = `you can afford the ${v.name}.`; break; }
+  if(!hint) for(const [k,v] of Object.entries(PETS)) if(!S.owned.pets.includes(k) && S.ore>=v.cost){ hint = `you can afford the ${v.name}.`; break; }
+  $('e-msg').textContent = hint;
+  $('e-tk').textContent = roundTk>0 ? `🎟️ +${roundTk} ticket${roundTk>1?'s':''} earned!` : '';
+  $('e-orelbl').textContent = 'GEMS MINED';
+  document.querySelector('#scr-end .endcell:last-child .l').textContent = 'BEST COMBO';
+  $('btn-again').textContent = 'play again';
+  endAgainAction = ()=>startRound(lastTopic);
+  show('scr-end');
+  sfx.end();
+  burst($('e-ore'), ['#E8C94F','#8F97DE','#F4BE93'], 14);
+  let shown = 0; const target = g.ore; const step = Math.max(1, Math.ceil(target/40));
+  const iv = setInterval(()=>{
+    shown = Math.min(target, shown+step);
+    $('e-ore').textContent = shown;
+    if(shown>=target) clearInterval(iv);
+  }, 24);
+}
+/* ================= navigation ================= */
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on');
+  window.scrollTo(0,0);
+  updateSideNav(id);
+}
+function updateSideNav(activeId){
+  const map = {'nav-home':'scr-home','nav-shop':'scr-shop','nav-rew':'scr-rewards','nav-par':'scr-parent'};
+  for(const [nid, sid] of Object.entries(map)){
+    const el = $(nid); if(el) el.classList.toggle('on', sid===activeId || (nid==='nav-home' && !Object.values(map).includes(activeId)));
+  }
+  const av = $('sn-avatar'); if(av) av.innerHTML = S.pet ? PETS[S.pet].icon : ILLOS.avatar;
+  // level-up CTA mirrors the grade-test state
+  const lvl = $('sn-lvl'); if(!lvl) return;
+  const req = ['frac','ratio','int','alg'].filter(k=>tierOf(k)>=2).length;
+  if(S.passed[8]){
+    lvl.innerHTML = `<b>every grade. beaten.</b><span>keep the streak alive</span>`;
+  } else if(S.passed[S.grade]){
+    lvl.innerHTML = `<b>grade ${S.grade+1} is open</b><span>keep climbing</span>`;
+  } else if(req>=4){
+    lvl.innerHTML = `<b>Grade ${S.grade} test ready</b><span>20 questions · 16 to pass</span><button class="lvlbtn" id="sn-test">take the test</button>`;
+    $('sn-test').onclick = startTest;
+  } else {
+    lvl.innerHTML = `<b>Grade ${S.grade+1||8} unlocks</b><span>reach Tier 2 in every world — ${req}/4 ready</span>`;
+  }
+}
+
+/* ================= home ================= */
+function starHTML(tier){
+  let s='';
+  for(let i=1;i<=3;i++) s += `<span class="tdot ${i<=tier?'lit':''}"></span>`;
+  return s;
+}
+const LOCKSVG = '<svg width="13" height="13" viewBox="0 0 12 12"><rect x="2.5" y="5" width="7" height="5.5" rx="1.4" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M4.2 5 V3.6 a1.8 1.8 0 0 1 3.6 0 V5" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>';
+const GEMSVG = '<svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 4.2 L6 1.2 L10 4.2 L6 10.8 Z" fill="#8F97DE"/></svg>';
+function renderHome(){
+  $('h-ore').textContent = S.ore;
+  $('h-daily').textContent = S.stats.daily.streak;
+  $('h-tk').textContent = S.tickets;
+  $('mode-timed').className = S.mode==='timed'?'on':'';
+  $('mode-chill').className = S.mode==='chill'?'on':'';
+  // grade path: 🏆 passed · number = unlocked · 🔒 locked until the test is passed
+  const topG = unlockedUpTo();
+  const strip = $('gradestrip'); strip.innerHTML='';
+  for(let g=3; g<=8; g++){
+    const b = document.createElement('button');
+    b.className = 'gbadge' + (S.grade===g?' cur':'') + (g>topG?' lock':'') + (S.passed[g]?' done':'');
+    b.innerHTML = g>topG ? LOCKSVG : g;
+    if(g<=topG) b.onclick = ()=>{ S.grade=g; save(); renderHome(); };
+    strip.appendChild(b);
+  }
+  // grade test card
+  const req = ['frac','ratio','int','alg'].filter(k=>tierOf(k)>=2).length;
+  const tc = $('testcard');
+  const tst = S.tests[S.grade];
+  if(S.passed[S.grade]){
+    tc.innerHTML = S.grade<8
+      ? `<div class="card center" style="padding:12px;"><b>grade ${S.grade} — passed.</b> <span class="muted">grade ${S.grade+1} is open.</span></div>`
+      : `<div class="card center" style="padding:12px;"><b>grade 8 passed. every grade, beaten.</b></div>`;
+  } else if(req>=4){
+    tc.innerHTML = `<button class="btn gold big" id="btn-test">take the grade ${S.grade} test</button>
+      <div class="center tiny" style="margin:6px 0 10px;">20 questions · 16 right = pass${S.grade<8?' · unlocks grade '+(S.grade+1):''}${tst&&tst.best?' · best so far: '+tst.best+'%':''}</div>`;
+    $('btn-test').onclick = startTest;
+  } else {
+    tc.innerHTML = `<div class="card" style="padding:12px 14px;">
+      <b style="font-size:13.5px;">Grade ${S.grade} Test</b> <span style="float:right; color:var(--ink3);">${LOCKSVG}</span>
+      <div class="muted" style="font-size:12px; margin-top:3px;">reach Tier 2 in every world to unlock — ${req}/4 ready</div>
+    </div>`;
+  }
+  // world tiles (Roblox-style game grid)
+  const box = $('worlds'); box.innerHTML='';
+  const bgIcons = {
+    frac:'#F2E7F0',   // lilac-pink flood for the ice-cream blob
+    ratio:'#E7F2EA',  // sage flood
+    int:'#E3EEFA',    // sky flood
+    alg:'#ECEDF9'     // periwinkle flood
+  };
+  applyBand();
+  // avatar shows her equipped pet, else the thinker blob
+  $('h-avatar').innerHTML = S.pet ? PETS[S.pet].icon : ILLOS.avatar;
+  // desktop grade hero: grades as completion cards
+  const passedCount = [3,4,5,6,7,8].filter(g=>S.passed[g]).length;
+  const gh = $('gradehero');
+  if(gh){
+    const cards = [];
+    if(S.grade>3) cards.push(`<div class="gcard ${S.passed[S.grade-1]?'':'lock'}"><span class="gn">GRADE</span><b>${S.grade-1}</b><span class="st">${S.passed[S.grade-1]?'✓ passed':'skipped'}</span></div>`);
+    cards.push(`<div class="gcard now"><span class="gn">GRADE</span><b>${S.grade}</b><span class="st">now · ${['frac','ratio','int','alg'].filter(k=>tierOf(k)>=2).length}/4 worlds at tier 2</span></div>`);
+    if(S.grade<8) cards.push(`<div class="gcard ${S.passed[S.grade]?'':'lock'}"><span class="gn">GRADE</span><b>${S.grade+1}</b><span class="st">${S.passed[S.grade]?'open':'locked'}</span></div>`);
+    gh.innerHTML = `
+      <div class="micro">hey, miner</div>
+      <h3>${passedCount ? passedCount+' grade'+(passedCount>1?'s':'')+' passed.' : 'fresh start.'}<br>Grade ${S.grade} in progress.</h3>
+      <div class="gcards">${cards.join('')}</div>`;
+  }
+  // desktop piggy: tickets at a glance
+  const hp = $('homepiggy');
+  if(hp){
+    ensureTk();
+    const nxt = S.rewards.filter(r=>r.cost>S.tickets).sort((a,b)=>a.cost-b.cost)[0];
+    const pct = nxt ? Math.min(100, Math.round(S.tickets/nxt.cost*100)) : 100;
+    hp.innerHTML = `<span class="pw">${ILLOS.piggy}</span>
+      <span style="flex:1; min-width:0;">
+        <b style="font-size:13.5px;">piggy bank: ${S.tickets} ticket${S.tickets===1?'':'s'}</b>
+        <span class="bartrack" style="display:block; margin-top:6px;"><span class="barfill" style="display:block; width:${pct}%; background:var(--gold);"></span></span>
+        <span class="tiny" style="display:block; margin-top:4px;">${nxt ? (nxt.cost-S.tickets)+' more to "'+nxt.name+'"' : 'you can afford everything on the list'}</span>
+      </span>`;
+    hp.onclick = ()=>{ renderRewards(); show('scr-rewards'); };
+  }
+  // "Jump back in" card
+  const ct = (S.lastTopic && GRADE_WORLDS[S.grade][S.lastTopic]) ? S.lastTopic : 'frac';
+  const cw = GRADE_WORLDS[S.grade][ct];
+  $('contbox').innerHTML = `
+    <button class="contcard" id="contcard">
+      <span class="contthumb" style="background:${bgIcons[ct]};">${ILLOS[ct]}</span>
+      <span><span class="contname">${cw.name}</span><br><span class="contsub">Grade ${S.grade} · Tier ${tierOf(ct)}</span></span>
+      <span class="contplay">play</span>
+    </button>`;
+  $('contcard').onclick = ()=>startRound(ct);
+  $('worlds-h').textContent = `🎮 Grade ${S.grade} worlds`;
+  const idx = {frac:1, ratio:2, int:3, alg:4};
+  for(const key of ['frac','ratio','int','alg']){
+    const t = GRADE_WORLDS[S.grade][key];
+    const b = document.createElement('button');
+    b.className='wtile';
+    b.innerHTML = `
+      <span class="wthumb" style="background:${bgIcons[key]};"><span class="tchip">0${idx[key]} · TIER ${tierOf(key)}</span>${ILLOS[key]}</span>
+      <span class="wtbody">
+        <span class="wname">${t.name}</span>
+        <span class="wfoot"><span class="wstars">${starHTML(tierOf(key))}</span><span class="tierlbl">${t.desc}</span></span>
+      </span>`;
+    b.onclick = ()=>startRound(key);
+    box.appendChild(b);
+  }
+}
+
+/* ================= shop ================= */
+let shopTab = 'pickaxes';
+function renderShop(){
+  $('s-ore').textContent = S.ore;
+  document.querySelectorAll('.shoptabs .btn').forEach(b=>{
+    b.classList.toggle('on', b.dataset.tab===shopTab);
+  });
+  const box = $('shopitems'); box.innerHTML='';
+  const CATS = {pickaxes:[PICKAXES,'pickaxe'], pets:[PETS,'pet'], themes:[THEMES,'theme']};
+  const [items, slot] = CATS[shopTab];
+  const ownedList = S.owned[shopTab];
+  for(const [key,it] of Object.entries(items)){
+    const owned = ownedList.includes(key);
+    const equipped = S[slot]===key;
+    const div = document.createElement('div');
+    div.className='item';
+    let desc = '';
+    if(shopTab==='pickaxes') desc = it.bonus? `+${it.bonus}% gems per answer` : 'trusty starter pick';
+    if(shopTab==='pets') desc = `+${it.bonus}% gems · cheers your combos!`;
+    if(shopTab==='themes') desc = 'changes the whole vibe';
+    let act;
+    if(equipped) act = `<button class="btn small" disabled>✔ Equipped</button>`;
+    else if(owned) act = `<button class="btn small" data-equip="${key}">Equip</button>`;
+    else act = `<button class="btn small gold" data-buy="${key}" ${S.ore<it.cost?'disabled':''}>${GEMSVG} ${it.cost}</button>`;
+    div.innerHTML = `<span class="icon">${it.icon}</span>
+      <span><span class="iname">${it.name}</span><br><span class="idesc">${desc}</span></span>
+      <span class="act">${act}</span>`;
+    box.appendChild(div);
+  }
+  box.querySelectorAll('[data-buy]').forEach(b=>b.onclick = ()=>{
+    const key = b.dataset.buy; const it = CATS[shopTab][0][key];
+    if(S.ore < it.cost) return;
+    S.ore -= it.cost;
+    S.owned[shopTab].push(key);
+    S[CATS[shopTab][1]] = key;
+    if(shopTab==='themes') applyTheme();
+    sfx.buy(); toast(`${it.icon} ${it.name} unlocked!`, 1600);
+    burst(b, ['#E8C94F','#8F97DE','#F0AFCE'], 10);
+    save(); renderShop();
+  });
+  box.querySelectorAll('[data-equip]').forEach(b=>b.onclick = ()=>{
+    S[CATS[shopTab][1]] = b.dataset.equip;
+    if(shopTab==='themes') applyTheme();
+    sfx.buy(); save(); renderShop();
+  });
+}
+function applyBand(){
+  document.body.classList.remove('band-a','band-c');
+  if(S.grade<=4) document.body.classList.add('band-a');        // grades 3–4: big & warm
+  else if(S.grade>=7) document.body.classList.add('band-c');   // grades 7–8: tighter & cooler
+}
+function applyTheme(){
+  document.body.classList.forEach(c=>{ if(c.startsWith('theme-')) document.body.classList.remove(c); });
+  document.body.classList.add('theme-'+S.theme);
+  applyBand();
+}
+
+/* ================= rewards screen (kid side) ================= */
+function renderRewards(){
+  ensureTk();
+  $('r-tk').textContent = S.tickets;
+  $('h-tk') && ($('h-tk').textContent = S.tickets);
+  const chk = ok => ok ? '<span style="color:var(--success); font-weight:900;">●</span>' : '<span style="color:var(--line); font-weight:900;">○</span>';
+  // piggy bank: the whole point, in one picture
+  const next = S.rewards.filter(r=>r.cost>S.tickets).sort((a,b)=>a.cost-b.cost)[0];
+  const fillPct = next ? Math.min(100, Math.round(S.tickets/next.cost*100)) : 100;
+  let html = `<div class="card piggy" style="display:flex; align-items:center; gap:14px;">
+    <span style="width:86px; flex-shrink:0; display:block;">${ILLOS.piggy}</span>
+    <span style="flex:1; min-width:0;">
+      <b style="font-size:15px;">piggy bank: ${S.tickets} ticket${S.tickets===1?'':'s'}</b>
+      <span class="bartrack" style="display:block; margin-top:8px;"><span class="barfill" style="display:block; width:${fillPct}%; background:var(--gold);"></span></span>
+      <span class="tiny" style="display:block; margin-top:6px;">${next ? (next.cost-S.tickets)+' more to "'+next.name+'"' : 'you can afford everything on the list'}</span>
+    </span>
+  </div>`;
+  html += `<div class="card">
+    <div class="h2" style="margin-top:0;">How to earn today</div>
+    <div class="mrow"><span class="mchk">${chk(S.tk.dayPlay)}</span> Finish a session (10+ answers, 60%+ right)<span class="mval">+1</span></div>
+    <div class="mrow"><span class="mchk">${chk(S.tk.dayAcc)}</span> Sharp round (12+ answers, 80%+ right)<span class="mval">+1</span></div>
+    <div class="mrow"><span class="mchk">${S.tk.tierUps>=2?chk(true):S.tk.tierUps>0?'<span style="color:var(--gold); font-weight:900;">●</span>':chk(false)}</span> Level up a tier (max 2/day)<span class="mval">+1 each</span></div>
+    <div class="mrow"><span class="mchk">${chk(S.tk.weekStreakGiven)}</span> Play 5 different days this week (${S.tk.weekDays.length}/5)<span class="mval">+3</span></div>
+    <div class="tiny" style="margin-top:6px;">This week: ${S.tk.weekEarned} of ${S.tk.weekCap||10} tickets earned · resets Monday${S.grade!==unlockedUpTo()? '<br>⭐ tier-up & sharp-round tickets only count at your top grade (Grade '+unlockedUpTo()+')':''}</div>
+  </div>`;
+  html += `<div class="h2">Trade in tickets</div>`;
+  if(S.rewards.length===0){
+    html += `<div class="card muted">No rewards set up yet — ask your grown-up to add some in the dashboard!</div>`;
+  }
+  for(const r of S.rewards){
+    const can = S.tickets >= r.cost;
+    html += `<div class="item">
+      <span class="icon">🎁</span>
+      <span><span class="iname">${r.name}</span><br><span class="idesc">🎟️ ${r.cost} tickets</span></span>
+      <span class="act"><button class="btn small ${can?'play':''}" data-redeem="${r.id}" ${can?'':'disabled'}>Redeem</button></span>
+    </div>`;
+  }
+  const reqs = S.redemptions.slice(0,8);
+  if(reqs.length){
+    html += `<div class="h2">Your trades</div><div class="card">`;
+    for(const r of reqs){
+      html += `<div class="sessrow"><span>${r.name} · 🎟️${r.cost}</span><span class="statuschip ${r.status==='given'?'done':'req'}">${r.status==='given'?'✓ received':'waiting for grown-up'}</span></div>`;
+    }
+    html += `</div>`;
+  }
+  $('rewardsbody').innerHTML = html;
+  document.querySelectorAll('[data-redeem]').forEach(b=>b.onclick = ()=>{
+    const r = S.rewards.find(x=>String(x.id)===b.dataset.redeem);
+    if(!r || S.tickets<r.cost) return;
+    S.tickets -= r.cost;
+    S.redemptions.unshift({id:Date.now(), name:r.name, cost:r.cost, d:todayStr(), status:'requested'});
+    if(S.redemptions.length>30) S.redemptions.length = 30;
+    sfx.buy(); burst(b, ['#E8C94F','#7CBF8B','#F0AFCE'], 12);
+    toast('sent — your grown-up has it in their dashboard', 2400);
+    save(); renderRewards();
+  });
+}
+$('btn-rewards').onclick = ()=>{ renderRewards(); show('scr-rewards'); };
+$('btn-rewards-back').onclick = ()=>{ renderHome(); show('scr-home'); };
+
+/* ================= parent dashboard ================= */
+function fmtMin(ms){
+  const m = Math.round(ms/60000);
+  if(m<60) return m+' min';
+  return Math.floor(m/60)+'h '+(m%60)+'m';
+}
+function renderParent(){
+  const st = S.stats;
+  let totC=0, totW=0, totH=0;
+  for(const t of Object.values(st.topics)){ totC+=t.c; totW+=t.w; }
+  for(const s of Object.values(st.skills)){ totH += s.h||0; }
+  const tot = totC+totW;
+  let html = `
+    <div class="tiles">
+      <div class="tile"><div class="v">${tot}</div><div class="l">PROBLEMS ATTEMPTED</div></div>
+      <div class="tile"><div class="v">${tot?Math.round(totC/tot*100)+'%':'—'}</div><div class="l">OVERALL ACCURACY</div></div>
+      <div class="tile"><div class="v">${st.daily.streak}</div><div class="l">DAY STREAK</div></div>
+      <div class="tile"><div class="v">${fmtMin(st.totalMs)}</div><div class="l">TIME PRACTICING</div></div>
+      <div class="tile"><div class="v">${totH}</div><div class="l">💡 HINTS USED</div></div>
+      <div class="tile"><div class="v">${st.sessions.length}</div><div class="l">ROUNDS PLAYED</div></div>
+    </div>`;
+
+  // grade level (moved here from the kid's home screen to keep it uncluttered)
+  const testLines = Object.entries(S.tests).map(([g,t])=>`Grade ${g} test: best ${t.best}% over ${t.tries} tr${t.tries===1?'y':'ies'}${S.passed[g]?' · 🏆 PASSED':''}`);
+  html += `<div class="h2">Grade level & progression</div><div class="card">
+    <div class="gradewrap" style="margin-bottom:0;">${[3,4,5,6,7,8].map(g=>`<button data-grade="${g}" class="${S.grade===g?'on':''}">${S.passed[g]?'🏆':g}</button>`).join('')}</div>
+    ${testLines.length? `<div style="margin-top:9px; font-size:12.5px;">${testLines.join('<br>')}</div>` : ''}
+    <div class="tiny" style="margin-top:8px;">Grades above her top one are locked until she passes each grade's test (20 questions, 80% to pass, unlocked by reaching Tier 2 in all four worlds). Tapping a grade here places her there and unlocks it — use this for initial placement or to skip ahead. She can always revisit lower unlocked grades for review; effort tickets only count at her top grade so easy grades can't be farmed.</div>
+  </div>`;
+
+  // per-topic accuracy bars (current grade)
+  html += `<div class="h2">Accuracy by topic — Grade ${S.grade}</div><div class="card">`;
+  for(const [key,t] of Object.entries(GRADE_WORLDS[S.grade])){
+    const d = st.topics[S.grade+'_'+key];
+    const n = d? d.c+d.w : 0;
+    const acc = n? Math.round(d.c/n*100) : 0;
+    html += `<div class="barrow">
+      <span class="barlbl">${t.icon} ${t.name}</span>
+      <span class="bartrack"><span class="barfill" style="display:block;width:${n?acc:0}%"></span></span>
+      <span class="barval">${n? acc+'% · '+n+'q' : 'no data'}</span>
+    </div>`;
+    html += `<div class="tiny" style="margin:-4px 0 8px 128px;">difficulty tier ${tierOf(key)} of 3</div>`;
+  }
+  html += `<div class="tiny" style="margin-top:4px;">Change grade on the home screen — each grade keeps its own difficulty tiers and topic stats.</div>`;
+  html += `</div>`;
+
+  // focus list
+  const weak = Object.entries(st.skills)
+    .map(([name,d])=>({name, n:d.c+d.w, acc: (d.c+d.w)? d.c/(d.c+d.w) : 0}))
+    .filter(s=>s.n>=6 && s.acc<0.7)
+    .sort((a,b)=>a.acc-b.acc);
+  html += `<div class="h2">🎯 Suggested focus for lessons</div>`;
+  if(weak.length){
+    html += `<div class="focus">` + weak.slice(0,5).map(s=>
+      `<div class="fi">⚠️ <b>${s.name}</b> — ${Math.round(s.acc*100)}% over ${s.n} tries</div>`).join('') + `</div>`;
+  } else if(tot<20){
+    html += `<div class="card muted">Not enough data yet — this fills in after a few rounds of play.</div>`;
+  } else {
+    html += `<div class="card" style="color:var(--green); font-weight:700;">✅ No weak spots right now — everything ≥70% accuracy. Consider nudging her to a new world.</div>`;
+  }
+
+  // skills table
+  const allSkills = Object.entries(st.skills)
+    .map(([name,d])=>({name, c:d.c, n:d.c+d.w, h:d.h||0}))
+    .sort((a,b)=> (a.c/a.n) - (b.c/b.n));
+  if(allSkills.length){
+    html += `<div class="h2">Every skill practiced</div><div class="card"><table class="sk">
+      <tr><th>Skill</th><th>Tries</th><th>💡</th><th>Accuracy</th></tr>`;
+    for(const s of allSkills){
+      const acc = Math.round(s.c/s.n*100);
+      html += `<tr><td>${s.name}</td><td>${s.n}</td><td>${s.h||''}</td><td style="font-weight:800; color:${acc>=70?'var(--green)':acc>=50?'var(--gold)':'var(--red)'}">${acc}%</td></tr>`;
+    }
+    html += `</table></div>`;
+  }
+
+  // recent sessions
+  const sess = st.sessions.slice(-10).reverse();
+  if(sess.length){
+    html += `<div class="h2">Recent rounds</div><div class="card">`;
+    for(const s of sess){
+      const n = s.c+s.w;
+      const W = GRADE_WORLDS[s.g||6][s.t];
+      html += `<div class="sessrow"><span>${s.d} · G${s.g||6} ${W.icon} ${W.name}${s.mode==='chill'?' 🧘':''}${s.h?' · 💡'+s.h:''}</span><span>${s.c}/${n} · 💎${s.ore}</span></div>`;
+    }
+    html += `</div>`;
+  }
+
+  // settings
+  // tickets & real-world rewards (parent controls)
+  ensureTk();
+  const pend = S.redemptions.filter(r=>r.status==='requested');
+  html += `<div class="h2">🎟️ Tickets → real rewards</div><div class="card">
+    <div class="row spread"><span class="muted">Her ticket balance</span><b style="font-size:16px;">🎟️ ${S.tickets}</b></div>
+    <div class="row spread" style="margin-top:9px;"><span class="muted">Earned this week</span><b>${S.tk.weekEarned} / ${S.tk.weekCap||10}</b></div>
+    <div class="row spread" style="margin-top:9px;"><span class="muted">Weekly ticket cap</span>
+      <input type="number" class="inp" id="capinp" min="0" max="99" value="${S.tk.weekCap||10}" style="width:72px; text-align:right;"></div>
+    <div class="tiny" style="margin-top:9px;">Tickets come only from effort milestones — daily session (+1), an 80%+ round (+1), tier-ups (+1, max 2/day), five play-days in a week (+3) — never per answer, so they can't be farmed. Rule of thumb: price rewards so one ticket ≈ 50¢ of value.</div>
+  </div>`;
+  if(pend.length){
+    html += `<div class="h2">Waiting for you</div><div class="card">`;
+    for(const r of pend){
+      html += `<div class="row spread" style="padding:5px 0;">
+        <span style="font-size:13.5px;">🎁 <b>${r.name}</b> · 🎟️${r.cost} · ${r.d}</span>
+        <span class="row" style="gap:6px;">
+          <button class="btn small play" data-given="${r.id}">✓ Given</button>
+          <button class="btn small" data-refund="${r.id}">↩</button>
+        </span></div>`;
+    }
+    html += `<div class="tiny">✓ Given marks it delivered. ↩ cancels and refunds her tickets.</div></div>`;
+  }
+  html += `<div class="h2">Reward menu (you define these)</div><div class="card" id="rewardeditor">`;
+  for(const r of S.rewards){
+    html += `<div class="row" style="margin-bottom:8px; gap:7px;">
+      <input class="inp" data-rname="${r.id}" value="${String(r.name).replace(/"/g,'&quot;')}" style="flex:1;">
+      <input class="inp" type="number" data-rcost="${r.id}" min="1" max="99" value="${r.cost}" style="width:62px; text-align:right;">
+      <button class="btn small" data-rdel="${r.id}">✕</button></div>`;
+  }
+  html += `<button class="btn small" id="btn-raddreward">+ Add reward</button>
+  <div class="tiny" style="margin-top:8px;">Ideas: extra screen time, choose dinner, a Robux gift card, an outing. Cost is in tickets.</div></div>`;
+  if(S.tkLog.length){
+    html += `<div class="h2">Recent ticket earnings</div><div class="card">`;
+    for(const l of S.tkLog.slice(0,8)) html += `<div class="sessrow"><span>${l.d} · ${l.why}</span><span>+${l.n} 🎟️</span></div>`;
+    html += `</div>`;
+  }
+
+  refreshVoices();
+  const autoV = VOICES.length ? VOICES[0].name : '';
+  const voiceOpts = [`<option value="">Auto — best available${autoV? ' ('+autoV+')':''}</option>`]
+    .concat(VOICES.map(v=>`<option value="${v.name.replace(/"/g,'&quot;')}" ${S.voiceName===v.name?'selected':''}>${v.name} (${v.lang})</option>`)).join('');
+  html += `<div class="h2">Settings</div><div class="card">
+    <div class="row spread">
+      <span class="muted">Sound effects</span>
+      <button class="btn small" id="btn-sound">${S.sound?'🔊 On':'🔇 Off'}</button>
+    </div>
+    <div class="row spread" style="margin-top:14px;">
+      <span class="muted">Read-aloud voice</span>
+      <button class="btn small" id="btn-voicetest">▶ Preview</button>
+    </div>
+    <select id="voicesel" class="sel">${voiceOpts}</select>
+    <div class="tiny" style="margin-top:6px;">Voice quality depends on the browser. Best free voices: <b>Microsoft Edge</b> → pick one marked "Natural"; <b>Chrome</b> → "Google US English"; <b>Mac/iPad</b> → an "Enhanced"/"Premium" voice (add more in System Settings → Spoken Content). If the list looks short, press Preview once and reopen this page.</div>
+    <div class="row spread" style="margin-top:14px;">
+      <span class="muted">Erase all progress</span>
+      <button class="btn small" id="btn-reset">Reset…</button>
+    </div>
+    <div class="tiny" style="margin-top:10px;">How difficulty works: each world has 3 tiers. 5 of the last 6 correct → tier up; struggling → it quietly steps back down. "💡 Teach me" shows worked steps (with read-aloud), pauses the clock, keeps her combo, and halves gems for that question — hinted answers don't count toward tier changes. A high 💡 count on a skill means she's leaning on the explanations there. Progress saves in this browser on this device.</div>
+  </div>`;
+
+  $('parentbody').innerHTML = html;
+  document.querySelectorAll('[data-grade]').forEach(b=>b.onclick = ()=>{
+    S.grade = parseInt(b.dataset.grade);
+    S.maxG = Math.max(S.maxG, S.grade);   // parent placement unlocks that grade
+    save(); renderParent();
+  });
+  // ticket controls
+  const cap = $('capinp');
+  if(cap) cap.onchange = ()=>{ S.tk.weekCap = Math.max(0, Math.min(99, parseInt(cap.value)||0)); save(); };
+  document.querySelectorAll('[data-given]').forEach(b=>b.onclick = ()=>{
+    const r = S.redemptions.find(x=>String(x.id)===b.dataset.given);
+    if(r){ r.status='given'; save(); renderParent(); }
+  });
+  document.querySelectorAll('[data-refund]').forEach(b=>b.onclick = ()=>{
+    const i = S.redemptions.findIndex(x=>String(x.id)===b.dataset.refund);
+    if(i>=0){ S.tickets += S.redemptions[i].cost; S.redemptions.splice(i,1); save(); renderParent(); }
+  });
+  document.querySelectorAll('[data-rname]').forEach(inp=>inp.onchange = ()=>{
+    const r = S.rewards.find(x=>String(x.id)===inp.dataset.rname);
+    if(r){ r.name = inp.value.slice(0,60) || 'Reward'; save(); }
+  });
+  document.querySelectorAll('[data-rcost]').forEach(inp=>inp.onchange = ()=>{
+    const r = S.rewards.find(x=>String(x.id)===inp.dataset.rcost);
+    if(r){ r.cost = Math.max(1, Math.min(99, parseInt(inp.value)||1)); save(); }
+  });
+  document.querySelectorAll('[data-rdel]').forEach(b=>b.onclick = ()=>{
+    S.rewards = S.rewards.filter(x=>String(x.id)!==b.dataset.rdel);
+    save(); renderParent();
+  });
+  const addR = $('btn-raddreward');
+  if(addR) addR.onclick = ()=>{
+    S.rewards.push({id:Date.now(), name:'New reward', cost:5});
+    save(); renderParent();
+  };
+  $('btn-sound').onclick = ()=>{ S.sound=!S.sound; save(); renderParent(); };
+  const vsel = $('voicesel');
+  if(vsel){
+    vsel.onchange = ()=>{ S.voiceName = vsel.value; save(); };
+    $('btn-voicetest').onclick = ()=>{
+      S.voiceName = vsel.value; save();
+      speak(`Hi! Here's how I read a problem. One half plus one quarter. Make the bottoms match: one half equals two quarters. Add the tops: two plus one is three. The answer is three quarters!`);
+    };
+  }
+  let armed = false;
+  $('btn-reset').onclick = ()=>{
+    if(!armed){ armed=true; $('btn-reset').textContent='Tap again to erase!'; $('btn-reset').style.background='var(--red)'; setTimeout(()=>{armed=false; if($('btn-reset')){$('btn-reset').textContent='Reset…'; $('btn-reset').style.background='';}}, 2500); }
+    else { store.clear(); S = freshState(); save(); applyTheme(); renderParent(); toast('All progress erased'); }
+  };
+}
+
+/* ================= teach mode + speech ================= */
+const canSpeak = ('speechSynthesis' in window);
+function speakify(html){
+  let t = String(html);
+  t = t.replace(/<span class="fr"><span class="fn">(.*?)<\/span><span class="fd">(.*?)<\/span><\/span>/g, ' $1 over $2 ');
+  t = t.replace(/<br\s*\/?>/g, '. ');
+  t = t.replace(/<sup>(\d+)<\/sup>/g, ' to the power of $1 ');
+  t = t.replace(/<[^>]+>/g, '');
+  t = t.replace(/&nbsp;/g, ' ');
+  t = t.replace(/\|\s*([^|]+?)\s*\|/g, ' the absolute value of $1 ');
+  t = t.replace(/√/g, ' the square root of ');
+  t = t.replace(/▢/g, ' the box ');
+  t = t.replace(/(\d) r (\d)/g, '$1 remainder $2');
+  t = t.replace(/\$(\d+(?:\.\d+)?)/g, '$1 dollars');
+  t = t.replace(/(\d)\s*:\s*(\d)/g, '$1 to $2');
+  t = t.replace(/=\s*\?/g, ' equals what');
+  t = t.replace(/−/g, ' minus ');
+  t = t.replace(/(^|[\s(=])-(\d)/g, '$1negative $2');
+  t = t.replace(/×/g, ' times ');
+  t = t.replace(/÷/g, ' divided by ');
+  t = t.replace(/=/g, ' equals ');
+  t = t.replace(/[✓✔]/g, ' — checks out!');
+  t = t.replace(/PEMDAS/g, 'pem-dass');
+  t = t.replace(/[⛏️🔥⬆️→💎🪙]/g, ' ');
+  return t.replace(/\s+/g,' ').trim();
+}
+/* voice quality ranking: browsers hide their best voices behind the default one */
+let VOICES = [];
+function scoreVoice(v){
+  const n = v.name.toLowerCase();
+  if(!/^en/i.test(v.lang)) return -1;
+  let s = /en[-_]us/i.test(v.lang) ? 20 : 8;
+  if(/natural/.test(n)) s += 100;                                    // Edge neural voices — best free option
+  if(/google/.test(n)) s += 50;                                      // Chrome network voices
+  if(/premium|enhanced|neural/.test(n)) s += 40;                     // Apple enhanced voices
+  if(/samantha|ava|allison|zoe|joelle/.test(n)) s += 35;             // good Apple defaults
+  if(/aria|jenny|michelle|emma|ana|sonia|libby/.test(n)) s += 15;    // good Microsoft names
+  if(/online/.test(n)) s += 10;
+  if(/female/.test(n)) s += 5;
+  if(/compact|espeak|flite|robo/.test(n)) s -= 50;                   // the robotic ones
+  return s;
+}
+function refreshVoices(){
+  try{
+    VOICES = speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));
+    VOICES.sort((a,b)=>scoreVoice(b)-scoreVoice(a));
+  }catch(e){ VOICES = []; }
+}
+if(canSpeak){ refreshVoices(); speechSynthesis.onvoiceschanged = refreshVoices; }
+function currentVoice(){
+  if(!VOICES.length) refreshVoices();
+  if(S.voiceName){ const v = VOICES.find(v=>v.name===S.voiceName); if(v) return v; }
+  return VOICES[0] || null;
+}
+function speak(text){
+  if(!canSpeak || !text) return;
+  try{
+    speechSynthesis.cancel();
+    const v = currentVoice();
+    // one utterance per sentence: natural pacing + sidesteps Chrome's long-utterance cutoff
+    const chunks = (String(text).match(/[^.!?]+[.!?]*/g) || [String(text)]).map(c=>c.trim()).filter(Boolean);
+    for(const c of chunks){
+      const u = new SpeechSynthesisUtterance(c);
+      if(v) u.voice = v;
+      u.rate = 0.95; u.pitch = 1.03;
+      speechSynthesis.speak(u);
+    }
+  }catch(e){}
+}
+function stopSpeak(){ if(canSpeak){ try{ speechSynthesis.cancel(); }catch(e){} } }
+function hideTeach(){
+  const t = $('teach'); if(t) t.style.display='none';
+  document.body.classList.remove('teaching');
+}
+/* One step at a time — chunking beats a wall of steps for ADHD focus */
+function renderTeachSteps(){
+  if(!G || !G.cur) return;
+  const steps = G.cur.steps || [];
+  const idx = G.teachIdx || 0;
+  const box = $('tsteps');
+  box.innerHTML = steps.slice(0, idx+1).map((s,i)=>
+    `<div class="tstep ${i<idx?'dim':'cur'}"><span class="stepnum">${i+1}</span><span>${s}</span></div>`
+  ).join('') || `<div class="tstep cur"><span>Take your best shot — you've got this!</span></div>`;
+  const last = idx >= steps.length-1;
+  $('btn-next').style.display = last ? 'none' : '';
+  $('btn-gotit').style.display = last ? '' : 'none';
+}
+function showTeach(){
+  if(!G || !G.cur || G.locked) return;
+  G.helped = true;
+  G.paused = true;   // timer stops while she learns
+  G.teachIdx = 0;
+  clearTimeout(idleT);
+  $('btn-teach').classList.remove('pulse');
+  renderTeachSteps();
+  $('teach').style.display='block';
+  document.body.classList.add('teaching');   // focus dim: answers & scene recede while she learns
+  sfx.buy();
+}
+$('btn-teach').onclick = showTeach;
+$('btn-sayq').onclick = ()=>{ if(G && G.cur) speak(speakify(G.cur.prompt)+': '+speakify(G.cur.q)); };
+$('btn-say').onclick = ()=>{   // reads just the current step — chunked audio to match chunked text
+  if(!G || !G.cur) return;
+  const steps = G.cur.steps || [];
+  speak(steps.length ? speakify(steps[G.teachIdx||0]) : speakify(G.cur.prompt)+': '+speakify(G.cur.q));
+};
+$('btn-next').onclick = ()=>{ if(!G) return; G.teachIdx = (G.teachIdx||0)+1; renderTeachSteps(); sfx.tick(); };
+$('btn-gotit').onclick = ()=>{ hideTeach(); if(G) G.paused=false; stopSpeak(); };
+if(!canSpeak){ $('btn-sayq').style.display='none'; $('btn-say').style.display='none'; }
+
+/* ================= wiring ================= */
+$('mode-timed').onclick = ()=>{ S.mode='timed'; save(); renderHome(); };
+$('mode-chill').onclick = ()=>{ S.mode='chill'; save(); renderHome(); };
+$('btn-shop').onclick = ()=>{ renderShop(); show('scr-shop'); };
+$('h-gemchip').onclick = ()=>{ renderShop(); show('scr-shop'); };   // the "+" on the gem chip opens the shop
+$('nav-home').onclick = ()=>{ if(G) endRound(); renderHome(); show('scr-home'); };
+$('nav-shop').onclick = ()=>{ if(G) endRound(); renderShop(); show('scr-shop'); };
+$('nav-rew').onclick = ()=>{ if(G) endRound(); renderRewards(); show('scr-rewards'); };
+$('nav-par').onclick = ()=>{ if(G) endRound(); renderParent(); show('scr-parent'); };
+$('btn-end-shop').onclick = ()=>{ renderShop(); show('scr-shop'); };
+$('btn-shop-back').onclick = ()=>{ renderHome(); show('scr-home'); };
+$('btn-parent').onclick = ()=>{ renderParent(); show('scr-parent'); };
+$('btn-parent-back').onclick = ()=>{ renderHome(); show('scr-home'); };
+$('btn-again').onclick = ()=>{ (endAgainAction || (()=>startRound(lastTopic)))(); };
+$('btn-end-home').onclick = ()=>{ renderHome(); show('scr-home'); };
+$('btn-quit').onclick = ()=>{ endRound(); };
+document.querySelectorAll('.shoptabs .btn').forEach(b=>{
+  b.onclick = ()=>{ shopTab = b.dataset.tab; renderShop(); };
+});
+document.addEventListener('keydown', e=>{
+  if(!G || G.locked) return;
+  const n = parseInt(e.key);
+  if(n>=1 && n<=4){
+    const btns = $('answers').children;
+    if(btns[n-1]) answer(n-1);
+  }
+});
+
+/* ================= init ================= */
+applyTheme();
+renderHome();
+
+</script>
+</body>
+</html>

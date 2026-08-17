@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Miner — Style Guide & Desktop Mockups</title>
+<style>
+:root{
+  --bg:#F7F5F1; --surface:#FFFFFF; --surface2:#F1EFE8; --ink:#23252B; --ink2:#6E7280; --ink3:#9CA0AB; --line:#E5E2DA;
+  --lav:#8F97DE; --purple:#A879C2; --peach:#F4BE93; --sage:#7CBF8B; --blue:#5E9FE0; --teal:#5FB8AB;
+  --pink:#F0AFCE; --berry:#C64F7B; --coral:#EE8A55; --citron:#D9DE62; --sand:#BBAE9C;
+  --success:#58B372; --error:#E4766C; --gold:#E8C94F;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{font-family:'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif; background:var(--bg); color:var(--ink); line-height:1.5;}
+.wrap{max-width:1280px; margin:0 auto; padding:56px 32px 120px;}
+h1{font-size:52px; font-weight:900; letter-spacing:-2px; line-height:1.05;}
+h2{font-size:28px; font-weight:800; letter-spacing:-.5px; margin:72px 0 8px;}
+.lede{color:var(--ink2); font-size:16px; max-width:640px; margin-top:10px;}
+.micro{font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--ink3);}
+.rule{border:none; border-top:1px dashed var(--line); margin:20px 0 28px;}
+
+/* swatches */
+.swatches{display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin-top:24px;}
+.sw{border-radius:16px; overflow:hidden; border:1px solid var(--line); background:var(--surface);}
+.sw .c{height:86px;}
+.sw .m{padding:10px 12px;}
+.sw .m b{font-size:13px; display:block;}
+.sw .m span{font-size:11px; color:var(--ink3); font-family:ui-monospace,monospace;}
+.rolegrid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:18px;}
+.role{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px;}
+.role .dot{width:26px; height:26px; border-radius:9px; margin-bottom:10px;}
+.role b{font-size:13.5px;}
+.role p{font-size:12px; color:var(--ink2); margin-top:3px;}
+
+/* type */
+.typerow{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:28px 32px; margin-top:18px;}
+.t-hero{font-size:44px; font-weight:900; letter-spacing:-1.8px;}
+.t-h2{font-size:24px; font-weight:800; letter-spacing:-.4px; margin-top:14px;}
+.t-body{font-size:15.5px; margin-top:12px; max-width:560px;}
+.t-micro{margin-top:14px;}
+
+/* components demo */
+.comprow{display:flex; flex-wrap:wrap; gap:22px; align-items:flex-start; margin-top:18px;}
+.compcard{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px; box-shadow:0 2px 10px rgba(35,37,43,.04);}
+.complbl{font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--ink3); margin-bottom:14px;}
+.btn{display:inline-flex; align-items:center; gap:8px; font-family:inherit; font-weight:800; font-size:15px; color:#fff; background:var(--ink); border:none; border-radius:14px; padding:13px 22px; cursor:pointer;}
+.btn.play{background:var(--success); position:relative;}
+.btn.play::after{content:''; position:absolute; left:16px; bottom:-5px; width:10px; height:10px; background:var(--success); transform:rotate(45deg); border-radius:2px;}
+.btn.soft{background:var(--surface2); color:var(--ink); border:1px solid var(--line);}
+.chip{display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:700; border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:7px 14px;}
+.chip .d{width:7px; height:7px; border-radius:50%;}
+.stars .s{opacity:.25; filter:grayscale(1);}
+.stars .lit{opacity:1; filter:none;}
+
+/* route path */
+.route{position:relative; display:flex; justify-content:space-between; align-items:center; width:420px; padding:6px 2px;}
+.route::before{content:''; position:absolute; left:20px; right:20px; top:50%; border-top:2px dashed #D6D2C6; transform:translateY(-50%);}
+.node{position:relative; z-index:1; width:42px; height:42px; border-radius:50%; background:var(--surface); border:2px solid var(--line); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; color:var(--ink2);}
+.node.done{border-color:#7CBF8B; background:#7CBF8B; color:#fff;}
+.node.cur{width:48px; height:48px; background:var(--ink); color:#fff; border-color:var(--ink); box-shadow:0 0 0 4px rgba(35,37,43,.08);}
+.node.lock{color:var(--ink3); font-size:13px;}
+
+/* mockup frames */
+.frame{background:var(--surface); border:1px solid var(--line); border-radius:24px; overflow:hidden; box-shadow:0 24px 60px rgba(35,37,43,.10); margin-top:22px;}
+.framebar{display:flex; gap:6px; padding:13px 18px; border-bottom:1px solid var(--line); background:var(--surface2);}
+.framebar i{width:10px; height:10px; border-radius:50%; background:#DDD9CF; display:block;}
+.screen{display:flex; min-height:640px; background:var(--bg);}
+.side{width:220px; background:var(--surface); border-right:1px solid var(--line); padding:22px 16px; display:flex; flex-direction:column; gap:4px;}
+.brand{display:flex; align-items:center; gap:10px; padding:0 8px 18px;}
+.brand b{font-size:17px; font-weight:900; letter-spacing:-.5px;}
+.nav{display:flex; align-items:center; gap:11px; padding:11px 12px; border-radius:12px; font-size:14px; font-weight:700; color:var(--ink2);}
+.nav.on{background:var(--surface2); color:var(--ink);}
+.nav svg{flex-shrink:0;}
+.main{flex:1; padding:28px 34px;}
+.mtop{display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;}
+.hero{background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:28px 32px; display:flex; align-items:center; gap:28px;}
+.hero h3{font-size:30px; font-weight:900; letter-spacing:-1px; line-height:1.1;}
+.hero .sub{margin-top:6px;}
+.tilegrid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:16px;}
+.wtile{position:relative; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:0; overflow:hidden;}
+.wthumb{position:relative; height:132px; display:flex; align-items:center; justify-content:center; border-radius:14px; margin:8px;}
+.tchip{position:absolute; top:10px; left:10px; background:rgba(255,255,255,.8); border-radius:999px; padding:4px 11px; font-size:10px; font-weight:800; letter-spacing:.6px; color:var(--ink);}
+.tarrow{position:absolute; top:9px; right:12px; font-size:14px; font-weight:700; color:rgba(35,37,43,.55);}
+.wbody{padding:13px 15px 15px; border-top:1px solid var(--line);}
+.wbody b{font-size:14.5px; letter-spacing:-.2px; display:block;}
+.wbody .micro{margin-top:4px;}
+.wfoot{display:flex; justify-content:space-between; align-items:center; margin-top:9px; font-size:11px;}
+/* play screen */
+.playcol{max-width:560px; margin:0 auto; text-align:center;}
+.qcard{background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:26px 24px 20px; margin-top:18px;}
+.qcard .eq{font-size:40px; font-weight:900; letter-spacing:-1px; margin:10px 0 16px;}
+.teach{background:#FBF3E4; border:1px solid #EFDDBA; border-radius:18px; padding:18px 20px; margin-top:14px; text-align:left;}
+.tstep{display:flex; gap:12px; align-items:flex-start; font-size:15px; padding:5px 0;}
+.stepnum{flex-shrink:0; width:24px; height:24px; border-radius:50%; border:2px solid var(--gold); color:#B08F1D; font-weight:900; font-size:12px; display:flex; align-items:center; justify-content:center; margin-top:1px; background:#fff;}
+.tstep.dim{opacity:.45; font-size:13px;}
+.ansgrid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;}
+.ans{background:var(--surface); border:1.5px solid var(--line); border-radius:16px; padding:18px; font-size:22px; font-weight:800;}
+.ans:hover{border-color:var(--ink);}
+.progress{height:10px; background:var(--surface2); border-radius:999px; overflow:hidden; border:1px solid var(--line);}
+.progress i{display:block; height:100%; width:42%; background:var(--sage); border-radius:999px;}
+/* dashboard */
+.tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.tile{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px;}
+.tile b{font-size:26px; font-weight:900; letter-spacing:-.5px;}
+.tile .micro{margin-top:4px;}
+.barrow{display:flex; align-items:center; gap:12px; margin-top:10px; font-size:13px;}
+.barlbl{width:150px; font-weight:700; color:var(--ink2); flex-shrink:0;}
+.bartrack{flex:1; height:12px; background:var(--surface2); border:1px solid var(--line); border-radius:999px; overflow:hidden;}
+.barfill{height:100%; background:var(--lav); border-radius:999px;}
+.barval{width:80px; text-align:right; font-weight:800; font-size:12px;}
+.note{background:#FBF3E4; border:1px solid #EFDDBA; border-radius:14px; padding:12px 16px; font-size:13px; margin-top:14px;}
+.cap{font-size:12.5px; color:var(--ink3); margin-top:12px;}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:18px;}
+.railcol{width:78px; padding:22px 0; display:flex; flex-direction:column; align-items:center; gap:12px;}
+.railbtn{width:44px; height:44px; border-radius:50%; background:var(--surface); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; box-shadow:0 2px 8px rgba(35,37,43,.06);}
+.railbtn.on{background:var(--ink); border-color:var(--ink);}
+.listrow{display:flex; align-items:center; justify-content:space-between; background:var(--surface2); border-radius:14px; padding:12px 16px; font-size:14px; font-weight:700; margin-top:8px; min-width:280px;}
+.listrow .meta{font-size:12px; color:var(--ink3); font-weight:600;}
+.checkc{width:22px; height:22px; border-radius:50%; background:var(--surface); border:1px solid var(--line); display:inline-flex; align-items:center; justify-content:center; font-size:11px; color:var(--success);}
+.ambient{background:linear-gradient(135deg,#E9EED8 0%, #F4E7D6 55%, #F3DFD2 100%) !important;}
+.tframe{border-radius:16px; padding:10px 12px 12px; width:212px;}
+.tftitle{display:flex; justify-content:space-between; align-items:center; font-size:13.5px; font-weight:800; padding:2px 4px 9px;}
+.tfinner{background:var(--surface); border-radius:12px; padding:13px 14px; box-shadow:0 1px 4px rgba(35,37,43,.06); font-size:12.5px; color:var(--ink2);}
+.tfinner b{color:var(--ink); font-size:13px; display:block; margin-bottom:5px;}
+.tag{display:inline-flex; align-items:center; font-size:10px; font-weight:700; border-radius:7px; padding:3px 8px; margin:0 4px 6px 0;}
+
+.lvlcard{margin-top:auto; background:#F4BE93; border-radius:16px; padding:16px 14px; text-align:center;}
+.lvlcard b{font-size:14.5px; display:block;}
+.lvlcard span{font-size:11.5px; color:rgba(35,37,43,.7); display:block; margin-top:2px;}
+.lvlbtn{display:inline-block; margin-top:10px; background:var(--ink); color:#fff; border-radius:999px; padding:8px 16px; font-size:12px; font-weight:800;}
+.gcards{display:flex; gap:10px;}
+.gcard{width:84px; border-radius:14px; background:var(--surface); border:1px solid var(--line); padding:12px 10px; text-align:left;}
+.gcard .gn{font-size:10px; font-weight:800; color:var(--ink3); letter-spacing:1px;}
+.gcard b{font-size:15px; display:block; margin-top:3px;}
+.gcard .st{font-size:10px; font-weight:700; margin-top:8px; color:var(--success);}
+.gcard.now{background:#AFB5E6; border-color:#AFB5E6;}
+.gcard.now .st{color:#2C3670;}
+.gcard.lock{opacity:.45;}
+.piggyw{display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:14px 16px;}
+.blobrow{display:flex; gap:26px; flex-wrap:wrap; margin-top:18px;}
+.blobcard{background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:22px 26px; text-align:center; width:180px;}
+.blobcard b{display:block; margin-top:10px; font-size:14px;}
+.blobcard span{font-size:11px; color:var(--ink3);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="micro">Math Miner · Brand & UI Direction · v1</div>
+  <h1>Soft blobs,<br>sharp structure.</h1>
+  <p class="lede">Toko's editorial UI skeleton — flat cards, dot-chips, dashed route paths, corner index numbers, speech-bubble CTAs — dressed in the calm pastel palette and blob-character illustration style of your reference set. Light, friendly, and quiet enough for an ADHD-first learning tool.</p>
+
+  <!-- ============ PALETTE ============ -->
+  <h2>01 · Palette</h2>
+  <p class="lede">Pastels on warm off-white, black ink doing the hierarchy. Accents appear two ways: <b>flooded card thumbs</b> (a full pastel block with a contrasting saturated mascot on top — your second reference) and small UI moments (dots, bars, fills). Never as full-screen backgrounds.</p>
+  <hr class="rule">
+  <div class="micro">Neutrals</div>
+  <div class="swatches" style="grid-template-columns:repeat(6,1fr);">
+    <div class="sw"><div class="c" style="background:#F7F5F1;"></div><div class="m"><b>Paper</b><span>#F7F5F1</span></div></div>
+    <div class="sw"><div class="c" style="background:#FFFFFF; border-bottom:1px solid var(--line);"></div><div class="m"><b>Surface</b><span>#FFFFFF</span></div></div>
+    <div class="sw"><div class="c" style="background:#F1EFE8;"></div><div class="m"><b>Surface 2</b><span>#F1EFE8</span></div></div>
+    <div class="sw"><div class="c" style="background:#E5E2DA;"></div><div class="m"><b>Line</b><span>#E5E2DA</span></div></div>
+    <div class="sw"><div class="c" style="background:#6E7280;"></div><div class="m"><b>Ink 2</b><span>#6E7280</span></div></div>
+    <div class="sw"><div class="c" style="background:#23252B;"></div><div class="m"><b>Ink</b><span>#23252B</span></div></div>
+  </div>
+  <div class="micro" style="margin-top:26px;">Pastel accents (from your illustration set)</div>
+  <div class="swatches">
+    <div class="sw"><div class="c" style="background:#8F97DE;"></div><div class="m"><b>Periwinkle</b><span>#8F97DE</span></div></div>
+    <div class="sw"><div class="c" style="background:#A879C2;"></div><div class="m"><b>Plum</b><span>#A879C2</span></div></div>
+    <div class="sw"><div class="c" style="background:#F4BE93;"></div><div class="m"><b>Peach</b><span>#F4BE93</span></div></div>
+    <div class="sw"><div class="c" style="background:#7CBF8B;"></div><div class="m"><b>Sage</b><span>#7CBF8B</span></div></div>
+    <div class="sw"><div class="c" style="background:#5E9FE0;"></div><div class="m"><b>Sky</b><span>#5E9FE0</span></div></div>
+    <div class="sw"><div class="c" style="background:#5FB8AB;"></div><div class="m"><b>Teal</b><span>#5FB8AB</span></div></div>
+    <div class="sw"><div class="c" style="background:#F0AFCE;"></div><div class="m"><b>Pink</b><span>#F0AFCE</span></div></div>
+    <div class="sw"><div class="c" style="background:#C64F7B;"></div><div class="m"><b>Berry</b><span>#C64F7B</span></div></div>
+    <div class="sw"><div class="c" style="background:#EE8A55;"></div><div class="m"><b>Coral</b><span>#EE8A55</span></div></div>
+    <div class="sw"><div class="c" style="background:#D9DE62;"></div><div class="m"><b>Citron</b><span>#D9DE62</span></div></div>
+    <div class="sw"><div class="c" style="background:#BBAE9C;"></div><div class="m"><b>Sand</b><span>#BBAE9C</span></div></div>
+    <div class="sw"><div class="c" style="background:#E8C94F;"></div><div class="m"><b>Gold (reward)</b><span>#E8C94F</span></div></div>
+  </div>
+  <div class="micro" style="margin-top:26px;">Role mapping</div>
+  <div class="rolegrid">
+    <div class="role"><div class="dot" style="background:#F4BE93;"></div><b>Fraction Factory</b><p>Peach world. Mascot, tile thumb tint, icon fills.</p></div>
+    <div class="role"><div class="dot" style="background:#7CBF8B;"></div><b>Trade Tycoon</b><p>Sage world.</p></div>
+    <div class="role"><div class="dot" style="background:#5E9FE0;"></div><b>Frozen Obby</b><p>Sky world.</p></div>
+    <div class="role"><div class="dot" style="background:#8F97DE;"></div><b>Equation Lab</b><p>Periwinkle world.</p></div>
+    <div class="role"><div class="dot" style="background:#58B372;"></div><b>Success</b><p>Correct answers, PLAY buttons, pass states.</p></div>
+    <div class="role"><div class="dot" style="background:#E4766C;"></div><b>Error</b><p>Wrong answers only. Never decorative.</p></div>
+    <div class="role"><div class="dot" style="background:#E8C94F;"></div><b>Reward</b><p>Gems, tickets, combo, teach-panel accent.</p></div>
+    <div class="role"><div class="dot" style="background:#23252B;"></div><b>Ink</b><p>All text, linework, primary buttons. Hierarchy lives here.</p></div>
+  </div>
+
+  <!-- ============ TYPE ============ -->
+  <h2>02 · Typography</h2>
+  <p class="lede">Inter Tight (free, embeddable) with a system-rounded fallback. Three jobs: big tight editorial headlines, plain readable body, and tiny uppercase micro-labels doing the wayfinding.</p>
+  <div class="typerow">
+    <div class="t-hero">Solve Bold.<br>Mine Gems.<br>Level Up.</div>
+    <div class="t-h2">Jump back in</div>
+    <div class="t-body">The bottoms are different — make them match. 2 × 3 = 6 works. Whatever happens to the bottom must happen to the top too.</div>
+    <div class="micro t-micro">Tier 2 · Grade 6 · 12 questions</div>
+  </div>
+
+  <!-- ============ ILLUSTRATION ============ -->
+  <h2>03 · Illustration — blob mascots</h2>
+  <p class="lede">Each world gets a blob character in its accent color: soft amoeba fill, dot eyes, a small smile, and thin ink doodles that hint at the math. Recreated below in code — swap for the licensed SVGs from your set once you connect that folder.</p>
+  <div class="blobrow">
+    <div class="blobcard">
+      <svg width="110" height="110" viewBox="0 0 100 100"><path d="M50 10 C70 4 90 18 88 38 C100 54 86 80 62 84 C44 96 16 84 14 62 C4 44 20 16 42 14 Z" fill="#F4BE93"/><circle cx="42" cy="42" r="2.6" fill="#23252B"/><circle cx="60" cy="42" r="2.6" fill="#23252B"/><path d="M44 53 Q51 59 58 53" stroke="#23252B" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M20 24 L30 24 M25 19 L25 29" stroke="#23252B" stroke-width="1.4" stroke-linecap="round"/><text x="72" y="26" font-size="13" font-weight="700" fill="#23252B" font-family="Inter Tight,system-ui">½</text></svg>
+      <b>Fraction Factory</b><span>peach · carries a ½</span>
+    </div>
+    <div class="blobcard">
+      <svg width="110" height="110" viewBox="0 0 100 100"><path d="M52 8 C74 10 92 28 86 46 C96 64 78 86 56 84 C38 94 14 80 16 60 C6 40 26 12 52 8 Z" fill="#7CBF8B"/><circle cx="44" cy="44" r="2.6" fill="#23252B"/><circle cx="62" cy="44" r="2.6" fill="#23252B"/><path d="M46 55 Q53 61 60 55" stroke="#23252B" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M70 18 a7 7 0 1 1 .1 0 M70 14 v8 M67 16 h6" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+      <b>Trade Tycoon</b><span>sage · coin doodle</span>
+    </div>
+    <div class="blobcard">
+      <svg width="110" height="110" viewBox="0 0 100 100"><path d="M48 12 C68 2 88 16 88 36 C98 52 88 78 66 82 C48 94 20 86 16 64 C6 46 20 20 48 12 Z" fill="#5E9FE0"/><circle cx="42" cy="42" r="2.6" fill="#23252B"/><circle cx="60" cy="42" r="2.6" fill="#23252B"/><path d="M44 53 Q51 59 58 53" stroke="#23252B" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M22 20 l3 3 M28 17 l0 4 M18 27 l4 0" stroke="#23252B" stroke-width="1.4" stroke-linecap="round"/><text x="66" y="24" font-size="12" font-weight="700" fill="#23252B" font-family="Inter Tight,system-ui">−5</text></svg>
+      <b>Frozen Obby</b><span>sky · snow specks, −5</span>
+    </div>
+    <div class="blobcard">
+      <svg width="110" height="110" viewBox="0 0 100 100"><path d="M46 10 C66 6 86 20 86 40 C96 58 82 82 60 84 C42 94 16 82 16 60 C8 42 24 14 46 10 Z" fill="#8F97DE"/><circle cx="42" cy="42" r="2.6" fill="#23252B"/><circle cx="60" cy="42" r="2.6" fill="#23252B"/><path d="M44 53 Q51 59 58 53" stroke="#23252B" stroke-width="2" fill="none" stroke-linecap="round"/><text x="66" y="26" font-size="12" font-weight="700" fill="#23252B" font-family="Inter Tight,system-ui">x²</text><path d="M20 22 q4 -6 8 0" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg>
+      <b>Equation Lab</b><span>periwinkle · x²</span>
+    </div>
+  </div>
+  <p class="cap">Rules: fills are always one flat pastel; faces and props are 1.3–2px ink lines; no gradients, no outlines around the blob body; one prop per character max.</p>
+
+  <!-- ============ COMPONENTS ============ -->
+  <h2>04 · Core components</h2>
+  <div class="comprow">
+    <div class="compcard">
+      <div class="complbl">Buttons</div>
+      <button class="btn">Primary</button>&nbsp;
+      <button class="btn play">▶ Play</button>&nbsp;
+      <button class="btn soft"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M8 2 a4 4 0 0 1 2.5 7.1 c-.5.4-.8 1-.8 1.6 h-3.4 c0-.6-.3-1.2-.8-1.6 A4 4 0 0 1 8 2 Z M6.5 13.4 h3" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Teach me</button>
+      <p class="cap">Ink primary · speech-bubble Play (tail) · soft secondary.</p>
+    </div>
+    <div class="compcard">
+      <div class="complbl">Dot-chips</div>
+      <span class="chip"><span class="d" style="background:#5E9FE0;"></span>ADD</span>&nbsp;
+      <span class="chip"><span class="d" style="background:#58B372;"></span>Chill · no timer</span>&nbsp;
+      <span class="chip"><span class="d" style="background:#E8C94F;"></span>Tickets · 4</span>
+      <p class="cap">Status dots replace emoji noise. One chip per fact.</p>
+    </div>
+    <div class="compcard">
+      <div class="complbl">Menu — icon rail</div>
+      <div style="display:flex; gap:20px; align-items:flex-start;">
+        <div class="railcol" style="padding:0;">
+          <div class="railbtn on"><svg width="17" height="17" viewBox="0 0 16 16"><path d="M3 13 L3 7 L8 3 L13 7 L13 13" stroke="#fff" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="railbtn"><svg width="17" height="17" viewBox="0 0 16 16"><rect x="3" y="5" width="10" height="8" rx="2" stroke="#23252B" stroke-width="1.5" fill="none"/><path d="M6 5 V4 a2 2 0 0 1 4 0 V5" stroke="#23252B" stroke-width="1.5" fill="none"/></svg></div>
+          <div class="railbtn"><svg width="17" height="17" viewBox="0 0 16 16"><rect x="2.5" y="5" width="11" height="7" rx="2" stroke="#23252B" stroke-width="1.5" fill="none"/><circle cx="8" cy="8.5" r="1.6" stroke="#23252B" stroke-width="1.3" fill="none"/></svg></div>
+        </div>
+        <p class="cap" style="max-width:190px;">Floating circular buttons, thin ink icons, active state inverts to solid ink. Labels appear on hover only — the icons carry it.</p>
+      </div>
+    </div>
+    <div class="compcard">
+      <div class="complbl">List rows</div>
+      <div class="listrow">Fraction Factory <span class="checkc">✓</span></div>
+      <div class="listrow">Trade Tycoon <span class="checkc">✓</span></div>
+      <div class="listrow">Frozen Obby <span class="meta">Tier 2 · 58%</span></div>
+      <p class="cap">Soft pill rows with trailing meta — worlds, teach steps, skill lists, session history.</p>
+    </div>
+    <div class="compcard" style="max-width:300px;">
+      <div class="complbl">Text pattern</div>
+      <div class="micro">Grade 6 · Tier 2</div>
+      <div style="font-size:23px; font-weight:900; letter-spacing:-.6px; margin:4px 0 6px;">Frozen Obby</div>
+      <p style="font-size:13.5px; color:var(--ink2);">Negative numbers live below zero. Five right in a row levels you up.</p>
+      <p class="cap">Whisper micro-label → big ink heading → quiet body. Hierarchy from type, never from boxes.</p>
+    </div>
+    <div class="compcard" style="min-width:470px;">
+      <div class="complbl">Grade route path</div>
+      <div class="route">
+        <div class="node done">3</div><div class="node done">4</div><div class="node done">5</div>
+        <div class="node cur">6</div><div class="node">7</div><div class="node lock"><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2.5" y="5" width="7" height="5.5" rx="1.4" stroke="#9CA0AB" stroke-width="1.2" fill="none"/><path d="M4.2 5 V3.6 a1.8 1.8 0 0 1 3.6 0 V5" stroke="#9CA0AB" stroke-width="1.2" fill="none"/></svg></div>
+      </div>
+      <p class="cap">Dashed connector · sage fill = passed · ink = current · dimmed lock = not yet earned.</p>
+    </div>
+    <div class="compcard" style="min-width:100%;">
+      <div class="complbl">Tinted frame cards — tiers</div>
+      <div style="display:flex; gap:16px; flex-wrap:wrap;">
+        <div class="tframe" style="background:#E4F0DC;">
+          <div class="tftitle" style="color:#4E7D46;">Tier 1 <span>✓</span></div>
+          <div class="tfinner">
+            <b>Warm-up</b>
+            <span class="tag" style="background:#EAF3E4; color:#4E7D46;">Adding negatives</span><span class="tag" style="background:#EAF3E4; color:#4E7D46;">Ordering</span>
+            <div style="margin-top:4px;">Mastered · 92% accuracy</div>
+          </div>
+        </div>
+        <div class="tframe" style="background:#E3E7FA;">
+          <div class="tftitle" style="color:#4C5BAF;">Tier 2 <span>· now</span></div>
+          <div class="tfinner">
+            <b>Heating up</b>
+            <span class="tag" style="background:#ECEFFC; color:#4C5BAF;">Subtracting negatives</span><span class="tag" style="background:#ECEFFC; color:#4C5BAF;">Multiplying</span>
+            <div style="margin-top:4px;">5 of last 6 right to level up</div>
+          </div>
+        </div>
+        <div class="tframe" style="background:#FBE3EA;">
+          <div class="tftitle" style="color:#B14A6C;">Tier 3 <span><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2.5" y="5" width="7" height="5.5" rx="1.4" stroke="#9CA0AB" stroke-width="1.2" fill="none"/><path d="M4.2 5 V3.6 a1.8 1.8 0 0 1 3.6 0 V5" stroke="#9CA0AB" stroke-width="1.2" fill="none"/></svg></span></div>
+          <div class="tfinner">
+            <b>Boss level</b>
+            <span class="tag" style="background:#FCEDF1; color:#B14A6C;">Order of operations</span><span class="tag" style="background:#FCEDF1; color:#B14A6C;">Chained signs</span>
+            <div style="margin-top:4px;">Unlocks at Tier 2 mastery</div>
+          </div>
+        </div>
+      </div>
+      <p class="cap">Colored frame + white nested card + pastel skill tags (your notes-app reference). Used for tier progression on world pages and in the grown-ups dashboard; the tint communicates state — green mastered, periwinkle active, pink locked/boss.</p>
+    </div>
+  </div>
+
+  <!-- ============ MOCKUP: HOME ============ -->
+  <h2>05 · Desktop — Home</h2>
+  <p class="lede">Structure from your dashboard reference: labeled sidebar menu, a hero completion module where the cards are <b>grades</b> (passed = white, current = flooded, next = locked), the level-up CTA anchored bottom-left, and the piggy bank making the ticket economy visible at a glance.</p>
+  <div class="frame">
+    <div class="framebar"><i></i><i></i><i></i></div>
+    <div class="screen ambient">
+      <div class="side" style="background:transparent; border-right:1px dashed var(--line);">
+        <div class="brand">
+          <svg width="30" height="30" viewBox="0 0 100 100"><path d="M50 10 C70 4 90 18 88 38 C100 54 86 80 62 84 C44 96 16 84 14 62 C4 44 20 16 42 14 Z" fill="#8F97DE"/><circle cx="42" cy="42" r="3" fill="#23252B"/><circle cx="60" cy="42" r="3" fill="#23252B"/><path d="M44 53 Q51 59 58 53" stroke="#23252B" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+          <b>math miner</b>
+        </div>
+        <div class="nav on"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 13 L3 7 L8 3 L13 7 L13 13" stroke="#23252B" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Play</div>
+        <div class="nav"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="3" y="5" width="10" height="8" rx="2" stroke="#6E7280" stroke-width="1.6" fill="none"/><path d="M6 5 V4 a2 2 0 0 1 4 0 V5" stroke="#6E7280" stroke-width="1.6" fill="none"/></svg>Shop</div>
+        <div class="nav"><svg width="16" height="16" viewBox="0 0 16 16"><rect x="2.5" y="5" width="11" height="7" rx="2" stroke="#6E7280" stroke-width="1.6" fill="none"/><circle cx="8" cy="8.5" r="1.6" stroke="#6E7280" stroke-width="1.4" fill="none"/></svg>Rewards</div>
+        <div class="nav"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 13 a5 5 0 0 1 10 0 M8 7 a2.4 2.4 0 1 0 0-4.8 A2.4 2.4 0 0 0 8 7" stroke="#6E7280" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>Grown-ups</div>
+        <div class="lvlcard">
+          <b>Grade 7 unlocks</b>
+          <span>pass the Grade 6 test — 2/4 worlds ready</span>
+          <span class="lvlbtn">take the test ↗</span>
+        </div>
+      </div>
+      <div class="main">
+        <div class="mtop">
+          <div class="micro">Home</div>
+          <div style="display:flex; gap:10px;">
+            <span class="chip"><span class="d" style="background:#EE8A55;"></span>4-day streak</span>
+            <span class="chip"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 4.2 L6 1.2 L10 4.2 L6 10.8 Z" fill="#8F97DE"/></svg>1,240 &nbsp;<b style="background:#58B372;color:#fff;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;">+</b></span>
+          </div>
+        </div>
+        <div class="hero" style="background:#F3E9DE; border:none; align-items:center;">
+          <div style="flex:1;">
+            <div class="micro">hey, maya</div>
+            <h3>3 grades passed.<br>Grade 6 in progress.</h3>
+            <span class="lvlbtn" style="margin-top:14px;">view progress ↗</span>
+          </div>
+          <div class="gcards">
+            <div class="gcard"><span class="gn">GRADE</span><b>5</b><span class="st">✓ passed</span></div>
+            <div class="gcard now"><span class="gn">GRADE</span><b>6</b><span class="st">now · tier 2</span></div>
+            <div class="gcard lock"><span class="gn">GRADE</span><b>7</b><span class="st" style="color:var(--ink3);">locked</span></div>
+          </div>
+        </div>
+        <div style="display:flex; gap:16px; margin-top:16px;">
+          <div style="flex:1.6;">
+            <div class="micro" style="margin-bottom:10px;">Grade 6 worlds</div>
+            <div class="tilegrid" style="grid-template-columns:1fr 1fr;">
+              <div class="wtile"><div class="wthumb" style="background:#AFB5E6; height:96px;"><span class="tchip">01 · TIER 2</span>
+                <svg width="64" height="64" viewBox="0 0 100 100"><path d="M50 10 C70 4 90 18 88 38 C100 54 86 80 62 84 C44 96 16 84 14 62 C4 44 20 16 42 14 Z" fill="#EE8A55"/><circle cx="42" cy="42" r="2.8" fill="#23252B"/><circle cx="60" cy="42" r="2.8" fill="#23252B"/><path d="M44 53 Q51 59 58 53" stroke="#23252B" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></div>
+                <div class="wbody"><b>Fraction Factory</b><div class="micro">fractions ↔ decimals</div></div></div>
+              <div class="wtile"><div class="wthumb" style="background:#E0E169; height:96px;"><span class="tchip">02 · TIER 1</span>
+                <svg width="64" height="64" viewBox="0 0 100 100"><path d="M52 8 C74 10 92 28 86 46 C96 64 78 86 56 84 C38 94 14 80 16 60 C6 40 26 12 52 8 Z" fill="#E88585"/><circle cx="44" cy="44" r="2.8" fill="#23252B"/><circle cx="62" cy="44" r="2.8" fill="#23252B"/><path d="M46 55 Q53 61 60 55" stroke="#23252B" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg></div>
+                <div class="wbody"><b>Trade Tycoon</b><div class="micro">ratios & percents</div></div></div>
+            </div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column; gap:12px;">
+            <div class="piggyw">
+              <svg width="64" height="64" viewBox="0 0 100 100"><path d="M50 22 C72 18 88 34 84 52 C90 66 74 82 54 80 C36 88 18 74 20 58 C12 42 28 24 50 22 Z" fill="#F0AFCE"/><circle cx="42" cy="46" r="2.8" fill="#23252B"/><circle cx="58" cy="46" r="2.8" fill="#23252B"/><path d="M44 56 Q50 61 56 56" stroke="#23252B" stroke-width="2.2" fill="none" stroke-linecap="round"/><rect x="43" y="26" width="14" height="3" rx="1.5" fill="#23252B"/></svg>
+              <span style="flex:1;">
+                <b style="font-size:14px;">piggy bank: 7 tickets</b>
+                <span style="display:block; height:10px; background:var(--surface2); border:1px solid var(--line); border-radius:99px; margin-top:7px; overflow:hidden;"><span style="display:block; height:100%; width:70%; background:var(--gold);"></span></span>
+                <span class="cap" style="display:block; margin-top:5px;">3 more to "$5 treat"</span>
+              </span>
+            </div>
+            <div class="listrow">Frozen Obby <span class="meta">Tier 2 · 58%</span></div>
+            <div class="listrow">Equation Lab <span class="meta">Tier 1 · new</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">Labeled sidebar with the level-up CTA anchored bottom-left (your dashboard reference) · hero module shows grades as completion cards — white passed, flooded current, dimmed locked · piggy bank widget keeps the ticket economy visible. In the real app the piggy uses the Savings blob from your icon set.</p>
+
+  <!-- ============ MOCKUP: PLAY ============ -->
+  <h2>06 · Desktop — Play (teach panel open)</h2>
+  <div class="frame">
+    <div class="framebar"><i></i><i></i><i></i></div>
+    <div class="screen" style="display:block; padding:30px 0 44px;">
+      <div class="playcol">
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="railbtn" style="width:38px; height:38px;"><span style="font-size:14px; font-weight:800;">✕</span></div>
+          <div class="progress" style="flex:1;"><i></i></div>
+          <span class="chip"><svg width="11" height="11" viewBox="0 0 12 12"><path d="M2 4.2 L6 1.2 L10 4.2 L6 10.8 Z" fill="#8F97DE"/></svg>128</span>
+        </div>
+        <div style="margin:26px auto 6px; position:relative; width:110px;">
+          <svg width="110" height="110" viewBox="0 0 100 100"><path d="M48 12 C68 2 88 16 88 36 C98 52 88 78 66 82 C48 94 20 86 16 64 C6 46 20 20 48 12 Z" fill="#5E9FE0"/><circle cx="42" cy="42" r="2.8" fill="#23252B"/><circle cx="60" cy="42" r="2.8" fill="#23252B"/><path d="M44 53 Q51 59 58 53" stroke="#23252B" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+          </div>
+        <div class="micro">Frozen Obby · Grade 6 · Tier 2 · Streak 3</div>
+        <div class="qcard">
+          <span class="chip"><span class="d" style="background:#5E9FE0;"></span>ADD</span>
+          <div class="eq">−10 + 3</div>
+          <button class="btn soft"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M8 2 a4 4 0 0 1 2.5 7.1 c-.5.4-.8 1-.8 1.6 h-3.4 c0-.6-.3-1.2-.8-1.6 A4 4 0 0 1 8 2 Z M6.5 13.4 h3" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg> Teach me</button>&nbsp;
+          <button class="btn soft"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M3 6 v4 h2.5 L9 13 V3 L5.5 6 Z" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linejoin="round"/><path d="M11 6 a3 3 0 0 1 0 4" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg> Read it</button>
+          <div class="teach">
+            <div class="tstep dim"><span class="stepnum">1</span><span>Picture a number line. Start at −10.</span></div>
+            <div class="tstep"><span class="stepnum">2</span><span><b>Adding 3 means walking 3 steps to the RIGHT.</b>
+              <svg width="100%" height="44" viewBox="0 0 280 44" style="display:block; margin-top:6px;"><line x1="8" y1="30" x2="272" y2="30" stroke="#9CA0AB" stroke-width="1.5"/><path d="M60 16 Q95 2 130 16" fill="none" stroke="#E8C94F" stroke-width="2.4"/><circle cx="60" cy="30" r="4.5" fill="#5E9FE0"/><circle cx="130" cy="30" r="4.5" fill="#58B372"/><text x="60" y="43" font-size="10" text-anchor="middle" fill="#23252B" font-weight="700">−10</text><text x="130" y="43" font-size="10" text-anchor="middle" fill="#23252B" font-weight="800">−7</text><text x="216" y="43" font-size="10" text-anchor="middle" fill="#9CA0AB">0</text></svg></span></div>
+            <div style="display:flex; align-items:center; margin-top:10px;">
+              <button class="btn soft" style="font-size:13px; padding:9px 15px;"><svg width="14" height="14" viewBox="0 0 16 16"><path d="M3 6 v4 h2.5 L9 13 V3 L5.5 6 Z" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linejoin="round"/><path d="M11 6 a3 3 0 0 1 0 4" stroke="#23252B" stroke-width="1.3" fill="none" stroke-linecap="round"/></svg> Read it</button>
+              <button class="btn" style="margin-left:auto; font-size:13px; padding:9px 15px;">Next step →</button>
+            </div>
+            <div class="micro" style="margin-top:10px;">Clock paused · Combo safe</div>
+          </div>
+        </div>
+        <div class="ansgrid" style="opacity:.45;">
+          <div class="ans">−7</div><div class="ans">13</div><div class="ans">−13</div><div class="ans">7</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">The blob replaces the gem as the thing she "mines" — correct answers bounce it and burst pastel droplets; the cream teach panel is the only warm surface on the screen, so attention lands there when it opens.</p>
+
+  <!-- ============ MOCKUP: DASHBOARD ============ -->
+  <h2>07 · Desktop — Grown-ups dashboard</h2>
+  <div class="frame">
+    <div class="framebar"><i></i><i></i><i></i></div>
+    <div class="screen" style="display:block; padding:34px 46px;">
+      <div class="micro">Grown-up dashboard · Grade 6</div>
+      <h3 style="font-size:30px; font-weight:900; letter-spacing:-1px; margin:6px 0 20px;">This week</h3>
+      <div class="tiles">
+        <div class="tile"><b>184</b><div class="micro">Problems attempted</div></div>
+        <div class="tile"><b>78%</b><div class="micro">Overall accuracy</div></div>
+        <div class="tile"><b>4</b><div class="micro">Day streak</div></div>
+        <div class="tile"><b>7 / 10</b><div class="micro">Tickets this week</div></div>
+      </div>
+      <div class="two">
+        <div class="compcard" style="min-width:0;">
+          <div class="complbl">Accuracy by topic</div>
+          <div class="barrow"><span class="barlbl">Fraction Factory</span><div class="bartrack"><div class="barfill" style="width:82%;"></div></div><span class="barval">82% · 64q</span></div>
+          <div class="barrow"><span class="barlbl">Trade Tycoon</span><div class="bartrack"><div class="barfill" style="width:74%;"></div></div><span class="barval">74% · 41q</span></div>
+          <div class="barrow"><span class="barlbl">Frozen Obby</span><div class="bartrack"><div class="barfill" style="width:58%;"></div></div><span class="barval">58% · 52q</span></div>
+          <div class="barrow"><span class="barlbl">Equation Lab</span><div class="bartrack"><div class="barfill" style="width:81%;"></div></div><span class="barval">81% · 27q</span></div>
+        </div>
+        <div class="compcard" style="min-width:0;">
+          <div class="complbl">Suggested focus</div>
+          <div class="note" style="margin-top:0;"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#E4766C; margin-right:8px;"></span><b>Subtracting a negative</b> — 45% over 11 tries, 6 hints used</div>
+          <div class="note"><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#E4766C; margin-right:8px;"></span><b>Percent change</b> — 55% over 9 tries</div>
+          <p class="cap">Skills under 70% with 6+ attempts. High hint counts mean she's leaning on the explanations — teach these directly.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ADHD RULES ============ -->
+  <h2>08 · ADHD rules — binding, not vibes</h2>
+  <p class="lede">Distilled from ADHD-friendly app design research (Monster Math's checklist + K-12 platform accessibility work), applied to this design. These override aesthetics when they conflict.</p>
+  <div class="rolegrid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="role"><b>Untimed by default</b><p>Chill mode (progress bar, no clock) is the default everywhere. Blitz is opt-in, never shown first, and has no ticking sounds or last-seconds panic effects.</p></div>
+    <div class="role"><b>One primary action per screen</b><p>Every screen has exactly one dominant CTA (the green Play bubble). Everything else is quiet chrome she can ignore.</p></div>
+    <div class="role"><b>Focus dimming</b><p>When the teach panel opens, answers and chrome drop to ~45% opacity. The panel is the only warm surface on screen — attention has one place to land.</p></div>
+    <div class="role"><b>One step at a time</b><p>Explanations reveal one chunk per tap with the previous steps shrinking. Never a wall of steps. Every step readable aloud.</p></div>
+    <div class="role"><b>Progress for small wins</b><p>Question-progress bar in every round, tier stars, route path, weekly ticket meter — always something visibly filling.</p></div>
+    <div class="role"><b>Reward effort, not perfection</b><p>Tickets come from showing up (sessions, streak days, tier-ups) — never per correct answer, so there's nothing to grind and nothing to fail.</p></div>
+    <div class="role"><b>No punitive mechanics</b><p>Wrong answer = show the right one, no lost points, no lives. Failed grade test = a named practice plan + retry button, zero penalty.</p></div>
+    <div class="role"><b>Purposeful motion only</b><p>Animation fires as feedback (blob bounce, droplet burst on correct) and never ambient. Nothing loops, pulses, or moves while she's thinking.</p></div>
+    <div class="role"><b>CRA visuals in teaching</b><p>Number lines with jump arrows, fraction bars, dot groups — the representational layer appears before the symbols in every teach panel that supports it.</p></div>
+  </div>
+
+  <!-- ============ VOICE ============ -->
+  <h2>09 · Voice — Gen Z calibrated</h2>
+  <p class="lede">The fastest way to lose a 13-year-old is trying too hard. The voice is understated, dry, and brief — it treats her like she's competent. Enthusiasm is shown through the blob and the animation, not through exclamation marks.</p>
+  <div class="two">
+    <div class="compcard" style="min-width:0; border-color:#CFE5D4;">
+      <div class="complbl" style="color:#58B372;">Sounds like us</div>
+      <div class="listrow">clean run. 12 for 12.</div>
+      <div class="listrow">tier 3 unlocked</div>
+      <div class="listrow">not this one — look:</div>
+      <div class="listrow">so close. 14/16 — two more.</div>
+      <div class="listrow">day 5. streak's alive.</div>
+    </div>
+    <div class="compcard" style="min-width:0; border-color:#F2D4D0;">
+      <div class="complbl" style="color:#E4766C;">Never</div>
+      <div class="listrow">GREAT JOB, SUPERSTAR!!! 🎉🎉</div>
+      <div class="listrow">Oopsie! Let's try again! 😊</div>
+      <div class="listrow">Math is FUN, right?!</div>
+      <div class="listrow">forced slang ("that's bussin!")</div>
+      <div class="listrow">anything a teacher would put on a poster</div>
+    </div>
+  </div>
+  <p class="cap">Rules: lowercase is allowed and encouraged in celebration copy · buttons ≤ 4 words · one exclamation mark per screen maximum · wrong-answer copy is neutral and immediately useful · never reference being cool.</p>
+
+  <!-- ============ GRADE-ADAPTIVE ============ -->
+  <h2>10 · Grade-adaptive design</h2>
+  <p class="lede">Same components, different dials. The grade she's placed in switches a token set — a grade 3 kid and a grade 8 teen should feel like the app was made for <i>them</i>.</p>
+  <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:18px;">
+    <div class="tframe" style="background:#E4F0DC; width:300px;">
+      <div class="tftitle" style="color:#4E7D46;">Grades 3–4 · "big & warm"</div>
+      <div class="tfinner">
+        <b>Dial settings</b>
+        Type +20% · buttons +25% taller · mascot large and on every screen · saturated floods · celebrations big (confetti, bounce) · copy ≤ 6 words, read-aloud offered on everything · Chill mode only by default · stats hidden from kid view
+      </div>
+    </div>
+    <div class="tframe" style="background:#E3E7FA; width:300px;">
+      <div class="tftitle" style="color:#4C5BAF;">Grades 5–6 · "the baseline"</div>
+      <div class="tfinner">
+        <b>Dial settings</b>
+        The design exactly as shown in this guide. Balanced mascot presence, standard type scale, Chill default with Blitz visible, celebrations medium, tickets & streaks visible
+      </div>
+    </div>
+    <div class="tframe" style="background:#FBE3EA; width:300px;">
+      <div class="tftitle" style="color:#B14A6C;">Grades 7–8 · "tighter & cooler"</div>
+      <div class="tfinner">
+        <b>Dial settings</b>
+        Type −10%, denser layout · mascot shrinks to a corner sticker · muted floods, more ink · <b>dark theme unlockable and default-offered</b> · celebrations = one subtle glow, dry copy · her own stats visible (accuracy trend, best streaks) — teens love their own data
+      </div>
+    </div>
+  </div>
+  <div class="two" style="margin-top:22px;">
+    <div class="compcard" style="min-width:0;">
+      <div class="complbl">Same moment · Grade 3</div>
+      <div style="background:#F1F6EA; border-radius:16px; padding:26px; text-align:center;">
+        <svg width="88" height="88" viewBox="0 0 100 100"><path d="M52 8 C74 10 92 28 86 46 C96 64 78 86 56 84 C38 94 14 80 16 60 C6 40 26 12 52 8 Z" fill="#7CBF8B"/><circle cx="44" cy="44" r="3.2" fill="#23252B"/><circle cx="62" cy="44" r="3.2" fill="#23252B"/><path d="M45 55 Q53 62 61 55" stroke="#23252B" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>
+        <div style="font-size:44px; font-weight:900; letter-spacing:-1px; margin:10px 0 16px;">7 + 5</div>
+        <button class="btn soft" style="font-size:16px; padding:15px 24px;">show me how</button>
+        <div style="display:flex; gap:6px; justify-content:center; margin-top:18px;">
+          <span style="width:34px; height:8px; border-radius:99px; background:#7CBF8B;"></span><span style="width:34px; height:8px; border-radius:99px; background:#7CBF8B;"></span><span style="width:34px; height:8px; border-radius:99px; background:#E5E2DA;"></span><span style="width:34px; height:8px; border-radius:99px; background:#E5E2DA;"></span>
+        </div>
+      </div>
+      <p class="cap">Big mascot, big type, segment progress dots, gentle button copy.</p>
+    </div>
+    <div class="compcard" style="min-width:0;">
+      <div class="complbl">Same moment · Grade 8</div>
+      <div style="background:#23252B; border-radius:16px; padding:24px; text-align:center; position:relative;">
+        <svg width="34" height="34" viewBox="0 0 100 100" style="position:absolute; top:14px; right:14px; transform:rotate(10deg);"><path d="M52 8 C74 10 92 28 86 46 C96 64 78 86 56 84 C38 94 14 80 16 60 C6 40 26 12 52 8 Z" fill="#8F97DE"/><circle cx="44" cy="44" r="3" fill="#23252B"/><circle cx="62" cy="44" r="3" fill="#23252B"/><path d="M46 55 Q53 61 60 55" stroke="#23252B" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+        <div style="display:flex; gap:8px; justify-content:center; margin-bottom:12px;">
+          <span class="chip" style="background:transparent; border-color:#3A3D42; color:#9CA0AB;"><span class="d" style="background:#8F97DE;"></span>streak 7</span>
+          <span class="chip" style="background:transparent; border-color:#3A3D42; color:#9CA0AB;"><span class="d" style="background:#E8C94F;"></span>87% this week</span>
+        </div>
+        <div style="font-size:32px; font-weight:900; letter-spacing:-.8px; color:#fff; margin:6px 0 14px;">3x − 7 = −31</div>
+        <button class="btn" style="background:#3A3D42; font-size:13px; padding:10px 16px;">teach me</button>
+        <div class="progress" style="margin-top:16px; background:#2C2E31; border-color:#3A3D42;"><i style="width:60%; background:#8F97DE;"></i></div>
+      </div>
+      <p class="cap">Dark theme, tighter type, mascot as corner sticker, her stats up front, lowercase chrome.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:70px; padding:26px 30px; background:var(--surface); border:1px solid var(--line); border-radius:20px;">
+    <div class="micro">Next steps</div>
+    <p style="font-size:14.5px; margin-top:8px; color:var(--ink2);">① Approve or mark up this direction → ② connect your illustration folder in the desktop app so the real SVGs replace my recreations → ③ I reskin the live game against this guide (mobile + this desktop layout) → ④ deploy as a shareable site for the pilot families.</p>
+  </div>
+
+</div>
+</body>
+</html>
