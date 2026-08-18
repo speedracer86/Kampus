@@ -11,10 +11,10 @@ export const color = {
   orange: '#EE8A55', orangeDeep: '#7C4A1D', peach: '#F4BE93',
 };
 export const world = {
-  fractions: { color: '#F0AFCE', name: 'Fraction Factory', blob: 'Ice_cream' },
-  trade: { color: '#F4BE93', name: 'Trade Tycoon', blob: 'Cash' },
-  weather: { color: '#5E9FE0', name: 'Weather Station', blob: 'Rain' },
-  equations: { color: '#8F97DE', name: 'Equation Lab', blob: 'Learning' },
+  fractions: { color: '#F0AFCE', name: 'The Kitchen', blob: 'Ice_cream' },
+  trade: { color: '#F4BE93', name: 'The Store', blob: 'Cash' },
+  weather: { color: '#5E9FE0', name: 'The Trip', blob: 'Rain' },
+  equations: { color: '#8F97DE', name: 'The Build', blob: 'Learning' },
 };
 export const worldTint = (c) => `color-mix(in oklab, ${c} 24%, white)`;
 export const font = { family: "'Inter Tight', sans-serif" };

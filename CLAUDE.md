@@ -103,10 +103,16 @@ untouched lines.**
   `apps/web/src/worlds.js`, `packages/ui/src/tokens.js` (`world` map), and the engine's
   `GRADE_WORLDS`. `worlds.js` gives `alg` the `Idea` blob while `tokens.js` says `Learning`.
   Reconcile deliberately rather than patching one call site.
-- **The current design handoff renames the worlds** to The Kitchen / The Store / The Trip /
-  The Build; all code and `docs/STYLE_GUIDE.md` still use the v1 names (Fraction Factory,
-  Trade Tycoon, Weather Station, Equation Lab). Consistent today, but an open decision
-  before Phase 3 — don't half-apply it.
+- **World names are The Kitchen / The Store / The Trip / The Build** (topics `frac` /
+  `ratio` / `int` / `alg`), per the design handoff. The v1 names (Fraction Factory, Trade
+  Tycoon, Weather Station, Equation Lab) are gone everywhere except
+  `packages/ui/src/gallery-preview.jsx`, which is generated and unused.
+- **`GRADE_WORLDS[grade][topic].name` is dead data.** The legacy app overwrites all of it
+  from the `WORLD` map at `index.html:1549`, and `apps/web` reads only `.desc` from it —
+  names there come from `worlds.js`. Its per-grade names (Number Mine, Frozen Obby, Slope
+  City, Puzzle Lab) have never been user-visible. Don't rely on them; don't render them.
+- **The world emoji in `GRADE_WORLDS` are never rendered.** Only pet and shop-item icons
+  reach the screen.
 - **Topic codes are not display names.** Internally: `frac`, `ratio`, `int`, `alg`.
 - **Two different test runners.** Vitest for the packages, a plain Node + Playwright script
   for `test:e2e`. `npm test` does not run the e2e suite.

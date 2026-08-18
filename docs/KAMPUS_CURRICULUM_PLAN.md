@@ -18,7 +18,7 @@
 
 ## 2. Per-grade lesson map
 
-Format: the **major work** of each grade (where 65–85% of time should go), what Kampus **already covers**, the **gaps to build**, and the **real-world wrap** for each lesson. Worlds: 🏭 Fraction Factory · 💰 Trade Tycoon · 🌡 Weather Station · 🧪 Equation Lab · 🍋 Lemonade Stand (the business sim, which becomes a real curricular vehicle below).
+Format: the **major work** of each grade (where 65–85% of time should go), what Kampus **already covers**, the **gaps to build**, and the **real-world wrap** for each lesson. Worlds: 🏭 The Kitchen · 💰 The Store · 🌡 The Trip · 🧪 The Build · 🍋 Lemonade Stand (the business sim, which becomes a real curricular vehicle below).
 
 ### Grade 3 — "the multiplication year"
 
@@ -79,7 +79,7 @@ Format: the **major work** of each grade (where 65–85% of time should go), wha
 | **Functions: evaluate, compare, model** | ✘ (partial via evalTwoVar) | **Build** | 🧪 "f(x) = 12x + 30: babysitting pay — what's f(4)?" |
 | *Supporting:* **Pythagorean theorem** | ✘ | Build — it's iconic and kids feel grown-up doing it | 🏭 "Will a 60-inch TV fit the 52×30 wall nook?"; shortcut across the park |
 
-**Bottom line on coverage:** grades 6–7 are in good shape; grade 4 has a real hole (decimals); grade 5 is missing decimal division and volume; grade 8 is missing half its major work (functions, systems); and the whole app under-uses word-problem framing — which is exactly the "wrap it in the real world" change you're proposing. Geometry and statistics are absent as strands, but they don't need a fifth world: area/volume fold into Fraction Factory (recipes → trays → boxes), stats and probability fold into the Lemonade Stand, Pythagorean into Fraction Factory's "build" identity.
+**Bottom line on coverage:** grades 6–7 are in good shape; grade 4 has a real hole (decimals); grade 5 is missing decimal division and volume; grade 8 is missing half its major work (functions, systems); and the whole app under-uses word-problem framing — which is exactly the "wrap it in the real world" change you're proposing. Geometry and statistics are absent as strands, but they don't need a fifth world: area/volume fold into The Kitchen (recipes → trays → boxes), stats and probability fold into the Lemonade Stand, Pythagorean into The Kitchen's "build" identity.
 
 ---
 
@@ -114,8 +114,8 @@ Your model — Kredits in-app, parents converting effort into real-world rewards
 ## 5. Build order (what I'd implement, in priority)
 
 1. **Grade 4 decimals + Grade 5 decimal division** — a real curriculum hole, and money context makes it the easiest build (highest correctness-per-effort).
-2. **Context wraps on existing generators** — biggest engagement win, no new math needed; start with Trade Tycoon and Weather Station where stories are natural.
-3. **Grade 7 percent applications (tax/tip/discount/interest)** — most life-relevant gap, fits Trade Tycoon perfectly.
+2. **Context wraps on existing generators** — biggest engagement win, no new math needed; start with The Store and The Trip where stories are natural.
+3. **Grade 7 percent applications (tax/tip/discount/interest)** — most life-relevant gap, fits The Store perfectly.
 4. **Ticket-economy rework** — inputs-only tickets, Scholar bonus replacing the teach penalty, self-set weekly goal. Small code, big behavioral stakes.
 5. **Lemonade Stand curriculum hooks** — G6 stats and G7 probability from her own sales data.
 6. **Grade 8 functions + systems** — needed before she gets there; some runway if she's entering grade 7 material.

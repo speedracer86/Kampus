@@ -1293,29 +1293,29 @@ function slope2G(){
 /* ---- per-grade worlds & problem pools ---- */
 const GRADE_WORLDS = {
   3:{int:{name:'Number Mine',icon:'⛏️',desc:'adding & subtracting big numbers'},
-     frac:{name:'Fraction Factory',icon:'🏭',desc:'first fractions: pieces & shares'},
-     ratio:{name:'Trade Tycoon',icon:'💰',desc:'times tables & fair trades'},
+     frac:{name:'The Kitchen',icon:'🏭',desc:'first fractions: pieces & shares'},
+     ratio:{name:'The Store',icon:'💰',desc:'times tables & fair trades'},
      alg:{name:'Puzzle Lab',icon:'🧩',desc:'mystery numbers & patterns'}},
   4:{int:{name:'Number Mine',icon:'⛏️',desc:'big ×, ÷ and rounding'},
-     frac:{name:'Fraction Factory',icon:'🏭',desc:'equivalent fractions & comparing'},
-     ratio:{name:'Trade Tycoon',icon:'💰',desc:'fact fluency & money problems'},
+     frac:{name:'The Kitchen',icon:'🏭',desc:'equivalent fractions & comparing'},
+     ratio:{name:'The Store',icon:'💰',desc:'fact fluency & money problems'},
      alg:{name:'Puzzle Lab',icon:'🧩',desc:'mystery numbers & patterns'}},
   5:{int:{name:'Decimal Depths',icon:'🌊',desc:'decimals & order of operations'},
-     frac:{name:'Fraction Factory',icon:'🏭',desc:'adding & multiplying fractions'},
-     ratio:{name:'Trade Tycoon',icon:'💰',desc:'unit rates & scaling up'},
-     alg:{name:'Equation Lab',icon:'🧪',desc:'order of operations & variables'}},
+     frac:{name:'The Kitchen',icon:'🏭',desc:'adding & multiplying fractions'},
+     ratio:{name:'The Store',icon:'💰',desc:'unit rates & scaling up'},
+     alg:{name:'The Build',icon:'🧪',desc:'order of operations & variables'}},
   6:{int:{name:'Frozen Obby',icon:'❄️',desc:'negative numbers (below zero!)'},
-     frac:{name:'Fraction Factory',icon:'🏭',desc:'fractions ↔ decimals & percents'},
-     ratio:{name:'Trade Tycoon',icon:'💰',desc:'ratios, percents & proportions'},
-     alg:{name:'Equation Lab',icon:'🧪',desc:'one & two-step equations'}},
+     frac:{name:'The Kitchen',icon:'🏭',desc:'fractions ↔ decimals & percents'},
+     ratio:{name:'The Store',icon:'💰',desc:'ratios, percents & proportions'},
+     alg:{name:'The Build',icon:'🧪',desc:'one & two-step equations'}},
   7:{int:{name:'Frozen Obby',icon:'❄️',desc:'all four operations with negatives'},
-     frac:{name:'Fraction Factory',icon:'🏭',desc:'multiply & divide fractions'},
-     ratio:{name:'Trade Tycoon',icon:'💰',desc:'proportions & percent change'},
-     alg:{name:'Equation Lab',icon:'🧪',desc:'two-step equations & distributing'}},
+     frac:{name:'The Kitchen',icon:'🏭',desc:'multiply & divide fractions'},
+     ratio:{name:'The Store',icon:'💰',desc:'proportions & percent change'},
+     alg:{name:'The Build',icon:'🧪',desc:'two-step equations & distributing'}},
   8:{int:{name:'Power Plant',icon:'⚡',desc:'exponents, roots & scientific notation'},
-     frac:{name:'Fraction Factory',icon:'🏭',desc:'fraction · decimal · percent fluency'},
+     frac:{name:'The Kitchen',icon:'🏭',desc:'fraction · decimal · percent fluency'},
      ratio:{name:'Slope City',icon:'📈',desc:'slope & heavy-duty percents'},
-     alg:{name:'Equation Lab',icon:'🧪',desc:'x on both sides & combining terms'}}
+     alg:{name:'The Build',icon:'🧪',desc:'x on both sides & combining terms'}}
 };
 const CURRICULUM = {
   3:{int:{1:[addBigG(20,99), subBigG(20,99)], 2:[addBigG(100,999), subBigG(100,999)], 3:[addBigG(100,999), subBigG(100,999), multFactG(9)]},
@@ -1540,10 +1540,10 @@ document.getElementById('coinicon2').innerHTML = IC.coin;
 
 /* ---------- fixed world identities (design handoff) ---------- */
 const WORLD = {
-  frac:{name:'Fraction Factory', color:'#F0AFCE', blob:'frac'},
-  ratio:{name:'Trade Tycoon',    color:'#F4BE93', blob:'ratio'},
-  int:{name:'Weather Station',   color:'#5E9FE0', blob:'int'},
-  alg:{name:'Equation Lab',      color:'#8F97DE', blob:'alg'}
+  frac:{name:'The Kitchen',  color:'#F0AFCE', blob:'frac'},
+  ratio:{name:'The Store',   color:'#F4BE93', blob:'ratio'},
+  int:{name:'The Trip',      color:'#5E9FE0', blob:'int'},
+  alg:{name:'The Build',     color:'#8F97DE', blob:'alg'}
 };
 const WKEYS = ['frac','ratio','int','alg'];
 for(const g of [3,4,5,6,7,8]) for(const k of WKEYS) GRADE_WORLDS[g][k].name = WORLD[k].name;

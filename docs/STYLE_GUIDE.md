@@ -37,7 +37,7 @@ Character: warm paper ground, dark ink, flat candy-toned accents. No gradients, 
 
 ### 1.3 World colors
 Tints always `color-mix(in oklab, <color> 24%, white)`.
-Fraction Factory `#F0AFCE` (Ice_cream.svg) · Trade Tycoon `#F4BE93` (Cash.svg) · Weather Station `#5E9FE0` (Rain.svg) · Equation Lab `#8F97DE` (Learning.svg).
+The Kitchen `#F0AFCE` (Ice_cream.svg) · The Store `#F4BE93` (Cash.svg) · The Trip `#5E9FE0` (Rain.svg) · The Build `#8F97DE` (Learning.svg).
 
 ### 1.4 Misc palettes
 Streak titles: STARTER `#8A8578` · INTERN/LEGEND `#8F97DE` · PRO `#D9A93F` · MANAGER `#58B372` · BOSS `#EE8A55` · CEO `#5E9FE0`.
