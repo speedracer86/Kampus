@@ -1,0 +1,20 @@
+{
+  "name": "@kampus/ui",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Kampus component library from the design handoff — zero-dependency React (plain JSX), inline-styled from tokens.js. Do not restyle; see README.",
+  "main": "src/primitives.jsx",
+  "exports": {
+    "./tokens": "./src/tokens.js",
+    "./primitives": "./src/primitives.jsx",
+    "./app": "./src/app.jsx",
+    "./quiz": "./src/quiz.jsx",
+    "./flows": "./src/flows.jsx",
+    "./parent": "./src/parent.jsx",
+    "./home": "./src/home.jsx",
+    "./gamify": "./src/gamify.jsx"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}

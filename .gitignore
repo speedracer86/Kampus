@@ -1,5 +1,7 @@
 node_modules/
+dist/
 *.png
 *.zip
 illos/
 .DS_Store
+apps/web/public/

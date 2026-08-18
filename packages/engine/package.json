@@ -1,0 +1,14 @@
+{
+  "name": "@kampus/engine",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Kampus math engine — problem generators, adaptive tiers, and economy math as pure functions. No DOM, no state of its own.",
+  "main": "src/index.js",
+  "exports": { ".": "./src/index.js" },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@kampus/curriculum",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Common Core skill taxonomy and major-work coverage reporting for the Kampus curriculum.",
+  "main": "src/index.js",
+  "exports": { ".": "./src/index.js" },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}
