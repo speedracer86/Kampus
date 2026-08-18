@@ -13,9 +13,21 @@ Progress saves to the browser's localStorage, **per device per browser**. Cleari
 | Path | What it is |
 |---|---|
 | `index.html` | The entire app: markup, styles, logic, and 25 embedded SVG blob illustrations (~230KB) |
+| `ui/` | React component library + live gallery (Vite). See [`ui/README.md`](ui/README.md) |
 | `docs/DESIGN_SPEC.md` | The 10-screen product spec from the Claude Design handoff |
 | `docs/STYLE_GUIDE.md` | Design tokens: colors, type scale, motion, grade-band sizing rules |
+| `docs/ASSETS.md` | Illustration inventory (all 80 blobs) and the inline-SVG icon set, with usage rules |
 | `tests/test_kampus.js` | Playwright suite: 10,800-problem generator fuzz plus end-to-end flows for every screen |
+
+`index.html` and `ui/` are two independent tracks against the same design system: `index.html` is the shipping single-file app, `ui/` is the componentized React rebuild. Neither imports the other yet.
+
+## Component library
+
+```bash
+cd ui && npm install && npm run dev
+```
+
+Opens a gallery at `http://localhost:5173` rendering every component live — home screen (desktop + phone), a playable quiz round, onboarding, shop, rewards, the campus map, and the Grown-ups surfaces. Components are zero-dependency React, inline-styled from `ui/src/lib/tokens.js`.
 
 ## Testing
 
