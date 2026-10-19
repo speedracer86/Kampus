@@ -65,3 +65,13 @@ Applied here first; rolls through remaining surfaces in Phase 3.
 - `KreditsWeekCard` and the tickets card lead with huge numerals.
 - New `PracticeHeat` (home.jsx): contribution-grid of the last 10 weeks,
   fed by `data.practiceDays` ({'YYYY-MM-DD': runCount}).
+
+### ShareWillow-inspired shell (owner reference, Oct 2026)
+
+Top nav kept (owner's call after trying a sidebar), with the reference's soul:
+cream page (`color.sidebar` #F7F2E6), the app floating as a white content sheet
+(28px radius, hairline edge), **outline boxes** — `Card` and `WorldTile` now use
+hairline borders with no shadow (hover lift keeps its float shadow) — and the
+bank prominent top-right: green bold Kredit balance plus a "+N this week" chip.
+A `SideBar` component was built during the exploration and stays in app.jsx,
+unused by the kid shell; candidate for the Grown-ups side in Phase 4.

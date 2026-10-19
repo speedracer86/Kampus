@@ -1,6 +1,6 @@
 // Kampus app components — composed from primitives + tokens.
 import { color, type, radius, shadow, font, worldTint, glassBlur, motion } from './tokens.js';
-import { Button, Card, Kicker, Chip, ProgressBar, TierDots, KreditCoin, Logo, Blob } from './primitives.jsx';
+import { Button, Card, Kicker, Chip, ProgressBar, TierDots, KreditCoin, TicketIcon, Logo, Blob } from './primitives.jsx';
 
 const base = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -19,7 +19,7 @@ export function NavBar({ items, active, onNav, weekLabel, kredits, avatar, onSho
       <button onClick={onShop} style={{ ...base, display: 'flex', alignItems: 'center', gap: 7, background: color.surface,
         border: `1px solid ${color.border}`, borderRadius: radius.full, padding: '7px 8px 7px 14px', fontSize: 13.5, fontWeight: 700,
         cursor: 'pointer', whiteSpace: 'nowrap', flex: 'none' }}>
-        <KreditCoin />{kredits}
+        <KreditCoin size={16} /><span style={{ color: color.greenDeep, fontSize: 15.5, fontWeight: 800 }}>{kredits}</span>
         <span style={{ width: 20, height: 20, borderRadius: radius.full, background: color.green, color: '#fff',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800 }}>+</span></button>
       {avatar && <Blob name={avatar} size={30} dir={blobDir} style={{ background: color.surface, border: `1px solid ${color.border}`, borderRadius: radius.sm, padding: 3 }} />}
@@ -43,7 +43,7 @@ export function GradeCard({ grade, status = 'locked', pct = 0, detail }) {
     border: `1px solid ${passed ? color.goldBorder : cur ? color.ink : color.border}`,
     borderRadius: radius.lg, padding: '14px 14px 12px', opacity: status === 'locked' ? 0.45 : 1 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-      <span style={{ fontSize: 17, fontWeight: 800, letterSpacing: '-.01em', color: fg }}>Grade {grade}</span>
+      <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: '-.01em', color: fg, whiteSpace: 'nowrap' }}>Grade {grade}</span>
       {passed && <svg width="18" height="18" viewBox="0 0 24 24"><path d="M8 21L10.5 14M16 21L13.5 14" stroke={color.goldDeep} strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="9" r="6.5" fill={color.gold} stroke={color.goldDeep} strokeWidth="1.8" /><path d="M12 6.2L12.9 8H14.8L13.3 9.3L13.8 11.2L12 10.1L10.2 11.2L10.7 9.3L9.2 8H11.1Z" fill={color.goldDeep} /></svg>}
       {status === 'locked' && <svg width="14" height="14" viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0110 0v2M6 10h12v10H6z" stroke={color.textMuted} strokeWidth="2" fill="none" strokeLinejoin="round" /></svg>}
     </div>
@@ -56,9 +56,9 @@ export function GradeCard({ grade, status = 'locked', pct = 0, detail }) {
 export function WorldTile({ name, skill, worldColor, blob, tierLabel, tier = 0, onPlay, blobDir, wellH = 150, wellBlob = 96, tintPct = 24 }) {
   const [hover, setHover] = React.useState(false);
   return <button onClick={onPlay} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-    style={{ ...base, background: color.surface, border: 'none', borderRadius: radius.lg,
+    style={{ ...base, background: color.surface, border: `1px solid ${color.border}`, borderRadius: radius.lg,
       padding: 0, cursor: 'pointer', textAlign: 'left', overflow: 'hidden', display: 'block', width: '100%',
-      boxShadow: hover ? shadow.float : shadow.card, transform: hover ? 'translateY(-3px)' : 'none', transition: motion.lift }}>
+      boxShadow: hover ? shadow.float : 'none', transform: hover ? 'translateY(-3px)' : 'none', transition: motion.lift }}>
     <div style={{ background: worldTint(worldColor, tintPct), height: wellH, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ position: 'absolute', top: 10, left: 10, background: color.surface, borderRadius: radius.sm,
         padding: '4px 9px', fontSize: 10.5, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: color.textSecondary }}>{tierLabel}</span>
@@ -92,3 +92,43 @@ export function TeachConfirm({ solo, withHelp, onTry, onTeach }) {
       <Button variant="gold" size="sm" onClick={onTeach} style={{ background: 'transparent' }}>Teach me anyway</Button></div></div>;
 }
 
+
+
+/**
+ * SideBar — the app shell's left rail (ShareWillow-style reference, Oct 2026):
+ * warm cream panel, greeting, stacked nav pills, and the Kredit bank pinned to
+ * the bottom so the money is always in view. Pairs with a white content sheet.
+ * Props: items [{id,label,dot}], active, onNav, kredits, weekEarned, tickets,
+ * avatar (blob name), blobDir, name.
+ */
+export function SideBar({ items, active, onNav, kredits = 0, weekEarned = 0, tickets = 0, avatar, name, blobDir }) {
+  const fmtK = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'k' : String(n);
+  return <aside style={{ ...base, width: 248, flex: 'none', background: color.sidebar, padding: '26px 20px 24px',
+    display: 'flex', flexDirection: 'column', gap: 4, position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box' }}>
+    <span style={{ marginBottom: 26 }}><Logo /></span>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
+      {avatar && <Blob name={avatar} size={40} dir={blobDir} />}
+      <div>
+        <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.1 }}>Welcome back{name ? ',' : '!'}</div>
+        {name && <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15 }}>{name}!</div>}</div></div>
+    {items.map(n => { const sel = n.id === active;
+      return <SideItem key={n.id} label={n.label} dot={n.dot} active={sel} onClick={() => onNav && onNav(n.id)} />; })}
+    <div style={{ marginTop: 'auto', paddingTop: 20 }}>
+      <Kicker style={{ marginBottom: 6 }}>kredit bank</Kicker>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <KreditCoin size={22} />
+        <span style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-.02em', color: color.greenDeep, lineHeight: 1 }}>{fmtK(kredits)}</span></div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: color.textMuted, margin: '6px 0 10px' }}>+{weekEarned} this week</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12.5, fontWeight: 700, color: color.textSecondary }}>
+        <TicketIcon size={15} /> {tickets} ticket{tickets === 1 ? '' : 's'}</div></div></aside>;
+}
+
+function SideItem({ label, dot, active, onClick }) {
+  const [hover, setHover] = React.useState(false);
+  return <button onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+    style={{ ...base, display: 'flex', alignItems: 'center', gap: 10, width: '100%', textAlign: 'left',
+      background: active ? '#fff' : hover ? 'rgba(255,255,255,.55)' : 'none',
+      border: 'none', borderRadius: radius.md, padding: '11px 14px', fontSize: 14.5, fontWeight: active ? 800 : 600,
+      color: color.ink, cursor: 'pointer', transition: 'background .2s' }}>
+    <span style={{ width: 8, height: 8, borderRadius: radius.full, background: dot, flex: 'none' }} />{label}</button>;
+}

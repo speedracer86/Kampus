@@ -31,7 +31,7 @@ export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () =
   const hero = d.weekEarned > 0
     ? <>You've earned <b style={{ color: color.ink, fontWeight: 800 }}>{d.weekEarned} Kredits</b> this week.</>
     : <>Nothing earned yet. <b style={{ color: color.ink, fontWeight: 800 }}>Lock in.</b></>;
-  return <div ref={ref} style={{ ...hBase, background: color.ground, padding: phone ? '20px 16px 40px' : '30px 32px 48px' }}>
+  return <div ref={ref} style={{ ...hBase, background: color.surface, minHeight: '100%', padding: phone ? '20px 16px 40px' : '30px 32px 48px' }}>
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
     <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 600, color: color.textMuted, letterSpacing: '-.03em', lineHeight: 1.1, margin: '0 0 24px', textWrap: 'pretty' }}>{hero}</h1>
     <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 320px', gap: 24 }}>

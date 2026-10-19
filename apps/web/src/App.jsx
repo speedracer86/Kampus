@@ -139,7 +139,7 @@ export function App() {
     </div>;
   }
 
-  return <div style={{ minHeight: '100vh', background: color.ground }}>
+  return <div style={{ minHeight: '100vh', background: color.sidebar }}>
     <NavBar
       items={[
         { id: 'home', label: 'Play', dot: color.green },
@@ -150,20 +150,23 @@ export function App() {
       ]}
       active="home"
       onNav={() => {}}
-      weekLabel="0-day week"
+      weekLabel={`+${state.week.earned} this week`}
       kredits={state.kredits}
       avatar={state.avatar}
       blobDir={BLOB_DIR}
     />
-    <HomeScreen
-      data={homeData(state)}
-      grade={state.grade}
-      blobDir={BLOB_DIR}
-      onEvent={(type, payload) => {
-        if (type === 'world') startRound(payload.id);
-        if (type === 'play' || type === 'quick6') startRound(state.lastTopic);
-        if (type === 'blitz') startRound(state.lastTopic, { blitz: true });
-      }}
-    />
+    <main style={{ maxWidth: 1080, margin: '22px auto 44px', background: color.surface,
+      borderRadius: 28, border: '1px solid rgba(35,37,43,.06)', overflow: 'hidden' }}>
+      <HomeScreen
+        data={homeData(state)}
+        grade={state.grade}
+        blobDir={BLOB_DIR}
+        onEvent={(type, payload) => {
+          if (type === 'world') startRound(payload.id);
+          if (type === 'play' || type === 'quick6') startRound(state.lastTopic);
+          if (type === 'blitz') startRound(state.lastTopic, { blitz: true });
+        }}
+      />
+    </main>
   </div>;
 }

@@ -27,9 +27,10 @@ export function Button({ variant = 'primary', size = 'md', disabled, style, chil
 }
 
 export function Card({ padding = 20, dashed, tint, style, children }) {
+  // Outline boxes per the ShareWillow reference: hairline border, no shadow
   return <div style={{ ...base, background: tint || color.surface, borderRadius: radius.lg, padding,
-    border: dashed ? `1px dashed ${color.border}` : 'none',
-    boxShadow: tint || dashed ? 'none' : shadow.card, ...style }}>{children}</div>;
+    border: dashed ? `1px dashed ${color.border}` : tint ? 'none' : `1px solid ${color.border}`,
+    ...style }}>{children}</div>;
 }
 
 export function Kicker({ color: c = color.textMuted, style, children }) {
