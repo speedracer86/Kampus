@@ -14,7 +14,7 @@ export const color = {
   orange: '#EE8A55', orangeDeep: '#7C4A1D', peach: '#F4BE93',
   // frosted chrome (nav, floating bars)
   glass: 'rgba(253,252,250,.8)', hairline: 'rgba(35,37,43,.08)',
-  sidebar: '#F7F2E6',
+  sidebar: '#F0F0EE',
 };
 export const glassBlur = 'saturate(1.8) blur(20px)';
 export const world = {
