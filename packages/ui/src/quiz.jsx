@@ -105,54 +105,85 @@ export function TeachPanel({ steps, onClose }) {
 }
 
 /**
- * QuizRound — the full working round: streaks, Kredit math, teach economics, focus mode,
- * second-look retry, celebration, all four answer modes + multiple choice.
+ * QuizRound — the full working round: streaks, economy v2 (Teach Tokens, first-try
+ * bonus, opt-in Blitz), focus mode, second-look retry, celebration, all answer modes.
  * Props: questions [{text, mode:'choice'|'numline'|'fraction'|'money'|'thermo', choices?, answerIndex?, vis?, teach:[]}],
- *   grade (3-8), tier (1-3), gearBonus (%), worldColor, mascot (blob name), blobDir, focusMode, onEvent(type, payload), onQuit.
+ *   grade (3-8), tier (1-3), gearBonus (%), worldColor, mascot, blobDir, focusMode,
+ *   blitz (opt-in: fast answers pay ×1.5 — never on by default), onEvent(type, payload), onQuit.
+ * Economy v2 (mirrors @kampus/engine payout.js — the tested source of truth):
+ *   round(base(tier) × streakMult × (1+gear%) × blitz) + 5 first-try; teach without
+ *   a token halves (ceil). 3 Teach Tokens per run make help a budget, not a fine.
  */
-export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, worldColor = '#F0AFCE', mascot = 'Ice_cream', blobDir = 'blobs/', focusMode = true, onEvent = () => {}, onQuit }) {
+const TOKENS_PER_RUN = 3;
+const BLITZ_WINDOW_MS = 8000;
+
+export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, worldColor = '#F0AFCE', mascot = 'Ice_cream', blobDir = 'blobs/', focusMode = true, blitz = false, onEvent = () => {}, onQuit }) {
   const bz = band(grade);
-  const [st, set] = React.useState({ qNum: 0, order: questions.map((_, i) => i), retry: false, missed: [], correct: 0, asked: questions.length,
-    streak: 0, best: 0, kredits: 0, feedback: null, picked: null, teachConfirm: false, teachOpen: false, halved: false, fixed: 0, resets: 0, gainKey: 0, gained: 0 });
+  const fresh = () => ({ qNum: 0, order: questions.map((_, i) => i), retry: false, missed: [], correct: 0, asked: questions.length,
+    streak: 0, best: 0, kredits: 0, feedback: null, picked: null, teachConfirm: false, teachOpen: false, helpUsed: false, tokenUsed: false,
+    tokensLeft: TOKENS_PER_RUN, firstTries: 0, qStart: Date.now(), fixed: 0, resets: 0, gainKey: 0, gained: 0, parts: [] });
+  const [st, set] = React.useState(fresh);
   const q = questions[st.order[st.qNum]];
   const fullGain = Math.round((8 + 4 * tier) * MULT(st.streak + 1) * (1 + gearBonus / 100));
 
   const advance = (s) => {
-    if (s.qNum + 1 < s.order.length) return { ...s, qNum: s.qNum + 1, feedback: null, picked: null, teachOpen: false, teachConfirm: false, halved: false };
-    if (!s.retry && s.missed.length) return { ...s, retry: true, order: s.missed.slice(), missed: [], qNum: 0, asked: s.asked + s.missed.length, feedback: null, picked: null, teachOpen: false, teachConfirm: false, halved: false };
+    const next = { feedback: null, picked: null, teachOpen: false, teachConfirm: false, helpUsed: false, tokenUsed: false, qStart: Date.now() };
+    if (s.qNum + 1 < s.order.length) return { ...s, ...next, qNum: s.qNum + 1 };
+    if (!s.retry && s.missed.length) return { ...s, ...next, retry: true, order: s.missed.slice(), missed: [], qNum: 0, asked: s.asked + s.missed.length };
     const acc = Math.round(100 * s.correct / s.asked);
-    onEvent('round_end', { kredits: s.kredits, correct: s.correct, asked: s.asked, acc, best: s.best, fixed: s.fixed, comeback: s.resets > 0 && s.best >= 3 });
+    onEvent('round_end', { kredits: s.kredits, correct: s.correct, asked: s.asked, acc, best: s.best, fixed: s.fixed,
+      comeback: s.resets > 0 && s.best >= 3, firstTries: s.firstTries, tokensUsed: TOKENS_PER_RUN - s.tokensLeft });
     return { ...s, done: true, feedback: null };
   };
   const answer = (value, isRight) => set(s => {
     if (s.feedback) return s;
     if (isRight) {
       const streak = s.streak + 1;
-      let gain = Math.round((8 + 4 * tier) * MULT(streak) * (1 + gearBonus / 100));
-      if (s.halved) gain = Math.ceil(gain / 2);
-      onEvent('answer', { right: true, gain, streak, halved: s.halved });
-      setTimeout(() => set(advance), 1000);
-      return { ...s, feedback: 'correct', picked: value, gained: gain, gainKey: s.gainKey + 1, kredits: s.kredits + gain,
-        streak, best: Math.max(s.best, streak), correct: s.correct + 1, fixed: s.fixed + (s.retry ? 1 : 0), teachOpen: false, teachConfirm: false };
+      const mult = MULT(streak);
+      const fast = blitz && (Date.now() - s.qStart) < BLITZ_WINDOW_MS;
+      let gain = Math.round((8 + 4 * tier) * mult * (1 + gearBonus / 100) * (fast ? 1.5 : 1));
+      const firstTry = !s.retry;
+      const parts = [];
+      if (mult > 1) parts.push(['×' + mult + ' streak', 'green']);
+      if (fast) parts.push(['×1.5 blitz', 'ink']);
+      if (firstTry) { gain += 5; parts.push(['+5 first try', 'green']); }
+      if (s.helpUsed && s.tokenUsed) parts.push(['token used', 'gold']);
+      if (s.helpUsed && !s.tokenUsed) { gain = Math.ceil(gain / 2); parts.push(['halved · help', 'muted']); }
+      onEvent('answer', { right: true, gain, streak, halved: s.helpUsed && !s.tokenUsed, firstTry, fast, tokenUsed: s.tokenUsed });
+      setTimeout(() => set(advance), 1300);
+      return { ...s, feedback: 'correct', picked: value, gained: gain, parts, gainKey: s.gainKey + 1, kredits: s.kredits + gain,
+        streak, best: Math.max(s.best, streak), correct: s.correct + 1, firstTries: s.firstTries + (firstTry ? 1 : 0),
+        fixed: s.fixed + (s.retry ? 1 : 0), teachOpen: false, teachConfirm: false };
     }
     onEvent('answer', { right: false });
     return { ...s, feedback: 'wrong', picked: value, streak: 0, resets: s.resets + 1, missed: s.missed.concat(s.order[s.qNum]), teachOpen: false, teachConfirm: false };
   });
 
   if (st.done) return <EndOfRound kredits={st.kredits} acc={Math.round(100 * st.correct / st.asked)} best={st.best}
-    fixed={st.fixed} comeback={st.resets > 0 && st.best >= 3} blobDir={blobDir} mascot={mascot}
-    onAgain={() => { onEvent('again', {}); set({ qNum: 0, order: questions.map((_, i) => i), retry: false, missed: [], correct: 0, asked: questions.length, streak: 0, best: 0, kredits: 0, feedback: null, picked: null, teachConfirm: false, teachOpen: false, halved: false, fixed: 0, resets: 0, gainKey: 0, gained: 0 }); }}
+    fixed={st.fixed} comeback={st.resets > 0 && st.best >= 3} firstTries={st.firstTries} correct={st.correct} asked={st.asked}
+    blobDir={blobDir} mascot={mascot}
+    onAgain={() => { onEvent('again', {}); set(fresh()); }}
     onHome={onQuit} />;
 
   const hudOp = focusMode && st.feedback !== 'correct' ? 0 : 1;
   const dim = st.teachOpen || st.teachConfirm ? 0.45 : 1;
   const modeUI = { numline: NumberLine, fraction: FractionPieces, money: MoneyCounter, thermo: Thermometer }[q.mode];
   const isRightFree = (v) => q.mode === 'numline' ? v === q.vis.end : q.mode === 'fraction' ? v === q.vis.target : v === q.vis.target;
+  const chipStyle = kind => ({
+    green: { background: color.greenTint, color: color.greenDeep },
+    gold: { background: color.goldTint, color: color.goldDeep },
+    ink: { background: color.ink, color: '#fff' },
+    muted: { background: color.fillHover, color: color.textSecondary },
+  }[kind]);
 
   return <div style={{ ...qBase, background: color.ground, minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px' }}>
       {onQuit && <button onClick={onQuit} style={{ ...qBase, width: 38, height: 38, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full, fontSize: 16, cursor: 'pointer' }}>✕</button>}
       <ProgressBar value={100 * (st.qNum + (st.feedback ? 1 : 0)) / st.order.length} fill={worldColor} height={6} style={{ flex: 1 }} />
+      {blitz && <span style={{ background: color.ink, color: '#fff', borderRadius: radius.full, padding: '6px 12px', fontSize: 11, fontWeight: 800, letterSpacing: '.1em' }}>⚡ BLITZ</span>}
+      <span title="Teach Tokens left" style={{ display: 'inline-flex', gap: 5, background: '#fff', boxShadow: shadow.card, borderRadius: radius.full, padding: '10px 12px' }}>
+        {Array.from({ length: TOKENS_PER_RUN }, (_, i) => <i key={i} style={{ width: 9, height: 9, borderRadius: radius.full,
+          background: i < st.tokensLeft ? color.gold : color.track }} />)}</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full,
         padding: '7px 14px', fontWeight: 700, fontSize: 15, opacity: hudOp, transition: 'opacity .3s' }}><KreditCoin />{st.kredits}</div></div>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
@@ -161,13 +192,19 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
         {TITLE(st.streak)}{st.streak > 0 ? ` · ${st.streak} STREAK · ×${MULT(st.streak)}` : ''}</div>
       <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>{q.text}</h2>
       {q.teach && !st.teachOpen && !st.feedback && <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
-        <Button variant="gold" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: true }))}>Teach me · costs half</Button>
+        <Button variant="gold" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: true }))}>
+          {st.tokensLeft > 0 ? `Teach me · ${st.tokensLeft} token${st.tokensLeft > 1 ? 's' : ''} left` : 'Teach me · costs half'}</Button>
         <Button variant="outline" size="sm" onClick={() => speak(q.text)}>Read it</Button></div>}
       {st.teachConfirm && <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: color.goldTint, border: `1px solid ${color.goldBorder}`, borderRadius: radius.lg, padding: '14px 18px', marginBottom: 18, width: '100%' }}>
-        <span style={{ fontSize: 15, lineHeight: 1.4, flex: 1, minWidth: 220 }}>Help costs half a Kredit. Thinking is free. Solo this pays <strong>~{fullGain}</strong>, with help <strong>~{Math.ceil(fullGain / 2)}</strong>.</span>
+        {st.tokensLeft > 0
+          ? <span style={{ fontSize: 15, lineHeight: 1.4, flex: 1, minWidth: 220 }}>Spend a Teach Token? <strong>{st.tokensLeft} left</strong> this run — a token means full pay (~{fullGain}). Save them for the hard ones.</span>
+          : <span style={{ fontSize: 15, lineHeight: 1.4, flex: 1, minWidth: 220 }}>Tokens are spent. Help still works — this one pays <strong>~{Math.ceil(fullGain / 2)}</strong> instead of ~{fullGain}.</span>}
         <div style={{ display: 'flex', gap: 8, flex: 'none' }}>
           <Button variant="ink" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: false }))}>I'll try first</Button>
-          <Button variant="gold" size="sm" style={{ background: 'transparent' }} onClick={() => { onEvent('teach_open', {}); set(s => ({ ...s, teachConfirm: false, teachOpen: true, halved: true })); }}>Teach me anyway</Button></div></div>}
+          <Button variant="gold" size="sm" style={{ background: 'transparent' }} onClick={() => { onEvent('teach_open', { token: st.tokensLeft > 0 }); set(s => s.tokensLeft > 0
+            ? { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: true, tokensLeft: s.tokensLeft - 1 }
+            : { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: false }); }}>
+            {st.tokensLeft > 0 ? 'Use a token' : 'Teach me anyway'}</Button></div></div>}
       {st.teachOpen && <div style={{ width: '100%', marginBottom: 18 }}><TeachPanel steps={q.teach} onClose={() => set(s => ({ ...s, teachOpen: false }))} /></div>}
       <div style={{ width: '100%', opacity: dim, transition: 'opacity .3s' }}>
         {q.mode === 'choice' || !q.mode
@@ -182,20 +219,30 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
       {st.feedback === 'wrong' && <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: color.redTint, border: `1px solid ${color.red}`, borderRadius: radius.md, padding: '12px 16px', marginTop: 18, width: '100%' }}>
         <span style={{ fontSize: 15, fontWeight: 600, flex: 1 }}>Not this one — you'll see it again at the end.</span>
         <Button variant="ink" size="sm" onClick={() => set(advance)}>Next →</Button></div>}
-      {st.feedback === 'correct' && <div key={st.gainKey} style={{ fontSize: 20, fontWeight: 800, color: color.greenDeep, marginTop: 16 }}>+{st.gained}</div>}
+      {st.feedback === 'correct' && <div key={st.gainKey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 14 }}>
+        <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.02em', color: color.greenDeep, lineHeight: 1 }}>+{st.gained}</div>
+        {st.parts.length > 0 && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {st.parts.map(([label, kind], i) => <span key={i} style={{ ...chipStyle(kind), borderRadius: radius.full,
+            padding: '4px 11px', fontSize: 11.5, fontWeight: 700 }}>{label}</span>)}</div>}
+      </div>}
     </div></div>;
 }
 
-/** End-of-round summary with comeback + fixed banners. */
-export function EndOfRound({ kredits, acc, best, fixed = 0, comeback, mascot = 'Party', blobDir = 'blobs/', onAgain, onHome }) {
+/** End-of-round summary: big-numeral stat cards, a dot row of the run, comeback + fixed banners. */
+export function EndOfRound({ kredits, acc, best, fixed = 0, comeback, firstTries, correct, asked, mascot = 'Party', blobDir = 'blobs/', onAgain, onHome }) {
   const headline = acc === 100 ? 'Clean run. W.' : comeback ? 'Comeback. Respect.' : best >= 6 ? 'On fire.' : 'Round done.';
+  const stats = [['Kredits', '+' + kredits], ['accuracy', acc + '%'], ['best combo', '×' + best]];
+  if (firstTries !== undefined) stats.push(['first try', firstTries]);
   return <div style={{ ...qBase, background: color.ground, minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 32, textAlign: 'center' }}>
     <Blob name={acc >= 80 ? 'Party' : mascot} size={140} dir={blobDir} />
-    <h1 style={{ fontSize: 56, fontWeight: 800, letterSpacing: '-.03em', margin: '18px 0 26px' }}>{headline}</h1>
-    <div style={{ display: 'flex', gap: 12, marginBottom: 22 }}>
-      {[['Kredits', '+' + kredits], ['accuracy', acc + '%'], ['best combo', '×' + best]].map(([k, v]) =>
-        <div key={k} style={{ background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.lg, padding: '16px 26px' }}>
-          <div style={{ fontSize: 26, fontWeight: 800 }}>{v}</div>
+    <h1 style={{ fontSize: 56, fontWeight: 800, letterSpacing: '-.03em', margin: '18px 0 20px' }}>{headline}</h1>
+    {correct !== undefined && asked !== undefined && <div style={{ display: 'flex', gap: 7, marginBottom: 24 }}>
+      {Array.from({ length: asked }, (_, i) => <span key={i} style={{ width: 13, height: 13, borderRadius: radius.full,
+        background: i < correct ? color.green : color.trackOff }} />)}</div>}
+    <div style={{ display: 'flex', gap: 12, marginBottom: 22, flexWrap: 'wrap', justifyContent: 'center' }}>
+      {stats.map(([k, v]) =>
+        <div key={k} style={{ background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.lg, padding: '16px 26px', minWidth: 96 }}>
+          <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.02em' }}>{v}</div>
           <div style={{ ...type.kicker, color: color.textMuted, marginTop: 4 }}>{k}</div></div>)}</div>
     {fixed > 0 && <div style={{ background: color.greenTint, border: `1px solid ${color.green}`, borderRadius: radius.md, padding: '12px 18px', marginBottom: 22, fontSize: 15, fontWeight: 600, color: color.greenDeep }}>
       Fixed {fixed} from earlier on the second look. That's the move.</div>}

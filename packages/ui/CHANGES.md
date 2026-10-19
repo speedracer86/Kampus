@@ -34,3 +34,24 @@ Grades 3-4 keep big friendly blobs, 24% world tints, and the flooded lime stand 
 grades 7-8 get 48px accent blobs, 9% tints, a 36px headline, a compact neutral stand
 card, and a smaller play mascot. `HomeScreen` takes a `grade` prop; `WorldTile` takes
 `wellH`/`wellBlob`/`tintPct`; `worldTint(c, pct)` accepts a percent.
+
+## Economy v2 in QuizRound (Oct 2026)
+
+Owner-directed reward rework (see docs/KAMPUS_CURRICULUM_PLAN.md §4 for the evidence):
+- **Teach Tokens**: 3 per run. A token buys the teach panel at full pay — help is a
+  budget to spend strategically, not a fine. After tokens: the original half-pay.
+  Token dots live in the play HUD.
+- **First-try bonus** (+5): answers on the second-look retry pass still pay, just
+  without the bonus — fewer tries earns more, visibly.
+- **Opt-in Blitz** (`blitz` prop): fast answers (<8s) pay ×1.5. Never the default —
+  untimed remains the ADHD-safe baseline; the kid chooses Blitz per round.
+- **Payout breakdown chips**: every gain shows why (×2 streak / ×1.5 blitz /
+  +5 first try / token used / halved · help) as tag pills under a large +N.
+- EndOfRound: dot row of the run (green = correct) + first-try stat card.
+- Formula mirrors @kampus/engine `payout.js`, the tested source of truth.
+- `round_end` payload adds `firstTries` and `tokensUsed`; `answer` adds
+  `firstTry`, `fast`, `tokenUsed`.
+
+Design direction (owner references, Oct 2026): huge numerals as heroes, tag pills
+for metadata, dot-matrix progress, tone-on-tone nesting, ink pills + one accent.
+Applied here first; rolls through remaining surfaces in Phase 3.

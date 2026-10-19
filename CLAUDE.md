@@ -9,7 +9,7 @@ npm workspaces monorepo. `npm install` once at the root installs everything.
 
 ```bash
 npm install                   # root only — installs all workspaces
-npm test                      # unit tests: 115 vitest tests (engine + curriculum)
+npm test                      # unit tests: 123 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
 npm run test:e2e              # Playwright suite against the legacy index.html
@@ -26,7 +26,7 @@ GitHub work goes through the `gh` CLI (already authenticated) — not an MCP ser
 npm test && npm run build
 ```
 
-Both must be clean: 115 passing tests, build exits 0. CI (`.github/workflows/ci.yml`) runs
+Both must be clean: 123 passing tests, build exits 0. CI (`.github/workflows/ci.yml`) runs
 exactly this on every push to `main` and every PR, so a red run here is a red run there.
 
 **If you touched `index.html`**, also run the end-to-end suite:

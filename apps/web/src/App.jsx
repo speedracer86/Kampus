@@ -65,6 +65,7 @@ export function App() {
   const [state, setState] = useState(load);
   const [screen, setScreen] = useState('home');
   const [topic, setTopic] = useState(state.lastTopic);
+  const [blitzOn, setBlitzOn] = useState(false);
 
   // A fresh question set per round entry; key by nonce so "Run it back" gets new problems too
   const [roundNonce, setRoundNonce] = useState(0);
@@ -79,8 +80,9 @@ export function App() {
     return next;
   });
 
-  const startRound = t => {
+  const startRound = (t, { blitz = false } = {}) => {
     setTopic(t);
+    setBlitzOn(blitz);
     setRoundNonce(n => n + 1);
     update(s => { s.lastTopic = t; return s; });
     setScreen('play');
@@ -126,6 +128,7 @@ export function App() {
         mascot={w.blob}
         blobDir={BLOB_DIR}
         focusMode
+        blitz={blitzOn}
         onEvent={onQuizEvent}
         onQuit={() => setScreen('home')}
       />
@@ -155,6 +158,7 @@ export function App() {
       onEvent={(type, payload) => {
         if (type === 'world') startRound(payload.id);
         if (type === 'play' || type === 'quick6') startRound(state.lastTopic);
+        if (type === 'blitz') startRound(state.lastTopic, { blitz: true });
       }}
     />
   </div>;

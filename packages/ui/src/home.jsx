@@ -43,7 +43,9 @@ export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () =
               <div style={{ fontSize: 13, color: color.textMuted, fontWeight: 600 }}>Tier {d.jumpBack.tier} · {d.jumpBack.skill}</div></div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 'none' }}>
               <Button variant="primary" size="lg" onClick={() => onEvent('play', d.jumpBack)}>PLAY</Button>
-              <Button variant="outline" size="sm" onClick={() => onEvent('quick6', d.jumpBack)}>Quick 6 →</Button></div></div></Card>}
+              <div style={{ display: 'flex', gap: 6 }}>
+                <Button variant="outline" size="sm" onClick={() => onEvent('quick6', d.jumpBack)}>Quick 6 →</Button>
+                <Button variant="outline" size="sm" title="Fast answers pay ×1.5 — your call" onClick={() => onEvent('blitz', d.jumpBack)}>⚡ Blitz</Button></div></div></div></Card>}
         <Kicker style={{ marginBottom: 10 }}>worlds</Kicker>
         <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 26 }}>
           {d.worlds.map(wd => <WorldTile key={wd.name} {...wd} wellH={bz.wellH} wellBlob={bz.wellBlob} tintPct={bz.tint} blobDir={blobDir} onPlay={() => onEvent('world', wd)} />)}</div>
