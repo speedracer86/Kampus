@@ -147,11 +147,11 @@ export function GradeChips({ grades = [] }) {
       return <div key={g.grade} style={{ flex: 1, minWidth: 0, textAlign: 'center',
         background: cur ? color.ink : color.surface,
         border: `1px solid ${cur ? color.ink : color.border}`, borderRadius: radius.md,
-        padding: '9px 4px 8px', opacity: g.status === 'locked' ? 0.45 : 1 }}>
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em',
+        padding: '10px 4px 9px', opacity: g.status === 'locked' ? 0.45 : 1 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', marginBottom: 2,
           color: cur ? color.onInkMuted : passed ? color.greenDeep : color.textFaint }}>
           {passed ? '✓ PASSED' : cur ? 'NOW' : 'LOCKED'}</div>
-        <div style={{ fontFamily: font.display, fontSize: 27, lineHeight: 1.15, color: cur ? '#fff' : color.ink }}>{g.grade}</div>
+        <div style={{ fontFamily: font.display, fontSize: 21, lineHeight: 1.2, whiteSpace: 'nowrap', color: cur ? '#fff' : color.ink }}>Grade {g.grade}</div>
         {cur && <ProgressBar value={g.pct} height={4} fill={color.lime} track={color.onInkTrack} style={{ margin: '6px 6px 0' }} />}
       </div>; })}</div>;
 }
@@ -165,7 +165,7 @@ export function RecordsLedger({ rows = [] }) {
   return <div style={{ ...base, display: 'flex', flexDirection: 'column', gap: 6 }}>
     {rows.map((r, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       gap: 12, background: r.bg, borderRadius: radius.md, padding: '10px 16px' }}>
-      <span style={{ fontFamily: font.display, fontSize: 32, lineHeight: 1, color: r.fg || color.ink }}>{r.n}</span>
-      <span style={{ fontSize: 13, fontWeight: 700, color: r.fg || color.ink, textAlign: 'right' }}>{r.label}</span>
+      <span style={{ fontFamily: font.display, fontSize: 32, lineHeight: 1, color: color.ink }}>{r.n}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: color.ink, textAlign: 'right' }}>{r.label}</span>
     </div>)}</div>;
 }

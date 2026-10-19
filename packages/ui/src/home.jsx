@@ -30,8 +30,8 @@ export function HomeScreen({ data, grade = 6, gradeView = 'cards', blobDir = 'bl
   const d = data, bz = band(grade);
   // Hero sentence in the reference style: muted base weight, values in bold ink
   const hero = d.weekEarned > 0
-    ? <>You've earned <b style={{ fontFamily: font.display, fontWeight: 400, fontStyle: 'italic', color: color.ink }}>{d.weekEarned} Kredits</b> this week.</>
-    : <>Nothing earned yet. <b style={{ fontFamily: font.display, fontWeight: 400, fontStyle: 'italic', color: color.ink }}>Lock in.</b></>;
+    ? <>You've earned <b style={{ fontFamily: font.display, fontWeight: 400, color: color.ink }}>{d.weekEarned} Kredits</b> this week.</>
+    : <>Nothing earned yet. <b style={{ fontFamily: font.display, fontWeight: 400, color: color.ink }}>Lock in.</b></>;
   return <div ref={ref} style={{ ...hBase, background: color.surface, minHeight: '100%', padding: phone ? '20px 16px 40px' : '30px 32px 48px' }}>
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
     <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 600, color: color.textMuted, letterSpacing: '-.03em', lineHeight: 1.1, margin: '0 0 24px', textWrap: 'pretty' }}>{hero}</h1>
