@@ -1,5 +1,5 @@
 // Kampus app components — composed from primitives + tokens.
-import { color, type, radius, shadow, font, worldTint } from './tokens.js';
+import { color, type, radius, shadow, font, worldTint, glassBlur, motion } from './tokens.js';
 import { Button, Card, Kicker, Chip, ProgressBar, TierDots, KreditCoin, Logo, Blob } from './primitives.jsx';
 
 const base = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -7,7 +7,8 @@ const base = { fontFamily: font.family, boxSizing: 'border-box' };
 export function NavBar({ items, active, onNav, weekLabel, kredits, avatar, onShop, blobDir }) {
   // items: [{id, label, dot}]
   return <nav style={{ ...base, display: 'flex', alignItems: 'center', gap: 4, padding: '12px clamp(14px, 2.5vw, 32px)',
-    borderBottom: `1px solid ${color.border}`, position: 'sticky', top: 0, background: color.ground, zIndex: 10, flexWrap: 'wrap', rowGap: 6 }}>
+    borderBottom: `1px solid ${color.hairline}`, position: 'sticky', top: 0, background: color.glass,
+    backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, zIndex: 10, flexWrap: 'wrap', rowGap: 6 }}>
     <span style={{ marginRight: 'clamp(8px, 1.5vw, 22px)', flex: 'none' }}><Logo /></span>
     <div style={{ flex: 1 }} />
     {items.map(n => { const sel = n.id === active;
@@ -16,7 +17,7 @@ export function NavBar({ items, active, onNav, weekLabel, kredits, avatar, onSho
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 16 }}>
       {weekLabel && <Chip dot={color.orange}>{weekLabel}</Chip>}
       <button onClick={onShop} style={{ ...base, display: 'flex', alignItems: 'center', gap: 7, background: color.surface,
-        border: `1px solid ${color.border}`, borderRadius: radius.md, padding: '7px 8px 7px 14px', fontSize: 13.5, fontWeight: 700,
+        border: `1px solid ${color.border}`, borderRadius: radius.full, padding: '7px 8px 7px 14px', fontSize: 13.5, fontWeight: 700,
         cursor: 'pointer', whiteSpace: 'nowrap', flex: 'none' }}>
         <KreditCoin />{kredits}
         <span style={{ width: 20, height: 20, borderRadius: radius.full, background: color.green, color: '#fff',
@@ -29,8 +30,8 @@ function NavItem({ label, dot, active, onClick }) {
   const [hover, setHover] = React.useState(false);
   return <button onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
     style={{ ...base, display: 'flex', alignItems: 'center', gap: 9, background: active || hover ? color.fillHover : 'none',
-      border: 'none', borderRadius: radius.sm, padding: '10px 14px', fontSize: 14.5, fontWeight: active ? 800 : 600,
-      color: color.ink, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+      border: 'none', borderRadius: radius.full, padding: '10px 16px', fontSize: 14.5, fontWeight: active ? 800 : 600,
+      color: color.ink, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .2s' }}>
     <span style={{ width: 8, height: 8, borderRadius: radius.full, background: dot, flex: 'none' }} />{label}</button>;
 }
 
@@ -55,8 +56,9 @@ export function GradeCard({ grade, status = 'locked', pct = 0, detail }) {
 export function WorldTile({ name, skill, worldColor, blob, tierLabel, tier = 0, onPlay, blobDir }) {
   const [hover, setHover] = React.useState(false);
   return <button onClick={onPlay} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
-    style={{ ...base, background: color.surface, border: `1px solid ${hover ? color.ink : color.border}`, borderRadius: radius.lg,
-      padding: 0, cursor: 'pointer', textAlign: 'left', overflow: 'hidden', boxShadow: shadow.card, display: 'block', width: '100%' }}>
+    style={{ ...base, background: color.surface, border: 'none', borderRadius: radius.lg,
+      padding: 0, cursor: 'pointer', textAlign: 'left', overflow: 'hidden', display: 'block', width: '100%',
+      boxShadow: hover ? shadow.float : shadow.card, transform: hover ? 'translateY(-3px)' : 'none', transition: motion.lift }}>
     <div style={{ background: worldTint(worldColor), height: 150, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ position: 'absolute', top: 10, left: 10, background: color.surface, borderRadius: radius.sm,
         padding: '4px 9px', fontSize: 10.5, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: color.textSecondary }}>{tierLabel}</span>

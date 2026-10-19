@@ -1,6 +1,6 @@
 // Kampus quiz engine — fully working round logic from the prototype, UI + state included.
 // Backend feeds questions and listens on onEvent(type, payload). See README for the event table.
-import { color, type, radius, band, streakColors, confetti, font } from './tokens.js';
+import { color, type, radius, shadow, band, streakColors, confetti, font } from './tokens.js';
 import { Button, Kicker, ProgressBar, KreditCoin, Blob } from './primitives.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -151,9 +151,9 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
 
   return <div style={{ ...qBase, background: color.ground, minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 20px' }}>
-      {onQuit && <button onClick={onQuit} style={{ ...qBase, width: 38, height: 38, background: '#fff', border: `1px solid ${color.border}`, borderRadius: radius.md, fontSize: 16, cursor: 'pointer' }}>✕</button>}
+      {onQuit && <button onClick={onQuit} style={{ ...qBase, width: 38, height: 38, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full, fontSize: 16, cursor: 'pointer' }}>✕</button>}
       <ProgressBar value={100 * (st.qNum + (st.feedback ? 1 : 0)) / st.order.length} fill={worldColor} height={6} style={{ flex: 1 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: `1px solid ${color.border}`, borderRadius: radius.md,
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full,
         padding: '7px 14px', fontWeight: 700, fontSize: 15, opacity: hudOp, transition: 'opacity .3s' }}><KreditCoin />{st.kredits}</div></div>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
       <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => speak(q.text)} />
@@ -175,7 +175,8 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
             {q.choices.map((c, i) => { const right = st.feedback && i === q.answerIndex, wrong = st.feedback === 'wrong' && i === st.picked;
               return <button key={i} onClick={() => !st.feedback && answer(i, i === q.answerIndex)}
                 style={{ ...qBase, background: right ? color.greenTint : wrong ? color.redTint : '#fff',
-                  border: `1.5px solid ${right ? color.green : wrong ? color.red : color.border}`, borderRadius: radius.md,
+                  border: `1.5px solid ${right ? color.green : wrong ? color.red : 'transparent'}`, borderRadius: radius.md,
+                  boxShadow: right || wrong ? 'none' : shadow.card,
                   padding: `${bz.pad}px 18px`, fontSize: bz.answer, fontWeight: 700, cursor: st.feedback ? 'default' : 'pointer', color: color.ink }}>{c}</button>; })}</div>
           : React.createElement(modeUI, { vis: q.vis, feedback: st.feedback, picked: st.picked, onPick: (v) => answer(v, isRightFree(v)) })}</div>
       {st.feedback === 'wrong' && <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: color.redTint, border: `1px solid ${color.red}`, borderRadius: radius.md, padding: '12px 16px', marginTop: 18, width: '100%' }}>
@@ -193,7 +194,7 @@ export function EndOfRound({ kredits, acc, best, fixed = 0, comeback, mascot = '
     <h1 style={{ fontSize: 56, fontWeight: 800, letterSpacing: '-.03em', margin: '18px 0 26px' }}>{headline}</h1>
     <div style={{ display: 'flex', gap: 12, marginBottom: 22 }}>
       {[['Kredits', '+' + kredits], ['accuracy', acc + '%'], ['best combo', '×' + best]].map(([k, v]) =>
-        <div key={k} style={{ background: '#fff', border: `1px solid ${color.border}`, borderRadius: radius.lg, padding: '16px 26px' }}>
+        <div key={k} style={{ background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.lg, padding: '16px 26px' }}>
           <div style={{ fontSize: 26, fontWeight: 800 }}>{v}</div>
           <div style={{ ...type.kicker, color: color.textMuted, marginTop: 4 }}>{k}</div></div>)}</div>
     {fixed > 0 && <div style={{ background: color.greenTint, border: `1px solid ${color.green}`, borderRadius: radius.md, padding: '12px 18px', marginBottom: 22, fontSize: 15, fontWeight: 600, color: color.greenDeep }}>

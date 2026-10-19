@@ -1,3 +1,5 @@
+> **v2 "Modern" amendments (Oct 2026):** radii 10/14/20/pill, layered soft shadows, frosted nav, pill buttons, spring motion. `packages/ui/src/tokens.js` is the live source of truth; this document describes the original handoff values where they differ. See `packages/ui/CHANGES.md`.
+
 # Kampus Style Guide
 
 Design reference for implementing Kampus (kid-facing homeschool math app, grades 3–8) in a production codebase. Everything here reflects the HTML prototype `Kampus.dc.html` as of 2026-08-17. Values are exact — treat them as tokens.

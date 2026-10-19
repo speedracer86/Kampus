@@ -53,8 +53,9 @@ look in the browser.
 - **`packages/engine` is the math brain and is strictly pure.** Generators, adaptive tier
   rules, and economy math as ES modules with no DOM and no state of its own — callers own
   all state. This is what makes the whole thing testable headlessly; keep it that way.
-- **`packages/ui` is a design handoff, not our code.** Compose it, don't restyle it.
-  Divergences from the delivered files get recorded in `packages/ui/CHANGES.md`.
+- **`packages/ui` started as a design handoff and is now our evolving design system**
+  (owner-directed v2 "Modern" pass, Oct 2026). Still: compose screens from it rather
+  than styling in `apps/web`, and record every design change in `packages/ui/CHANGES.md`.
 - **`packages/curriculum`** holds the Common Core skill taxonomy and major-work coverage
   reporting — the roadmap turns curriculum into data rather than code.
 - **State** lives at the edges: `apps/web/src/store.js` (localStorage `kampus_web_v0`,

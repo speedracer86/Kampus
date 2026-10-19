@@ -6,12 +6,13 @@ const base = { fontFamily: font.family, boxSizing: 'border-box' };
 
 export function Button({ variant = 'primary', size = 'md', disabled, style, children, ...rest }) {
   const [hover, setHover] = React.useState(false);
-  const pad = size === 'lg' ? '16px 30px' : size === 'sm' ? '9px 14px' : '12px 20px';
+  const pad = size === 'lg' ? '16px 32px' : size === 'sm' ? '9px 16px' : '12px 22px';
   const fs = size === 'lg' ? 18 : size === 'sm' ? 13.5 : 15;
+  const lifted = hover && !disabled;
   const variants = {
-    primary: { background: hover ? color.greenHover : color.green, color: '#fff', border: 'none' },
-    ink: { background: hover ? color.inkHover : color.ink, color: '#fff', border: 'none' },
-    outline: { background: color.surface, color: color.ink, border: `1px solid ${hover ? color.ink : color.border}` },
+    primary: { background: hover ? color.greenHover : color.green, color: '#fff', border: 'none', boxShadow: lifted ? shadow.btn : '0 1px 2px rgba(35,37,43,.08)' },
+    ink: { background: hover ? color.inkHover : color.ink, color: '#fff', border: 'none', boxShadow: lifted ? shadow.btn : '0 1px 2px rgba(35,37,43,.08)' },
+    outline: { background: hover ? color.border : color.fillHover, color: color.ink, border: 'none' },
     gold: { background: color.goldTint, color: color.goldDeep, border: `1px solid ${color.goldBorder}`, filter: hover ? 'brightness(.96)' : 'none' },
     ghost: { background: 'none', color: hover ? color.ink : color.textMuted, border: 'none' },
     destructive: { background: color.surface, color: color.red, border: `1px solid ${hover ? color.red : color.border}` },
@@ -19,14 +20,15 @@ export function Button({ variant = 'primary', size = 'md', disabled, style, chil
   return <button {...rest} disabled={disabled}
     onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
     style={{ ...base, padding: pad, fontSize: fs, fontWeight: variant === 'ghost' ? 600 : 700 + (size === 'lg' ? 100 : 0),
-      borderRadius: size === 'sm' ? radius.sm : radius.md, cursor: disabled ? 'not-allowed' : 'pointer',
+      borderRadius: radius.full, cursor: disabled ? 'not-allowed' : 'pointer', transition: motion.lift,
+      transform: lifted && (variant === 'primary' || variant === 'ink') ? 'translateY(-1px)' : 'none',
       ...(disabled ? { background: color.ground, color: color.textFaint, border: `1px solid ${color.border}` } : variants[variant]), ...style }}>
     {children}</button>;
 }
 
 export function Card({ padding = 20, dashed, tint, style, children }) {
   return <div style={{ ...base, background: tint || color.surface, borderRadius: radius.lg, padding,
-    border: dashed ? `1px dashed ${color.border}` : tint ? 'none' : `1px solid ${color.border}`,
+    border: dashed ? `1px dashed ${color.border}` : 'none',
     boxShadow: tint || dashed ? 'none' : shadow.card, ...style }}>{children}</div>;
 }
 
@@ -36,7 +38,7 @@ export function Kicker({ color: c = color.textMuted, style, children }) {
 
 export function Chip({ dot, style, children }) {
   return <div style={{ ...base, display: 'inline-flex', alignItems: 'center', gap: 7, background: color.surface,
-    border: `1px solid ${color.border}`, borderRadius: radius.md, padding: '7px 14px', fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', ...style }}>
+    border: `1px solid ${color.border}`, borderRadius: radius.full, padding: '7px 14px', fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', ...style }}>
     {dot && <span style={{ width: 7, height: 7, borderRadius: radius.full, background: dot, flex: 'none' }} />}{children}</div>;
 }
 
