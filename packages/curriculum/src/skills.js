@@ -63,7 +63,7 @@ export const SKILLS = {
   addBig: { label: 'Multi-digit addition', primary: '3.NBT.A.2', also: ['4.NBT.B.4'] },
   subBig: { label: 'Multi-digit subtraction', primary: '3.NBT.A.2', also: ['4.NBT.B.4'] },
   multFact: { label: 'Multiplication facts', primary: '3.OA.C.7' },
-  divFact: { label: 'Division facts', primary: '3.OA.C.7' },
+  divFact: { label: 'Division facts', primary: '3.OA.C.7', also: ['3.OA.B.6'] },
   mulDigit: { label: 'Multi-digit multiplication', primary: '4.NBT.B.5' },
   divRem: { label: 'Division with remainders', primary: '4.NBT.B.6' },
   roundNum: { label: 'Rounding', primary: '4.NBT.A.3' },
@@ -76,6 +76,28 @@ export const SKILLS = {
   sqroot: { label: 'Square roots', primary: '8.EE.A.2' },
   sciNot: { label: 'Scientific notation', primary: '8.EE.A.3' },
   slope2: { label: 'Slope from two points', primary: '8.EE.B.6' },
+
+  // ---- Phase 1 expansion (packages/engine/src/expansion.js) ----
+  areaModel: { label: 'Area as multiplication', primary: '3.MD.C.7', also: ['3.OA.A.1'] },
+  twoStepStory: { label: 'Two-step word problems', primary: '3.OA.D.8' },
+  decNotation: { label: 'Decimal notation (tenths & hundredths)', primary: '4.NF.C.6' },
+  decCompare: { label: 'Comparing decimals', primary: '4.NF.C.7' },
+  multCompare: { label: 'Multiplicative comparison', primary: '4.OA.A.2' },
+  powTen: { label: 'Powers of ten', primary: '5.NBT.A.2' },
+  decDiv: { label: 'Dividing decimals', primary: '5.NBT.B.7' },
+  unitFracDiv: { label: 'Dividing with unit fractions', primary: '5.NF.B.7' },
+  volumeBox: { label: 'Volume', primary: '5.MD.C.5' },
+  meanMedian: { label: 'Mean & median', primary: '6.SP.B.5c' },
+  depVar: { label: 'Dependent & independent variables', primary: '6.EE.C.9' },
+  tipCalc: { label: 'Tips and totals', primary: '7.RP.A.3' },
+  discountTax: { label: 'Discounts', primary: '7.RP.A.3' },
+  simpleInterest: { label: 'Simple interest', primary: '7.RP.A.3' },
+  probSimple: { label: 'Probability', primary: '7.SP.C.6', also: ['7.SP.C.5'] },
+  funcEval: { label: 'Evaluating functions', primary: '8.F.A.1' },
+  funcRate: { label: 'Modeling with functions', primary: '8.F.B.4' },
+  sysSolve: { label: 'Systems of equations', primary: '8.EE.C.8b' },
+  pythag: { label: 'Pythagorean theorem', primary: '8.G.B.7' },
+  approxRoot: { label: 'Approximating roots', primary: '8.NS.A.2' },
 };
 
 /* The major work of each grade (Achieve the Core "Where to Focus" cluster codes).

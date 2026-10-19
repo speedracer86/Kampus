@@ -1,6 +1,6 @@
 # @kampus/engine
 
-The game's math brain, UI-free. Ported from the v1 single-file app with behavior preserved — the same ~60 generators, adaptive rules, and economy math, now as pure ES modules the React app and (later) the backend both consume.
+The game's math brain, UI-free. Ported from the v1 single-file app with behavior preserved — ~80 generators (the v1 set plus the Phase 1 expansion), adaptive rules, and economy math, now as pure ES modules the React app and (later) the backend both consume.
 
 ## What's here
 
@@ -11,6 +11,7 @@ The game's math brain, UI-free. Ported from the v1 single-file app with behavior
 | `src/curriculum.js` | `R` (named generator refs), grade-parameterized factories, `GRADE_WORLDS` (per-grade world identities), and `CURRICULUM` (grade × topic × tier problem pools). Extracted verbatim from v1. |
 | `src/adaptive.js` | `makeProblem(grade, topic, tier, opts)` — distractor value-filtering, choice shuffling, the 20% easier-win sprinkle — and `recordAnswer(recent, tier, correct)`, the 5-of-6-up / ≤2-of-6-down tier rule. Pure: callers own all state. |
 | `src/economy.js` | Kredit formula, streak ladder and multipliers, shop catalog + `bonusPct`, ticket weekly-cap math. Server-side source of truth for validating ledgers (the UI's `QuizRound` computes display gains itself, per its architecture contract). |
+| `src/expansion.js` | Phase 1 curriculum expansion: 20 context-first generators that close every major-work gap in grades 3-8 (decimals, volume, stats, percent applications, probability, functions, systems, Pythagorean). Registers itself into `CURRICULUM` on import. |
 | `src/quiz-adapter.js` | `toQuizQuestion(...)` — maps engine problems onto `@kampus/ui` QuizRound's question contract, including numline mode for integer tier-1 problems and `plainText()` flattening of fraction HTML. |
 
 ## Usage
@@ -24,7 +25,7 @@ const next = recordAnswer(recent, tier, true);   // update adaptive state after 
 
 ## Testing
 
-`npm test` — Vitest. 10,800-problem fuzz across every grade × topic × tier (structural invariants: valid choices, no value-equal distractors, teach steps present, no fallback generator), plus adaptive, economy, and adapter contract tests.
+`npm test` — Vitest. 10,800-problem curriculum fuzz plus 6,000-run per-generator fuzz of the expansion (structural invariants: valid choices, no value-equal distractors, teach steps present, no fallback generator), plus adaptive, economy, and adapter contract tests.
 
 ## Known tradeoff
 

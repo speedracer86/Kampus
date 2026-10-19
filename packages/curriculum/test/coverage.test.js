@@ -15,29 +15,21 @@ describe('skill taxonomy', () => {
   });
 });
 
-describe('majorWorkCoverage — documents the known curriculum gaps', () => {
+/* Before the Phase 1 expansion these tests documented the gaps
+   (4.OA.A, 5.NBT.A, 5.MD.C, 6.EE.C, 8.NS.A, 8.F.A, 8.F.B — see git history).
+   The expansion closed them; this now guards against regressions. */
+describe('majorWorkCoverage — full coverage after Phase 1', () => {
   const allSkills = Object.keys(SKILLS);
 
-  it('grade 7 major work is fully covered; grade 6 misses only 6.EE.C', () => {
-    expect(majorWorkCoverage(7, allSkills).missing).toEqual([]);
-    // 6.EE.C (dependent/independent variable relationships) is a real gap —
-    // planned as a Lemonade Stand skill (cups-sold vs revenue tables) in Phase 1
-    expect(majorWorkCoverage(6, allSkills).missing).toEqual(['6.EE.C']);
+  it('every grade has its complete major work covered', () => {
+    for (const grade of [3, 4, 5, 6, 7, 8]) {
+      expect(majorWorkCoverage(grade, allSkills).missing, `grade ${grade}`).toEqual([]);
+    }
   });
 
-  it('grade 4 is missing decimal notation (4.NF.C is covered, 4.OA partially)', () => {
-    const { covered } = majorWorkCoverage(4, allSkills);
-    expect(covered).toContain('4.NF.C');
-  });
-
-  it('grade 8 gaps match the build plan: number system and functions', () => {
-    const { missing } = majorWorkCoverage(8, allSkills);
-    expect(missing).toContain('8.NS.A');   // irrational approximation — to build
-    expect(missing).toContain('8.F.A');    // functions — to build
-    expect(missing).toContain('8.F.B');
-  });
-
-  it('grade 5 gap matches the build plan: volume (5.MD.C)', () => {
-    expect(majorWorkCoverage(5, allSkills).missing).toContain('5.MD.C');
+  it('coverage math itself works: an empty skill set covers nothing', () => {
+    const { covered, missing } = majorWorkCoverage(6, []);
+    expect(covered).toEqual([]);
+    expect(missing).toEqual(MAJOR_WORK[6]);
   });
 });

@@ -12,8 +12,8 @@ Two things live in this repo:
 | Path | What it is |
 |---|---|
 | `index.html` | The complete v1 app (markup, styles, logic, embedded illustrations). Open in any browser — no install, no server. |
-| `packages/engine` | The math brain as pure ES modules: ~60 problem generators with teach steps, grade 3–8 curriculum pools, adaptive tier logic, economy math. Fully unit-tested. |
-| `packages/curriculum` | Common Core (CCSS) skill taxonomy + major-work coverage reporting. The tests document the known curriculum gaps the build plan addresses. |
+| `packages/engine` | The math brain as pure ES modules: ~80 problem generators with teach steps (v1 set + Phase 1 expansion covering every grade's full major work), grade 3–8 curriculum pools, adaptive tier logic, economy math. Fully unit-tested. |
+| `packages/curriculum` | Common Core (CCSS) skill taxonomy + major-work coverage reporting. After Phase 1, its tests assert every grade's complete major work is covered. |
 | `packages/ui` | The React component library from the design handoff (plain JSX, zero dependencies, inline-styled from `tokens.js`). See its README for the architecture contract; `CHANGES.md` for local divergences. |
 | `apps/web` | The v2 React app (Vite). Currently a working vertical slice: Home → world → full quiz round with teach mode, streaks, and Kredit earnings, persisted locally. |
 | `docs/` | Product docs: design spec, style guide, curriculum & engagement plan, build plan. |
@@ -33,7 +33,7 @@ No environment variables yet; Phase 2 (Supabase backend) introduces them and wil
 
 ## Testing philosophy
 
-The engine is pure functions, so the heavy testing is headless and fast: a 10,800-problem fuzz across every grade × topic × tier runs in under a second. The curriculum package's tests double as living documentation of coverage gaps — when a gap is filled, its test changes.
+The engine is pure functions, so the heavy testing is headless and fast: a 10,800-problem fuzz across every grade × topic × tier runs in under a second. The curriculum package's tests double as living documentation of standards coverage: after Phase 1 they assert every grade's complete Common Core major work is covered, and fail on regression.
 
 ## Docs
 
