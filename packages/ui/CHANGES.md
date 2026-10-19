@@ -55,3 +55,13 @@ Owner-directed reward rework (see docs/KAMPUS_CURRICULUM_PLAN.md §4 for the evi
 Design direction (owner references, Oct 2026): huge numerals as heroes, tag pills
 for metadata, dot-matrix progress, tone-on-tone nesting, ink pills + one accent.
 Applied here first; rolls through remaining surfaces in Phase 3.
+
+### Dashboard in the reference language (same pass)
+
+- Ground lightened (#F7F5F1 → #FAF9F6); frosted nav slightly brighter.
+- Content locked to 1080px, centered (NavBar inner + HomeScreen).
+- Hero is a mixed-weight sentence: muted base, values in bold ink
+  ("You've earned **356 Kredits** this week.").
+- `KreditsWeekCard` and the tickets card lead with huge numerals.
+- New `PracticeHeat` (home.jsx): contribution-grid of the last 10 weeks,
+  fed by `data.practiceDays` ({'YYYY-MM-DD': runCount}).

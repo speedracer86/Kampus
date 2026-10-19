@@ -27,8 +27,13 @@ export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () =
   const w = useWidth(ref);
   const narrow = w < 900, phone = w < 640;
   const d = data, bz = band(grade);
+  // Hero sentence in the reference style: muted base weight, values in bold ink
+  const hero = d.weekEarned > 0
+    ? <>You've earned <b style={{ color: color.ink, fontWeight: 800 }}>{d.weekEarned} Kredits</b> this week.</>
+    : <>Nothing earned yet. <b style={{ color: color.ink, fontWeight: 800 }}>Lock in.</b></>;
   return <div ref={ref} style={{ ...hBase, background: color.ground, padding: phone ? '20px 16px 40px' : '30px 32px 48px' }}>
-    <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, margin: '0 0 24px', textWrap: 'pretty' }}>{d.headline}</h1>
+    <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+    <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 600, color: color.textMuted, letterSpacing: '-.03em', lineHeight: 1.1, margin: '0 0 24px', textWrap: 'pretty' }}>{hero}</h1>
     <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 320px', gap: 24 }}>
       <div style={{ minWidth: 0 }}>
         <Kicker style={{ marginBottom: 10 }}>your grades</Kicker>
@@ -81,6 +86,10 @@ export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () =
                 <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.02em' }}>Lemonade stand</div></div></div>
             <div style={{ fontSize: 13.5, color: color.textSecondary, lineHeight: 1.45, marginBottom: 12 }}>Set a price, read the forecast, keep the profit. Banks as Kredits, ×10.</div>
             <Button variant="ink" size="sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => onEvent('stand')}>Open the stand →</Button></Card>}
+        {d.practiceDays && <Card padding={20}>
+          <Kicker style={{ marginBottom: 10 }}>practice</Kicker>
+          <PracticeHeat days={d.practiceDays} />
+        </Card>}
         <Card padding={20} dashed={!d.recentRuns || d.recentRuns.length === 0}>
           <Kicker style={{ marginBottom: 10 }}>recent runs</Kicker>
           {(!d.recentRuns || d.recentRuns.length === 0)
@@ -91,7 +100,7 @@ export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () =
               <span style={{ width: 8, height: 8, borderRadius: radius.full, background: r.color, flex: 'none' }} />
               <span style={{ flex: 1, fontSize: 13.5, fontWeight: 700 }}>{r.world}</span>
               <span style={{ fontSize: 12, color: color.textMuted, fontWeight: 600 }}>{r.meta}</span></div>)}</Card>
-      </div></div></div>;
+      </div></div></div></div>;
 }
 
 /**
@@ -124,3 +133,28 @@ export function PinGate({ pin = '1234', onPass = () => {}, onCancel, blobDir = '
       {onCancel && <Button variant="ghost" size="sm" style={{ marginTop: 18 }} onClick={onCancel}>← Back to the kid side</Button>}</div></div>;
 }
 
+
+
+/**
+ * PracticeHeat — contribution-grid of the last 10 weeks. days: {'YYYY-MM-DD': runCount}.
+ * Columns are weeks (oldest left), rows Mon-Sun. Intensity: 0 none, 1 light, 2+ full.
+ */
+export function PracticeHeat({ days = {}, weeks = 10 }) {
+  const today = new Date();
+  const dow = (today.getDay() + 6) % 7;               // Mon = 0
+  const start = new Date(today); start.setDate(today.getDate() - dow - (weeks - 1) * 7);
+  const cells = [];
+  for (let c = 0; c < weeks; c++) for (let r = 0; r < 7; r++) {
+    const d = new Date(start); d.setDate(start.getDate() + c * 7 + r);
+    const key = d.toISOString().slice(0, 10);
+    const n = days[key] || 0;
+    const future = d > today;
+    cells.push({ key: `${c}-${r}`, c, r, bg: future ? 'transparent' : n >= 2 ? color.green : n === 1 ? '#A8D7B6' : color.track });
+  }
+  const total = Object.values(days).reduce((s, v) => s + v, 0);
+  return <div style={hBase}>
+    <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1, marginBottom: 2 }}>{total}</div>
+    <div style={{ fontSize: 12, fontWeight: 600, color: color.textMuted, marginBottom: 12 }}>runs in the last {weeks} weeks</div>
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${weeks}, 1fr)`, gridTemplateRows: 'repeat(7, 1fr)', gridAutoFlow: 'column', gap: 4 }}>
+      {cells.map(x => <span key={x.key} style={{ aspectRatio: '1', borderRadius: 4, background: x.bg }} />)}</div></div>;
+}

@@ -18,6 +18,7 @@ export function freshState() {
     lastTopic: 'frac',
     week: { key: weekKey(), earned: 0, spent: 0 },
     recentRuns: [],
+    days: {},
     onboarded: false,
     avatar: 'Thinker',
   };

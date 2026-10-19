@@ -3,7 +3,7 @@
 // larger continuous radii, layered soft shadows, frosted surfaces, springy
 // motion — while keeping the warm palette, Inter Tight, and the blob world.
 export const color = {
-  ground: '#F7F5F1', surface: '#FFFFFF', ink: '#23252B', inkHover: '#3A3D45',
+  ground: '#FAF9F6', surface: '#FFFFFF', ink: '#23252B', inkHover: '#3A3D45',
   textSecondary: '#5D5A52', textMuted: '#8A8578', textFaint: '#B5B0A4',
   border: '#E5E2DA', borderFaint: '#F1EEE6', track: '#ECE9E1', trackOff: '#D8D4C9', fillHover: '#EEEBE3',
   onInkMuted: 'rgba(255,255,255,.72)', onInkTrack: 'rgba(255,255,255,.22)',
@@ -13,7 +13,7 @@ export const color = {
   lime: '#D9DE62', limeDeep: '#5B5E1F', limeBody: '#4A4D1E',
   orange: '#EE8A55', orangeDeep: '#7C4A1D', peach: '#F4BE93',
   // frosted chrome (nav, floating bars)
-  glass: 'rgba(252,251,248,.78)', hairline: 'rgba(35,37,43,.08)',
+  glass: 'rgba(253,252,250,.8)', hairline: 'rgba(35,37,43,.08)',
 };
 export const glassBlur = 'saturate(1.8) blur(20px)';
 export const world = {

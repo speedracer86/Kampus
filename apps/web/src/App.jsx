@@ -58,6 +58,7 @@ function homeData(state) {
     weekSpent: state.week.spent,
     weekHint: state.week.earned === 0 ? 'Play a round to start earning.' : undefined,
     recentRuns: state.recentRuns.slice(0, 4),
+    practiceDays: state.days || {},
   };
 }
 
@@ -110,6 +111,9 @@ export function App() {
           meta: `${payload.correct}/${payload.asked} · +${payload.kredits} Kredits`,
         });
         s.recentRuns = s.recentRuns.slice(0, 8);
+        const day = new Date().toISOString().slice(0, 10);
+        s.days = s.days || {};
+        s.days[day] = (s.days[day] || 0) + 1;
         return s;
       });
     }

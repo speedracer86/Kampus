@@ -6,9 +6,9 @@ const base = { fontFamily: font.family, boxSizing: 'border-box' };
 
 export function NavBar({ items, active, onNav, weekLabel, kredits, avatar, onShop, blobDir }) {
   // items: [{id, label, dot}]
-  return <nav style={{ ...base, display: 'flex', alignItems: 'center', gap: 4, padding: '12px clamp(14px, 2.5vw, 32px)',
-    borderBottom: `1px solid ${color.hairline}`, position: 'sticky', top: 0, background: color.glass,
-    backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, zIndex: 10, flexWrap: 'wrap', rowGap: 6 }}>
+  return <nav style={{ ...base, borderBottom: `1px solid ${color.hairline}`, position: 'sticky', top: 0, background: color.glass,
+    backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, zIndex: 10, padding: '12px clamp(14px, 2.5vw, 32px)' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, maxWidth: 1080, margin: '0 auto', flexWrap: 'wrap', rowGap: 6 }}>
     <span style={{ marginRight: 'clamp(8px, 1.5vw, 22px)', flex: 'none' }}><Logo /></span>
     <div style={{ flex: 1 }} />
     {items.map(n => { const sel = n.id === active;
@@ -23,7 +23,7 @@ export function NavBar({ items, active, onNav, weekLabel, kredits, avatar, onSho
         <span style={{ width: 20, height: 20, borderRadius: radius.full, background: color.green, color: '#fff',
           display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800 }}>+</span></button>
       {avatar && <Blob name={avatar} size={30} dir={blobDir} style={{ background: color.surface, border: `1px solid ${color.border}`, borderRadius: radius.sm, padding: 3 }} />}
-    </div></nav>;
+    </div></div></nav>;
 }
 
 function NavItem({ label, dot, active, onClick }) {
@@ -73,7 +73,8 @@ export function WorldTile({ name, skill, worldColor, blob, tierLabel, tier = 0, 
 export function KreditsWeekCard({ earned = 0, spent = 0, hint }) {
   const total = earned + spent, earnPct = total ? Math.round(100 * earned / total) : 0;
   return <Card>
-    <Kicker style={{ marginBottom: 12 }}>kredits this week</Kicker>
+    <Kicker style={{ marginBottom: 10 }}>kredits this week</Kicker>
+    <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1, fontFamily: font.family, marginBottom: 10 }}>{earned}</div>
     <ProgressBar height={10} segments={total ? [{ pct: earnPct, color: color.green }, { pct: 100 - earnPct, color: color.red }] : []} style={{ marginBottom: 10 }} />
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12.5, fontWeight: 700, fontFamily: font.family }}>
       <span style={{ color: color.greenDeep }}>+{earned} earned</span>
