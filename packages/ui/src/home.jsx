@@ -1,7 +1,8 @@
 // Composed Home screen + Parent PIN gate. Responsive: grids collapse below ~900px and ~640px.
 import { color, type, radius, shadow, font, worldTint, band } from './tokens.js';
 import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob } from './primitives.jsx';
-import { GradeCard, WorldTile, KreditsWeekCard } from './app.jsx';
+import { GradeCard, GradeChips, WorldTile, KreditsWeekCard } from './app.jsx';
+import { CampusMap } from './gamify.jsx';
 
 const hBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -22,7 +23,7 @@ function useWidth(ref) {
  *   worlds:[WorldTile props], testReady?, tickets, nextReward, weekEarned, weekSpent, weekHint,
  *   recentRuns:[{world,color,meta}]}, blobDir, onEvent('play'|'quick6'|'world'|'test'|'stand'|'rewards', payload).
  */
-export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () => {} }) {
+export function HomeScreen({ data, grade = 6, gradeView = 'cards', blobDir = 'blobs/', onEvent = () => {} }) {
   const ref = React.useRef(null);
   const w = useWidth(ref);
   const narrow = w < 900, phone = w < 640;
@@ -36,9 +37,15 @@ export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () =
     <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 600, color: color.textMuted, letterSpacing: '-.03em', lineHeight: 1.1, margin: '0 0 24px', textWrap: 'pretty' }}>{hero}</h1>
     <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 320px', gap: 24 }}>
       <div style={{ minWidth: 0 }}>
-        <Kicker style={{ marginBottom: 10 }}>your grades</Kicker>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${phone ? 3 : 6}, 1fr)`, gap: 10, marginBottom: 26 }}>
-          {d.grades.map(g => <GradeCard key={g.grade} {...g} />)}</div>
+        <Kicker style={{ marginBottom: 10 }}>{gradeView === 'campus' ? 'your campus' : 'your grades'}</Kicker>
+        {gradeView === 'campus'
+          ? <Card padding={18} style={{ marginBottom: 26 }}>
+            <CampusMap teaser onEvent={onEvent}
+              districts={d.grades.map(g => ({ grade: g.grade, name: g.detail, unlocked: g.status === 'passed' }))} /></Card>
+          : gradeView === 'chips'
+            ? <div style={{ marginBottom: 26 }}><GradeChips grades={d.grades} /></div>
+            : <div style={{ display: 'grid', gridTemplateColumns: `repeat(${phone ? 3 : 6}, 1fr)`, gap: 10, marginBottom: 26 }}>
+              {d.grades.map(g => <GradeCard key={g.grade} {...g} />)}</div>}
         {d.jumpBack && <Card padding={20} style={{ marginBottom: 26 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <Blob name={d.jumpBack.blob} size={bz.jumpBlob} dir={blobDir} />

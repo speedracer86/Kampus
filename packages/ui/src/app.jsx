@@ -132,3 +132,26 @@ function SideItem({ label, dot, active, onClick }) {
       color: color.ink, cursor: 'pointer', transition: 'background .2s' }}>
     <span style={{ width: 8, height: 8, borderRadius: radius.full, background: dot, flex: 'none' }} />{label}</button>;
 }
+
+
+/**
+ * GradeChips — the grade journey as a compact day-strip (task-manager reference):
+ * small chips, current grade in ink with a lime progress sliver, passed get a
+ * green check, locked fade back. One-third the height of the card strip.
+ * grades: [{grade, status: 'passed'|'current'|'locked', pct, detail}]
+ */
+export function GradeChips({ grades = [] }) {
+  return <div style={{ ...base, display: 'flex', gap: 8 }}>
+    {grades.map(g => {
+      const cur = g.status === 'current', passed = g.status === 'passed';
+      return <div key={g.grade} style={{ flex: 1, minWidth: 0, textAlign: 'center',
+        background: cur ? color.ink : color.surface,
+        border: `1px solid ${cur ? color.ink : color.border}`, borderRadius: radius.md,
+        padding: '9px 4px 8px', opacity: g.status === 'locked' ? 0.45 : 1 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em',
+          color: cur ? color.onInkMuted : passed ? color.greenDeep : color.textFaint }}>
+          {passed ? '✓ PASSED' : cur ? 'NOW' : 'LOCKED'}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, color: cur ? '#fff' : color.ink }}>{g.grade}</div>
+        {cur && <ProgressBar value={g.pct} height={4} fill={color.lime} track={color.onInkTrack} style={{ margin: '6px 6px 0' }} />}
+      </div>; })}</div>;
+}

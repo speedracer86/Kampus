@@ -160,6 +160,7 @@ export function App() {
       <HomeScreen
         data={homeData(state)}
         grade={state.grade}
+        gradeView={new URLSearchParams(location.search).get('grades') || 'cards'}
         blobDir={BLOB_DIR}
         onEvent={(type, payload) => {
           if (type === 'world') startRound(payload.id);
