@@ -1,7 +1,7 @@
 // Composed Home screen + Parent PIN gate. Responsive: grids collapse below ~900px and ~640px.
 import { color, type, radius, shadow, font, worldTint, band } from './tokens.js';
 import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob } from './primitives.jsx';
-import { GradeCard, GradeChips, WorldTile, KreditsWeekCard } from './app.jsx';
+import { GradeCard, GradeChips, WorldTile, KreditsWeekCard, RecordsLedger } from './app.jsx';
 import { CampusMap } from './gamify.jsx';
 
 const hBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -30,8 +30,8 @@ export function HomeScreen({ data, grade = 6, gradeView = 'cards', blobDir = 'bl
   const d = data, bz = band(grade);
   // Hero sentence in the reference style: muted base weight, values in bold ink
   const hero = d.weekEarned > 0
-    ? <>You've earned <b style={{ color: color.ink, fontWeight: 800 }}>{d.weekEarned} Kredits</b> this week.</>
-    : <>Nothing earned yet. <b style={{ color: color.ink, fontWeight: 800 }}>Lock in.</b></>;
+    ? <>You've earned <b style={{ fontFamily: font.display, fontWeight: 400, fontStyle: 'italic', color: color.ink }}>{d.weekEarned} Kredits</b> this week.</>
+    : <>Nothing earned yet. <b style={{ fontFamily: font.display, fontWeight: 400, fontStyle: 'italic', color: color.ink }}>Lock in.</b></>;
   return <div ref={ref} style={{ ...hBase, background: color.surface, minHeight: '100%', padding: phone ? '20px 16px 40px' : '30px 32px 48px' }}>
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
     <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 600, color: color.textMuted, letterSpacing: '-.03em', lineHeight: 1.1, margin: '0 0 24px', textWrap: 'pretty' }}>{hero}</h1>
@@ -69,15 +69,21 @@ export function HomeScreen({ data, grade = 6, gradeView = 'cards', blobDir = 'bl
           <Button variant="outline" onClick={() => onEvent('test', d.testReady)}>See the test</Button></div>}
       </div>
       <div style={{ display: 'grid', gap: 20, alignContent: 'start' }}>
-        <Card padding={20}>
+        {d.records && <Card padding={16}>
+          <Kicker style={{ margin: '4px 0 10px 4px' }}>your records</Kicker>
+          <RecordsLedger rows={d.records} />
+          {d.nextReward && <div style={{ fontSize: 12, fontWeight: 600, color: color.textMuted, margin: '10px 4px 2px' }}>
+            {Math.max(0, d.nextReward.cost - d.tickets)} more tickets to "{d.nextReward.name}"</div>}
+        </Card>}
+        {!d.records && <Card padding={20}>
           <Kicker style={{ marginBottom: 10 }}>your tickets</Kicker>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
             <span style={{ fontSize: 40, fontWeight: 800, lineHeight: 1 }}>{d.tickets}</span><TicketIcon size={20} /></div>
           {d.nextReward && <>
             <ProgressBar value={100 * d.tickets / d.nextReward.cost} fill={color.gold} style={{ margin: '12px 0 8px' }} />
             <div style={{ fontSize: 12.5, fontWeight: 600, color: color.textMuted }}>Earn {Math.max(0, d.nextReward.cost - d.tickets)} more tickets to unlock "{d.nextReward.name}"</div></>}
-          <Button variant="ghost" size="sm" style={{ marginTop: 8, padding: '4px 0' }} onClick={() => onEvent('rewards')}>Rewards →</Button></Card>
-        <KreditsWeekCard earned={d.weekEarned} spent={d.weekSpent} hint={d.weekHint} />
+          <Button variant="ghost" size="sm" style={{ marginTop: 8, padding: '4px 0' }} onClick={() => onEvent('rewards')}>Rewards →</Button></Card>}
+        {!d.records && <KreditsWeekCard earned={d.weekEarned} spent={d.weekSpent} hint={d.weekHint} />}
         {bz.standFlood
           ? <div style={{ background: color.lime, borderRadius: radius.lg, padding: '22px 20px 20px' }}>
             <Blob name="Startup" size={bz.standBlob} dir={blobDir} style={{ display: 'block', margin: '0 0 6px -6px' }} />
@@ -160,7 +166,7 @@ export function PracticeHeat({ days = {}, weeks = 10 }) {
   }
   const total = Object.values(days).reduce((s, v) => s + v, 0);
   return <div style={hBase}>
-    <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1, marginBottom: 2 }}>{total}</div>
+    <div style={{ fontFamily: font.display, fontSize: 36, lineHeight: 1, marginBottom: 2 }}>{total}</div>
     <div style={{ fontSize: 12, fontWeight: 600, color: color.textMuted, marginBottom: 12 }}>runs in the last {weeks} weeks</div>
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${weeks}, 1fr)`, gridTemplateRows: 'repeat(7, 1fr)', gridAutoFlow: 'column', gap: 4 }}>
       {cells.map(x => <span key={x.key} style={{ aspectRatio: '1', borderRadius: 4, background: x.bg }} />)}</div></div>;

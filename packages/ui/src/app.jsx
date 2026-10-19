@@ -74,7 +74,7 @@ export function KreditsWeekCard({ earned = 0, spent = 0, hint }) {
   const total = earned + spent, earnPct = total ? Math.round(100 * earned / total) : 0;
   return <Card>
     <Kicker style={{ marginBottom: 10 }}>kredits this week</Kicker>
-    <div style={{ fontSize: 44, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1, fontFamily: font.family, marginBottom: 10 }}>{earned}</div>
+    <div style={{ fontFamily: font.display, fontSize: 48, lineHeight: 1, marginBottom: 10 }}>{earned}</div>
     <ProgressBar height={10} segments={total ? [{ pct: earnPct, color: color.green }, { pct: 100 - earnPct, color: color.red }] : []} style={{ marginBottom: 10 }} />
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12.5, fontWeight: 700, fontFamily: font.family }}>
       <span style={{ color: color.greenDeep }}>+{earned} earned</span>
@@ -151,7 +151,21 @@ export function GradeChips({ grades = [] }) {
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em',
           color: cur ? color.onInkMuted : passed ? color.greenDeep : color.textFaint }}>
           {passed ? '✓ PASSED' : cur ? 'NOW' : 'LOCKED'}</div>
-        <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, color: cur ? '#fff' : color.ink }}>{g.grade}</div>
+        <div style={{ fontFamily: font.display, fontSize: 27, lineHeight: 1.15, color: cur ? '#fff' : color.ink }}>{g.grade}</div>
         {cur && <ProgressBar value={g.pct} height={4} fill={color.lime} track={color.onInkTrack} style={{ margin: '6px 6px 0' }} />}
       </div>; })}</div>;
+}
+
+
+/**
+ * RecordsLedger — stacked record bands (Tasky reference): big serif numeral
+ * left, label right, one tint per row. rows: [{n, label, bg, fg}].
+ */
+export function RecordsLedger({ rows = [] }) {
+  return <div style={{ ...base, display: 'flex', flexDirection: 'column', gap: 6 }}>
+    {rows.map((r, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: 12, background: r.bg, borderRadius: radius.md, padding: '10px 16px' }}>
+      <span style={{ fontFamily: font.display, fontSize: 32, lineHeight: 1, color: r.fg || color.ink }}>{r.n}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: r.fg || color.ink, textAlign: 'right' }}>{r.label}</span>
+    </div>)}</div>;
 }

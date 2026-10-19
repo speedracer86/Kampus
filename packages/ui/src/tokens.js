@@ -24,7 +24,7 @@ export const world = {
   equations: { color: '#8F97DE', name: 'Equation Lab', blob: 'Learning' },
 };
 export const worldTint = (c, pct = 24) => `color-mix(in oklab, ${c} ${pct}%, white)`;
-export const font = { family: "'Inter Tight', sans-serif" };
+export const font = { family: "'Inter Tight', sans-serif", display: "'Instrument Serif', Georgia, serif" };
 export const type = {
   display: { fontSize: 52, fontWeight: 800, letterSpacing: '-.035em', lineHeight: 1.02 },
   h1: { fontSize: 44, fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05 },

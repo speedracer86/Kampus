@@ -59,6 +59,12 @@ function homeData(state) {
     weekHint: state.week.earned === 0 ? 'Play a round to start earning.' : undefined,
     recentRuns: state.recentRuns.slice(0, 4),
     practiceDays: state.days || {},
+    records: [
+      { n: state.tickets, label: 'Tickets saved', bg: '#FBF3E4', fg: '#A8862A' },
+      { n: state.week.earned, label: 'Kredits this week', bg: '#EAF6EE', fg: '#2E7C46' },
+      { n: Object.keys(state.passed || {}).length, label: 'Grades passed', bg: '#EDEBFA', fg: '#4F56A3' },
+      { n: Object.values(state.days || {}).reduce((a, b) => a + b, 0), label: 'Total runs', bg: '#FBEDF5', fg: '#A3537D' },
+    ],
   };
 }
 

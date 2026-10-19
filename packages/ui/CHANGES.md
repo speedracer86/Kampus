@@ -75,3 +75,12 @@ hairline borders with no shadow (hover lift keeps its float shadow) — and the
 bank prominent top-right: green bold Kredit balance plus a "+N this week" chip.
 A `SideBar` component was built during the exploration and stays in app.jsx,
 unused by the kid shell; candidate for the Grown-ups side in Phase 4.
+
+### Tasky-inspired pass (owner reference, Oct 2026)
+
+- **Serif display accent**: Instrument Serif (`font.display`), used ONLY for hero
+  numerals and emphasized hero values (italic) — grade-chip digits, week/tickets/
+  practice numerals, RecordsLedger. Inter Tight remains the UI font everywhere else.
+- **RecordsLedger** (app.jsx): Tasky "Your records" bands — big serif numeral left,
+  label right, one tint per row. HomeScreen renders it from `data.records` in place
+  of the separate tickets + week cards (which remain for data without records).
