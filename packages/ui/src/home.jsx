@@ -1,5 +1,5 @@
 // Composed Home screen + Parent PIN gate. Responsive: grids collapse below ~900px and ~640px.
-import { color, type, radius, shadow, font, worldTint } from './tokens.js';
+import { color, type, radius, shadow, font, worldTint, band } from './tokens.js';
 import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob } from './primitives.jsx';
 import { GradeCard, WorldTile, KreditsWeekCard } from './app.jsx';
 
@@ -22,13 +22,13 @@ function useWidth(ref) {
  *   worlds:[WorldTile props], testReady?, tickets, nextReward, weekEarned, weekSpent, weekHint,
  *   recentRuns:[{world,color,meta}]}, blobDir, onEvent('play'|'quick6'|'world'|'test'|'stand'|'rewards', payload).
  */
-export function HomeScreen({ data, blobDir = 'blobs/', onEvent = () => {} }) {
+export function HomeScreen({ data, grade = 6, blobDir = 'blobs/', onEvent = () => {} }) {
   const ref = React.useRef(null);
   const w = useWidth(ref);
   const narrow = w < 900, phone = w < 640;
-  const d = data;
+  const d = data, bz = band(grade);
   return <div ref={ref} style={{ ...hBase, background: color.ground, padding: phone ? '20px 16px 40px' : '30px 32px 48px' }}>
-    <h1 style={{ fontSize: phone ? 32 : 46, fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, margin: '0 0 24px', textWrap: 'pretty' }}>{d.headline}</h1>
+    <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, margin: '0 0 24px', textWrap: 'pretty' }}>{d.headline}</h1>
     <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '1fr 320px', gap: 24 }}>
       <div style={{ minWidth: 0 }}>
         <Kicker style={{ marginBottom: 10 }}>your grades</Kicker>
@@ -36,7 +36,7 @@ export function HomeScreen({ data, blobDir = 'blobs/', onEvent = () => {} }) {
           {d.grades.map(g => <GradeCard key={g.grade} {...g} />)}</div>
         {d.jumpBack && <Card padding={20} style={{ marginBottom: 26 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <Blob name={d.jumpBack.blob} size={84} dir={blobDir} />
+            <Blob name={d.jumpBack.blob} size={bz.jumpBlob} dir={blobDir} />
             <div style={{ flex: 1, minWidth: 140 }}>
               <Kicker style={{ marginBottom: 4 }}>jump back in</Kicker>
               <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.02em' }}>{d.jumpBack.world}</div>
@@ -46,9 +46,9 @@ export function HomeScreen({ data, blobDir = 'blobs/', onEvent = () => {} }) {
               <Button variant="outline" size="sm" onClick={() => onEvent('quick6', d.jumpBack)}>Quick 6 →</Button></div></div></Card>}
         <Kicker style={{ marginBottom: 10 }}>worlds</Kicker>
         <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 14, marginBottom: 26 }}>
-          {d.worlds.map(wd => <WorldTile key={wd.name} {...wd} blobDir={blobDir} onPlay={() => onEvent('world', wd)} />)}</div>
+          {d.worlds.map(wd => <WorldTile key={wd.name} {...wd} wellH={bz.wellH} wellBlob={bz.wellBlob} tintPct={bz.tint} blobDir={blobDir} onPlay={() => onEvent('world', wd)} />)}</div>
         {d.testReady && <div style={{ background: color.goldTint, border: `1px solid ${color.goldBorder}`, borderRadius: radius.lg, padding: 20, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-          <Blob name="Winner" size={64} dir={blobDir} />
+          <Blob name="Winner" size={bz.jumpBlob > 64 ? 64 : bz.jumpBlob} dir={blobDir} />
           <div style={{ flex: 1, minWidth: 160 }}>
             <div style={{ fontSize: 18, fontWeight: 800 }}>Grade {d.testReady.grade} test unlocked</div>
             <div style={{ fontSize: 13, color: color.goldDeep, fontWeight: 600 }}>{d.testReady.note}</div></div>
@@ -64,12 +64,21 @@ export function HomeScreen({ data, blobDir = 'blobs/', onEvent = () => {} }) {
             <div style={{ fontSize: 12.5, fontWeight: 600, color: color.textMuted }}>Earn {Math.max(0, d.nextReward.cost - d.tickets)} more tickets to unlock "{d.nextReward.name}"</div></>}
           <Button variant="ghost" size="sm" style={{ marginTop: 8, padding: '4px 0' }} onClick={() => onEvent('rewards')}>Rewards →</Button></Card>
         <KreditsWeekCard earned={d.weekEarned} spent={d.weekSpent} hint={d.weekHint} />
-        <div style={{ background: color.lime, borderRadius: radius.lg, padding: '22px 20px 20px' }}>
-          <Blob name="Startup" size={96} dir={blobDir} style={{ display: 'block', margin: '0 0 6px -6px' }} />
-          <Kicker color={color.limeDeep} style={{ marginBottom: 6 }}>your business</Kicker>
-          <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, marginBottom: 6 }}>Lemonade stand</div>
-          <div style={{ fontSize: 14, color: color.limeBody, lineHeight: 1.45, marginBottom: 14 }}>Set a price, make some cups, keep the profit. Banks as Kredits, ×10.</div>
-          <Button variant="ink" style={{ width: '100%', justifyContent: 'center' }} onClick={() => onEvent('stand')}>Open the stand →</Button></div>
+        {bz.standFlood
+          ? <div style={{ background: color.lime, borderRadius: radius.lg, padding: '22px 20px 20px' }}>
+            <Blob name="Startup" size={bz.standBlob} dir={blobDir} style={{ display: 'block', margin: '0 0 6px -6px' }} />
+            <Kicker color={color.limeDeep} style={{ marginBottom: 6 }}>your business</Kicker>
+            <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, marginBottom: 6 }}>Lemonade stand</div>
+            <div style={{ fontSize: 14, color: color.limeBody, lineHeight: 1.45, marginBottom: 14 }}>Set a price, make some cups, keep the profit. Banks as Kredits, ×10.</div>
+            <Button variant="ink" style={{ width: '100%', justifyContent: 'center' }} onClick={() => onEvent('stand')}>Open the stand →</Button></div>
+          : <Card padding={20}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <Blob name="Startup" size={bz.standBlob} dir={blobDir} />
+              <div>
+                <Kicker color={color.limeDeep} style={{ marginBottom: 2 }}>your business</Kicker>
+                <div style={{ fontSize: 19, fontWeight: 800, letterSpacing: '-.02em' }}>Lemonade stand</div></div></div>
+            <div style={{ fontSize: 13.5, color: color.textSecondary, lineHeight: 1.45, marginBottom: 12 }}>Set a price, read the forecast, keep the profit. Banks as Kredits, ×10.</div>
+            <Button variant="ink" size="sm" style={{ width: '100%', justifyContent: 'center' }} onClick={() => onEvent('stand')}>Open the stand →</Button></Card>}
         <Card padding={20} dashed={!d.recentRuns || d.recentRuns.length === 0}>
           <Kicker style={{ marginBottom: 10 }}>recent runs</Kicker>
           {(!d.recentRuns || d.recentRuns.length === 0)

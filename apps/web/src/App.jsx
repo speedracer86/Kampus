@@ -150,6 +150,7 @@ export function App() {
     />
     <HomeScreen
       data={homeData(state)}
+      grade={state.grade}
       blobDir={BLOB_DIR}
       onEvent={(type, payload) => {
         if (type === 'world') startRound(payload.id);

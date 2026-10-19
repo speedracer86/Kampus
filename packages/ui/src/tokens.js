@@ -22,7 +22,7 @@ export const world = {
   weather: { color: '#5E9FE0', name: 'Weather Station', blob: 'Rain' },
   equations: { color: '#8F97DE', name: 'Equation Lab', blob: 'Learning' },
 };
-export const worldTint = (c) => `color-mix(in oklab, ${c} 24%, white)`;
+export const worldTint = (c, pct = 24) => `color-mix(in oklab, ${c} ${pct}%, white)`;
 export const font = { family: "'Inter Tight', sans-serif" };
 export const type = {
   display: { fontSize: 52, fontWeight: 800, letterSpacing: '-.035em', lineHeight: 1.02 },
@@ -44,9 +44,14 @@ export const motion = {
   bar: `width .5s ${spring}`, fade: 'opacity .3s', knob: `left .25s ${spring}`,
   lift: `transform .25s ${spring}, box-shadow .25s ${spring}, background .2s`,
 };
-// Grade-band sizing for Play surfaces: band(grade) -> sizes
-export const band = (g) => g <= 4 ? { mascot: 132, question: 62, answer: 26, pad: 24 }
-  : g <= 6 ? { mascot: 100, question: 54, answer: 22, pad: 20 }
-  : { mascot: 76, question: 46, answer: 20, pad: 16 };
+// Grade-band sizing: band(grade) -> sizes for Play AND Home surfaces.
+// The age dial: younger grades get big friendly illustration and saturated
+// tints; grades 7-8 get the same world rendered smaller and cooler so a
+// pre-teen never feels the app is for little kids.
+export const band = (g) => g <= 4
+  ? { mascot: 124, question: 58, answer: 26, pad: 24, title: 46, wellH: 150, wellBlob: 96, tint: 24, jumpBlob: 84, standBlob: 96, standFlood: true }
+  : g <= 6
+    ? { mascot: 92, question: 50, answer: 22, pad: 20, title: 42, wellH: 118, wellBlob: 68, tint: 15, jumpBlob: 64, standBlob: 64, standFlood: true }
+    : { mascot: 60, question: 44, answer: 20, pad: 16, title: 36, wellH: 92, wellBlob: 48, tint: 9, jumpBlob: 48, standBlob: 44, standFlood: false };
 export const streakColors = { STARTER: '#8A8578', INTERN: '#8F97DE', PRO: '#D9A93F', MANAGER: '#58B372', BOSS: '#EE8A55', CEO: '#5E9FE0', LEGEND: '#8F97DE' };
 export const confetti = ['#8F97DE', '#F4BE93', '#7CBF8B', '#F0AFCE', '#5E9FE0', '#D9DE62'];

@@ -23,3 +23,14 @@ don't restyle" rule for the changes below; everything else stays handoff-verbati
   instead of darkening its border.
 - `quiz.jsx`: answer tiles, quit button, coin chip, and end-of-round stat cards are
   borderless with soft elevation; feedback states still ring in green/red.
+
+### Age-adaptive illustration dial (same pass, follow-up)
+
+Pre-teen feedback: the big mascots and saturated tints read "little kid." Instead of
+removing the illustrations (they carry the brand and help younger kids), illustration
+presence now scales with the grade band via `band(grade)`, which gained Home-surface
+knobs: `title`, `wellH`, `wellBlob`, `tint`, `jumpBlob`, `standBlob`, `standFlood`.
+Grades 3-4 keep big friendly blobs, 24% world tints, and the flooded lime stand card;
+grades 7-8 get 48px accent blobs, 9% tints, a 36px headline, a compact neutral stand
+card, and a smaller play mascot. `HomeScreen` takes a `grade` prop; `WorldTile` takes
+`wellH`/`wellBlob`/`tintPct`; `worldTint(c, pct)` accepts a percent.

@@ -53,16 +53,16 @@ export function GradeCard({ grade, status = 'locked', pct = 0, detail }) {
     <div style={{ fontSize: 11, fontWeight: 600, color: sub, marginTop: 6 }}>{detail}</div></div>;
 }
 
-export function WorldTile({ name, skill, worldColor, blob, tierLabel, tier = 0, onPlay, blobDir }) {
+export function WorldTile({ name, skill, worldColor, blob, tierLabel, tier = 0, onPlay, blobDir, wellH = 150, wellBlob = 96, tintPct = 24 }) {
   const [hover, setHover] = React.useState(false);
   return <button onClick={onPlay} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
     style={{ ...base, background: color.surface, border: 'none', borderRadius: radius.lg,
       padding: 0, cursor: 'pointer', textAlign: 'left', overflow: 'hidden', display: 'block', width: '100%',
       boxShadow: hover ? shadow.float : shadow.card, transform: hover ? 'translateY(-3px)' : 'none', transition: motion.lift }}>
-    <div style={{ background: worldTint(worldColor), height: 150, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ background: worldTint(worldColor, tintPct), height: wellH, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ position: 'absolute', top: 10, left: 10, background: color.surface, borderRadius: radius.sm,
         padding: '4px 9px', fontSize: 10.5, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: color.textSecondary }}>{tierLabel}</span>
-      <Blob name={blob} size={96} dir={blobDir} /></div>
+      <Blob name={blob} size={wellBlob} dir={blobDir} /></div>
     <div style={{ padding: '14px 16px 16px' }}>
       <div style={{ ...type.cardTitle, fontSize: 21, color: color.ink, marginBottom: 7 }}>{name}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
