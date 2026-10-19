@@ -148,10 +148,12 @@ export function GradeChips({ grades = [] }) {
         background: cur ? color.ink : color.surface,
         border: `1px solid ${cur ? color.ink : color.border}`, borderRadius: radius.md,
         padding: '10px 4px 9px', opacity: g.status === 'locked' ? 0.45 : 1 }}>
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', marginBottom: 2,
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', marginBottom: 3,
           color: cur ? color.onInkMuted : passed ? color.greenDeep : color.textFaint }}>
           {passed ? '✓ PASSED' : cur ? 'NOW' : 'LOCKED'}</div>
-        <div style={{ fontFamily: font.display, fontSize: 21, lineHeight: 1.2, whiteSpace: 'nowrap', color: cur ? '#fff' : color.ink }}>Grade {g.grade}</div>
+        <div style={{ fontSize: 9, fontWeight: 800, letterSpacing: '.16em', textTransform: 'uppercase',
+          color: cur ? color.onInkMuted : color.textMuted }}>Grade</div>
+        <div style={{ fontFamily: font.display, fontSize: 26, lineHeight: 1.1, color: cur ? '#fff' : color.ink }}>{g.grade}</div>
         {cur && <ProgressBar value={g.pct} height={4} fill={color.lime} track={color.onInkTrack} style={{ margin: '6px 6px 0' }} />}
       </div>; })}</div>;
 }
