@@ -16,7 +16,8 @@
     "./question": "./src/question.jsx",
     "./lesson": "./src/lesson.jsx",
     "./interactives": "./src/interactives.jsx",
-    "./util": "./src/util.jsx"
+    "./util": "./src/util.jsx",
+    "./home-stack": "./src/home-stack.jsx"
   },
   "peerDependencies": {
     "react": ">=18"

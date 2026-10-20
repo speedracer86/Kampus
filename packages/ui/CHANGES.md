@@ -193,3 +193,36 @@ Two fixes made while verifying this step:
   `@kampus/ui/quiz` — import it from `@kampus/ui/util`.
 - **`buildLesson()` ran on every App render**, re-rolling every question mid-lesson
   because the generators are random. It is memoized per grade/topic/tier/attempt now.
+
+## Step 5 — Home (§0 3b / 3a, with the Brief v4 retrofit)
+
+New `src/home-stack.jsx`. The pre-§0 `home.jsx` `HomeScreen` is left in place for the
+gallery and as reference; `apps/web` now renders `HomeStack`.
+
+- §0 frame: `340px | 1fr`, column-gap 48, page padding 48, everything on ground with
+  exactly one white sheet.
+- Left: the two-line greeting (values in ink, the rest muted) bottom-aligned with the
+  stat block, over the **grade stack** — overlapping bands (`margin-top:-14px`) with the
+  §0 edge treatment, passed grades deepening along the purple ramp, current in ink with
+  lime unit dots, locked in `#E6EAEE`, and grade 8 masked into the ground over 48px. Only
+  the bottom card is fully rounded. Opening a passed grade grows its padding and pushes
+  the stack down, revealing **"Test 19/20"** and an ink `+$N` chip — a score, never a
+  letter grade or a percentage.
+- Right: `Bank` / `Kredits this week` as white pill labels over 44px/300 numerals split by
+  a 1.5px rule, green when up and `loss` red with `−$` when down, plus the Today/Week pill
+  switch. Then the sheet: **Today's lesson** standing out by scale not fill (kicker, world
+  chip, "~20 min · no timer", 34px title, the five labelled move segments, 96px ink Start),
+  then **Free practice** rows, then the lime stand band.
+- Progress counts **units**, not runs: "unit 3 of 7 · 38 of 130 lessons · grade test opens
+  after unit 7".
+- **Blitz is opt-in per row** and never on by default: the pill toggles ground → ink
+  "⚡ Blitz on" and the row's meta gains "×1.5 under 8s"; starting the round is a separate
+  tap on the play button.
+- The stand band is gated by the lesson — "Class first, then the register opens." with the
+  55%-white "Opens after the lesson" pill until today's lesson is done.
+- Week view: a 7-column calendar of run cards with today as an ink "+ Next run" tile.
+
+`NavBar` moved to the §0 app frame too: it sits on the ground under a 1.5px
+`rgba(35,37,43,.12)` rule instead of a frosted card, Kredits render with a `$`, and the
+avatar is a 38px world-colour disc with an ink initial — §0 explicitly bans the blob
+illustration in the nav.

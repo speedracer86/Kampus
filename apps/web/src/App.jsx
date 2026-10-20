@@ -5,7 +5,7 @@ import { useState, useMemo } from 'react';
 import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { NavBar } from '@kampus/ui/app';
-import { HomeScreen } from '@kampus/ui/home';
+import { HomeStack } from '@kampus/ui/home-stack';
 import { QuizRound } from '@kampus/ui/quiz';
 import { DailyLesson } from '@kampus/ui/lesson';
 import { buildLesson } from './lessonData.js';
@@ -20,6 +20,48 @@ const tierKey = (grade, topic) => `${grade}_${topic}`;
 function buildRound(state, topic) {
   const tier = state.tiers[tierKey(state.grade, topic)] || 1;
   return Array.from({ length: ROUND_LENGTH }, () => toQuizQuestion(state.grade, topic, tier));
+}
+
+/** The §0 Home contract: grade placement, today's lesson, free practice, bank, gate. */
+function homeStackData(state) {
+  const grade = state.grade;
+  const today = new Date().toISOString().slice(0, 10);
+  const curTier = state.tiers[tierKey(grade, state.lastTopic)] || 1;
+  return {
+    name: state.name || 'there',
+    bank: state.kredits,
+    weekKredits: state.week.earned,
+    grades: [3, 4, 5, 6, 7, 8].map(g => {
+      const passed = !!state.passed[g];
+      return {
+        grade: g,
+        status: passed ? 'passed' : g === grade ? 'current' : 'locked',
+        // Brief v4: a test score, never a letter grade or a percentage.
+        test: passed ? (state.tests?.[g] || '18/20') : undefined,
+        earned: passed ? (state.testEarned?.[g] || 0) : undefined,
+        unit: g === grade ? curTier : undefined,
+        units: 7,
+        graduated: passed && g === 8,
+      };
+    }),
+    unit: { unit: curTier, units: 7, lessonsDone: Object.keys(state.days || {}).length, lessonsTotal: 130 },
+    lesson: {
+      world: WORLDS[state.lastTopic],
+      title: GRADE_WORLDS[grade][state.lastTopic].desc,
+      moveIndex: 0,
+      mins: 20,
+    },
+    practice: TOPIC_ORDER.map(topic => ({
+      id: topic,
+      world: WORLDS[topic],
+      title: GRADE_WORLDS[grade][topic].desc,
+      questions: 6,
+      kredits: 6 * (8 + 4 * (state.tiers[tierKey(grade, topic)] || 1)),
+      blitz: false,
+    })),
+    standGated: state.lessonDoneDay !== today,
+    runs: (state.recentRuns || []).slice(0, 7).map((r, i) => ({ day: i, world: r.world, color: r.color, kredits: 0 })),
+  };
 }
 
 function homeData(state) {
@@ -193,24 +235,18 @@ export function App() {
       ]}
       active="home"
       onNav={() => {}}
-      weekLabel={`+${state.week.earned} this week`}
+      weekLabel={`+$${state.week.earned} this week`}
       kredits={state.kredits}
-      avatar={state.avatar}
-      blobDir={BLOB_DIR}
+      avatar={state.name || 'K'}
+      avatarColor={WORLDS[state.lastTopic]?.color}
     />
-    <main style={{ maxWidth: 1080, margin: '22px auto 44px', background: color.surface,
-      borderRadius: 28, border: '1px solid rgba(35,37,43,.06)', overflow: 'hidden' }}>
-      <HomeScreen
-        data={homeData(state)}
-        grade={state.grade}
-        gradeView={new URLSearchParams(location.search).get('grades') || 'cards'}
-        blobDir={BLOB_DIR}
-        onEvent={(type, payload) => {
-          if (type === 'world') startRound(payload.id);
-          if (type === 'play' || type === 'quick6') startRound(state.lastTopic);
-          if (type === 'blitz') startRound(state.lastTopic, { blitz: true });
-        }}
-      />
-    </main>
+    <HomeStack
+      data={homeStackData(state)}
+      onEvent={(type, payload) => {
+        if (type === 'start_lesson') { setTopic(state.lastTopic); setScreen('lesson'); }
+        if (type === 'practice') startRound(payload.id, { blitz: !!payload.blitz });
+        if (type === 'stand') setScreen('home');
+      }}
+    />
   </div>;
 }
