@@ -12,6 +12,7 @@ The game's math brain, UI-free. Ported from the v1 single-file app with behavior
 | `src/adaptive.js` | `makeProblem(grade, topic, tier, opts)` — distractor value-filtering, choice shuffling, the 20% easier-win sprinkle — and `recordAnswer(recent, tier, correct)`, the 5-of-6-up / ≤2-of-6-down tier rule. Pure: callers own all state. |
 | `src/economy.js` | Kredit formula, streak ladder and multipliers, shop catalog + `bonusPct`, ticket weekly-cap math. Server-side source of truth for validating ledgers (the UI's `QuizRound` computes display gains itself, per its architecture contract). |
 | `src/expansion.js` | Phase 1 curriculum expansion: 20 context-first generators that close every major-work gap in grades 3-8 (decimals, volume, stats, percent applications, probability, functions, systems, Pythagorean). Registers itself into `CURRICULUM` on import. |
+| `src/business.js` | The Living Business: inventory lots with capped spoilage, market drift, reputation with a floor + vacation freeze, persona regulars with memory, customer-queue generation, banded math moments from live sim state, day simulation + ledger. Pure tick functions (docs/KAMPUS_BUSINESS_SIM.md). |
 | `src/quiz-adapter.js` | `toQuizQuestion(...)` — maps engine problems onto `@kampus/ui` QuizRound's question contract, including numline mode for integer tier-1 problems and `plainText()` flattening of fraction HTML. |
 
 ## Usage
