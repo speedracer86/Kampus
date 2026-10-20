@@ -20,6 +20,38 @@ const EASIER_WIN_CHANCE = 0.2;
  * @param {{forceTier?: 1|2|3, random?: () => number}} [opts] forceTier pins the
  *   tier exactly (grade tests) and disables the easier-win sprinkle.
  */
+/**
+ * Turn a raw generator result into a playable problem: de-duplicate the distractors
+ * by VALUE (4/6 and 2/3 are the same answer wearing different clothes), top them up
+ * if a generator ran short, and shuffle the choices. Shared by makeProblem and
+ * problemsForSkill so a skill-targeted question is identical in shape to a random one.
+ * @returns the assembled problem, or null when fewer than two usable distractors exist.
+ */
+export function assembleProblem(p, effectiveTier) {
+  const av = valOf(p.ans);
+  let wrongs = [];
+  for (const w of new Set(p.wrongs)) {
+    if (String(w) === String(p.ans)) continue;   // mixed types: "7" must not survive beside 7
+    const wv = valOf(w);
+    // A distractor must never EQUAL the answer in value (e.g. 4/6 vs 2/3)
+    if (av !== null && wv !== null && Math.abs(av - wv) < 1e-9) continue;
+    if (wv !== null && wrongs.some(x => { const xv = valOf(x); return xv !== null && Math.abs(xv - wv) < 1e-9; })) continue;
+    wrongs.push(w);
+  }
+  let guard = 0;
+  while (wrongs.length < 3 && guard++ < 20) {
+    const numAns = parseFloat(String(p.ans).replace('x = ', '').replace('$', '').replace('%', ''));
+    if (!isNaN(numAns) && !/</.test(p.ans)) {
+      const alt = String(p.ans).replace(/-?[\d.]+/, fmt(numAns + pick([-3, -2, 2, 3, 4])));
+      if (alt !== p.ans && !wrongs.includes(alt)) wrongs.push(alt);
+    } else break;
+  }
+  wrongs = wrongs.slice(0, 3);
+  if (wrongs.length < 2) return null;
+  const choices = shuffle([p.ans, ...wrongs]);
+  return { ...p, tier: effectiveTier, choices, correctIdx: choices.indexOf(p.ans) };
+}
+
 export function makeProblem(grade, topic, tier, opts = {}) {
   const random = opts.random || Math.random;
   let effectiveTier = opts.forceTier || tier;
@@ -32,28 +64,9 @@ export function makeProblem(grade, topic, tier, opts = {}) {
       // World generators read ctx.biz; the rest ignore the argument entirely.
       const p = gen(opts.ctx);
       p.source = sourceFor(gen.name);
-      const av = valOf(p.ans);
-      let wrongs = [];
-      for (const w of new Set(p.wrongs)) {
-        if (String(w) === String(p.ans)) continue;   // mixed types: "7" must not survive beside 7
-        const wv = valOf(w);
-        // A distractor must never EQUAL the answer in value (e.g. 4/6 vs 2/3)
-        if (av !== null && wv !== null && Math.abs(av - wv) < 1e-9) continue;
-        if (wv !== null && wrongs.some(x => { const xv = valOf(x); return xv !== null && Math.abs(xv - wv) < 1e-9; })) continue;
-        wrongs.push(w);
-      }
-      let guard = 0;
-      while (wrongs.length < 3 && guard++ < 20) {
-        const numAns = parseFloat(String(p.ans).replace('x = ', '').replace('$', '').replace('%', ''));
-        if (!isNaN(numAns) && !/</.test(p.ans)) {
-          const alt = String(p.ans).replace(/-?[\d.]+/, fmt(numAns + pick([-3, -2, 2, 3, 4])));
-          if (alt !== p.ans && !wrongs.includes(alt)) wrongs.push(alt);
-        } else break;
-      }
-      wrongs = wrongs.slice(0, 3);
-      if (wrongs.length < 2) continue;
-      const choices = shuffle([p.ans, ...wrongs]);
-      return { ...p, tier: effectiveTier, choices, correctIdx: choices.indexOf(p.ans) };
+      const assembled = assembleProblem(p, effectiveTier);
+      if (!assembled) continue;
+      return assembled;
     } catch {
       /* regenerate */
     }
