@@ -70,7 +70,7 @@ look in the browser.
 |---|---|
 | `packages/engine/src/` | Generators, adaptive tiers, economy, quiz adapter — all pure |
 | `packages/ui/src/tokens.js` | Every design token; the only legal source of color |
-| `packages/ui/src/` | Component library; `Gallery.jsx` renders all of it |
+| `packages/ui/src/` | Component library, at §0 values |
 | `apps/web/src/App.jsx` | The vertical slice wiring engine ↔ component library |
 | `apps/web/src/store.js` | Persistence surface (swap point for Supabase) |
 | `index.html` | The legacy v1 app, still complete and shipping |
@@ -92,8 +92,6 @@ untouched lines.**
   remember something, it takes it as an argument and returns the update.
 - `packages/ui`: inline `style` objects only — no CSS files, no Tailwind. Components take a
   single `onEvent(type, payload)` prop and never touch localStorage.
-- `parent.jsx` P-components (square corners, 2px rules) are for Grown-ups surfaces only;
-  the kid side never uses them.
 - Inter Tight is the only font, on both sides.
 - `index.html`: 2-space indent, semicolons, compact single-line guards, plain globals over
   frameworks, `/* ===== banner ===== */` per section. Keep it dependency-free.
@@ -107,10 +105,15 @@ untouched lines.**
   `apps/web/src/worlds.js`, `packages/ui/src/tokens.js` (`world` map), and the engine's
   `GRADE_WORLDS`. `worlds.js` gives `alg` the `Idea` blob while `tokens.js` says `Learning`.
   Reconcile deliberately rather than patching one call site.
-- **The current design handoff renames the worlds** to The Kitchen / The Store / The Trip /
-  The Build; all code and `docs/STYLE_GUIDE.md` still use the v1 names (Fraction Factory,
-  Trade Tycoon, Weather Station, Equation Lab). Consistent today, but an open decision
-  before Phase 3 — don't half-apply it.
+- **World names are settled: Fraction Factory · Trade Tycoon · Weather Station ·
+  Equation Lab.** The deliverable's §1.3 still lists an abandoned renaming (The Kitchen /
+  The Store / The Trip / The Build); §0's Brief v4 retrofit supersedes it and the code
+  matches §0. Ignore §1.3 on this point.
+- **The pre-§0 components are gone** — `Gallery.jsx`, `gallery-preview.jsx`, `home.jsx`,
+  `flows.jsx`, `parent.jsx`, `gamify.jsx`, and the old Home pieces inside `app.jsx`. Their
+  §0 replacements are `home-stack.jsx`, `question.jsx`, `lesson.jsx` and `interactives.jsx`;
+  `pin-gate.jsx` is the one piece carried over. Recover from git history rather than
+  reviving a file.
 - **Topic codes are not display names.** Internally: `frac`, `ratio`, `int`, `alg`.
 - **Two different test runners.** Vitest for the packages, a plain Node + Playwright script
   for `test:e2e`. `npm test` does not run the e2e suite.
@@ -120,5 +123,4 @@ untouched lines.**
   that produces it — edit it directly and re-run `test:e2e`.
 - **Library files use bare `React.useState` with no import** — `apps/web/vite.config.js`
   injects React via `jsxInject`. Any other bundler needs the same shim.
-- **`packages/ui/src/gallery-preview.jsx` is generated.** Regenerate it; never hand-edit.
 - **Saves migrate.** The legacy app imports a `mathminer_v1` localStorage save on first load.

@@ -226,3 +226,30 @@ gallery and as reference; `apps/web` now renders `HomeStack`.
 `rgba(35,37,43,.12)` rule instead of a frosted card, Kredits render with a `$`, and the
 avatar is a 38px world-colour disc with an ink initial — §0 explicitly bans the blob
 illustration in the nav.
+
+## Removal of the pre-§0 components
+
+With §0's replacements in place, the superseded components were deleted rather than left
+to rot beside them. Removed: `Gallery.jsx` and `gallery-preview.jsx` (the old showcase and
+its generated bundle, imported by nothing), `home.jsx` (`HomeScreen`, `PracticeHeat`),
+`flows.jsx` (`StudentOnboarding`, `RewardsPanel`, `ShopGrid`), `parent.jsx` (the Modernist
+Grown-ups surfaces and P-primitives), `gamify.jsx` (`DailyQuests`, `CampusMap`), and the
+pre-§0 Home components inside `app.jsx` (`GradeCard`, `WorldTile`, `KreditsWeekCard`,
+`TeachConfirm`, `SideBar`, `GradeChips`, `RecordsLedger`). `app.jsx` is now just the app
+frame: `NavBar`.
+
+`PinGate` was the one piece worth keeping — Step 8 restyles it and §0 never drew a PIN
+gate — so it moved to its own `pin-gate.jsx` and the rest of `home.jsx` went with the
+others. Package exports dropped `./flows`, `./parent`, `./home` and `./gamify`, and gained
+`./pin-gate`.
+
+What they covered, and what covers it now: Home → `home-stack.jsx`; the question surface →
+`question.jsx`; teaching → `lesson.jsx` + `interactives.jsx`. Rewards, Grown-ups and the
+business are §0 rebuilds in Steps 7–9, not ports of `flows.jsx`/`parent.jsx`. Onboarding,
+the shop, daily quests and the campus page are all on the handoff's explicit
+"not designed yet — do not build" list, so nothing replaces `gamify.jsx` or `flows.jsx`'s
+onboarding today.
+
+Kept deliberately: `index.html` (the v1 app families use at mykampus.ai — a shipping
+product, not an old design) and `quiz.jsx` (free-practice runs still use `QuizRound`, and
+the mission screen is not one of the ten build steps).

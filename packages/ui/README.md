@@ -3,22 +3,23 @@
 Zero-dependency React components, inline-styled from `tokens.js`. Written as plain ESM + JSX — drop into any React build (Vite, Next, CRA) or transpile standalone. No CSS files, no Tailwind, no styled-components.
 
 ## Files
-- `tokens.js` — every design token: colors, world palette + `worldTint()`, type scale, radii, shadow, motion, grade-band sizing `band(grade)`, streak colors, confetti.
-- `primitives.jsx` — `Button` (primary/ink/outline/gold/ghost/destructive, sm/md/lg), `Card` (white/tint/dashed-empty), `Kicker`, `Chip`, `ProgressBar` (single or stacked segments), `Toggle`, `Segmented`, `TierDots`, `KreditCoin`, `TicketIcon`, `Logo`, `Blob`, and form elements `TextField`, `RadioGroup`, `Checkbox`, `Select`, `Stepper`.
-- `app.jsx` — `NavBar` (horizontal sticky nav with centered items + week/Kredit/avatar cluster), `GradeCard` (passed/current/locked with progress + detail), `WorldTile`, `KreditsWeekCard` (earned-vs-spent bar), `TeachConfirm` (the think-first cost gate).
-- `quiz.jsx` — the working game: `QuizRound` (streaks, Kredit math, teach economics, focus mode, second-look retry, celebration), `EndOfRound`, `TeachPanel` (step reveal + read-aloud), answer modes `NumberLine`, `FractionPieces`, `MoneyCounter`, `Thermometer`, and `speak()` (built-in browser read-aloud).
-- `flows.jsx` — `StudentOnboarding` (3 steps), `RewardsPanel` (balance, redeem, pending), `ShopGrid` (tabs + affordability states).
-- `parent.jsx` — **Grown-ups surfaces, Modernist structure in Kampus colors** (square corners, 2px rules, flush-left buttons): structural primitives `PRule/PKicker/PSection/PButton/PTable/PStatBar`, plus `ParentAnalytics`, `TicketAdmin`, `ParentSettings`, `ParentOnboarding` (4 steps).
-- `home.jsx` — `HomeScreen` (the composed kid dashboard, responsive: two-column ≥900px, single column below, 3-up grade strip + 1-up worlds on phones) and `PinGate` (4-digit parent gate — a kid-stopper, not security).
-- `gamify.jsx` — gamification: `DailyQuests` (2/day, Kredit-paying, claim buttons; `compact` for tight spots), `QuestChip` (Play-HUD progress pill), `CampusMap` (skyline SVG — grade passes build districts, next-only silhouette, `teaser` variant for Home), `CampusPage` (full map page). Backend owns quest rotation/progress and unlock state.
-- `gallery-preview.jsx` — auto-generated single-file bundle of all of the above for the live gallery page; regenerate, don't hand-edit.
+- `tokens.js` — every design token, at §0 values: colors, the grade purple ramp, world palette, type scale (including the `numeral()` display-numeral helper), radii, shadows, motion, grade-band sizing `band(grade)`, and the `$` money helpers.
+- `primitives.jsx` — `Button`, `Card` (incl. the §0 `sheet` variant), `Kicker`, `Chip`, `PillLabel`, `ProgressBar`, `Toggle`, `Segmented`, `TierDots`, `KreditCoin`, `TicketIcon`, `Logo`, `Blob`, and the form elements.
+- `util.jsx` — `useWidth` and `speak`. Non-component exports live here on purpose: React Fast Refresh only works on modules whose exports are all components. The `.jsx` extension is load-bearing (see its header).
+- `app.jsx` — the app frame: `NavBar` (on ground, 1.5px rule, `$` Kredits, 38px initial avatar).
+- `question.jsx` — `Question`, the one question surface shared by the lesson, missions, the unit quiz and the grade test (§0 4d/4f), plus `PayoutLine` and `HELP_BY_CONTEXT`.
+- `lesson.jsx` — `DailyLesson` (the five-move runner) with `LessonSpine`, `TeachSteps` (the cheat-sheet teach frame), `ReteachView` and `LessonDone`.
+- `interactives.jsx` — the three hands-on lesson steps: `ShadeBar`, `SplitTheBill`, `SpotTheMistake`, registered in `INTERACTIVES`.
+- `home-stack.jsx` — `HomeStack` (§0 Home) with `GradeStack`, `StatPair`, `TodaysLesson`, `PracticeRow` and `StandBand`.
+- `quiz.jsx` — `QuizRound` (free-practice runs, Economy v2) with `EndOfRound`, `TeachPanel` and the free-response answer modes.
+- `pin-gate.jsx` — `PinGate`, the kid/parent boundary. Step 8 restyles it; §0 never drew one.
 
 ## Architecture contract (settled with the designer)
 - **Fully working components**: game logic (streak multipliers ×1.5/×2/×3 at 3/6/10, Kredit gain `round((8+4·tier)·mult·(1+gear%))`, teach halving, second-look retry) lives inside `QuizRound`. Backend does NOT reimplement it.
 - **Backend feeds questions**: `QuizRound` takes a `questions` array — `{text, mode: 'choice'|'numline'|'fraction'|'money'|'thermo', choices?, answerIndex?, vis?, teach: string[]}`. Money/thermometer are UI-only modes; generators are backend's job.
 - **Single event bus**: every stateful component takes `onEvent(type, payload)`. No other side channels, no localStorage — persistence is fully the backend's job.
 - **Read-aloud is built in** (browser SpeechSynthesis via `speak()`); no hook needed.
-- **The Modernist boundary**: everything behind the Grown-ups nav (settings, analytics, ticket admin, parent onboarding) uses `parent.jsx` — square corners, 2px ink rules, flush-left labels — but Kampus's warm palette, never red. Kid side never uses P-components.
+- **§0 is the binding visual spec** (`design-incoming/design_handoff_kampus/STYLE_GUIDE.md`). It supersedes the v1 "Modernist" parent styling and the v2 Modern pass; the pre-§0 components that embodied those were removed once their §0 replacements landed.
 
 ## Event table
 | Component | Events (type → payload) |
