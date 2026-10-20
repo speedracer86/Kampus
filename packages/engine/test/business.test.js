@@ -37,8 +37,9 @@ describe('dailyTick — the Tamagotchi organ, bounded', () => {
   });
 
   it('reputation drifts only after grace, never below the floor, frozen on vacation', () => {
-    let biz = { ...freshBiz(8), lastOpenDay: day(1), reputation: 23 };
-    for (let d = 2; d <= 15; d++) biz = dailyTick(biz, day(d), seeded).biz;
+    let biz = { ...freshBiz(8), lastOpenDay: day(1), reputation: REP_FLOOR + 13 };
+    // Long enough that the drift would run well past the floor if it were not clamped.
+    for (let d = 2; d <= 40; d++) biz = dailyTick(biz, day(d), seeded).biz;
     expect(biz.reputation).toBe(REP_FLOOR);    // floored, business never dies
     let frozen = { ...freshBiz(8), lastOpenDay: day(1), reputation: 60, vacation: true };
     for (let d = 2; d <= 15; d++) frozen = dailyTick(frozen, day(d), seeded).biz;

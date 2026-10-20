@@ -13,7 +13,7 @@
 export const RECIPE = { lemons: 1, sugar: 1, cups: 1 };          // per drink
 export const BASE_PRICES = { lemons: 0.5, sugar: 0.3, cups: 0.2 };
 export const LEMON_SHELF_DAYS = 3;
-export const REP_START = 50, REP_FLOOR = 20, REP_MAX = 100;
+export const REP_START = 50, REP_FLOOR = 10, REP_MAX = 100;
 export const REP_GRACE_DAYS = 2;                                  // closed days before drift
 export const SPOIL_CAP_PER_DAY = 8;                               // lemons max spoiled/day — bounded loss
 export const DEMAND_BASE = { 1: 36, 2: 22, 3: 12, 4: 6 };
