@@ -1,6 +1,7 @@
 // Composed Home screen + Parent PIN gate. Responsive: grids collapse below ~900px and ~640px.
 import { color, type, radius, shadow, font, numeral, worldTint, band } from './tokens.js';
-import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob, useWidth } from './primitives.jsx';
+import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob } from './primitives.jsx';
+import { useWidth } from './util.jsx';
 import { GradeCard, GradeChips, WorldTile, KreditsWeekCard, RecordsLedger } from './app.jsx';
 import { CampusMap } from './gamify.jsx';
 

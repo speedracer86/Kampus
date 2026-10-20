@@ -1,7 +1,8 @@
 // Kampus quiz engine — fully working round logic from the prototype, UI + state included.
 // Backend feeds questions and listens on onEvent(type, payload). See README for the event table.
 import { color, type, radius, shadow, band, streakColors, confetti, font } from './tokens.js';
-import { Button, Kicker, ProgressBar, KreditCoin, Blob, speak, useWidth } from './primitives.jsx';
+import { Button, Kicker, ProgressBar, KreditCoin, Blob } from './primitives.jsx';
+import { useWidth, speak } from './util.jsx';
 import { Question } from './question.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -15,10 +16,9 @@ const asQuestion = (q) => ({ text: q.text, answers: q.choices, correct: q.answer
 const PILL_KIND = { green: 'first', ink: 'streak', gold: 'token', muted: 'help' };
 const TITLE = (s) => s >= 13 ? 'LEGEND' : s >= 10 ? 'CEO' : s >= 8 ? 'BOSS' : s >= 6 ? 'MANAGER' : s >= 4 ? 'PRO' : s >= 2 ? 'INTERN' : 'STARTER';
 
-/** Built-in read-aloud (browser voice). */
-// speak() moved to primitives.jsx so question.jsx can use it without a cycle.
-// Re-exported here: consumers import it from '@kampus/ui/quiz'.
-export { speak };
+// speak() lives in util.js (see its header: re-exporting a non-component from a
+// component module disables Fast Refresh for the whole graph). Import it from
+// '@kampus/ui/util'.
 
 /** Tap-the-number-line answer mode. vis: {from, to, start, end} */
 export function NumberLine({ vis, feedback, picked, onPick }) {

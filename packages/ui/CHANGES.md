@@ -157,3 +157,39 @@ questions so the §0 desktop grid has room.
 Also moved `useWidth` and `speak` into `primitives.jsx` so `question.jsx` can use them
 without an import cycle; `quiz.jsx` re-exports `speak`, so `@kampus/ui/quiz` is unchanged
 for consumers. Added the `./question` package export.
+
+## Step 4 — the Daily Lesson (§0 7a / 7b)
+
+`src/lesson.jsx` and `src/interactives.jsx`.
+
+- `DailyLesson` runs the five moves in order — Warm-up (drawn from the review queue),
+  New idea (the teach phase), Guided (fading scaffolds), Mixed (interleaved), Prove it
+  (no help). Questions reuse `Question` at `context="lesson"`. No timer anywhere.
+- `LessonSpine` is the §0 top bar: five labelled columns, one 6px segment per question
+  (done green, current ink, todo `todo`), clickable to jump back, with the "+$N today"
+  green pill, the three-dot Teach Tokens pill and "Untimed".
+- `TeachSteps` is the cheat-sheet frame: the left column's steps each write their
+  takeaway as a note line once solved, so the column ends as a five-line cheat sheet;
+  the right sheet shows one step with Back / Next and a "Read it to me" pill.
+  **Every interactive step gates Next** — reading is not enough.
+- `interactives.jsx` holds the three hands-on steps: `ShadeBar` (20 blocks at 5%, ink
+  under / green exact / red over), `SplitTheBill` ($48 → ten $4.80 discs → double-tap to
+  cut one into $2.40 halves → collect exactly 15%), and `SpotTheMistake` (tap the wrong
+  line: "Found it", or "Checks out" on a line that is actually right). `INTERACTIVES`
+  lets a lesson name its interactive as data.
+- `ReteachView` is the §0 New idea / re-teach view (kicker, title, lede, three ruled
+  rows, last value green). Prove-it misses branch into it, then two fresh questions.
+- `LessonDone` shows the two tiles — Kredits today, and the real reward as
+  "Waiting on a grown-up".
+
+Two fixes made while verifying this step:
+
+- **Fast Refresh was broken by Step 2.** Re-exporting `speak` from `quiz.jsx` (a
+  component module) made Vite fall back to a full page reload on every edit, losing app
+  state each time. `useWidth` and `speak` now live in `src/util.jsx`, which exports no
+  components. The `.jsx` extension is load-bearing: `vite.config.js` injects React into
+  `.jsx` only, so a `.js` file holding a hook builds clean and then throws
+  "React is not defined" at runtime. `speak` is no longer re-exported from
+  `@kampus/ui/quiz` — import it from `@kampus/ui/util`.
+- **`buildLesson()` ran on every App render**, re-rolling every question mid-lesson
+  because the generators are random. It is memoized per grade/topic/tier/attempt now.

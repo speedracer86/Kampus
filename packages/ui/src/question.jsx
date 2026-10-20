@@ -6,7 +6,8 @@
    tokens left, the payout to show) is owned by the caller and arrives as props.
    The component reports intent through callbacks and onEvent. No localStorage. */
 import { color, type, radius, font, numeral } from './tokens.js';
-import { Kicker, Button, useWidth, speak } from './primitives.jsx';
+import { Kicker, Button } from './primitives.jsx';
+import { useWidth, speak } from './util.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
 

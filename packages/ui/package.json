@@ -13,7 +13,10 @@
     "./parent": "./src/parent.jsx",
     "./home": "./src/home.jsx",
     "./gamify": "./src/gamify.jsx",
-    "./question": "./src/question.jsx"
+    "./question": "./src/question.jsx",
+    "./lesson": "./src/lesson.jsx",
+    "./interactives": "./src/interactives.jsx",
+    "./util": "./src/util.jsx"
   },
   "peerDependencies": {
     "react": ">=18"

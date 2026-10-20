@@ -2,11 +2,13 @@
    Proves the engine ↔ component-library contract end to end. The remaining screens
    (shop, rewards, stand, grown-ups, onboarding, grade tests) arrive in Phase 3. */
 import { useState, useMemo } from 'react';
-import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct } from '@kampus/engine';
+import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { NavBar } from '@kampus/ui/app';
 import { HomeScreen } from '@kampus/ui/home';
 import { QuizRound } from '@kampus/ui/quiz';
+import { DailyLesson } from '@kampus/ui/lesson';
+import { buildLesson } from './lessonData.js';
 import { load, save } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
@@ -70,7 +72,9 @@ function homeData(state) {
 
 export function App() {
   const [state, setState] = useState(load);
-  const [screen, setScreen] = useState('home');
+  // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
+  // repro). Home remains the default; the hash is read once, not watched.
+  const [screen, setScreen] = useState(() => (typeof location !== 'undefined' && location.hash === '#lesson' ? 'lesson' : 'home'));
   const [topic, setTopic] = useState(state.lastTopic);
   const [blitzOn, setBlitzOn] = useState(false);
 
@@ -93,6 +97,20 @@ export function App() {
     setRoundNonce(n => n + 1);
     update(s => { s.lastTopic = t; return s; });
     setScreen('play');
+  };
+
+  // buildLesson() draws random questions, so it must be built once per attempt —
+  // rebuilding on a re-render would swap the questions mid-lesson.
+  const lesson = useMemo(() => buildLesson(state, topic),
+    [state.grade, topic, state.tiers[tierKey(state.grade, topic)], roundNonce]);
+
+  const onLessonEvent = (type, payload) => {
+    if (type === 'answer' && payload.right) update(s => { s.kredits += payload.gain; s.week.earned += payload.gain; return s; });
+    if (type === 'lesson_complete') update(s => {
+      s.lessonDoneDay = new Date().toISOString().slice(0, 10);
+      s.earnings = (s.earnings || []).concat({ id: `l${Date.now()}`, label: "Finished today's lesson", cents: payload.rewardCents, status: 'earned' });
+      return s;
+    });
   };
 
   const onQuizEvent = (type, payload) => {
@@ -125,6 +143,20 @@ export function App() {
     }
     if (type === 'again') setRoundNonce(n => n + 1);
   };
+
+  if (screen === 'lesson') {
+    return <div style={{ minHeight: '100vh', background: color.ground }}>
+      <DailyLesson
+        lesson={lesson}
+        tier={state.tiers[tierKey(state.grade, topic)] || 1}
+        pricer={(a) => { const p = payout({ ...a, bonusPct: bonusPct(state.owned) });
+          return { amount: p.total, pills: p.parts.map(label => ({ label, kind: /streak/.test(label) ? 'streak' : /first/.test(label) ? 'first' : /blitz/.test(label) ? 'blitz' : /token/.test(label) ? 'token' : 'help' })) }; }}
+        onEvent={onLessonEvent}
+        onExit={() => setScreen('home')}
+        onShop={() => setScreen('home')}
+      />
+    </div>;
+  }
 
   if (screen === 'play') {
     const w = WORLDS[topic];
