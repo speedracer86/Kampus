@@ -4,7 +4,8 @@
 import { useState, useMemo } from 'react';
 import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
-  award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey } from '@kampus/engine';
+  award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
+  approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { NavBar } from '@kampus/ui/app';
 import { HomeStack } from '@kampus/ui/home-stack';
@@ -12,6 +13,8 @@ import { QuizRound } from '@kampus/ui/quiz';
 import { DailyLesson } from '@kampus/ui/lesson';
 import { AssessmentIntro, AssessmentRunner, UnitQuizResults, GradeTestResults } from '@kampus/ui/assessment';
 import { RewardsScreen } from '@kampus/ui/rewards';
+import { GrownUps } from '@kampus/ui/parents';
+import { PinGate } from '@kampus/ui/pin-gate';
 import { buildLesson } from './lessonData.js';
 import { load, save, append, DEFAULT_STUDENT_ID } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
@@ -137,10 +140,11 @@ export function App() {
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
     const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    return ['lesson', 'quiz', 'test', 'rewards'].includes(h) ? h : 'home';
+    return ['lesson', 'quiz', 'test', 'rewards', 'parents'].includes(h) ? h : 'home';
   });
   const [paper, setPaper] = useState(null);     // graded quiz / test result
   const [papers, setPapers] = useState(null);   // the assembled question sheet
+  const [pinOk, setPinOk] = useState(false);    // parent gate, per session
   const [topic, setTopic] = useState(state.lastTopic);
   const [blitzOn, setBlitzOn] = useState(false);
 
@@ -175,7 +179,7 @@ export function App() {
     if (type === 'answer' && payload.right) update(s => { s.kredits += payload.gain; s.week.earned += payload.gain; return s; });
     if (type === 'lesson_complete') update(s => {
       s.lessonDoneDay = new Date().toISOString().slice(0, 10);
-      s.ledger = award(s.ledger || [], { reason: 'lesson', day: dayName(), week: weekKey(), cap: s.capCents || DEFAULT_CAP_CENTS }).rows;
+      s.ledger = award(s.ledger || [], { reason: 'lesson', day: dayName(), week: weekKey() }).rows;
       return s;
     });
   };
@@ -212,11 +216,52 @@ export function App() {
     if (type === 'again') setRoundNonce(n => n + 1);
   };
 
+  if (screen === 'parents') {
+    if (!pinOk) return <PinGate pin={state.pin || '1234'} blobDir={BLOB_DIR}
+      onPass={() => setPinOk(true)} onCancel={() => setScreen('home')} />;
+    const ledger = state.ledger || [];
+    const cap = state.settings?.cap ?? DEFAULT_CAP_CENTS;
+    const setS = (k, v) => update(s => { s.settings = { ...(s.settings || {}), [k]: v }; return s; });
+    return <GrownUps
+      data={{
+        kid: { name: state.name || 'Your kid', grade: state.grade, day: Object.keys(state.days || {}).length, streak: state.streak || 0 },
+        // Waiting first, then recently decided — §0 keeps closed rows visible with an Undo.
+        pending: [
+          ...ledger.filter(r => r.cents > 0 && r.status === 'pending'),
+          ...ledger.filter(r => r.cents > 0 && r.status !== 'pending'),
+        ].slice(0, 12),
+        asks: ledger.filter(r => r.status === 'held').map(r => ({ id: r.id, label: r.label, cents: Math.abs(r.cents) })),
+        approvedThisWeek: earnedThisWeek(ledger, weekKey()),
+        settings: { cap, ...(state.settings || {}) },
+        progress: TOPIC_ORDER.map(t => ({ topic: t, name: WORLDS[t].name, color: WORLDS[t].color,
+          unit: state.tiers[tierKey(state.grade, t)] || 1, placement: state.grade,
+          verdict: (state.tiers[tierKey(state.grade, t)] || 1) >= 3 ? 'solid' : (state.tiers[tierKey(state.grade, t)] || 1) === 2 ? 'shaky' : 'notyet' })),
+        stats: [
+          { label: 'Lessons done', value: Object.keys(state.days || {}).length },
+          { label: 'Kredits', value: state.kredits },
+          { label: 'Waiting', value: pendingEarnings(ledger).length },
+        ],
+      }}
+      onEvent={(type, payload) => {
+        if (type === 'approve_earning') update(s => { s.ledger = approveEarning(s.ledger, payload.id, { week: weekKey(), cap }).rows; return s; });
+        if (type === 'hold_earning') update(s => { s.ledger = deferEarning(s.ledger, payload.id); return s; });
+        if (type === 'undo_earning') update(s => { s.ledger = undoEarning(s.ledger, payload.id); return s; });
+        if (type === 'approve_all') update(s => { s.ledger = approveAllEarned(s.ledger, { week: weekKey(), cap }).rows; return s; });
+        if (type === 'approve_ask') update(s => { s.ledger = approveAsk(s.ledger, payload.id); return s; });
+        if (type === 'decline_ask') update(s => { s.ledger = cancelAsk(s.ledger, payload.id); return s; });
+        if (type === 'set_cap') setS('cap', payload);
+        if (type === 'set_lesson_length') setS('lessonLength', payload);
+        if (type === 'set_allow_blitz') setS('allowBlitz', payload);
+        if (type === 'set_sprints') setS('sprints', payload);
+        if (type === 'set_vacation') setS('vacation', payload);
+      }} />;
+  }
+
   if (screen === 'rewards') {
     const ledger = state.ledger || [];
     return <RewardsScreen
       data={{
-        receipt: receiptModel(ledger, { name: state.name || null, week: weekKey(), cap: state.capCents || DEFAULT_CAP_CENTS, goal: state.goal, number: ledger.length + 1 }),
+        receipt: receiptModel(ledger, { name: state.name || null, week: weekKey(), cap: state.settings?.cap ?? DEFAULT_CAP_CENTS, goal: state.goal, number: ledger.length + 1 }),
         howYouEarn: howYouEarn(),
         available: availableCents(ledger),
         goal: state.goal?.id,
@@ -260,7 +305,7 @@ export function App() {
         const res = isQuiz ? gradeUnitQuiz(papers, answers) : gradeGradeTest({ grade: state.grade, questions: papers, answers });
         append(studentId, { type: isQuiz ? 'quiz_result' : 'test_result', payload: res });
         update(s => {
-          s.ledger = award(s.ledger || [], { reason: isQuiz ? 'quiz' : 'test', day: dayName(), week: weekKey(), cap: s.capCents || DEFAULT_CAP_CENTS }).rows;
+          s.ledger = award(s.ledger || [], { reason: isQuiz ? 'quiz' : 'test', day: dayName(), week: weekKey() }).rows;
           if (!isQuiz && res.passed) { s.passed[state.grade] = true; s.tests = { ...(s.tests || {}), [state.grade]: `${res.score}/${res.asked}` }; }
           return s;
         });

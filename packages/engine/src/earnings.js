@@ -30,14 +30,28 @@ export const RATE_LABEL = {
 export const CAP_OPTIONS = [300, 500, 800];
 export const DEFAULT_CAP_CENTS = 500;
 
-export const EARNED = 'earned', HELD = 'held', GIVEN = 'given', REFUNDED = 'refunded';
+/* Statuses.
+   An earning is recorded the moment the effort happens, but it is *pending* until a
+   grown-up approves it — that is what the Grown-ups approvals queue is for (§0 11a),
+   and it is why the weekly cap binds at approval rather than at award: the kid is
+   never told "that lesson didn't count", only that the week is paid up.
+   A grown-up may also defer a row; deferring is reversible and costs nothing. */
+export const PENDING = 'pending', APPROVED = 'approved', DEFERRED = 'deferred';
+/* An ask moves money out: held while it waits, given once the grown-up buys it. */
+export const HELD = 'held', GIVEN = 'given', REFUNDED = 'refunded';
+export const EARNED = PENDING;   // legacy alias
 
 const sum = (rows) => rows.reduce((n, r) => n + r.cents, 0);
 const id = (prefix) => `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 
-/** Rows that are money coming in this week. */
+/** Money a grown-up has actually approved this week — what the cap measures. */
 export function earnedThisWeek(rows = [], week) {
-  return sum(rows.filter(r => r.cents > 0 && r.week === week && r.status !== REFUNDED));
+  return sum(rows.filter(r => r.cents > 0 && r.week === week && r.status === APPROVED));
+}
+
+/** Efforts recorded but not yet approved or deferred — the approvals queue. */
+export function pendingEarnings(rows = []) {
+  return rows.filter(r => r.cents > 0 && r.status === PENDING);
 }
 
 /** What is left under the cap this week. Never negative. */
@@ -46,20 +60,54 @@ export function capRemaining(rows = [], week, cap = DEFAULT_CAP_CENTS) {
 }
 
 /**
- * Pay for an action. Trimmed to the cap, so the result may be a smaller row or none.
- * @returns {{rows, awarded: number, cappedOut: boolean}}
+ * Record an effort. Always the full rate, always pending — the cap is applied when a
+ * grown-up approves, so a capped-out week never silently shrinks what the kid did.
+ * @returns {{rows, awarded: number}}
  */
-export function award(rows = [], { reason, day, week, cap = DEFAULT_CAP_CENTS, label } = {}) {
-  const full = RATES[reason] || 0;
-  const room = capRemaining(rows, week, cap);
-  const awarded = Math.max(0, Math.min(full, room));
-  if (awarded === 0) return { rows, awarded: 0, cappedOut: true };
+export function award(rows = [], { reason, day, week, label } = {}) {
+  const cents = RATES[reason] || 0;
+  if (cents === 0) return { rows, awarded: 0 };
   const row = {
-    id: id('e'), cents: awarded, reason,
+    id: id('e'), cents, reason,
     label: label || RATE_LABEL[reason] || reason,
-    status: EARNED, day, week,
+    status: PENDING, day, week,
   };
-  return { rows: [...rows, row], awarded, cappedOut: awarded < full };
+  return { rows: [...rows, row], awarded: cents };
+}
+
+/** Would approving this row push the week past the cap? Drives §0's "Over limit". */
+export function wouldExceedCap(rows = [], rowId, { week, cap = DEFAULT_CAP_CENTS } = {}) {
+  const row = rows.find(r => r.id === rowId);
+  if (!row) return false;
+  return row.cents > capRemaining(rows, week, cap);
+}
+
+/** A grown-up says yes. Refused, without changing anything, if it would pass the cap. */
+export function approveEarning(rows = [], rowId, { week, cap = DEFAULT_CAP_CENTS } = {}) {
+  const row = rows.find(r => r.id === rowId);
+  if (!row || row.status === APPROVED) return { rows, ok: false, overLimit: false };
+  if (wouldExceedCap(rows, rowId, { week, cap })) return { rows, ok: false, overLimit: true };
+  return { rows: rows.map(r => (r.id === rowId ? { ...r, status: APPROVED } : r)), ok: true, overLimit: false };
+}
+
+/** Defer a row for now. Reversible, and it never expires. */
+export function deferEarning(rows = [], rowId) {
+  return rows.map(r => (r.id === rowId && r.cents > 0 ? { ...r, status: DEFERRED } : r));
+}
+
+/** Undo a decision on an earning, putting it back in the queue. */
+export function undoEarning(rows = [], rowId) {
+  return rows.map(r => (r.id === rowId && r.cents > 0 ? { ...r, status: PENDING } : r));
+}
+
+/** Approve everything pending, oldest first, stopping cleanly at the cap. */
+export function approveAllEarned(rows = [], { week, cap = DEFAULT_CAP_CENTS } = {}) {
+  let out = rows, approved = 0;
+  for (const r of pendingEarnings(rows)) {
+    const res = approveEarning(out, r.id, { week, cap });
+    if (res.ok) { out = res.rows; approved += r.cents; }
+  }
+  return { rows: out, approved };
 }
 
 /** Money set aside against a specific ask, waiting on a grown-up. */
@@ -67,9 +115,9 @@ export function heldCents(rows = []) {
   return Math.abs(sum(rows.filter(r => r.status === HELD)));
 }
 
-/** Money the kid can actually spend: earned, minus held, minus given. */
+/** Money the kid can actually spend: approved earnings, minus what is held or given. */
 export function availableCents(rows = []) {
-  const earned = sum(rows.filter(r => r.cents > 0 && r.status !== REFUNDED));
+  const earned = sum(rows.filter(r => r.cents > 0 && r.status === APPROVED));
   const out = Math.abs(sum(rows.filter(r => r.cents < 0 && r.status !== REFUNDED)));
   return earned - out;
 }
@@ -108,7 +156,7 @@ export function goalProgress(rows = [], goal) {
  * Everything the receipt prints, already ordered. The UI formats; it decides nothing.
  */
 export function receiptModel(rows = [], { name = 'you', week, cap = DEFAULT_CAP_CENTS, goal, number = 1 } = {}) {
-  const earned = rows.filter(r => r.cents > 0 && r.week === week && r.status !== REFUNDED);
+  const earned = rows.filter(r => r.cents > 0 && r.week === week && r.status === APPROVED);
   const holds = rows.filter(r => r.status === HELD);
   return {
     name,
@@ -118,6 +166,7 @@ export function receiptModel(rows = [], { name = 'you', week, cap = DEFAULT_CAP_
     cap,
     capLeft: capRemaining(rows, week, cap),
     held: holds.map(r => ({ id: r.id, label: r.label, cents: Math.abs(r.cents) })),
+    waitingOnGrownUp: sum(pendingEarnings(rows)),
     available: availableCents(rows),
     goal: goalProgress(rows, goal),
     note: 'Paid for effort. Never for scores.',

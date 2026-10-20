@@ -26,7 +26,7 @@ GitHub work goes through the `gh` CLI (already authenticated) — not an MCP ser
 npm test && npm run build
 ```
 
-Both must be clean: 184 passing tests, build exits 0. CI (`.github/workflows/ci.yml`) runs
+Both must be clean: 187 passing tests, build exits 0. CI (`.github/workflows/ci.yml`) runs
 exactly this on every push to `main` and every PR, so a red run here is a red run there.
 
 **If you touched `index.html`**, also run the end-to-end suite:

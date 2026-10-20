@@ -319,3 +319,35 @@ The engine module is where the rules actually live:
   whatever is left rather than overshooting, and never claws back an earlier row.
 - `ask` / `approve` / `cancelAsk` model the hold, and `receiptModel` returns the receipt
   already ordered so the component formats but decides nothing.
+
+## Step 8 — Grown-ups (§0 11a / 11b)
+
+`src/parents.jsx`, behind the carried-over `PinGate`. Three tabs, with the weekly limit
+bar and "Paid for effort. Never for scores." always visible beside them.
+
+- **Approvals** — Earned rows (label, day, 32px green amount) with §0's Hold / Approve
+  pair, and **"Over limit"** disabled when approving that row would pass the cap. Closed
+  rows keep their place with an Approved / On hold tag and an Undo. Asks get Not now /
+  Say yes. The footer's "Approve all earned" approves oldest-first and stops cleanly at
+  the cap.
+- **Progress** — three ground stat tiles over per-world rows (dot · name · current unit ·
+  placement · verdict pill, reusing `VerdictPill` so the vocabulary stays Solid / Shaky /
+  Not yet everywhere).
+- **Settings** — the §0 controls, now actually wired: Weekly limit $3/$5/$8 and Lesson
+  length 12/17/22 as segmented pills, and toggles for Allow Blitz, Fluency sprints and
+  Shop vacation mode.
+
+### The ledger gained an approval step
+
+§0's approvals queue only makes sense if an earning is provisional until a grown-up says
+yes, so `earnings.js` changed shape (this supersedes part of Step 7):
+
+- `award()` records the **full rate immediately as `pending`** and no longer applies the
+  cap. A capped-out week never shrinks what the kid actually did.
+- The **cap binds at approval**: `approveEarning()` refuses — without changing anything —
+  when a row would pass it, which is what drives the "Over limit" button. `wouldExceedCap()`
+  exposes that to the UI, and `approveAllEarned()` walks the queue and stops at the cap.
+- `availableCents()` counts **approved** earnings only, so the Rewards receipt shows what
+  a grown-up has actually okayed. `receiptModel()` gained `waitingOnGrownUp`.
+- `deferEarning()` / `undoEarning()` back the Hold and Undo buttons; both are reversible
+  and neither destroys a row.

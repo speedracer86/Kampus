@@ -1,12 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import {
-  RATES, RATE_LABEL, CAP_OPTIONS, DEFAULT_CAP_CENTS, EARNED, HELD, GIVEN, REFUNDED,
-  earnedThisWeek, capRemaining, award, heldCents, availableCents,
+  RATES, RATE_LABEL, CAP_OPTIONS, DEFAULT_CAP_CENTS,
+  PENDING, APPROVED, DEFERRED, HELD, GIVEN, REFUNDED,
+  earnedThisWeek, pendingEarnings, capRemaining, award, heldCents, availableCents,
+  wouldExceedCap, approveEarning, deferEarning, undoEarning, approveAllEarned,
   ask, approve, cancelAsk, goalProgress, receiptModel, howYouEarn,
 } from '../src/earnings.js';
 
 const W = '2026-W43';
-const pay = (rows, reason, cap = DEFAULT_CAP_CENTS) => award(rows, { reason, day: 'Mon', week: W, cap });
+/** Record an effort AND have a grown-up approve it — the common path in these tests. */
+const pay = (rows, reason, cap = DEFAULT_CAP_CENTS) => {
+  const { rows: withRow } = award(rows, { reason, day: 'Mon', week: W });
+  const res = approveEarning(withRow, withRow.at(-1).id, { week: W, cap });
+  return { rows: res.ok ? res.rows : withRow, awarded: res.ok ? withRow.at(-1).cents : 0, cappedOut: !res.ok };
+};
 
 describe('rates — effort only', () => {
   it('pays the four efforts at the published rates', () => {
@@ -33,36 +40,68 @@ describe('the weekly cap', () => {
   });
 
   it('counts only this week', () => {
-    const rows = [{ id: 'x', cents: 300, week: 'older', status: EARNED }];
+    const rows = [{ id: 'x', cents: 300, week: 'older', status: APPROVED }];
     expect(earnedThisWeek(rows, W)).toBe(0);
     expect(capRemaining(rows, W)).toBe(500);
   });
 
-  it('trims the last award to what is left instead of overshooting', () => {
+  it('refuses the approval that would pass the cap, leaving the row pending', () => {
     let rows = [];
-    ({ rows } = pay(rows, 'test'));      // 150
+    ({ rows } = pay(rows, 'test'));      // 150 approved
     ({ rows } = pay(rows, 'test'));      // 300
     ({ rows } = pay(rows, 'test'));      // 450
-    const r = pay(rows, 'test');         // would be 600; only 50 left
-    expect(r.awarded).toBe(50);
-    expect(r.cappedOut).toBe(true);
-    expect(earnedThisWeek(r.rows, W)).toBe(500);
+    ({ rows } = award(rows, { reason: 'test', day: 'Thu', week: W }));   // +150 would be 600
+    const id = rows.at(-1).id;
+    expect(wouldExceedCap(rows, id, { week: W })).toBe(true);
+    const res = approveEarning(rows, id, { week: W });
+    expect(res.ok).toBe(false);
+    expect(res.overLimit).toBe(true);
+    expect(res.rows).toBe(rows);                       // nothing changed
+    expect(earnedThisWeek(rows, W)).toBe(450);
+    expect(pendingEarnings(res.rows)).toHaveLength(1); // still waiting, not destroyed
   });
 
-  it('awards nothing once the cap is reached, and adds no row', () => {
+  it('records the effort at full rate even in a capped-out week', () => {
     let rows = [];
-    for (let i = 0; i < 5; i++) ({ rows } = pay(rows, 'quiz'));   // 5 x 100 = cap
-    const r = pay(rows, 'lesson');
-    expect(r.awarded).toBe(0);
-    expect(r.cappedOut).toBe(true);
-    expect(r.rows).toHaveLength(rows.length);
+    for (let i = 0; i < 5; i++) ({ rows } = pay(rows, 'quiz'));   // cap reached
+    const { rows: after, awarded } = award(rows, { reason: 'lesson', day: 'Sat', week: W });
+    expect(awarded).toBe(RATES.lesson);                // the kid still did the lesson
+    expect(after.at(-1).status).toBe(PENDING);
+    expect(earnedThisWeek(after, W)).toBe(500);        // but it does not pay out
   });
 
-  it('never claws back an earlier row to fit the cap', () => {
+  it('never claws back an approved row to fit the cap', () => {
     let rows = [];
     for (let i = 0; i < 6; i++) ({ rows } = pay(rows, 'quiz'));
-    expect(rows.every(r => r.cents > 0)).toBe(true);
+    expect(rows.filter(r => r.status === APPROVED).every(r => r.cents > 0)).toBe(true);
     expect(earnedThisWeek(rows, W)).toBe(500);
+  });
+
+  it('approves everything it can in one go and stops cleanly at the cap', () => {
+    let rows = [];
+    for (let i = 0; i < 8; i++) ({ rows } = award(rows, { reason: 'quiz', day: 'Mon', week: W }));
+    const { rows: after, approved } = approveAllEarned(rows, { week: W });
+    expect(approved).toBe(500);
+    expect(earnedThisWeek(after, W)).toBe(500);
+    expect(pendingEarnings(after)).toHaveLength(3);    // the rest simply wait
+  });
+
+  it('lets a grown-up defer a row and undo that decision', () => {
+    let rows = [];
+    ({ rows } = award(rows, { reason: 'lesson', day: 'Mon', week: W }));
+    const id = rows[0].id;
+    rows = deferEarning(rows, id);
+    expect(rows[0].status).toBe(DEFERRED);
+    expect(pendingEarnings(rows)).toHaveLength(0);
+    rows = undoEarning(rows, id);
+    expect(rows[0].status).toBe(PENDING);
+  });
+
+  it('pays nothing out until a grown-up approves it', () => {
+    const { rows } = award([], { reason: 'test', day: 'Mon', week: W });
+    expect(availableCents(rows)).toBe(0);
+    const ok = approveEarning(rows, rows[0].id, { week: W });
+    expect(availableCents(ok.rows)).toBe(150);
   });
 
   it("respects a grown-up's lower or higher cap", () => {
@@ -129,6 +168,7 @@ describe('the receipt', () => {
     expect(m.earned).toHaveLength(2);
     expect(m.subtotal).toBe(150);
     expect(m.capLeft).toBe(350);
+    expect(m.waitingOnGrownUp).toBe(0);
     expect(m.held).toEqual([{ id: expect.any(String), label: 'Lego set', cents: 100 }]);
     expect(m.available).toBe(50);
     expect(m.note).toBe('Paid for effort. Never for scores.');

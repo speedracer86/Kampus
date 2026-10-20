@@ -16,7 +16,8 @@
     "./home-stack": "./src/home-stack.jsx",
     "./pin-gate": "./src/pin-gate.jsx",
     "./assessment": "./src/assessment.jsx",
-    "./rewards": "./src/rewards.jsx"
+    "./rewards": "./src/rewards.jsx",
+    "./parents": "./src/parents.jsx"
   },
   "peerDependencies": {
     "react": ">=18"
