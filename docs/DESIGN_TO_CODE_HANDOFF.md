@@ -57,9 +57,12 @@ A Claude Design deliverable is unzipped in design-incoming/. Integrate it:
 6. Commit in logical chunks and push.
 
 Design decisions already settled (do not relitigate): top nav, white sheet on neutral
-page, outline boxes, Inter Tight + Instrument Serif (numerals/ink only), the age-dial
-band() system, Economy v2 mechanics, and the copy policy in
+page, the age-dial band() system, Economy v2 mechanics, and the copy policy in
 docs/KAMPUS_TEACHING_SYSTEM.md Part 9 (never "Common Core" in facing copy).
+VISUALS: as of the 2026-10-20 deliverable, the binding visual spec is
+`design-incoming/design_handoff_kampus/STYLE_GUIDE.md` §0 — it supersedes earlier
+visual decisions here (Instrument Serif is retired for Inter Tight 300 numerals,
+ground is `#F5F7F9`, sheet has no shadow, etc.). See design-incoming/START_HERE.md.
 ```
 
 ## What's already in the repo for Claude Code to lean on
