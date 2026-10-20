@@ -180,3 +180,44 @@ Sequence I recommend: review engine + lesson runner first (they make *existing* 
 - Schema-based instruction meta-analysis for students with disabilities: [SBI/MSBI as evidence-based practice](https://avesis.omu.edu.tr/yayin/618e6bd9-7829-4ee7-bef3-ebdd9c13a922/are-schema-based-and-modified-schema-based-instruction-evidence-based-practices-for-students-with-disabilities-a-meta-analysis).
 - EngageNY/Eureka Math module sequences (public domain scope & sequence), e.g. [module overviews](https://www.greenhills.org/academics/math-resources/grade-3/module-overviews).
 - Prior Kampus research (docs/KAMPUS_CURRICULUM_PLAN.md): Achieve the Core major-work maps, Zearn lesson structure, Fryer incentive trials, token economies for ADHD, Monster Math ADHD design guide.
+
+---
+
+## Part 8 — The Business Spine (real-life scenario edition)
+
+Owner direction: lessons build toward kids running a virtual business, with the
+Lemonade Stand as the seed. The rule that keeps this evidence-sound: **the business
+is the spine, not the teacher.** Project-only math instruction reliably fails
+struggling and ADHD learners (the math goes implicit, the executive load explodes);
+explicit lessons stay. The sim supplies the *why*, the *numbers*, and the *proof*.
+
+**The five edits to Parts 2–5:**
+1. **Units become business arcs.** Each unit maps to a business capability the kid
+   unlocks by mastering its skills (e.g. G7 percent unit = "Season: The Sale" —
+   running a promotion requires discount, margin-after-discount, and projection).
+   Same skills, same sequence; the arc is the motivation layer.
+2. **Lessons pull numbers from the kid's own sim state** wherever the skill allows:
+   warm-ups and mixed sets parameterize generators from her actual ledger (sales,
+   prices, inventory) instead of random values.
+3. **Proofs become decisions** where possible: one standard question + one sim
+   decision with the math shown ("lemons went up — keep or raise your price?").
+4. **Business Day:** 4 lesson days + 1 sim day per week, with Business Day *earned*
+   by completing the week's lessons — the sim is the reward loop, never the escape
+   hatch from math.
+5. **The business grows by band**, following the existing gear ladder (Starter Kit →
+   … → Franchise → Empire):
+   - **G3–4 · The Stand:** count the cash box, cups in arrays, simple bar charts
+     of sales, elapsed time for opening hours.
+   - **G5–6 · The Operation:** unit costs and pricing, recipe conversions, averages
+     and medians of real sales, coordinate plots of day-vs-cups.
+   - **G7–8 · The Company:** margins and markup, a startup loan (simple interest),
+     promotions (percent change), weather probability for stock decisions, profit
+     as a function of price, systems for combo pricing, scatter + trend of price
+     vs. demand; multi-location by grade 8.
+   Grade-test twin: a **capstone week** — run the business profitably using that
+   year's math, reported beside the test on the parent's cluster map.
+
+**Implementation deltas** (adds to Part 7): sim-state parameterization hooks in the
+generator API (accept overrides for context values), arc metadata on units
+(capability unlocked, required skills), Business Day session type, sim capability
+flags per band, loan/promotion/combo mechanics in the Stand for the 7–8 band.
