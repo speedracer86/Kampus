@@ -1,0 +1,231 @@
+/* The year, grade by grade, as data — the machine-readable form of
+   docs/KAMPUS_TEACHING_SYSTEM.md Part 4 (EngageNY-ordered, world-flavored).
+
+   Shape: YEAR[grade] = ordered units. Each unit:
+     id      stable id, used by snags.js and lesson pointers
+     name    kid-facing unit name (never a standards code)
+     world   display flavor (the four code worlds plus year-map flavors)
+     weeks   [first, last] teaching week (32-week year, 4 lessons/week)
+     skills  taxonomy keys (skills.js) with existing generators — the runnable core
+     gaps    ★ items from Part 4: content that needs a new generator before its
+             lessons can exist. Tracked, never faked with a weak stand-in.
+     focus   one sentence, parent-facing, of what the unit is for
+
+   The final unit of every grade is the review unit; its "quiz" is the grade test. */
+
+export const YEAR = {
+  3: [
+    { id: '3-1', name: 'Equal groups: meet × and ÷', world: 'Trade Tycoon', weeks: [1, 4],
+      skills: ['multFact', 'divFact', 'boxMul', 'areaModel'],
+      gaps: ['equalGroups', 'mulAsRepeatedAdd', 'divAsSharing'],
+      focus: 'Multiplication as equal groups you can see and count — the idea the whole year stands on.' },
+    { id: '3-2', name: 'Fact fluency I (×2, 5, 10, 3, 4)', world: 'Trade Tycoon', weeks: [5, 8],
+      skills: ['multFact', 'divFact', 'boxMul', 'boxAdd'],
+      gaps: ['familySequencedFacts'],
+      focus: 'The friendly fact families first, until they are quick and calm.' },
+    { id: '3-3', name: 'Place value & big add/sub', world: 'Number Mine', weeks: [9, 12],
+      skills: ['addBig', 'subBig', 'roundNum', 'twoStepStory'],
+      gaps: [],
+      focus: 'Hundreds and thousands behave just like ones — add, subtract, and round them with confidence.' },
+    { id: '3-4', name: 'Fact fluency II (×6, 7, 8, 9) + patterns', world: 'Trade Tycoon', weeks: [13, 16],
+      skills: ['multFact', 'divFact', 'patternNext'],
+      gaps: ['distributiveTrick'],
+      focus: 'The harder families, each one built from a fact she already owns.' },
+    { id: '3-5', name: 'Fractions as numbers', world: 'Fraction Factory', weeks: [17, 21],
+      skills: ['fracOfSet', 'unitFracCmp', 'eqFrac', 'cmpFrac'],
+      gaps: ['fracNumberLine'],
+      focus: 'A fraction is a number with a place on the line — not a pizza slice.' },
+    { id: '3-6', name: 'Area & perimeter', world: 'Equation Lab', weeks: [22, 25],
+      skills: ['areaModel'],
+      gaps: ['perimeter', 'decomposeRooms'],
+      focus: 'Area is multiplication you can walk around in.' },
+    { id: '3-7', name: 'Time, money & measurement', world: 'Trade Tycoon', weeks: [26, 28],
+      skills: ['twoStepStory', 'boxAdd'],
+      gaps: ['elapsedTime', 'moneyStory', 'metricMass'],
+      focus: 'Clocks, change, and grams — the measuring math of a working stand.' },
+    { id: '3-8', name: 'Data + the year in review', world: 'The Stand', weeks: [29, 32],
+      skills: ['multFact', 'addBig', 'fracOfSet', 'patternNext'],
+      gaps: ['barGraphs'],
+      focus: 'Read the stand’s charts, revisit the year, take the grade test.' },
+  ],
+
+  4: [
+    { id: '4-1', name: 'Place value to a million', world: 'Number Mine', weeks: [1, 4],
+      skills: ['addBig', 'subBig', 'roundNum', 'multCompare'],
+      gaps: [],
+      focus: 'Big numbers keep the same rules — comparing, rounding, adding and subtracting at scale.' },
+    { id: '4-2', name: 'Multi-digit × and ÷', world: 'Trade Tycoon', weeks: [5, 9],
+      skills: ['mulDigit', 'divRem', 'multCompare', 'boxMul'],
+      gaps: ['factorsMultiples'],
+      focus: 'Batches times batches, and what the remainder really means.' },
+    { id: '4-3', name: 'Measurement & conversions', world: 'Weather Station', weeks: [10, 13],
+      skills: ['twoStepStory', 'mulDigit'],
+      gaps: ['conversions', 'elapsedTime'],
+      focus: 'Kilometers to meters, kilograms to grams — bigger unit, smaller count.' },
+    { id: '4-4', name: 'Fraction equivalence & ordering', world: 'Fraction Factory', weeks: [14, 18],
+      skills: ['eqFrac', 'cmpFrac', 'addSameDen', 'mixedImp'],
+      gaps: [],
+      focus: 'Different names for the same amount, and how to tell which is more.' },
+    { id: '4-5', name: 'Fractions × whole numbers', world: 'Fraction Factory', weeks: [19, 22],
+      skills: ['fracOfSet', 'addSameDen', 'mixedImp'],
+      gaps: ['fracTimesWhole', 'linePlots'],
+      focus: 'Three quarters, four times — fractions start doing work.' },
+    { id: '4-6', name: 'Decimals meet money', world: 'Fraction Factory', weeks: [23, 26],
+      skills: ['decNotation', 'decCompare', 'frac2dec', 'dec2frac'],
+      gaps: ['addTenthsHundredths'],
+      focus: 'Tenths and hundredths are coins — decimals arrive as money she already knows.' },
+    { id: '4-7', name: 'Angles & shapes', world: 'Equation Lab', weeks: [27, 29],
+      skills: ['areaModel'],
+      gaps: ['angleMeasure', 'classifyShapes'],
+      focus: 'Turns, corners, and the names shapes earn.' },
+    { id: '4-8', name: 'The year in review', world: 'The Stand', weeks: [30, 32],
+      skills: ['mulDigit', 'eqFrac', 'decNotation', 'divRem', 'fracOfSet'],
+      gaps: [],
+      focus: 'Everything mixed together, then the grade test.' },
+  ],
+
+  5: [
+    { id: '5-1', name: 'Place value & powers of ten', world: 'Decimal Depths', weeks: [1, 4],
+      skills: ['powTen', 'roundNum', 'decCompare'],
+      gaps: ['decimalPlaceValue'],
+      focus: 'Each place is ten times its neighbor — the dial that moves decimals.' },
+    { id: '5-2', name: 'Decimal operations', world: 'Decimal Depths', weeks: [5, 9],
+      skills: ['decAdd', 'decMul', 'decDiv'],
+      gaps: [],
+      focus: 'Adding, multiplying and dividing money-numbers without fear.' },
+    { id: '5-3', name: 'Adding unlike fractions', world: 'Fraction Factory', weeks: [10, 14],
+      skills: ['addUnlikeDen', 'subFrac', 'cmpFrac'],
+      gaps: ['fracEstimation'],
+      focus: 'Different denominators just need a common name first.' },
+    { id: '5-4', name: 'Fraction × and ÷', world: 'Fraction Factory', weeks: [15, 19],
+      skills: ['mulFrac', 'fracOfSet', 'unitFracDiv', 'scaleRecipe'],
+      gaps: [],
+      focus: 'Scaling recipes up and cutting them down — multiplication and division grow up.' },
+    { id: '5-5', name: 'Volume & the coordinate plane', world: 'Equation Lab', weeks: [20, 23],
+      skills: ['volumeBox', 'areaModel'],
+      gaps: ['coordinateGraphing'],
+      focus: 'Filling boxes and naming points — space gets numbers.' },
+    { id: '5-6', name: 'Expressions & order of operations', world: 'Equation Lab', weeks: [24, 27],
+      skills: ['orderOpsParen', 'orderOps', 'evalX', 'patternNext'],
+      gaps: [],
+      focus: 'Why everyone must read a math sentence the same way.' },
+    { id: '5-7', name: 'Conversions, data + review', world: 'The Stand', weeks: [28, 32],
+      skills: ['decAdd', 'mulFrac', 'volumeBox', 'powTen'],
+      gaps: ['conversions', 'linePlots'],
+      focus: 'The year’s tools on the stand’s own numbers, then the grade test.' },
+  ],
+
+  6: [
+    { id: '6-1', name: 'Ratios & rates', world: 'Trade Tycoon', weeks: [1, 5],
+      skills: ['unitRate', 'simplifyRatio', 'ratioShare', 'scaleRecipe'],
+      gaps: ['tapeDiagrams'],
+      focus: 'Per-cup, per-hour, per-dollar — the comparison tool behind every good deal.' },
+    { id: '6-2', name: 'Percent', world: 'Trade Tycoon', weeks: [6, 9],
+      skills: ['easyPct', 'pctOf', 'findWhole', 'frac2pct'],
+      gaps: [],
+      focus: 'Out of a hundred: discounts, tips, and what the sale sign really says.' },
+    { id: '6-3', name: 'Fraction ÷ fraction, decimal fluency', world: 'Fraction Factory', weeks: [10, 13],
+      skills: ['divFrac', 'decMul', 'decDiv', 'frac2dec', 'dec2frac'],
+      gaps: [],
+      focus: 'How many quarter-cups fit in three halves — division finishes growing up.' },
+    { id: '6-4', name: 'Rational numbers', world: 'Weather Station', weeks: [14, 18],
+      skills: ['addInt', 'cmpInt', 'absVal', 'subToNeg'],
+      gaps: ['coordinatePlane'],
+      focus: 'Below zero is still a number — temperature, debt, and distance from zero.' },
+    { id: '6-5', name: 'Expressions & equations', world: 'Equation Lab', weeks: [19, 24],
+      skills: ['evalX', 'evalTwoVar', 'oneStepAdd', 'oneStepMul', 'twoStep', 'depVar'],
+      gaps: ['exponentsIntro'],
+      focus: 'Letters stand for numbers you don’t know yet — and equations find them.' },
+    { id: '6-6', name: 'Area, surface area & volume', world: 'Equation Lab', weeks: [25, 27],
+      skills: ['areaModel', 'volumeBox'],
+      gaps: ['triangleArea', 'nets'],
+      focus: 'Breaking shapes into pieces you already know how to measure.' },
+    { id: '6-7', name: 'Statistics: the Stand unit + review', world: 'The Stand', weeks: [28, 32],
+      skills: ['meanMedian', 'pctOf', 'twoStep'],
+      gaps: ['variability', 'histograms'],
+      focus: 'Her own ledger becomes the dataset, then the grade test.' },
+  ],
+
+  7: [
+    { id: '7-1', name: 'Proportional relationships', world: 'Trade Tycoon', weeks: [1, 5],
+      skills: ['propSolve', 'unitRate', 'scaleRecipe'],
+      gaps: ['fracUnitRate', 'propGraphs'],
+      focus: 'When two things grow in lockstep — and how to use one to find the other.' },
+    { id: '7-2', name: 'Rational number operations', world: 'Weather Station', weeks: [6, 10],
+      skills: ['subNeg', 'mulInt', 'divInt', 'mixedInt', 'doubleSub', 'addLarger'],
+      gaps: [],
+      focus: 'Full command of negatives: gains, losses, and chains of both.' },
+    { id: '7-3', name: 'Expressions & equations', world: 'Equation Lab', weeks: [11, 15],
+      skills: ['distrib', 'combineLike', 'twoStepNeg', 'twoStep'],
+      gaps: ['inequalities'],
+      focus: 'Rewriting before solving — the algebra habit that makes hard things easy.' },
+    { id: '7-4', name: 'Percent in the wild', world: 'Trade Tycoon', weeks: [16, 20],
+      skills: ['tipCalc', 'discountTax', 'simpleInterest', 'pctChange', 'findWhole'],
+      gaps: ['markup', 'salesTax'],
+      focus: 'Tips, discounts, interest, markup — the percent math that runs a business.' },
+    { id: '7-5', name: 'Statistics & sampling', world: 'The Stand', weeks: [21, 24],
+      skills: ['meanMedian'],
+      gaps: ['sampling', 'compareDistributions'],
+      focus: 'What a fair sample can and can’t tell you about the whole crowd.' },
+    { id: '7-6', name: 'Probability', world: 'The Stand', weeks: [25, 27],
+      skills: ['probSimple'],
+      gaps: ['compoundEvents'],
+      focus: 'Putting a number on maybe — and betting the stand’s stock wisely.' },
+    { id: '7-7', name: 'Geometry + the year in review', world: 'Equation Lab', weeks: [28, 32],
+      skills: ['tipCalc', 'twoStepNeg', 'propSolve', 'areaModel'],
+      gaps: ['scaleDrawings', 'angleEquations', 'circles'],
+      focus: 'Scale drawings and circles, the year mixed back together, the grade test.' },
+  ],
+
+  8: [
+    { id: '8-1', name: 'Exponents & scientific notation', world: 'Power Plant', weeks: [1, 4],
+      skills: ['powers', 'sciNot'],
+      gaps: ['exponentRules'],
+      focus: 'Writing the enormous and the tiny without running out of page.' },
+    { id: '8-2', name: 'Linear equations', world: 'Equation Lab', weeks: [5, 9],
+      skills: ['multiStep', 'twoStepNeg'],
+      gaps: ['xBothSides', 'specialCases'],
+      focus: 'Solving anything linear — including equations with x on both sides.' },
+    { id: '8-3', name: 'Slope & linear relationships', world: 'Slope City', weeks: [10, 14],
+      skills: ['slope2', 'funcRate'],
+      gaps: ['slopeIntercept', 'graphingLines'],
+      focus: 'Steepness as a number: every line tells a rate story.' },
+    { id: '8-4', name: 'Systems of equations', world: 'Equation Lab', weeks: [15, 18],
+      skills: ['sysSolve'],
+      gaps: ['substitution', 'wordSystems'],
+      focus: 'Two conditions at once — where the lines cross is the answer. Break-even lives here.' },
+    { id: '8-5', name: 'Functions', world: 'Equation Lab', weeks: [19, 23],
+      skills: ['funcEval', 'funcRate', 'depVar'],
+      gaps: ['compareFunctions', 'linearVsNonlinear'],
+      focus: 'A machine that turns inputs into outputs — price in, demand out.' },
+    { id: '8-6', name: 'Pythagoras & irrationals', world: 'Power Plant', weeks: [24, 26],
+      skills: ['pythag', 'approxRoot', 'sqroot'],
+      gaps: ['distanceFormula'],
+      focus: 'The most famous theorem there is, and numbers that never resolve.' },
+    { id: '8-7', name: 'Bivariate data', world: 'The Stand', weeks: [27, 29],
+      skills: ['meanMedian'],
+      gaps: ['scatterPlots', 'trendLines'],
+      focus: 'Two measurements at once — does hot weather really sell more cups?' },
+    { id: '8-8', name: 'The year in review', world: 'all', weeks: [30, 32],
+      skills: ['multiStep', 'slope2', 'sysSolve', 'funcEval'],
+      gaps: [],
+      focus: 'Six years of the ladder, mixed, then the final grade test — graduation.' },
+  ],
+};
+
+export const GRADES = Object.keys(YEAR).map(Number);
+
+/** The unit a given id belongs to, or undefined. */
+export const unitById = id => {
+  for (const g of GRADES) { const u = YEAR[g].find(u => u.id === id); if (u) return u; }
+};
+
+/** Quiz definition for a unit: its own skills plus up to 3 review skills drawn
+    from earlier units of the same grade (Part 5: 7 unit + 3 review questions). */
+export function quizSkills(grade, unitIdx) {
+  const units = YEAR[grade];
+  const own = units[unitIdx].skills;
+  const earlier = units.slice(0, unitIdx).flatMap(u => u.skills).filter(s => !own.includes(s));
+  const review = [...new Set(earlier)].slice(-3);   // most recent prior skills
+  return { unit: own, review };
+}
