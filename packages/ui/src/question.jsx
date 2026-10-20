@@ -112,7 +112,7 @@ export function PayoutLine({ payout, align = 'left' }) {
  */
 export function Question({
   question, context = 'mission', teachFree = false, tokensLeft = 3,
-  feedback = null, picked = null, payout = null, help = null, teachConfirm = false, selected = null,
+  feedback = null, picked = null, payout = null, help = null, teachConfirm = false, selected = null, snag = false,
   onAnswer = () => {}, onHelp = () => {}, onTeachConfirm = () => {}, onNext,
   onEvent = () => {}, style,
 }) {
@@ -122,7 +122,8 @@ export function Question({
   const [sel, setSel] = React.useState(null);
   React.useEffect(() => { setSel(null); }, [question]);
 
-  const helpIds = HELP_BY_CONTEXT[context] || HELP_BY_CONTEXT.mission;
+  // A Snag is "no pay, just a look": no help stack, because having the move is the point.
+  const helpIds = snag ? [] : (HELP_BY_CONTEXT[context] || HELP_BY_CONTEXT.mission);
   const locked = feedback === 'correct';
   const chooseHelp = (id) => {
     if (locked) return;
@@ -168,8 +169,11 @@ export function Question({
       teachFree={teachFree} onTeachConfirm={onTeachConfirm} phone={phone} />
   </>;
 
-  const prompt = <h2 style={{ fontSize: phone ? 26 : 40, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.18,
-    margin: 0, textWrap: 'pretty' }}>{question.text}</h2>;
+  const prompt = <>
+    {snag && <Kicker style={{ marginBottom: 10 }}>No pay, just a look</Kicker>}
+    <h2 style={{ fontSize: phone ? 26 : 40, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.18,
+      margin: 0, textWrap: 'pretty' }}>{question.text}</h2>
+  </>;
 
   const answers = <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 12, marginTop: phone ? 18 : 26 }}>
     {(question.answers || []).map((a, i) => <button key={i} onClick={() => pick(i)} style={answerStyle(i)}>
@@ -203,16 +207,16 @@ export function Question({
             <div style={{ fontSize: 12.5, fontWeight: 700, color: color.muted }}>{g.k}</div>
             <div style={{ ...numeral(26), marginTop: 2 }}>{g.v}</div></div>)}</div>}
         <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 20 }}>
-          {prompt}{scaffold}{answers}{helpCol}{wrongBar}
-          {feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
+          {prompt}{scaffold}{answers}{helpCol}{!snag && wrongBar}
+          {!snag && feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
           {checkBar}
         </div>
       </>
       : <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
         <div>{knowCol}{helpCol}</div>
         <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 32 }}>
-          {prompt}{scaffold}{answers}{wrongBar}
-          {feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
+          {prompt}{scaffold}{answers}{!snag && wrongBar}
+          {!snag && feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
             <PayoutLine payout={payout} /></div>}
         </div>
       </div>}

@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
+  firstReview, review, dayNumber, problemsForSkill,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { NavBar } from '@kampus/ui/app';
@@ -15,7 +16,8 @@ import { AssessmentIntro, AssessmentRunner, UnitQuizResults, GradeTestResults } 
 import { RewardsScreen } from '@kampus/ui/rewards';
 import { GrownUps } from '@kampus/ui/parents';
 import { PinGate } from '@kampus/ui/pin-gate';
-import { buildLesson } from './lessonData.js';
+import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
+import { unitById } from '@kampus/curriculum';
 import { load, save, append, DEFAULT_STUDENT_ID } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
@@ -30,6 +32,24 @@ function buildRound(state, topic) {
 }
 
 /** The §0 Home contract: grade placement, today's lesson, free practice, bank, gate. */
+/** Inspection Day's sheet: the unit's own skills, plus the bank's review picks. */
+function buildUnitQuizFromPlan(state) {
+  const plan = quizPlanFor(state);
+  const { day } = currentDay(state);
+  const world = worldForUnit(unitById(day?.unit));
+  const tier = state.tiers?.[`${state.grade}_${world.id}`] || 1;
+  const ctx = bizCtx(state);
+  const toQ = (p, group) => ({
+    text: String(p.q).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim(),
+    answers: p.choices, correct: p.correctIdx, answerIndex: p.correctIdx, choices: p.choices,
+    skill: p.skill || p.skillKey, teachSteps: p.steps, hint: p.steps?.[0], group,
+  });
+  const unitQs = plan.unit.flatMap(sk => problemsForSkill(sk, tier, { count: 3, ctx }).map(p => toQ(p, 'unit'))).slice(0, 7);
+  const reviewPool = plan.review.length ? plan.review : plan.unit;
+  const reviewQs = reviewPool.flatMap(sk => problemsForSkill(sk, Math.max(1, tier - 1), { count: 2, ctx }).map(p => toQ(p, 'review'))).slice(0, 3);
+  return [...unitQs, ...reviewQs];
+}
+
 const dayName = () => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
 
 /* Seed wishlists until a grown-up sets their own in Grown-ups (Step 8). */
@@ -63,13 +83,8 @@ function homeStackData(state) {
         graduated: passed && g === 8,
       };
     }),
-    unit: { unit: curTier, units: 7, lessonsDone: Object.keys(state.days || {}).length, lessonsTotal: 130 },
-    lesson: {
-      world: WORLDS[state.lastTopic],
-      title: GRADE_WORLDS[grade][state.lastTopic].desc,
-      moveIndex: 0,
-      mins: 20,
-    },
+    unit: (({ unit, units, lessonsDone, lessonsTotal }) => ({ unit, units, lessonsDone, lessonsTotal }))(yearProgress(state)),
+    lesson: todayCard(state),
     practice: TOPIC_ORDER.map(topic => ({
       id: topic,
       world: WORLDS[topic],
@@ -171,14 +186,25 @@ export function App() {
 
   // buildLesson() draws random questions, so it must be built once per attempt —
   // rebuilding on a re-render would swap the questions mid-lesson.
-  const lesson = useMemo(() => buildLesson(state, topic),
-    [state.grade, topic, state.tiers[tierKey(state.grade, topic)], roundNonce]);
+  // The day the student is actually on. Rebuilt only when the pointer or her tier moves —
+  // the questions are random, so rebuilding on a re-render would swap them mid-lesson.
+  const lesson = useMemo(() => buildDayLesson(state),
+    [state.grade, state.lessonPointer, state.tiers[tierKey(state.grade, topic)], roundNonce]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onLessonEvent = (type, payload) => {
     append(studentId, { type: `lesson_${type}`, payload });
     if (type === 'answer' && payload.right) update(s => { s.kredits += payload.gain; s.week.earned += payload.gain; return s; });
     if (type === 'lesson_complete') update(s => {
       s.lessonDoneDay = new Date().toISOString().slice(0, 10);
+      // Prove-it finished: step the year forward and put the skill into the review ladder.
+      const { day, seq } = currentDay(s);
+      if (day?.skill) {
+        const existing = (s.review || []).find(r => r.skill === day.skill);
+        s.review = existing
+          ? (s.review || []).map(r => (r.skill === day.skill ? review(r, true, dayNumber()) : r))
+          : (s.review || []).concat(firstReview(day.skill, dayNumber()));
+      }
+      s.lessonPointer = Math.min((s.lessonPointer || 0) + 1, seq.length - 1);
       s.ledger = award(s.ledger || [], { reason: 'lesson', day: dayName(), week: weekKey() }).rows;
       return s;
     });
@@ -294,9 +320,10 @@ export function App() {
       return <div style={{ minHeight: '100vh', background: color.ground, padding: 48 }}>
         <AssessmentIntro kind={isQuiz ? 'quiz' : 'test'} grade={state.grade}
           unit={state.tiers[tierKey(state.grade, topic)] || 1}
-          intro={isQuiz ? 'Ten questions on this unit, plus a few from earlier. No timer, and Read it to me stays on.' : testIntroCopy(state.grade)}
-          onStart={() => setPapers(isQuiz ? buildUnitQuiz({ grade: state.grade, topic, tier: state.tiers[tierKey(state.grade, topic)] || 1, review: state.review })
-            : buildGradeTest({ grade: state.grade }))} />
+          intro={isQuiz
+            ? 'Inspection Day. Ten questions on this unit, plus a few from earlier — the stand stays shut this morning. No timer, and Read it to me stays on. Nothing here can hurt your business.'
+            : `${testIntroCopy(state.grade)} Pass it and the Grade ${state.grade} district gets built.`}
+          onStart={() => setPapers(isQuiz ? buildUnitQuizFromPlan(state) : buildGradeTest({ grade: state.grade }))} />
       </div>;
     }
     return <AssessmentRunner kind={isQuiz ? 'quiz' : 'test'} questions={papers}
@@ -306,7 +333,24 @@ export function App() {
         append(studentId, { type: isQuiz ? 'quiz_result' : 'test_result', payload: res });
         update(s => {
           s.ledger = award(s.ledger || [], { reason: isQuiz ? 'quiz' : 'test', day: dayName(), week: weekKey() }).rows;
-          if (!isQuiz && res.passed) { s.passed[state.grade] = true; s.tests = { ...(s.tests || {}), [state.grade]: `${res.score}/${res.asked}` }; }
+          if (!isQuiz && res.passed) {
+            // The License: the district is built and the next grade opens (PLAY_SYSTEM §5).
+            s.passed[state.grade] = true;
+            s.tests = { ...(s.tests || {}), [state.grade]: `${res.score}/${res.asked}` };
+            s.districts = [...new Set([...(s.districts || []), state.grade])];
+            if (state.grade < 8) { s.grade = state.grade + 1; s.lessonPointer = 0; }
+          }
+          if (!isQuiz && !res.passed) {
+            // A repair plan is a schedule, not a punishment: its units go into review.
+            for (const u of res.repairPlan || []) {
+              const skills = (unitById(u.unitId)?.skills) || [];
+              for (const sk of skills) if (!(s.review || []).some(r => r.skill === sk)) {
+                s.review = (s.review || []).concat(firstReview(sk, dayNumber()));
+              }
+            }
+          }
+          // A quiz or test never touches the business — §5 is an invariant, not a habit.
+          s.lessonPointer = Math.min((s.lessonPointer || 0) + 1, (currentDay(s).seq.length - 1));
           return s;
         });
         setPapers(null); setPaper(res);
@@ -365,7 +409,10 @@ export function App() {
     <HomeStack
       data={homeStackData(state)}
       onEvent={(type, payload) => {
-        if (type === 'start_lesson') { setTopic(state.lastTopic); setScreen('lesson'); }
+        if (type === 'start_lesson') {
+          const { day } = currentDay(state);
+          setScreen(day?.type === 'quiz' ? 'quiz' : day?.type === 'test' ? 'test' : 'lesson');
+        }
         if (type === 'practice') startRound(payload.id, { blitz: !!payload.blitz });
         if (type === 'stand') setScreen('home');
       }}

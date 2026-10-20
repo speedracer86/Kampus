@@ -134,3 +134,21 @@ messages ("looks like you added the denominators") · 15. Prerequisite-repair pr
 sound; what's missing is the machine that *remembers* (review engine), the machine
 that *organizes the year* (lesson runner + quizzes + the other 45% of content), and
 the machine that *holds families* (backend + parent reports).
+
+## Curriculum bank gaps (found while wiring the runner, Phase B)
+
+Recorded rather than fixed: the bank is owner-reviewed and PROMPT.md forbids re-authoring
+its content. These are enrichment items, not blockers — the runner skips nothing.
+
+- **Grade 6, day 109 practises `meanMedian` with no lesson behind it.** The day is
+  `guided`, but the bank only introduces `meanMedian` as a `new` day in grades 7 and 8, so
+  a grade-6 student meets guided practice for a skill she has never been taught. The
+  runner degrades sanely (the generator exists, and "Teach me" still shows its steps), but
+  the intended first teach is missing. Either add a `new` day for it in unit 6-7, or move
+  the skill out of that unit's list. Pinned by `KNOWN_GAPS` in
+  `packages/engine/test/year-wiring.test.js`, so any *other* skill in this situation fails
+  the suite.
+- For contrast and as the rule: grade 7, day 112 practises `areaModel` without a grade-7
+  teach day, and that one is correct — `areaModel` is taught new in grades 3–6, and unit
+  7-7 is explicitly "Geometry + the year in review". Review units refresh; they do not
+  re-teach.

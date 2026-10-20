@@ -193,11 +193,17 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
   const [streak, setStreak] = React.useState(0);
   const [tokensLeft, setTokensLeft] = React.useState(tokensPerRun);
   const [ui, setUi] = React.useState({ feedback: null, picked: null, help: null, teachConfirm: false, payout: null, teachUsed: false, tokenUsed: false, tries: 0 });
-  const [phase, setPhase] = React.useState('run'); // run | teach | reteach | done
+  const [phase, setPhase] = React.useState('run'); // run | snag | teach | reteach | done
+  const [snagTried, setSnagTried] = React.useState(false);
   const [fresh, setFresh] = React.useState(false); // in the post-reteach fresh pair
 
   const move = moves[at];
-  React.useEffect(() => { if (move?.teach && !move.questions) setPhase('teach'); else setPhase('run'); }, [at]);
+  // A move that teaches opens with its Snag (PLAY_SYSTEM §1) before the teach panel.
+  React.useEffect(() => {
+    if (move?.snag) { setPhase('snag'); setSnagTried(false); }
+    else if (move?.teach && !move.questions) setPhase('teach');
+    else setPhase('run');
+  }, [at]);
 
   const questions = fresh && move?.fresh ? move.fresh : (move?.questions || []);
   const q = questions[qi];
@@ -264,6 +270,29 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
   if (phase === 'done') return frame(<LessonDone earned={earned} rewardCents={rewardCents} moves={moves}
     onAgain={() => { setAt(0); setQi(0); setEarned(0); setStreak(0); setTokensLeft(tokensPerRun); resetUi(); setPhase('run'); }}
     onShop={onShop} phone={phone} />);
+
+  if (phase === 'snag') {
+    const sn = move.snag;
+    return frame(<div>
+      <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32, marginBottom: 18 }}>
+        <Kicker style={{ marginBottom: 10 }}>The snag</Kicker>
+        <p style={{ fontSize: phone ? 18 : 22, lineHeight: 1.45, margin: 0 }}>{sn.scene}</p>
+      </div>
+      <Question
+        snag
+        question={{ text: sn.q, answers: sn.answers || [String(sn.ans)],
+          correct: (sn.answers || [String(sn.ans)]).indexOf(String(sn.ans)) }}
+        context="lesson" tokensLeft={tokensLeft} feedback={null}
+        onAnswer={() => { onEvent('snag_attempt', { move: move.id }); setSnagTried(true); }}
+        onHelp={() => {}} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginTop: 20 }}>
+        <span style={{ fontSize: 16, color: color.muted, flex: 1, minWidth: 220 }}>
+          {snagTried ? 'You don’t have the move for this one yet. Here it is.' : 'Have a go. It costs nothing either way.'}</span>
+        <Button variant="ink" onClick={() => { onEvent('snag_done', { move: move.id }); setPhase('teach'); }}>
+          {snagTried ? 'Show me the move →' : 'Skip to the move →'}</Button>
+      </div>
+    </div>);
+  }
 
   if (phase === 'teach') return frame(<TeachSteps teach={move.teach} phone={phone} onEvent={onEvent}
     onDone={() => { onEvent('move_complete', { move: move.id }); setProgress(p => ({ ...p, [move.id]: { done: 1 } })); finishMove(); }} />);

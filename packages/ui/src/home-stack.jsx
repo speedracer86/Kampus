@@ -97,7 +97,7 @@ export function TodaysLesson({ lesson, onStart, phone }) {
   if (!lesson) return null;
   return <div style={{ ...hBase, padding: phone ? '22px 20px' : '30px 32px', borderBottom: `1px solid ${color.rule}` }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
-      <Kicker>Today’s lesson</Kicker>
+      <Kicker>{lesson.isAssessment ? (lesson.kind === 'test' ? 'Today’s test' : 'Today’s inspection') : 'Today’s lesson'}</Kicker>
       <Chip dot={lesson.world?.color} style={{ background: color.fill }}>{lesson.world?.name}</Chip>
       <span style={{ fontSize: 13, color: color.muted, fontWeight: 600 }}>~{lesson.mins || 20} min · no timer</span>
     </div>
@@ -105,13 +105,17 @@ export function TodaysLesson({ lesson, onStart, phone }) {
       <div style={{ flex: 1, minWidth: 180 }}>
         <h3 style={{ fontSize: phone ? 24 : 34, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.15, margin: '0 0 16px' }}>
           {lesson.title}</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
-          {MOVES.map((m, i) => <div key={m}>
-            <span style={{ display: 'block', height: 6, borderRadius: 3,
-              background: i <= (lesson.moveIndex ?? 0) ? color.ink : color.locked }} />
-            {!phone && <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: color.muted, marginTop: 6 }}>{m}</span>}
-          </div>)}
-        </div>
+        {/* An inspection or the grade test is not a five-move lesson — don't draw its spine. */}
+        {lesson.isAssessment
+          ? <div style={{ fontSize: 14, fontWeight: 600, color: color.muted }}>
+            {lesson.kind === 'test' ? 'The year’s test. Pass it and the district gets built.' : 'The stand stays shut this morning.'}</div>
+          : <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+            {MOVES.map((m, i) => <div key={m}>
+              <span style={{ display: 'block', height: 6, borderRadius: 3,
+                background: i <= (lesson.moveIndex ?? 0) ? color.ink : color.locked }} />
+              {!phone && <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: color.muted, marginTop: 6 }}>{m}</span>}
+            </div>)}
+          </div>}
       </div>
       <button onClick={onStart} style={{ ...hBase, flex: 'none', width: phone ? 64 : 96, height: phone ? 64 : 96,
         borderRadius: radius.full, background: color.ink, color: '#fff', border: 'none', cursor: 'pointer',
