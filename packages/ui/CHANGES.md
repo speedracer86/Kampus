@@ -288,3 +288,34 @@ Two defects caught by running it rather than reading it:
   clusters shared a label. Stretch clusters are now "… · the harder ones", with a test
   asserting every cluster label is distinct — two identical rows in a repair plan are
   indistinguishable from a bug.
+
+## Step 7 — Rewards (§0 9a / 9c)
+
+`src/rewards.jsx`, on the new `packages/engine/src/earnings.js`. Tickets are retired;
+the currency is real money in integer cents, always printed with two decimals.
+
+- **`Receipt`** is the left column and the one surface in the app set in **IBM Plex Mono**,
+  and the one place §0 allows dashed rules. It prints in §0's order: centered KAMPUS BANK
+  header with the receipt number, EARNED THIS WEEK as `day · desc · +$x`, Subtotal, the
+  "Weekly limit $5.00 · $x left" line, HELD FOR ASKS (or "Nothing held"), AVAILABLE with
+  the 34px total, SAVING FOR with a ten-cell `■□` bar and "$x to go", then
+  "Paid for effort. Never for scores." It ends in a torn-paper edge built from two
+  gradients on a 14px period. Below it, on the ground, the "How you earn" list.
+- **The sheet** is the wishlist: the two-tone headline, the store-link paste pill, then
+  From stores / At home / Waiting on a grown-up, split by `rule`.
+- `StoreRow` carries the progress bar (available ÷ price) and "$x to go" / "You have
+  enough"; `HomeRow` is the grown-up's own offers. Button states follow §0 exactly —
+  Ask for it (ink), Asked ✓ (`held`), Save for it, Saving ✓ (`savingTint`), and a
+  disabled "Need $x more".
+- **Asking holds the money**: available drops at once, a held line appears on the receipt,
+  and a `held`-tinted row with Cancel appears under Waiting.
+
+The engine module is where the rules actually live:
+
+- `RATES` pays for **effort only** — lesson 50c, unit quiz 100c, grade test 150c, five-day
+  streak 50c. There is no parameter anywhere that could carry a score, and a test asserts
+  that passing one changes nothing.
+- The **weekly cap** ($5.00 default; a grown-up may set $3/$5/$8) trims the last award to
+  whatever is left rather than overshooting, and never claws back an earlier row.
+- `ask` / `approve` / `cancelAsk` model the hold, and `receiptModel` returns the receipt
+  already ordered so the component formats but decides nothing.

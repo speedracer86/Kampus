@@ -3,13 +3,15 @@
    (shop, rewards, stand, grown-ups, onboarding, grade tests) arrive in Phase 3. */
 import { useState, useMemo } from 'react';
 import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
-  buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy } from '@kampus/engine';
+  buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
+  award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { NavBar } from '@kampus/ui/app';
 import { HomeStack } from '@kampus/ui/home-stack';
 import { QuizRound } from '@kampus/ui/quiz';
 import { DailyLesson } from '@kampus/ui/lesson';
 import { AssessmentIntro, AssessmentRunner, UnitQuizResults, GradeTestResults } from '@kampus/ui/assessment';
+import { RewardsScreen } from '@kampus/ui/rewards';
 import { buildLesson } from './lessonData.js';
 import { load, save, append, DEFAULT_STUDENT_ID } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
@@ -25,6 +27,18 @@ function buildRound(state, topic) {
 }
 
 /** The §0 Home contract: grade placement, today's lesson, free practice, bank, gate. */
+const dayName = () => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
+
+/* Seed wishlists until a grown-up sets their own in Grown-ups (Step 8). */
+const DEMO_STORE = [
+  { id: 's1', name: 'Lego Speed Champions', store: 'Amazon', cents: 2400 },
+  { id: 's2', name: 'Sticker book', store: 'Target', cents: 600 },
+];
+const DEMO_HOME_REWARDS = [
+  { id: 'h1', name: 'Pick what we watch tonight', sub: 'One film, your call', cents: 200, icon: '📺' },
+  { id: 'h2', name: '30 min extra screen time', sub: 'Any day this week', cents: 150, icon: '⏱' },
+];
+
 function homeStackData(state) {
   const grade = state.grade;
   const today = new Date().toISOString().slice(0, 10);
@@ -123,7 +137,7 @@ export function App() {
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
     const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    return ['lesson', 'quiz', 'test'].includes(h) ? h : 'home';
+    return ['lesson', 'quiz', 'test', 'rewards'].includes(h) ? h : 'home';
   });
   const [paper, setPaper] = useState(null);     // graded quiz / test result
   const [papers, setPapers] = useState(null);   // the assembled question sheet
@@ -161,7 +175,7 @@ export function App() {
     if (type === 'answer' && payload.right) update(s => { s.kredits += payload.gain; s.week.earned += payload.gain; return s; });
     if (type === 'lesson_complete') update(s => {
       s.lessonDoneDay = new Date().toISOString().slice(0, 10);
-      s.earnings = (s.earnings || []).concat({ id: `l${Date.now()}`, label: "Finished today's lesson", cents: payload.rewardCents, status: 'earned' });
+      s.ledger = award(s.ledger || [], { reason: 'lesson', day: dayName(), week: weekKey(), cap: s.capCents || DEFAULT_CAP_CENTS }).rows;
       return s;
     });
   };
@@ -198,6 +212,29 @@ export function App() {
     if (type === 'again') setRoundNonce(n => n + 1);
   };
 
+  if (screen === 'rewards') {
+    const ledger = state.ledger || [];
+    return <RewardsScreen
+      data={{
+        receipt: receiptModel(ledger, { name: state.name || null, week: weekKey(), cap: state.capCents || DEFAULT_CAP_CENTS, goal: state.goal, number: ledger.length + 1 }),
+        howYouEarn: howYouEarn(),
+        available: availableCents(ledger),
+        goal: state.goal?.id,
+        store: state.wishlist || DEMO_STORE,
+        home: state.homeRewards || DEMO_HOME_REWARDS,
+        waiting: ledger.filter(r => r.status === 'held').map(r => ({ id: r.id, label: r.label, cents: Math.abs(r.cents) })),
+      }}
+      onEvent={(type, payload) => {
+        if (type === 'ask') update(s => { s.ledger = ask(s.ledger || [], { name: payload.name, cents: payload.cents, day: dayName() }).rows; return s; });
+        if (type === 'cancel') update(s => { s.ledger = cancelAsk(s.ledger || [], payload.id); return s; });
+        if (type === 'save') update(s => { s.goal = { id: payload.id, name: payload.name, cents: payload.cents }; return s; });
+        if (type === 'paste' && payload.link) update(s => {
+          s.wishlist = (s.wishlist || DEMO_STORE).concat({ id: `w${Date.now()}`, name: payload.link.replace(/^https?:\/\//, '').slice(0, 40), store: 'Link', cents: 1000 });
+          return s;
+        });
+      }} />;
+  }
+
   if (screen === 'quiz' || screen === 'test') {
     const isQuiz = screen === 'quiz';
     if (paper) {
@@ -223,8 +260,7 @@ export function App() {
         const res = isQuiz ? gradeUnitQuiz(papers, answers) : gradeGradeTest({ grade: state.grade, questions: papers, answers });
         append(studentId, { type: isQuiz ? 'quiz_result' : 'test_result', payload: res });
         update(s => {
-          s.earnings = (s.earnings || []).concat({ id: `a${Date.now()}`,
-            label: isQuiz ? 'Took a unit quiz' : 'Took the grade test', cents: res.rewardCents, status: 'earned' });
+          s.ledger = award(s.ledger || [], { reason: isQuiz ? 'quiz' : 'test', day: dayName(), week: weekKey(), cap: s.capCents || DEFAULT_CAP_CENTS }).rows;
           if (!isQuiz && res.passed) { s.passed[state.grade] = true; s.tests = { ...(s.tests || {}), [state.grade]: `${res.score}/${res.asked}` }; }
           return s;
         });

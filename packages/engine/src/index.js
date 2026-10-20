@@ -10,5 +10,6 @@ export { valOf, frH, sfrH, numLineSVG, fracBar, fmt } from './util.js';
 export { toQuizQuestion } from './quiz-adapter.js';
 export * from './review.js';
 export * from './assessment.js';
+export * from './earnings.js';
 export { payout, FIRST_TRY_BONUS, BLITZ_MULT, TEACH_TOKENS_PER_RUN, BLITZ_FAST_MS } from './payout.js';
 export * from './business.js';
