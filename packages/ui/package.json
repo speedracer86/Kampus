@@ -17,7 +17,8 @@
     "./pin-gate": "./src/pin-gate.jsx",
     "./assessment": "./src/assessment.jsx",
     "./rewards": "./src/rewards.jsx",
-    "./parents": "./src/parents.jsx"
+    "./parents": "./src/parents.jsx",
+    "./business": "./src/business.jsx"
   },
   "peerDependencies": {
     "react": ">=18"

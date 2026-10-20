@@ -15,6 +15,8 @@ import { DailyLesson } from '@kampus/ui/lesson';
 import { AssessmentIntro, AssessmentRunner, UnitQuizResults, GradeTestResults } from '@kampus/ui/assessment';
 import { RewardsScreen } from '@kampus/ui/rewards';
 import { GrownUps } from '@kampus/ui/parents';
+import { BusinessScreen } from '@kampus/ui/business';
+import { businessData, ensureBiz, gatesFor, today as bizToday } from './businessData.js';
 import { PinGate } from '@kampus/ui/pin-gate';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
 import { unitById } from '@kampus/curriculum';
@@ -155,7 +157,7 @@ export function App() {
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
     const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    return ['lesson', 'quiz', 'test', 'rewards', 'parents'].includes(h) ? h : 'home';
+    return ['lesson', 'quiz', 'test', 'rewards', 'parents', 'business'].includes(h) ? h : 'home';
   });
   const [paper, setPaper] = useState(null);     // graded quiz / test result
   const [papers, setPapers] = useState(null);   // the assembled question sheet
@@ -241,6 +243,23 @@ export function App() {
     }
     if (type === 'again') setRoundNonce(n => n + 1);
   };
+
+  if (screen === 'business') {
+    return <BusinessScreen data={businessData(state)} blobDir={BLOB_DIR}
+      onEvent={(type, payload) => {
+        if (type === 'price') update(s => { s.biz = { ...ensureBiz(s), price: payload }; return s; });
+        if (type === 'stock') update(s => {
+          s.order = { ...(s.order || {}), [payload.key]: Math.max(0, (s.order?.[payload.key] || 0) + payload.delta) };
+          return s;
+        });
+        if (type === 'promo') update(s => { s.promo = payload.id === 'none' ? null : payload.id; return s; });
+        if (type === 'karla_dismiss') update(s => {
+          if (payload?.key) s.karlaSeen = { ...(s.karlaSeen || {}), [payload.key]: true };
+          return s;
+        });
+        if (type === 'open_day') setScreen('business');
+      }} />;
+  }
 
   if (screen === 'parents') {
     if (!pinOk) return <PinGate pin={state.pin || '1234'} blobDir={BLOB_DIR}
@@ -394,13 +413,13 @@ export function App() {
     <NavBar
       items={[
         { id: 'home', label: 'Play', dot: color.green },
-        { id: 'stand', label: 'My Stand', dot: color.lime },
+        { id: 'business', label: 'Business', dot: color.lime },
         { id: 'shop', label: 'Shop', dot: '#8F97DE' },
         { id: 'rewards', label: 'Rewards', dot: color.gold },
         { id: 'parent', label: 'Grown-ups', dot: color.textFaint },
       ]}
       active="home"
-      onNav={() => {}}
+      onNav={(id) => setScreen(id === 'home' ? 'home' : id)}
       weekLabel={`+$${state.week.earned} this week`}
       kredits={state.kredits}
       avatar={state.name || 'K'}
@@ -414,7 +433,7 @@ export function App() {
           setScreen(day?.type === 'quiz' ? 'quiz' : day?.type === 'test' ? 'test' : 'lesson');
         }
         if (type === 'practice') startRound(payload.id, { blitz: !!payload.blitz });
-        if (type === 'stand') setScreen('home');
+        if (type === 'stand') setScreen('business');
       }}
     />
   </div>;
