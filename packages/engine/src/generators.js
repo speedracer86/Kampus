@@ -138,10 +138,12 @@ GEN.frac[3].push(
 
 /* ---------- RATIOS / PERCENTS / PROPORTIONS ---------- */
 GEN.ratio[1].push(
-  function unitRate(){
-    const n = pick([2,3,4,5,6]), p = ri(2,9);
-    const item = pick(['pets','power-ups','skins','pizza slices','speed coils']);
-    return Q('Unit rate', `${n} ${item} cost $${n*p}.<br>How much is 1?`,
+  function unitRate(ctx){
+    // world: her own order and her own price (PLAY_SYSTEM §2)
+    const n = pick([2,3,4,5,6]);
+    const p = ctx?.biz?.pricePerCup ? Math.max(1, Math.round(ctx.biz.pricePerCup)) : ri(2,9);
+    const item = ctx?.biz?.unitPlural || 'cups';
+    return Q('Unit rate', `Someone bought ${n} ${item} for $${n*p}.<br>What's one ${ctx?.biz?.unit || 'cup'}?`,
       '$'+p, ['$'+(p+1), '$'+(p-1||p+2), '$'+(p+n)], 'Unit rates', [
         `"Unit rate" = the price of ONE. Share the total equally.`,
         `$${n*p} ÷ ${n} = ${p}.`,
@@ -181,22 +183,28 @@ GEN.ratio[2].push(
   function ratioShare(){
     let a,b; do{ a=ri(1,5); b=ri(2,6); }while(a>=b);
     const u = ri(2,8), total = (a+b)*u;
-    return Q('Ratio share', `You and a friend split ${total} gems in the ratio ${a}:${b}.<br>How many is the <b>smaller</b> share?`,
-      a*u, [b*u, Math.round(total/2), u], 'Sharing in a ratio', [
+    const ans = a*u;
+    // The distractors must never coincide with the answer: a=1 makes "one part" and
+    // "the smaller share" the same number, and an even split can land on it too.
+    const wrongs = [...new Set([b*u, Math.round(total/2), u, ans + u])].filter(w => w !== ans).slice(0, 3);
+    return Q('Ratio share', `Split ${total} in the ratio ${a}:${b}.<br>How many is the <b>smaller</b> share?`,
+      ans, wrongs, 'Sharing in a ratio', [
         `Ratio ${a}:${b} means ${a} + ${b} = ${a+b} equal parts.`,
         `One part: ${total} ÷ ${a+b} = ${u}.`,
         `The smaller share gets ${a} parts: ${a} × ${u} = <b>${a*u}</b>.`]);
   }
 );
 GEN.ratio[3].push(
-  function pctChange(){
-    const pct = pick([10,20,25,50]), A = pick([20,40,60,80,120]);
+  function pctChange(ctx){
+    // world: yesterday's takings against today's (PLAY_SYSTEM §2)
+    const pct = pick([10,20,25,50]);
+    const A = ctx?.biz?.yesterdayRevenue || pick([20,40,60,80,120]);
     const up = Math.random()<0.6;
     const B = up ? A*(100+pct)/100 : A*(100-pct)/100;
     const ans = pct+'%';
     const diff = Math.abs(B-A);
     const wrongAlt = Math.round(diff/B*100);
-    return Q('Percent change', `A trade went from ${A} to ${fmt(B)} coins.<br>What's the percent ${up?'increase':'decrease'}?`,
+    return Q('Percent change', `Your takings went from $${fmt(A)} to $${fmt(B)}.<br>What's the percent ${up?'increase':'decrease'}?`,
       ans, [wrongAlt+'%', (pct+10)+'%', diff+'%'].filter(x=>x!==ans), 'Percent change', [
         `Find the change: ${fmt(Math.max(A,B))} − ${fmt(Math.min(A,B))} = ${fmt(diff)}.`,
         `Divide by the ORIGINAL number (${A}, where it started): ${fmt(diff)} ÷ ${A} = ${fmt(diff/A)}.`,
@@ -214,7 +222,7 @@ GEN.ratio[3].push(
   function scaleRecipe(){
     const c = ri(2,6), target = pick([6,8,10]);
     const ans = c*target/4;
-    return Q('Scale it up', `A potion for 4 players needs ${c} magic berries.<br>How many for ${target} players?`,
+    return Q('Scale it up', `Your recipe makes 4 and needs ${c} lemons.<br>How many for ${target}?`,
       fmt(ans), [fmt(c + (target-4)), fmt(c*2)===fmt(ans)?fmt(c*3):fmt(c*2), fmt(ans+1)].filter(x=>x!==fmt(ans)), 'Scaling recipes', [
         `Find the amount for ONE player: ${c} ÷ 4 = ${fmt(c/4)}.`,
         `Then multiply by ${target} players: ${fmt(c/4)} × ${target} = <b>${fmt(ans)}</b>.`]);

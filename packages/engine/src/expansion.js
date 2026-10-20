@@ -15,21 +15,26 @@ const NAMES = ['Maya', 'Leo', 'Zoe', 'Kai', 'Ava', 'Theo', 'Mia', 'Eli'];
 export function areaModel() {
   const r = ri(3, 9), c = ri(3, 9);
   const wrongs = [r + c, r * (c + 1), r * c + r].filter(x => x !== r * c);
-  return Q('Rows × columns', `A brownie tray has ${r} rows of ${c}. How many brownies?`,
+  return Q('Rows × columns', `${r} rows of ${c}. How many in all?`,
     r * c, wrongs, 'Area as multiplication', [
       `Rows of equal groups — that's multiplication, not adding.`,
       `${r} rows × ${c} in each row = ${r} × ${c}.`,
       `${r} × ${c} = <b>${r * c}</b> brownies. A rectangle's area works the same way.`]);
 }
 
-export function twoStepStory() {
+export function twoStepStory(ctx) {
   let start, n, price, left;
   do {
     start = pick([15, 20, 25, 30, 40]); n = ri(2, 4); price = ri(2, 6);
     left = start - n * price;
   } while (left <= 0 || left === start - price || left === n * price);
-  return Q('Two steps', `You have $${start} and buy ${n} snacks at $${price} each. How much is left?`,
-    left, [start - price, n * price, left + price], 'Two-step word problems', [
+  // world: her own bank, after a supply run (PLAY_SYSTEM §2).
+  // Distractors are the two classic wrong moves (forgot to multiply, answered the
+  // spend instead of the change) plus a near miss, de-duplicated so three always survive.
+  const wrongs = [...new Set([start - price, n * price, left + price, left + n])]
+    .filter(w => w !== left).slice(0, 3);
+  return Q('Two steps', `Your bank has $${start}. You buy ${n} supplies at $${price} each. How much is left?`,
+    left, wrongs, 'Two-step word problems', [
       `Two steps: first find the total spent, then subtract it from what you had.`,
       `Spent: ${n} × $${price} = $${n * price}.`,
       `Left: $${start} − $${n * price} = <b>$${left}</b>.`]);
@@ -73,7 +78,7 @@ export function multCompare() {
   const k = ri(2, 6), base = ri(12, 40), who = pick(NAMES);
   const ans = base * k;
   const wrongs = [base + k, base * (k + 1), base * (k - 1)].filter(x => x !== ans && x > 0);
-  return Q('Times as many', `Leo has ${base} cards. ${who} has ${k} times as many. How many does ${who} have?`,
+  return Q('Times as many', `${k} times as many as ${base} is?`,
     ans, wrongs, 'Multiplicative comparison', [
       `"${k} times as many" means multiply — not add ${k}.`,
       `${base} × ${k} = <b>${ans}</b>.`]);
@@ -101,7 +106,7 @@ export function decDiv() {
   const q = ri(1, 4) + pick([0.25, 0.5, 0.75]);
   const total = Math.round(n * q * 100) / 100;
   const wrongs = [q + 0.25, q - 0.25, q * 10].map(money).filter(w => w !== money(q));
-  return Q('Split the bill', `${n} friends split a ${money(total)} pizza evenly. Each pays?`,
+  return Q('Split it evenly', `${money(total)} split ${n} ways. Each share?`,
     money(q), wrongs, 'Dividing decimals', [
       `Splitting evenly is division: ${money(total)} ÷ ${n}.`,
       `Think in cents if it helps: ${Math.round(total * 100)} ÷ ${n} = ${Math.round(q * 100)} cents.`,
@@ -113,7 +118,7 @@ export function unitFracDiv() {
     const b = pick([2, 3, 4]), n = pick([2, 3, 4]);
     const ans = sfrH(1, b * n);
     const wrongs = [...new Set([frH(1, b + n), frH(n, b), frH(1, b)])].filter(w => w !== ans);
-    return Q('Share a piece', `${frH(1, b)} of a pan of brownies, shared by ${n} people. How much each?`,
+    return Q('Share a piece', `${frH(1, b)} shared ${n} ways. How much each?`,
       ans, wrongs, 'Dividing unit fractions', [
         `Cutting ${frH(1, b)} into ${n} equal shares makes the pieces ${n} times smaller.`,
         `${frH(1, b)} ÷ ${n} = ${frH(1, b)} × ${frH(1, n)}.`,
@@ -132,7 +137,7 @@ export function volumeBox() {
   const l = ri(2, 6), w = ri(2, 5), h = ri(2, 4);
   const ans = l * w * h;
   const wrongs = [l * w, l + w + h, l * w * (h + 1)].filter(x => x !== ans);
-  return Q('Fill the box', `A box is ${l} × ${w} × ${h} inches. How many 1-inch cubes fit inside?`,
+  return Q('Fill the box', `${l} × ${w} × ${h}. How many unit cubes fit?`,
     ans, wrongs, 'Volume', [
       `Build it in layers: how many cubes cover the bottom, times how many layers.`,
       `Bottom layer: ${l} × ${w} = ${l * w} cubes.`,
@@ -141,8 +146,9 @@ export function volumeBox() {
 
 /* ---------- grade 6 ---------- */
 
-export function meanMedian() {
-  const m = ri(8, 20);
+export function meanMedian(ctx) {
+  // world: her own week of sales when the stand has a history
+  const m = ctx?.biz?.meanCups || ri(8, 20);
   const deltas = shuffle([-3, -1, 0, 1, 3]);
   const days = deltas.map(d => m + d);
   const sorted = [...days].sort((a, b) => a - b);
@@ -163,8 +169,9 @@ export function meanMedian() {
       `The middle (3rd of 5) is <b>${median}</b>.`]);
 }
 
-export function depVar() {
-  const p = ri(2, 5), c = ri(4, 9);
+export function depVar(ctx) {
+  const p = ctx?.biz?.pricePerCup ? Math.max(2, Math.round(ctx.biz.pricePerCup)) : ri(2, 5);
+  const c = ri(4, 9);
   const ans = p * c;
   const wrongs = [p + c, p * (c + 1), c].filter(x => x !== ans);
   return Q('Cups in, money out', `At your stand, money made is m = ${p}c for c cups sold. You sell ${c} cups — what's m?`,
@@ -176,7 +183,7 @@ export function depVar() {
 
 /* ---------- grade 7 ---------- */
 
-export function tipCalc() {
+export function tipCalc(ctx) {
   const bill = pick([20, 25, 30, 40, 50, 60, 80]);
   const pct = pick([10, 15, 20]);
   const tip = bill * pct / 100;
@@ -192,11 +199,11 @@ export function tipCalc() {
   ];
   if (askTotal) steps.push(`Total = bill + tip: ${money(bill)} + ${money(tip)} = <b>${money(bill + tip)}</b>.`);
   return Q(askTotal ? 'Bill plus tip' : 'Figure the tip',
-    `Dinner is ${money(bill)}. ${askTotal ? `With a ${pct}% tip, what's the total?` : `What's a ${pct}% tip?`}`,
+    `A big order came to ${money(bill)}. ${askTotal ? `They tipped ${pct}% — what's the total?` : `What's a ${pct}% tip on it?`}`,
     money(ans), wrongs, 'Tips and totals', steps);
 }
 
-export function discountTax() {
+export function discountTax(ctx) {
   const price = pick([40, 60, 80, 120, 200]);
   const off = pick([10, 20, 25, 50]);
   const discount = price * off / 100;
@@ -211,7 +218,7 @@ export function discountTax() {
       `${money(price)} − ${money(discount)} = <b>${money(sale)}</b>.`]);
 }
 
-export function simpleInterest() {
+export function simpleInterest(ctx) {
   const p = pick([100, 200, 300, 400, 500]);
   const r = pick([2, 5, 10]);
   const y = ri(1, 3);
@@ -224,7 +231,7 @@ export function simpleInterest() {
       y > 1 ? `${y} years: ${money(p * r / 100)} × ${y} = <b>${money(ans)}</b>.` : `After 1 year: <b>${money(ans)}</b>.`]);
 }
 
-export function probSimple() {
+export function probSimple(ctx) {
   if (Math.random() < 0.5) {
     const p = pick([10, 20, 25, 30, 50]);
     const n = p === 25 ? 20 : pick([10, 20]);   // keep the expected count whole
@@ -256,17 +263,17 @@ export function funcEval() {
   const m = ri(8, 15), b = pick([10, 20, 25, 30]), h = ri(2, 6);
   const ans = m * h + b;
   const wrongs = [m * h, (m + b) * h, ans + 10].filter(x => x !== ans);
-  return Q('Function machine', `Babysitting pays f(h) = ${m}h + ${b} dollars for h hours. What's f(${h})?`,
+  return Q('Function machine', `f(h) = ${m}h + ${b}. What's f(${h})?`,
     ans, wrongs, 'Evaluating functions', [
       `f(${h}) means: feed ${h} into the function wherever h appears.`,
       `${m} × ${h} + ${b} = ${m * h} + ${b}.`,
       `f(${h}) = <b>${ans}</b> dollars.`]);
 }
 
-export function funcRate() {
+export function funcRate(ctx) {
   const b = pick([20, 30, 40, 50]), m = pick([5, 10, 15]);
   const ans = `s = ${m}w + ${b}`;
-  return Q('Which equation?', `Your savings start at $${b} and grow $${m} every week. Which equation gives savings s after w weeks?`,
+  return Q('Which equation?', `Your bank starts at $${b} and grows $${m} every week. Which equation gives s after w weeks?`,
     ans, [`s = ${b}w + ${m}`, `s = ${m + b}w`, `s = ${m}w − ${b}`], 'Modeling with functions', [
       `The amount per week multiplies w; the starting amount stands alone.`,
       `$${m} each week → ${m}w. Started with $${b} → + ${b}.`,
@@ -277,7 +284,7 @@ export function sysSolve() {
   const x = ri(3, 6), y = ri(1, 4);
   const A = 2 * x + y, B = x + y;
   const wrongs = [y, B, x + 1].filter(v => v !== x);
-  return Q('Menu mystery', `2 burgers + 1 fries cost $${A}. 1 burger + 1 fries cost $${B}. How much is one burger?`,
+  return Q('Two unknowns', `2a + b = ${A} and a + b = ${B}. What is a?`,
     x, [...new Set(wrongs)], 'Systems of equations', [
       `Compare the two orders — the only difference is one burger.`,
       `$${A} − $${B} = $${x}. That difference IS the burger.`,
@@ -288,7 +295,7 @@ export function pythag() {
   const [a, b, c] = pick([[3, 4, 5], [6, 8, 10], [5, 12, 13], [9, 12, 15], [8, 15, 17]]);
   const ctx = pick([
     `A ramp runs ${a} ft along the ground and rises ${b} ft. How long is the ramp itself?`,
-    `You walk ${a} blocks east and ${b} blocks north. How far is the straight-line shortcut back?`,
+    `Legs of ${a} and ${b}. How long is the hypotenuse?`,
   ]);
   const wrongs = [a + b, c + 1, c - 1].filter(x => x !== c);
   return Q('The shortcut rule', ctx, c, wrongs, 'Pythagorean theorem', [

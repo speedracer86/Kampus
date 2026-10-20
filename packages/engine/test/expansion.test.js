@@ -31,10 +31,11 @@ describe.each(GENERATORS)('%s', name => {
 });
 
 describe('spot-checked math', () => {
-  it('sysSolve: burger price is the difference of the two orders', () => {
+  it('sysSolve: a is the difference of the two equations', () => {
     for (let i = 0; i < 50; i++) {
       const p = x.sysSolve();
-      const [A, B] = [...p.q.matchAll(/\$(\d+)/g)].map(m => parseInt(m[1], 10));
+      // "2a + b = A and a + b = B"  =>  a = A - B
+      const [A, B] = [...p.q.matchAll(/=\s*(\d+)/g)].map(m => parseInt(m[1], 10));
       expect(Number(p.ans)).toBe(A - B);
     }
   });
@@ -42,7 +43,7 @@ describe('spot-checked math', () => {
   it('pythag answers are true hypotenuses', () => {
     for (let i = 0; i < 50; i++) {
       const p = x.pythag();
-      const [a, b] = [...p.q.matchAll(/(\d+) (?:ft|blocks)/g)].map(m => parseInt(m[1], 10));
+      const [a, b] = [...p.q.matchAll(/(\d+)/g)].map(m => parseInt(m[1], 10));
       expect(a * a + b * b).toBe(Number(p.ans) ** 2);
     }
   });

@@ -4,6 +4,7 @@
    question in five is quietly served a tier easier so streaks stay reachable. */
 import { pick, shuffle, valOf, fmt, ri } from './util.js';
 import { CURRICULUM } from './curriculum.js';
+import { sourceFor } from './sources.js';
 
 const RECENT_WINDOW = 6;
 const UP_THRESHOLD = 5;
@@ -27,11 +28,14 @@ export function makeProblem(grade, topic, tier, opts = {}) {
 
   for (let tries = 0; tries < 10; tries++) {
     try {
-      const p = pick(gens)();
+      const gen = pick(gens);
+      // World generators read ctx.biz; the rest ignore the argument entirely.
+      const p = gen(opts.ctx);
+      p.source = sourceFor(gen.name);
       const av = valOf(p.ans);
       let wrongs = [];
       for (const w of new Set(p.wrongs)) {
-        if (w === p.ans) continue;
+        if (String(w) === String(p.ans)) continue;   // mixed types: "7" must not survive beside 7
         const wv = valOf(w);
         // A distractor must never EQUAL the answer in value (e.g. 4/6 vs 2/3)
         if (av !== null && wv !== null && Math.abs(av - wv) < 1e-9) continue;

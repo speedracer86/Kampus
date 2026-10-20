@@ -50,7 +50,16 @@ const vizRow = (...parts) => `<span class="vizrow">${parts.join('')}</span>`;
 
 
 
-function Q(prompt, q, ans, wrongs, skill, steps){ return {prompt, q, ans:String(ans), wrongs:wrongs.map(String), skill, steps:steps||[]}; }
+/* Every generator returns through here. Distractors are stringified and then filtered
+   against the answer: several generators can coincidentally produce a "wrong" equal to
+   the right answer (eqFrac when a+k === a*k, ratioShare when the ratio starts at 1),
+   which would put the same value on two buttons with one of them marked wrong. Fixing
+   it at the funnel makes that impossible for all generators at once. */
+function Q(prompt, q, ans, wrongs, skill, steps){
+  const answer = String(ans);
+  const distinct = [...new Set(wrongs.map(String))].filter(w => w !== answer);
+  return {prompt, q, ans: answer, wrongs: distinct, skill, steps: steps || []};
+}
 const dspN = n => n<0 ? '−'+Math.abs(n) : String(n);          // −8
 const dspP = n => n<0 ? '(−'+Math.abs(n)+')' : String(n);     // (−8)
 function valOf(s){   // numeric value of a displayed choice, or null
