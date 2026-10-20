@@ -12,8 +12,9 @@ export function Button({ variant = 'primary', size = 'md', disabled, style, chil
   const variants = {
     primary: { background: hover ? color.greenHover : color.green, color: '#fff', border: 'none', boxShadow: lifted ? shadow.btn : '0 1px 2px rgba(35,37,43,.08)' },
     ink: { background: hover ? color.inkHover : color.ink, color: '#fff', border: 'none', boxShadow: lifted ? shadow.btn : '0 1px 2px rgba(35,37,43,.08)' },
-    outline: { background: hover ? color.border : color.fillHover, color: color.ink, border: 'none' },
-    gold: { background: color.goldTint, color: color.goldDeep, border: `1px solid ${color.goldBorder}`, filter: hover ? 'brightness(.96)' : 'none' },
+    outline: { background: hover ? color.track : color.fill, color: color.ink, border: 'none' },
+    gold: { background: color.gold, color: color.ink, border: 'none', filter: hover ? 'brightness(.96)' : 'none' },
+    held: { background: color.held, color: color.goldDeep, border: 'none' },
     ghost: { background: 'none', color: hover ? color.ink : color.textMuted, border: 'none' },
     destructive: { background: color.surface, color: color.red, border: `1px solid ${hover ? color.red : color.border}` },
   };
@@ -22,15 +23,24 @@ export function Button({ variant = 'primary', size = 'md', disabled, style, chil
     style={{ ...base, padding: pad, fontSize: fs, fontWeight: variant === 'ghost' ? 600 : 700 + (size === 'lg' ? 100 : 0),
       borderRadius: radius.full, cursor: disabled ? 'not-allowed' : 'pointer', transition: motion.lift,
       transform: lifted && (variant === 'primary' || variant === 'ink') ? 'translateY(-1px)' : 'none',
-      ...(disabled ? { background: color.ground, color: color.textFaint, border: `1px solid ${color.border}` } : variants[variant]), ...style }}>
+      ...(disabled ? { background: color.locked, color: color.disabledText, border: 'none', boxShadow: 'none' } : variants[variant]), ...style }}>
     {children}</button>;
 }
 
-export function Card({ padding = 20, dashed, tint, style, children }) {
-  // Outline boxes per the ShareWillow reference: hairline border, no shadow
-  return <div style={{ ...base, background: tint || color.surface, borderRadius: radius.lg, padding,
-    border: dashed ? `1px dashed ${color.border}` : tint ? 'none' : `1px solid ${color.border}`,
-    ...style }}>{children}</div>;
+export function Card({ padding = 20, dashed, tint, sheet, style, children }) {
+  // §0: `sheet` is the one white surface per screen — radius 28, no shadow, no
+  // border. Everything else is a plain box; `dashed` is honoured as a solid
+  // ground fill because §0 bans dashed outlines outside the Rewards receipt.
+  if (sheet) return <div style={{ ...base, background: color.surface, borderRadius: radius.sheet,
+    padding, border: 'none', boxShadow: shadow.sheet, ...style }}>{children}</div>;
+  return <div style={{ ...base, background: tint || (dashed ? color.fill : color.surface), borderRadius: radius.lg, padding,
+    border: dashed || tint ? 'none' : `1px solid ${color.border}`, ...style }}>{children}</div>;
+}
+
+// §0: a white pill label sitting on the ground, above a display numeral.
+export function PillLabel({ style, children }) {
+  return <span style={{ ...base, display: 'inline-block', background: color.surface, borderRadius: radius.full,
+    padding: '5px 11px', fontSize: 12.5, fontWeight: 700, color: color.ink, ...style }}>{children}</span>;
 }
 
 export function Kicker({ color: c = color.textMuted, style, children }) {
@@ -39,11 +49,11 @@ export function Kicker({ color: c = color.textMuted, style, children }) {
 
 export function Chip({ dot, style, children }) {
   return <div style={{ ...base, display: 'inline-flex', alignItems: 'center', gap: 7, background: color.surface,
-    border: `1px solid ${color.border}`, borderRadius: radius.full, padding: '7px 14px', fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', ...style }}>
+    border: 'none', borderRadius: radius.full, padding: '7px 14px', fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', ...style }}>
     {dot && <span style={{ width: 7, height: 7, borderRadius: radius.full, background: dot, flex: 'none' }} />}{children}</div>;
 }
 
-export function ProgressBar({ value = 0, fill = color.gold, track = color.track, height = 8, segments, style }) {
+export function ProgressBar({ value = 0, fill = color.greenDeep, track = color.track, height = 8, segments, style }) {
   // segments: [{pct, color}] for stacked bars (e.g. earned vs spent)
   return <div style={{ ...base, display: 'flex', height, borderRadius: radius.md, overflow: 'hidden', background: track, ...style }}>
     {segments ? segments.map((s, i) => <div key={i} style={{ width: s.pct + '%', background: s.color, transition: motion.bar }} />)
@@ -52,7 +62,7 @@ export function ProgressBar({ value = 0, fill = color.gold, track = color.track,
 
 export function Toggle({ on, onChange }) {
   return <button onClick={() => onChange && onChange(!on)} aria-pressed={!!on}
-    style={{ ...base, background: on ? color.green : color.trackOff, border: 'none', borderRadius: radius.full,
+    style={{ ...base, background: on ? color.greenDeep : color.todo, border: 'none', borderRadius: radius.full,
       width: 44, height: 26, position: 'relative', cursor: 'pointer', flex: 'none' }}>
     <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: radius.full,
       background: '#fff', transition: motion.knob, boxShadow: '0 1px 2px rgba(0,0,0,.2)' }} /></button>;

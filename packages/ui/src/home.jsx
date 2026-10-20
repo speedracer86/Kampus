@@ -1,5 +1,5 @@
 // Composed Home screen + Parent PIN gate. Responsive: grids collapse below ~900px and ~640px.
-import { color, type, radius, shadow, font, worldTint, band } from './tokens.js';
+import { color, type, radius, shadow, font, numeral, worldTint, band } from './tokens.js';
 import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob } from './primitives.jsx';
 import { GradeCard, GradeChips, WorldTile, KreditsWeekCard, RecordsLedger } from './app.jsx';
 import { CampusMap } from './gamify.jsx';
@@ -30,8 +30,8 @@ export function HomeScreen({ data, grade = 6, gradeView = 'cards', blobDir = 'bl
   const d = data, bz = band(grade);
   // Hero sentence in the reference style: muted base weight, values in bold ink
   const hero = d.weekEarned > 0
-    ? <>You've earned <b style={{ fontFamily: font.display, fontWeight: 400, color: color.ink }}>{d.weekEarned} Kredits</b> this week.</>
-    : <>Nothing earned yet. <b style={{ fontFamily: font.display, fontWeight: 400, color: color.ink }}>Lock in.</b></>;
+    ? <>You've earned <b style={{ fontWeight: 600, color: color.ink }}>{d.weekEarned} Kredits</b> this week.</>
+    : <>Nothing earned yet. <b style={{ fontWeight: 600, color: color.ink }}>Lock in.</b></>;
   return <div ref={ref} style={{ ...hBase, background: color.surface, minHeight: '100%', padding: phone ? '20px 16px 40px' : '30px 32px 48px' }}>
     <div style={{ maxWidth: 1080, margin: '0 auto' }}>
     <h1 style={{ fontSize: phone ? 30 : bz.title, fontWeight: 600, color: color.textMuted, letterSpacing: '-.03em', lineHeight: 1.1, margin: '0 0 24px', textWrap: 'pretty' }}>{hero}</h1>
@@ -166,7 +166,7 @@ export function PracticeHeat({ days = {}, weeks = 10 }) {
   }
   const total = Object.values(days).reduce((s, v) => s + v, 0);
   return <div style={hBase}>
-    <div style={{ fontFamily: font.display, fontSize: 36, lineHeight: 1, marginBottom: 2 }}>{total}</div>
+    <div style={{ ...numeral(36), marginBottom: 2 }}>{total}</div>
     <div style={{ fontSize: 12, fontWeight: 600, color: color.textMuted, marginBottom: 12 }}>runs in the last {weeks} weeks</div>
     <div style={{ display: 'grid', gridTemplateColumns: `repeat(${weeks}, 1fr)`, gridTemplateRows: 'repeat(7, 1fr)', gridAutoFlow: 'column', gap: 4 }}>
       {cells.map(x => <span key={x.key} style={{ aspectRatio: '1', borderRadius: 4, background: x.bg }} />)}</div></div>;

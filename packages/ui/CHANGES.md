@@ -84,3 +84,43 @@ unused by the kid shell; candidate for the Grown-ups side in Phase 4.
 - **RecordsLedger** (app.jsx): Tasky "Your records" bands — big serif numeral left,
   label right, one tint per row. HomeScreen renders it from `data.records` in place
   of the separate tickets + week cards (which remain for data without records).
+
+## §0 pass — STYLE_GUIDE "0. Locked direction" (3b, 2026-10-19)
+
+The design deliverable's §0 is the binding visual spec and supersedes both the v2
+"Modern" pass above and the list in `docs/DESIGN_TO_CODE_HANDOFF.md`. Step 1 of the
+integration build applies it to the token layer only; the screens follow in later steps.
+
+- **Ground is `#F5F7F9`** (blue-grey, was `#FAF9F6` cream). `apps/web/index.html`
+  body background matches.
+- **Instrument Serif is retired.** Removed `font.display` and dropped the font from
+  the stylesheet link. Its six call sites (balances, grade numerals, record counts,
+  greeting emphasis) now use the §0 display-numeral style: Inter Tight **300**,
+  `letter-spacing:-.045em`, `font-variant-numeric: tabular-nums` — exposed as
+  `type.numeral` and the `numeral(size)` helper. Inter Tight 300 added to the link.
+- **IBM Plex Mono loaded** for exactly one future surface, the Rewards receipt
+  (`font.mono`). It is the only non-Inter-Tight face in the app.
+- **New §0 colors**: `rule #EEECE7` (in-sheet section rule), `locked #E6EAEE` with
+  `disabledText`, `todo #D9DEE4`, `fill`/`track`, `held #FBF6E4`, `loss #C2463B`
+  (money lost — deliberately distinct from the `red #E4766C` wrong-answer ring),
+  `savingTint`, `navRule`/`vRule`, and `muted rgba(35,37,43,.55)`. `goldDeep` moved
+  to `#8A6D1C`. Legacy keys are kept and labelled, because the v1 app still renders
+  from them.
+- **Grade purple ramp**: `gradePurple` (`#C7B8F0 #B3A0EA #9E87E2 #8A6FD9`) +
+  `graduation #6E4FCC`, with `purpleFor(i)`. Passed grades never use world colors.
+- **Shape**: `radius.sheet 28` / `gradeCard 20` / `dayCell 16`; `shadow.sheet` is
+  `none` — the white sheet has no shadow and no border. Added `shadow.stackTop`,
+  `stackTopGold` and `stackEdge` for the overlapping grade stack.
+- **`layout`** carries the §0 desktop frame (`340px | 1fr`, gap 48, pad 48).
+- **Money helpers**: `money()`, `signed()` (Kredits always render with `$`) and
+  `dollars(cents)` for the real-reward ledger, which is integer cents and always
+  shows two decimals.
+- **`primitives.jsx`**: disabled buttons are a solid `#E6EAEE` fill with 45% ink text
+  (no bordered ghost); `gold` is the real `#E8C94F`; added a `held` variant and
+  `PillLabel` (the white pill label that sits above a numeral). `Card` gained a
+  `sheet` variant (radius 28, no shadow, no border); **`dashed` now renders a solid
+  ground fill** because §0 bans dashed outlines outside the receipt. `Chip` is a
+  borderless pill. `Toggle` off-state is `todo`, on-state `greenDeep`.
+
+Not yet §0: Home still uses the pre-§0 layout (records ledger, world grid, right
+rail). That is Step 5 (Home Grade Stack), which replaces it wholesale.
