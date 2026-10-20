@@ -2,12 +2,14 @@
    Proves the engine ↔ component-library contract end to end. The remaining screens
    (shop, rewards, stand, grown-ups, onboarding, grade tests) arrive in Phase 3. */
 import { useState, useMemo } from 'react';
-import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout } from '@kampus/engine';
+import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
+  buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { NavBar } from '@kampus/ui/app';
 import { HomeStack } from '@kampus/ui/home-stack';
 import { QuizRound } from '@kampus/ui/quiz';
 import { DailyLesson } from '@kampus/ui/lesson';
+import { AssessmentIntro, AssessmentRunner, UnitQuizResults, GradeTestResults } from '@kampus/ui/assessment';
 import { buildLesson } from './lessonData.js';
 import { load, save, append, DEFAULT_STUDENT_ID } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
@@ -119,7 +121,12 @@ export function App() {
   const [state, setState] = useState(() => load(studentId));
   // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
   // repro). Home remains the default; the hash is read once, not watched.
-  const [screen, setScreen] = useState(() => (typeof location !== 'undefined' && location.hash === '#lesson' ? 'lesson' : 'home'));
+  const [screen, setScreen] = useState(() => {
+    const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
+    return ['lesson', 'quiz', 'test'].includes(h) ? h : 'home';
+  });
+  const [paper, setPaper] = useState(null);     // graded quiz / test result
+  const [papers, setPapers] = useState(null);   // the assembled question sheet
   const [topic, setTopic] = useState(state.lastTopic);
   const [blitzOn, setBlitzOn] = useState(false);
 
@@ -190,6 +197,40 @@ export function App() {
     }
     if (type === 'again') setRoundNonce(n => n + 1);
   };
+
+  if (screen === 'quiz' || screen === 'test') {
+    const isQuiz = screen === 'quiz';
+    if (paper) {
+      return isQuiz
+        ? <UnitQuizResults result={paper} onDone={() => { setPaper(null); setScreen('home'); }}
+            onPractice={() => { setPaper(null); startRound(topic); }} />
+        : <GradeTestResults grade={state.grade} result={paper} worlds={WORLDS}
+            onDone={() => { setPaper(null); setScreen('home'); }}
+            onRepair={() => { setPaper(null); setScreen('lesson'); }} />;
+    }
+    if (!papers) {
+      return <div style={{ minHeight: '100vh', background: color.ground, padding: 48 }}>
+        <AssessmentIntro kind={isQuiz ? 'quiz' : 'test'} grade={state.grade}
+          unit={state.tiers[tierKey(state.grade, topic)] || 1}
+          intro={isQuiz ? 'Ten questions on this unit, plus a few from earlier. No timer, and Read it to me stays on.' : testIntroCopy(state.grade)}
+          onStart={() => setPapers(isQuiz ? buildUnitQuiz({ grade: state.grade, topic, tier: state.tiers[tierKey(state.grade, topic)] || 1, review: state.review })
+            : buildGradeTest({ grade: state.grade }))} />
+      </div>;
+    }
+    return <AssessmentRunner kind={isQuiz ? 'quiz' : 'test'} questions={papers}
+      onExit={() => { setPapers(null); setScreen('home'); }}
+      onHandIn={(answers) => {
+        const res = isQuiz ? gradeUnitQuiz(papers, answers) : gradeGradeTest({ grade: state.grade, questions: papers, answers });
+        append(studentId, { type: isQuiz ? 'quiz_result' : 'test_result', payload: res });
+        update(s => {
+          s.earnings = (s.earnings || []).concat({ id: `a${Date.now()}`,
+            label: isQuiz ? 'Took a unit quiz' : 'Took the grade test', cents: res.rewardCents, status: 'earned' });
+          if (!isQuiz && res.passed) { s.passed[state.grade] = true; s.tests = { ...(s.tests || {}), [state.grade]: `${res.score}/${res.asked}` }; }
+          return s;
+        });
+        setPapers(null); setPaper(res);
+      }} />;
+  }
 
   if (screen === 'lesson') {
     return <div style={{ minHeight: '100vh', background: color.ground }}>

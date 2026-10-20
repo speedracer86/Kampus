@@ -253,3 +253,38 @@ onboarding today.
 Kept deliberately: `index.html` (the v1 app families use at mykampus.ai — a shipping
 product, not an old design) and `quiz.jsx` (free-practice runs still use `QuizRound`, and
 the mission screen is not one of the ten build steps).
+
+## Step 6 — unit quiz and grade test (§0 8a/8b, 10a/10b)
+
+`src/assessment.jsx`, on the new `packages/engine/src/assessment.js`.
+
+- `AssessmentIntro` — the shared intro of plain rule rows (Questions · Timer None ·
+  Help Read it only · Reward · Retake), with the test's copy reading "Covers everything
+  your state expects for grade N". Never "Common Core".
+- `AssessmentRunner` — the question map (5 columns on desktop, a 10-wide strip on phone;
+  answered cells fill ink, the current one takes a 2px ring), Back/Next, and the last
+  button that reads **"Go to blank"** while anything is unanswered and only then
+  "Hand it in". Nothing is marked right or wrong until the paper goes in: the runner
+  holds `Question`'s `feedback` at `null` and passes the new `selected` prop so a pick
+  shows without revealing anything.
+- `UnitQuizResults` — a verdict per skill with its dots and next-step line, the tally by
+  verdict, and "$1.00 For taking it".
+- `GradeTestResults` — the two check rows (16+ right · every cluster has one right), then
+  either the ink district card or a **repair plan**, plus the 5×2 cluster grid. There is
+  no fail state anywhere in the component.
+- `VerdictPill` is the only way a result is ever stated: Solid / Shaky / Not yet.
+
+`Question` gained a `selected` prop so a quiz can show the chosen answer without feedback.
+
+Two defects caught by running it rather than reading it:
+
+- **Assessment questions rendered with no answers.** The engine speaks
+  `choices`/`answerIndex` and `Question` speaks `answers`/`correct`; the lesson had its own
+  adapter, so the gap only showed up here. Rather than add a third adapter,
+  `withQuestionProps()` in the engine now emits both shapes, forces `mode: 'choice'` (a
+  quiz never shows a free-response widget), and derives `hint`/`show`/`teachSteps`. A test
+  pins the contract.
+- **The repair plan listed the same unit twice**, because a world's core and stretch
+  clusters shared a label. Stretch clusters are now "… · the harder ones", with a test
+  asserting every cluster label is distinct — two identical rows in a repair plan are
+  indistinguishable from a bug.

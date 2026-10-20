@@ -105,12 +105,14 @@ export function PayoutLine({ payout, align = 'left' }) {
 /**
  * question: {text, givens[{k,v}], find, family, answers[4], correct, hint, show, teachSteps[], scaffold?, scaffoldLevel?}
  * context: 'lesson' | 'mission' | 'quiz' | 'test'  — decides which help is offered
- * Controlled: feedback/picked/help/teachConfirm/tokensLeft/payout all come from the caller.
+ * Controlled: feedback/picked/help/teachConfirm/tokensLeft/payout/selected come from the caller.
+ * In quiz and test contexts the caller holds `feedback` at null so nothing is marked
+ * right or wrong until the paper is handed in.
  * onAnswer(index) commits an answer; on phone the kid picks first and commits with Check (§0 4f).
  */
 export function Question({
   question, context = 'mission', teachFree = false, tokensLeft = 3,
-  feedback = null, picked = null, payout = null, help = null, teachConfirm = false,
+  feedback = null, picked = null, payout = null, help = null, teachConfirm = false, selected = null,
   onAnswer = () => {}, onHelp = () => {}, onTeachConfirm = () => {}, onNext,
   onEvent = () => {}, style,
 }) {
@@ -135,7 +137,8 @@ export function Question({
   const answerStyle = (i) => {
     const right = feedback && i === question.correct;
     const wrong = feedback === 'wrong' && i === picked;
-    const chosen = !feedback && sel === i;
+    // `selected` lets a quiz show the kid's pick without revealing right or wrong (§0).
+    const chosen = !feedback && (sel === i || selected === i);
     return {
       ...qBase, display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', cursor: feedback ? 'default' : 'pointer',
       background: right ? color.greenTint : wrong ? color.redTint : color.surface,
