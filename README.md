@@ -42,4 +42,5 @@ The engine is pure functions, so the heavy testing is headless and fast: a 10,80
 - `docs/KAMPUS_TEACHING_SYSTEM.md` — the teaching system: daily lesson model, per-band pedagogy, six year-long scope & sequences, assessment + retention design
 - `docs/KAMPUS_BUSINESS_SIM.md` — the living business: inventory, customers, reputation with a floor, and the lesson-enforcement loop
 - `docs/KAMPUS_INVENTORY.md` — full inventory, per-grade numbers, standards alignment, learning-science audit, and the gap list to a real product
+- `docs/DESIGN_TO_CODE_HANDOFF.md` — how Claude Design deliverables get integrated (drop in design-incoming/, paste the kickoff prompt into Claude Code)
 - `docs/DESIGN_SPEC.md` / `docs/STYLE_GUIDE.md` — the 10-screen product spec and design tokens
