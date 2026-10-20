@@ -31,3 +31,13 @@ const next = recordAnswer(recent, tier, true);   // update adaptive state after 
 ## Known tradeoff
 
 QuizRound renders question text as plain text, so `plainText()` flattens stacked-fraction HTML to `a/b` and drops inline CRA visuals from teach steps. Tracked for Phase 3: a blessed rich-content question mode in the component library brings them back.
+
+## review.js — retention
+
+`firstReview(skill, today)` schedules a newly mastered skill; `review(entry, correct, today)`
+re-schedules it on the expanding ladder (1, 3, 7, 16, 35 days, then monthly), moving one
+rung up on a correct review and one rung **down** — never to zero — on a miss.
+`dueQueue(entries, today, {limit})` is what warm-ups and mixed sets draw from, weakest and
+most overdue first; `retention(entries, today)` is the parent report's held/due/lapse
+snapshot. Days are integers (`dayNumber(date)` at the edge) so nothing in here touches a
+clock or a timezone. Spec: `docs/KAMPUS_TEACHING_SYSTEM.md` Part 6 #1, Part 7 #3.
