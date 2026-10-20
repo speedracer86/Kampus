@@ -10,6 +10,8 @@
    Capabilities switch on by grade band — each system arrives in the grade
    whose math it runs on (ownership 3-4, inventory 5, memory 6, company 7-8). */
 
+import { typeById, defaultName } from './business-types.js';
+
 export const RECIPE = { lemons: 1, sugar: 1, cups: 1 };          // per drink
 export const BASE_PRICES = { lemons: 0.5, sugar: 0.3, cups: 0.2 };
 export const LEMON_SHELF_DAYS = 3;
@@ -19,6 +21,10 @@ export const SPOIL_CAP_PER_DAY = 8;                               // lemons max 
 export const DEMAND_BASE = { 1: 36, 2: 22, 3: 12, 4: 6 };
 
 export const PERSONAS = [
+  // Karla is the coach (BUSINESS_CLEANUP). A regular from day one and never
+  // sunny-only — a coach has to show up in the rain.
+  { id: 'karla', name: 'Karla', blob: 'Coach', coach: true,
+    bio: 'Ran a stand on this corner for years. Says less than she knows.' },
   { id: 'juan', name: 'Juan', blob: 'Selfie' },
   { id: 'delfina', name: 'Delfina', blob: 'Singing', sunnyOnly: true },
   { id: 'tom', name: 'Tom', blob: 'Golf' },
@@ -41,20 +47,117 @@ export function capabilities(band) {
 
 export const bandOf = g => (g <= 4 ? 'a' : g <= 6 ? 'b' : 'c');
 
-export function freshBiz(grade = 6) {
+/** Day-one stock, for every band. Band b/c used to start empty and meet an empty
+    shelf on day three; the starter kit is flagged so it still spoils normally. */
+export const STARTER_KIT = { lemons: 12, sugar: 12, cups: 12 };
+
+export function freshBiz(grade = 6, typeId = 'lemonade', name) {
+  const type = typeById(typeId);
   return {
     band: bandOf(grade),
-    price: 2,
-    lots: [],                       // lemons: [{qty, boughtDay}] — lots make spoilage computable
-    sugar: 0, cups: 0,
+    grade,
+    typeId: type.id,
+    name: name || defaultName(type, null),
+    price: type.basePrice ?? 2,
+    // The Opening Week: one system per OPEN day, not per calendar day.
+    opening: { openDays: 0, done: false },
+    purchases: 0,                   // lifetime stock buys — gates the bag-of-12 lesson
+    gates: { percentsSolid: false, unitQuizTaken: false, systemsSolid: false },
+    lots: [{ qty: STARTER_KIT.lemons, boughtDay: '', starter: true }],
+    sugar: STARTER_KIT.sugar, cups: STARTER_KIT.cups,
     marketPrices: { ...BASE_PRICES },
     reputation: REP_START,
     regulars: PERSONAS.slice(0, 3).map(p => ({ id: p.id, affinity: 50 })),
     lastOpenDay: '', lastTickDay: '',
+    yesterdayPrices: { ...BASE_PRICES },   // drift arrows compare against this
     vacation: false,
     ledger: [],                     // [{day, served, missed, revenue, cost, profit}]
     events: [],                     // narrative feed, newest first
   };
+}
+
+/* ---------- the Opening Week (BUSINESS_CLEANUP) ---------- */
+
+/** Open day on which each system appears. Day 1 is serving and the ledger only. */
+export const UNLOCK_DAY = { price: 1, buy: 2, spoilage: 3, drift: 3, reputation: 4 };
+/** Open days until the arc finishes, per band — it never reveals what the band forbids. */
+export const OPENING_LENGTH = { a: 2, b: 5, c: 5 };
+
+/**
+ * Which controls exist today. Absent, not greyed out: a control the kid has not been
+ * taught should not be on the screen at all. Three things gate a control — the band's
+ * capabilities, how many days she has actually opened, and (band c only) skill gates
+ * the app writes into biz.gates, since the engine never reads mastery itself.
+ */
+export function unlocks(biz) {
+  const caps = capabilities(biz.band);
+  const open = biz.opening?.openDays || 0;
+  const gates = biz.gates || {};
+  const by = (day) => open >= day;
+  return {
+    serve: true,                                            // day one is just serving
+    price: by(UNLOCK_DAY.price),
+    buy: caps.inventory && by(UNLOCK_DAY.buy),
+    spoilage: caps.spoilage && by(UNLOCK_DAY.spoilage),
+    drift: caps.inventory && by(UNLOCK_DAY.drift),
+    reputation: caps.reputation && by(UNLOCK_DAY.reputation),
+    // Post-week reveals are gated by skill, never by day.
+    promos: !!caps.promos && !!gates.percentsSolid,
+    ladder: biz.band === 'c' && !!gates.unitQuizTaken,
+    bagOf12: biz.band === 'c' && (biz.purchases || 0) >= 3,
+  };
+}
+
+/** Has the Opening Week finished for this band? */
+export const openingDone = (biz) =>
+  (biz.opening?.openDays || 0) >= (OPENING_LENGTH[biz.band] || 5);
+
+/** What Karla introduces on the day just opened, or null. */
+export function unlockedOnDay(biz, openDays) {
+  const caps = capabilities(biz.band);
+  const map = [
+    [UNLOCK_DAY.price, 'price', true],
+    [UNLOCK_DAY.buy, 'buy', caps.inventory],
+    [UNLOCK_DAY.spoilage, 'spoilage', caps.spoilage],
+    [UNLOCK_DAY.reputation, 'reputation', caps.reputation],
+  ];
+  const hit = map.find(([d, , allowed]) => allowed && d === openDays);
+  return hit ? hit[1] : null;
+}
+
+/** Karla's lines. Copy is locked by BUSINESS_CLEANUP; do not paraphrase. */
+export const KARLA_LINES = {
+  day1: "First day's easy. I'll take a cup — just serve the line and watch the money.",
+  price: 'Charge more and fewer people come. Charge less and you sell out. Try a price.',
+  buy: "Now you buy your own supplies. Buy what you'll sell — leftovers sit in the back overnight.",
+  spoilage: "Two things nobody tells you: lemons go soft in three days, and yesterday's price isn't today's.",
+  reputation: 'See those faces? Regulars. Serve them well and they bring friends. Disappear on them and they drift.',
+  graduated: 'You run the place now.',
+  promos: 'A sale brings people in — if the math works. You know percents now, so it can.',
+  firstDrift: "Your regulars missed you. They don't quit on you fast — but don't test it.",
+};
+
+/**
+ * One coaching line, chosen from her actual state. Deterministic and rule-ordered, so
+ * the same situation always gets the same advice.
+ * @returns {{text: string, topic: string} | null} null when nothing needs saying.
+ */
+export function coachTip(biz, lastResult) {
+  const r = lastResult;
+  if (r && r.missed > (r.served + r.missed) / 3) {
+    return { topic: 'planning', text: "You turned away more than a third of them. Make more tomorrow — that's a planning problem, and planning is learnable." };
+  }
+  if (lemonCount(biz) >= 8) {
+    return { topic: 'buying', text: "You've got a pile sitting in the back. Buy closer to what you'll actually sell." };
+  }
+  if (capabilities(biz.band).reputation && biz.reputation < 30) {
+    return { topic: 'comeback', text: "It's quiet. Run a small sale and your regulars will come back — they always do." };
+  }
+  const costPerUnit = (biz.marketPrices?.lemons || 0) + (biz.marketPrices?.sugar || 0) + (biz.marketPrices?.cups || 0);
+  if (biz.price - costPerUnit < 0.5) {
+    return { topic: 'pricing', text: "You're barely clearing anything a cup. Either charge a bit more or buy cheaper." };
+  }
+  return null;
 }
 
 export const lemonCount = biz => biz.lots.reduce((s, l) => s + l.qty, 0);
@@ -70,17 +173,27 @@ const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 export function dailyTick(biz, today, random = Math.random) {
   if (biz.lastTickDay === today) return { biz, events: [] };
   const caps = capabilities(biz.band);
+  const open = unlocks(biz);
   const events = [];
-  const next = { ...biz, lastTickDay: today, lots: biz.lots.map(l => ({ ...l })), marketPrices: { ...biz.marketPrices } };
+  const next = {
+    ...biz, lastTickDay: today, lots: biz.lots.map(l => ({ ...l })),
+    // Yesterday's prices, kept so the screen can draw drift arrows against them.
+    yesterdayPrices: { ...biz.marketPrices },
+    marketPrices: { ...biz.marketPrices },
+  };
 
-  // market drift: ±10%/day, bounded to [0.6x, 1.6x] of base
-  for (const k of Object.keys(BASE_PRICES)) {
-    const drifted = next.marketPrices[k] * (1 + (random() - 0.5) * 0.2);
-    next.marketPrices[k] = Math.round(clamp(drifted, BASE_PRICES[k] * 0.6, BASE_PRICES[k] * 1.6) * 100) / 100;
+  // market drift: ±10%/day, bounded to [0.6x, 1.6x] of base.
+  // Inert until drift is unlocked — the Opening Week is a grace period, not a
+  // simulation running quietly behind the kid's back.
+  if (open.drift) {
+    for (const k of Object.keys(BASE_PRICES)) {
+      const drifted = next.marketPrices[k] * (1 + (random() - 0.5) * 0.2);
+      next.marketPrices[k] = Math.round(clamp(drifted, BASE_PRICES[k] * 0.6, BASE_PRICES[k] * 1.6) * 100) / 100;
+    }
   }
 
   // spoilage: lemons past shelf life, capped per day so a setback is a lesson, not a wipeout
-  if (caps.spoilage) {
+  if (caps.spoilage && open.spoilage) {
     let spoiled = 0;
     next.lots = next.lots.filter(lot => {
       if (dayNum(today) - dayNum(lot.boughtDay) > LEMON_SHELF_DAYS && spoiled < SPOIL_CAP_PER_DAY) {
@@ -95,7 +208,7 @@ export function dailyTick(biz, today, random = Math.random) {
   }
 
   // reputation drift: only after grace days closed, only for band c, never below floor, frozen on vacation
-  if (caps.repDrift && !next.vacation && next.lastOpenDay) {
+  if (caps.repDrift && open.reputation && !next.vacation && next.lastOpenDay) {
     const closedFor = dayNum(today) - dayNum(next.lastOpenDay);
     if (closedFor > REP_GRACE_DAYS && next.reputation > REP_FLOOR) {
       next.reputation = Math.max(REP_FLOOR, next.reputation - 1);
@@ -229,8 +342,14 @@ export function openDay(biz, queue, today) {
 /** Ledger, reputation gain, regular memory. Pure. */
 export function closeDay(biz, result, today) {
   const caps = capabilities(biz.band);
-  const next = { ...biz, lastOpenDay: today, ledger: [...biz.ledger, result].slice(-30) };
-  if (caps.reputation) {
+  const openDays = (biz.opening?.openDays || 0) + 1;
+  const next = {
+    ...biz, lastOpenDay: today, ledger: [...biz.ledger, result].slice(-30),
+    // The Opening Week counts OPEN days, so absence pauses the arc instead of skipping it.
+    opening: { openDays, done: openDays >= (OPENING_LENGTH[biz.band] || 5) },
+  };
+  // Reputation only moves once it has been introduced — the week is a real grace period.
+  if (caps.reputation && unlocks(next).reputation) {
     const ratio = result.served / Math.max(1, result.served + result.missed);
     next.reputation = clamp(Math.round(next.reputation + 2 + 4 * ratio - (result.missed > 0 ? 2 : 0)), REP_FLOOR, REP_MAX);
     next.regulars = next.regulars.map(r => ({ ...r, affinity: clamp(r.affinity + (result.missed > 0 ? -2 : 3), 10, 100) }));

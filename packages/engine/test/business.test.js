@@ -6,6 +6,10 @@ import {
 import { valOf } from '../src/util.js';
 
 const seeded = (seq => () => { seq = (seq * 9301 + 49297) % 233280; return seq / 233280; })(42);
+/** A business past its Opening Week — every system introduced, as BUSINESS_CLEANUP
+    intends. Tests about spoilage, drift and reputation need this; day-one tests don't. */
+const graduated = (biz) => ({ ...biz, opening: { openDays: 5, done: true } });
+
 const day = n => `2026-11-${String(n).padStart(2, '0')}`;
 
 describe('capabilities — the start-grade policy', () => {
@@ -18,7 +22,7 @@ describe('capabilities — the start-grade policy', () => {
 
 describe('dailyTick — the Tamagotchi organ, bounded', () => {
   it('is idempotent per day and drifts market prices within bounds', () => {
-    let biz = freshBiz(7);
+    let biz = graduated(freshBiz(7));
     for (let d = 1; d <= 20; d++) biz = dailyTick(biz, day(d), seeded).biz;
     for (const k of Object.keys(BASE_PRICES)) {
       expect(biz.marketPrices[k]).toBeGreaterThanOrEqual(BASE_PRICES[k] * 0.6 - 1e-9);
@@ -29,7 +33,7 @@ describe('dailyTick — the Tamagotchi organ, bounded', () => {
   });
 
   it('spoils old lemons with a daily cap and fires the planning lesson', () => {
-    let biz = freshBiz(7);
+    let biz = graduated(freshBiz(7));
     biz = buySupplies(biz, { lemons: 30 }, day(1), 999).biz;
     const { biz: after, events } = dailyTick(biz, day(6), seeded);
     expect(lemonCount(biz) - lemonCount(after)).toBe(SPOIL_CAP_PER_DAY);   // capped, not wiped out
@@ -37,14 +41,14 @@ describe('dailyTick — the Tamagotchi organ, bounded', () => {
   });
 
   it('reputation drifts only after grace, never below the floor, frozen on vacation', () => {
-    let biz = { ...freshBiz(8), lastOpenDay: day(1), reputation: REP_FLOOR + 13 };
+    let biz = graduated({ ...freshBiz(8), lastOpenDay: day(1), reputation: REP_FLOOR + 13 });
     // Long enough that the drift would run well past the floor if it were not clamped.
     for (let d = 2; d <= 40; d++) biz = dailyTick(biz, day(d), seeded).biz;
     expect(biz.reputation).toBe(REP_FLOOR);    // floored, business never dies
-    let frozen = { ...freshBiz(8), lastOpenDay: day(1), reputation: 60, vacation: true };
+    let frozen = graduated({ ...freshBiz(8), lastOpenDay: day(1), reputation: 60, vacation: true });
     for (let d = 2; d <= 15; d++) frozen = dailyTick(frozen, day(d), seeded).biz;
     expect(frozen.reputation).toBe(60);        // vacation mode: zero decay
-    let young = { ...freshBiz(3), lastOpenDay: day(1), reputation: 60 };
+    let young = graduated({ ...freshBiz(3), lastOpenDay: day(1), reputation: 60 });
     for (let d = 2; d <= 15; d++) young = dailyTick(young, day(d), seeded).biz;
     expect(young.reputation).toBe(60);         // grade 3-4 never feels absence
   });
@@ -52,7 +56,7 @@ describe('dailyTick — the Tamagotchi organ, bounded', () => {
 
 describe('the customer queue', () => {
   it('scales with price, weather, and reputation; always at least a trickle', () => {
-    const biz = freshBiz(7);
+    const biz = graduated(freshBiz(7));
     const sunny = customersForDay(biz, { forecast: 'sunny', grade: 7 }, seeded).length;
     const cloudy = customersForDay(biz, { forecast: 'cloudy', grade: 7 }, seeded).length;
     expect(sunny).toBeGreaterThan(cloudy);
@@ -63,7 +67,7 @@ describe('the customer queue', () => {
   });
 
   it('plants 1-3 valid math moments, never on the first customer', () => {
-    const biz = freshBiz(7);
+    const biz = graduated(freshBiz(7));
     for (let i = 0; i < 20; i++) {
       const queue = customersForDay(biz, { forecast: 'sunny', grade: 7 }, seeded);
       const moments = queue.map((c, idx) => ({ c, idx })).filter(x => x.c.moment);
@@ -79,7 +83,7 @@ describe('the customer queue', () => {
   });
 
   it('moments are banded: change-making at 3, unit price at 5, margins at 7', () => {
-    const base = freshBiz(7);
+    const base = graduated(freshBiz(7));
     expect(makeMoment(base, { name: 'Ava', order: { cups: 2 } }, 3, seeded).skill).toBe('Making change');
     expect(makeMoment(base, { name: 'Ava', order: { cups: 2 } }, 5, seeded).skill).toBe('Unit price');
     expect(makeMoment(base, { name: 'Ava', order: { cups: 2 } }, 8, seeded).skill).toBe('Margin after discount');
@@ -98,7 +102,9 @@ describe('the customer queue', () => {
 
 describe('openDay — serving the line', () => {
   it('serves while stocked, misses when out, and the ledger math balances', () => {
-    let biz = freshBiz(7);
+    // Start from a known shelf: freshBiz now ships a starter kit, which this test
+    // is not about. Clear it, then buy exactly ten of everything.
+    let biz = graduated({ ...freshBiz(7), lots: [], sugar: 0, cups: 0 });
     biz = buySupplies(biz, { lemons: 10, sugar: 10, cups: 10 }, day(1), 999).biz;
     const queue = Array.from({ length: 15 }, (_, i) => ({ persona: 'v', name: 'V', blob: 'Networking', order: { cups: 1 }, isRegular: false }));
     const { biz: after, result } = openDay(biz, queue, day(1));
@@ -118,7 +124,7 @@ describe('openDay — serving the line', () => {
   });
 
   it('serving well raises reputation and regular affinity; missing dings both, bounded', () => {
-    let biz = { ...freshBiz(7) };
+    let biz = graduated({ ...freshBiz(7) });
     biz = buySupplies(biz, { lemons: 50, sugar: 50, cups: 50 }, day(1), 999).biz;
     const good = openDay(biz, Array.from({ length: 10 }, () => ({ order: { cups: 1 } })), day(1)).biz;
     expect(good.reputation).toBeGreaterThan(biz.reputation);
