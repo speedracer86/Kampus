@@ -64,6 +64,10 @@ the known content backlog, prioritized grades 7–8 first.
 
 ## 3. Standards alignment (the homeschool-compliance story)
 
+> Policy (Teaching System Part 9): CCSS is the internal coverage engine, never the
+> parent-facing brand. Copy says "covers everything your state expects." One named
+> strategy per skill, standard algorithms honored, parents' own methods always valid.
+
 - Alignment target: **Common Core State Standards (CCSS)** — the de facto national
   framework, used or closely mirrored by ~40 states. Sequencing follows
   **EngageNY/Eureka**, the most widely used free CCSS scope & sequence.

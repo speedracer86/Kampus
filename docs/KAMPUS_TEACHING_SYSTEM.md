@@ -221,3 +221,36 @@ explicit lessons stay. The sim supplies the *why*, the *numbers*, and the *proof
 generator API (accept overrides for context values), arc metadata on units
 (capability unlocked, required skills), Business Day session type, sim capability
 flags per band, loan/promotion/combo mechanics in the Stand for the 7–8 band.
+
+---
+
+## Part 9 — Standards without the baggage (official policy)
+
+Most homeschool parents have a hard-earned allergy to "Common Core math" — not to the
+standards (a list of what kids should know by when, ~90% the same as what their
+parents learned), but to the implementation disaster that branded it: strategies
+graded as hoops, four methods taught at once, parents locked out of helping. Kampus
+uses the standards as its quality floor and rejects the method caricature entirely.
+Three rules, binding on all content and copy:
+
+1. **Language policy.** Parent-facing copy never says "Common Core." It says
+   "covers everything your state expects for grade N" / "aligned to national
+   grade-level standards," with state crosswalks (TX/VA/FL) on the roadmap. The
+   internal CCSS tagging (packages/curriculum) is unchanged — it is the coverage
+   engine and the reporting backbone, not the brand.
+
+2. **One-strategy rule.** Every skill teaches ONE primary named strategy, with the
+   standard algorithm honored as the destination. Visual models (number lines, bars,
+   grids) are scaffolds that fade — never hoops, never graded. Alternative methods
+   appear only as clearly-labeled optional "tricks." A kid who answers correctly by
+   any valid method — including exactly how her parents learned it — is simply
+   *correct*. No answer is ever penalized for its method.
+
+3. **The parent bridge.** For each skill, the Grown-ups area carries a one-paragraph
+   "How you probably learned this, and how it connects to what she's seeing" note —
+   so a parent can help in their own 90s-learned method without contradiction. The
+   kitchen-table conflict that made "Common Core math" infamous is a solved problem
+   in this product, and a differentiator no competitor offers.
+
+Positioning line for the pilot: **"The rigor of the standards, taught the way math
+actually made sense."**
