@@ -9,7 +9,7 @@ import { HomeScreen } from '@kampus/ui/home';
 import { QuizRound } from '@kampus/ui/quiz';
 import { DailyLesson } from '@kampus/ui/lesson';
 import { buildLesson } from './lessonData.js';
-import { load, save } from './store.js';
+import { load, save, append, DEFAULT_STUDENT_ID } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
 const ROUND_LENGTH = 12;
@@ -71,7 +71,10 @@ function homeData(state) {
 }
 
 export function App() {
-  const [state, setState] = useState(load);
+  // One student per device until family profiles exist; the id is chosen here, not
+  // inside store.js, so adding a profile switcher touches only this line.
+  const [studentId] = useState(DEFAULT_STUDENT_ID);
+  const [state, setState] = useState(() => load(studentId));
   // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => (typeof location !== 'undefined' && location.hash === '#lesson' ? 'lesson' : 'home'));
@@ -87,7 +90,7 @@ export function App() {
 
   const update = mutate => setState(prev => {
     const next = mutate(structuredClone(prev));
-    save(next);
+    save(studentId, next);
     return next;
   });
 
@@ -105,6 +108,7 @@ export function App() {
     [state.grade, topic, state.tiers[tierKey(state.grade, topic)], roundNonce]);
 
   const onLessonEvent = (type, payload) => {
+    append(studentId, { type: `lesson_${type}`, payload });
     if (type === 'answer' && payload.right) update(s => { s.kredits += payload.gain; s.week.earned += payload.gain; return s; });
     if (type === 'lesson_complete') update(s => {
       s.lessonDoneDay = new Date().toISOString().slice(0, 10);
@@ -114,6 +118,7 @@ export function App() {
   };
 
   const onQuizEvent = (type, payload) => {
+    append(studentId, { type, payload });
     if (type === 'answer') {
       update(s => {
         if (payload.right) {

@@ -58,9 +58,11 @@ look in the browser.
   than styling in `apps/web`, and record every design change in `packages/ui/CHANGES.md`.
 - **`packages/curriculum`** holds the Common Core skill taxonomy and major-work coverage
   reporting — the roadmap turns curriculum into data rather than code.
-- **State** lives at the edges: `apps/web/src/store.js` (localStorage `kampus_web_v0`,
-  intentionally a tiny read/write surface so Phase 2 can swap in Supabase) and the legacy
-  app's own `S` object (localStorage `kampus_v1`).
+- **State** lives at the edges: `apps/web/src/store.js` and the legacy app's own `S`
+  object (localStorage `kampus_v1`). The React store is keyed by student from day one —
+  `load(studentId)` / `save(studentId, state)` / `append(studentId, event)` over
+  `kampus_v1_<studentId>` — so swapping in Supabase changes that one file and no
+  components. See `docs/DEPLOYMENT.md`; the shape is deliberately the server's shape.
 
 ### Core files
 
@@ -74,6 +76,7 @@ look in the browser.
 | `index.html` | The legacy v1 app, still complete and shipping |
 | `tests/test_kampus.js` | Playwright suite for the legacy app |
 | `docs/KAMPUS_BUILD_PLAN.md` | Where this is going: Supabase, multi-family, sync |
+| `docs/DEPLOYMENT.md` | Stack, domains, Cloudflare Pages settings, the multi-tenant schema |
 | `docs/STYLE_GUIDE.md` | Palette, type scale, motion, grade-band sizing |
 
 ## Code style
