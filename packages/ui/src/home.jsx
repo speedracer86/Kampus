@@ -1,20 +1,10 @@
 // Composed Home screen + Parent PIN gate. Responsive: grids collapse below ~900px and ~640px.
 import { color, type, radius, shadow, font, numeral, worldTint, band } from './tokens.js';
-import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob } from './primitives.jsx';
+import { Button, Card, Kicker, ProgressBar, TicketIcon, Blob, useWidth } from './primitives.jsx';
 import { GradeCard, GradeChips, WorldTile, KreditsWeekCard, RecordsLedger } from './app.jsx';
 import { CampusMap } from './gamify.jsx';
 
 const hBase = { fontFamily: font.family, boxSizing: 'border-box' };
-
-function useWidth(ref) {
-  const [w, setW] = React.useState(1060);
-  React.useEffect(() => {
-    if (!ref.current) return;
-    const ro = new ResizeObserver(es => setW(es[0].borderBoxSize?.[0]?.inlineSize ?? es[0].target.getBoundingClientRect().width));
-    ro.observe(ref.current); return () => ro.disconnect();
-  }, []);
-  return w;
-}
 
 /**
  * HomeScreen — the composed kid dashboard. Fully responsive:

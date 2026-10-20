@@ -4,6 +4,27 @@ import { color, type, radius, shadow, motion, font } from './tokens.js';
 
 const base = { fontFamily: font.family, boxSizing: 'border-box' };
 
+/** Width of a ref'd element, for container-driven responsive layout. */
+export function useWidth(ref) {
+  const [w, setW] = React.useState(1060);
+  React.useEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver(es => setW(es[0].borderBoxSize?.[0]?.inlineSize ?? es[0].target.getBoundingClientRect().width));
+    ro.observe(ref.current); return () => ro.disconnect();
+  }, []);
+  return w;
+}
+
+/** Read text aloud (browser SpeechSynthesis). Silent where unsupported. */
+export function speak(text) {
+  try {
+    const u = new SpeechSynthesisUtterance(String(text).replace(/−/g, ' negative '));
+    const vs = speechSynthesis.getVoices();
+    u.voice = vs.find(v => /Natural/.test(v.name)) || vs.find(v => /Google US/.test(v.name)) || vs.find(v => /Samantha/.test(v.name)) || null;
+    u.rate = 0.95; speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch (e) { /* no speech support */ }
+}
+
 export function Button({ variant = 'primary', size = 'md', disabled, style, children, ...rest }) {
   const [hover, setHover] = React.useState(false);
   const pad = size === 'lg' ? '16px 32px' : size === 'sm' ? '9px 16px' : '12px 22px';

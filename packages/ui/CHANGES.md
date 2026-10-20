@@ -124,3 +124,36 @@ integration build applies it to the token layer only; the screens follow in late
 
 Not yet §0: Home still uses the pre-§0 layout (records ledger, world grid, right
 rail). That is Step 5 (Home Grade Stack), which replaces it wholesale.
+
+## Step 2 — the shared Question component (§0 4d / 4f)
+
+New `src/question.jsx`, the one question surface used by the daily lesson, free-practice
+missions, unit quizzes and the grade test. Per the handoff's wiring contract it is
+controlled: the caller owns picked/help/tokens/payout and the component reports intent.
+
+- Contract: `{text, givens[{k,v}], find, family, answers[4], correct, hint, show,
+  teachSteps[], scaffold?, scaffoldLevel?}`. `context` ('lesson' | 'mission' | 'quiz' |
+  'test') decides help: all four in lesson and mission, **Read it only in quiz and test**
+  (`HELP_BY_CONTEXT`).
+- Desktop 4d: left "What you know" ruled givens (15/700 label, 40px/300 value, Find at 45%
+  ink) + ink family chip + the 2×2 NEED HELP pill grid with right-aligned costs; right a
+  white r28 sheet with the 40px/600 prompt and 2×2 answers (numbered key discs, 34px light
+  numerals). Correct `#EAF6EE`/`#58B372`, wrong `#FBEDEC`/`#E4766C`.
+- Phone 4f: givens collapse to a 3-column strip on ground, the help grid moves inside the
+  sheet under the answers (`track` pills, 44px), help box `#F2F4F6`, and answering is
+  pick-then-**Check** with the button full-width at the foot.
+- Teach is gated exactly as §0 words it — "Spend a Teach Token? N left this run. A token
+  keeps full pay. Save them for the hard ones." with "I'll try first" / "Use a token"
+  ("Teach me anyway" at 0). Teach is free during a lesson's new skill (`teachFree`).
+- Wrong answers read "Not yet. Here's the step: …" and offer the hint, never a fail state.
+- `PayoutLine` exported for reuse: 44px/300 green `+$N` plus the breakdown pills.
+
+`QuizRound` now renders choice questions through `Question` while keeping its own state
+machine, Economy v2 math and event payloads unchanged (`answer`, `teach_open`,
+`round_end`, `again`) — the free-response modes (number line, fraction, money,
+thermometer) still use their own widgets. Its content column widens to 1180px for choice
+questions so the §0 desktop grid has room.
+
+Also moved `useWidth` and `speak` into `primitives.jsx` so `question.jsx` can use them
+without an import cycle; `quiz.jsx` re-exports `speak`, so `@kampus/ui/quiz` is unchanged
+for consumers. Added the `./question` package export.

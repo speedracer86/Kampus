@@ -1,21 +1,24 @@
 // Kampus quiz engine — fully working round logic from the prototype, UI + state included.
 // Backend feeds questions and listens on onEvent(type, payload). See README for the event table.
 import { color, type, radius, shadow, band, streakColors, confetti, font } from './tokens.js';
-import { Button, Kicker, ProgressBar, KreditCoin, Blob } from './primitives.jsx';
+import { Button, Kicker, ProgressBar, KreditCoin, Blob, speak, useWidth } from './primitives.jsx';
+import { Question } from './question.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
 const MULT = (s) => s >= 10 ? 3 : s >= 6 ? 2 : s >= 3 ? 1.5 : 1;
+// Engine question shape -> the §0 Question contract. The engine's teach script
+// doubles as the hint (first step) and the worked answer (all steps).
+const asQuestion = (q) => ({ text: q.text, answers: q.choices, correct: q.answerIndex,
+  givens: q.givens, find: q.find, family: q.family, teachSteps: q.teach,
+  hint: q.hint || (q.teach && q.teach[0]), show: q.show || (q.teach && q.teach.join(' ')),
+  scaffold: q.scaffold, scaffoldLevel: q.scaffoldLevel });
+const PILL_KIND = { green: 'first', ink: 'streak', gold: 'token', muted: 'help' };
 const TITLE = (s) => s >= 13 ? 'LEGEND' : s >= 10 ? 'CEO' : s >= 8 ? 'BOSS' : s >= 6 ? 'MANAGER' : s >= 4 ? 'PRO' : s >= 2 ? 'INTERN' : 'STARTER';
 
 /** Built-in read-aloud (browser voice). */
-export function speak(text) {
-  try {
-    const u = new SpeechSynthesisUtterance(String(text).replace(/−/g, ' negative '));
-    const vs = speechSynthesis.getVoices();
-    u.voice = vs.find(v => /Natural/.test(v.name)) || vs.find(v => /Google US/.test(v.name)) || vs.find(v => /Samantha/.test(v.name)) || null;
-    u.rate = 0.95; speechSynthesis.cancel(); speechSynthesis.speak(u);
-  } catch (e) { /* no speech support */ }
-}
+// speak() moved to primitives.jsx so question.jsx can use it without a cycle.
+// Re-exported here: consumers import it from '@kampus/ui/quiz'.
+export { speak };
 
 /** Tap-the-number-line answer mode. vis: {from, to, start, end} */
 export function NumberLine({ vis, feedback, picked, onPick }) {
@@ -120,14 +123,14 @@ const BLITZ_WINDOW_MS = 8000;
 export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, worldColor = '#F0AFCE', mascot = 'Ice_cream', blobDir = 'blobs/', focusMode = true, blitz = false, onEvent = () => {}, onQuit }) {
   const bz = band(grade);
   const fresh = () => ({ qNum: 0, order: questions.map((_, i) => i), retry: false, missed: [], correct: 0, asked: questions.length,
-    streak: 0, best: 0, kredits: 0, feedback: null, picked: null, teachConfirm: false, teachOpen: false, helpUsed: false, tokenUsed: false,
+    streak: 0, best: 0, kredits: 0, feedback: null, picked: null, teachConfirm: false, teachOpen: false, helpOpen: null, helpUsed: false, tokenUsed: false,
     tokensLeft: TOKENS_PER_RUN, firstTries: 0, qStart: Date.now(), fixed: 0, resets: 0, gainKey: 0, gained: 0, parts: [] });
   const [st, set] = React.useState(fresh);
   const q = questions[st.order[st.qNum]];
   const fullGain = Math.round((8 + 4 * tier) * MULT(st.streak + 1) * (1 + gearBonus / 100));
 
   const advance = (s) => {
-    const next = { feedback: null, picked: null, teachOpen: false, teachConfirm: false, helpUsed: false, tokenUsed: false, qStart: Date.now() };
+    const next = { feedback: null, picked: null, teachOpen: false, teachConfirm: false, helpOpen: null, helpUsed: false, tokenUsed: false, qStart: Date.now() };
     if (s.qNum + 1 < s.order.length) return { ...s, ...next, qNum: s.qNum + 1 };
     if (!s.retry && s.missed.length) return { ...s, ...next, retry: true, order: s.missed.slice(), missed: [], qNum: 0, asked: s.asked + s.missed.length };
     const acc = Math.round(100 * s.correct / s.asked);
@@ -165,6 +168,7 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
     onAgain={() => { onEvent('again', {}); set(fresh()); }}
     onHome={onQuit} />;
 
+  const isChoice = q.mode === 'choice' || !q.mode;
   const hudOp = focusMode && st.feedback !== 'correct' ? 0 : 1;
   const dim = st.teachOpen || st.teachConfirm ? 0.45 : 1;
   const modeUI = { numline: NumberLine, fraction: FractionPieces, money: MoneyCounter, thermo: Thermometer }[q.mode];
@@ -186,16 +190,16 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
           background: i < st.tokensLeft ? color.gold : color.track }} />)}</span>
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full,
         padding: '7px 14px', fontWeight: 700, fontSize: 15, opacity: hudOp, transition: 'opacity .3s' }}><KreditCoin />{st.kredits}</div></div>
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: isChoice ? 1180 : 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
       <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => speak(q.text)} />
       <div style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: '.12em', color: streakColors[TITLE(st.streak)], margin: '10px 0 2px', opacity: hudOp, transition: 'opacity .3s' }}>
         {TITLE(st.streak)}{st.streak > 0 ? ` · ${st.streak} STREAK · ×${MULT(st.streak)}` : ''}</div>
-      <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>{q.text}</h2>
-      {q.teach && !st.teachOpen && !st.feedback && <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+      {!isChoice && <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>{q.text}</h2>}
+      {!isChoice && q.teach && !st.teachOpen && !st.feedback && <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <Button variant="gold" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: true }))}>
           {st.tokensLeft > 0 ? `Teach me · ${st.tokensLeft} token${st.tokensLeft > 1 ? 's' : ''} left` : 'Teach me · costs half'}</Button>
         <Button variant="outline" size="sm" onClick={() => speak(q.text)}>Read it</Button></div>}
-      {st.teachConfirm && <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: color.goldTint, border: `1px solid ${color.goldBorder}`, borderRadius: radius.lg, padding: '14px 18px', marginBottom: 18, width: '100%' }}>
+      {!isChoice && st.teachConfirm && <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: color.goldTint, border: `1px solid ${color.goldBorder}`, borderRadius: radius.lg, padding: '14px 18px', marginBottom: 18, width: '100%' }}>
         {st.tokensLeft > 0
           ? <span style={{ fontSize: 15, lineHeight: 1.4, flex: 1, minWidth: 220 }}>Spend a Teach Token? <strong>{st.tokensLeft} left</strong> this run — a token means full pay (~{fullGain}). Save them for the hard ones.</span>
           : <span style={{ fontSize: 15, lineHeight: 1.4, flex: 1, minWidth: 220 }}>Tokens are spent. Help still works — this one pays <strong>~{Math.ceil(fullGain / 2)}</strong> instead of ~{fullGain}.</span>}
@@ -208,18 +212,22 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
       {st.teachOpen && <div style={{ width: '100%', marginBottom: 18 }}><TeachPanel steps={q.teach} onClose={() => set(s => ({ ...s, teachOpen: false }))} /></div>}
       <div style={{ width: '100%', opacity: dim, transition: 'opacity .3s' }}>
         {q.mode === 'choice' || !q.mode
-          ? <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            {q.choices.map((c, i) => { const right = st.feedback && i === q.answerIndex, wrong = st.feedback === 'wrong' && i === st.picked;
-              return <button key={i} onClick={() => !st.feedback && answer(i, i === q.answerIndex)}
-                style={{ ...qBase, background: right ? color.greenTint : wrong ? color.redTint : '#fff',
-                  border: `1.5px solid ${right ? color.green : wrong ? color.red : 'transparent'}`, borderRadius: radius.md,
-                  boxShadow: right || wrong ? 'none' : shadow.card,
-                  padding: `${bz.pad}px 18px`, fontSize: bz.answer, fontWeight: 700, cursor: st.feedback ? 'default' : 'pointer', color: color.ink }}>{c}</button>; })}</div>
+          ? <Question question={asQuestion(q)} context="mission" tokensLeft={st.tokensLeft}
+            feedback={st.feedback} picked={st.picked} help={st.helpOpen} teachConfirm={st.teachConfirm}
+            payout={st.feedback === 'correct' ? { amount: st.gained, pills: st.parts.map(([label, kind]) => ({ label, kind: PILL_KIND[kind] })) } : null}
+            onAnswer={(i) => answer(i, i === q.answerIndex)}
+            onHelp={(next, { needsConfirm } = {}) => set(s => ({ ...s, helpOpen: next, teachConfirm: next === 'teach' && !!needsConfirm }))}
+            onTeachConfirm={(use) => { if (!use) return set(s => ({ ...s, helpOpen: null, teachConfirm: false }));
+              onEvent('teach_open', { token: st.tokensLeft > 0 });
+              set(s => s.tokensLeft > 0
+                ? { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: true, tokensLeft: s.tokensLeft - 1 }
+                : { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: false }); }}
+            onNext={() => set(advance)} onEvent={onEvent} />
           : React.createElement(modeUI, { vis: q.vis, feedback: st.feedback, picked: st.picked, onPick: (v) => answer(v, isRightFree(v)) })}</div>
-      {st.feedback === 'wrong' && <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: color.redTint, border: `1px solid ${color.red}`, borderRadius: radius.md, padding: '12px 16px', marginTop: 18, width: '100%' }}>
+      {!isChoice && st.feedback === 'wrong' && <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: color.redTint, border: `1px solid ${color.red}`, borderRadius: radius.md, padding: '12px 16px', marginTop: 18, width: '100%' }}>
         <span style={{ fontSize: 15, fontWeight: 600, flex: 1 }}>Not this one — you'll see it again at the end.</span>
         <Button variant="ink" size="sm" onClick={() => set(advance)}>Next →</Button></div>}
-      {st.feedback === 'correct' && <div key={st.gainKey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 14 }}>
+      {!isChoice && st.feedback === 'correct' && <div key={st.gainKey} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginTop: 14 }}>
         <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: '-.02em', color: color.greenDeep, lineHeight: 1 }}>+{st.gained}</div>
         {st.parts.length > 0 && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
           {st.parts.map(([label, kind], i) => <span key={i} style={{ ...chipStyle(kind), borderRadius: radius.full,
