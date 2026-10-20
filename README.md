@@ -39,4 +39,5 @@ The engine is pure functions, so the heavy testing is headless and fast: a 10,80
 
 - `docs/KAMPUS_BUILD_PLAN.md` — architecture, data model, phases (the v2 roadmap)
 - `docs/KAMPUS_CURRICULUM_PLAN.md` — per-grade lesson map, real-world wraps, reward-economy design, with sources
+- `docs/KAMPUS_TEACHING_SYSTEM.md` — the teaching system: daily lesson model, per-band pedagogy, six year-long scope & sequences, assessment + retention design
 - `docs/DESIGN_SPEC.md` / `docs/STYLE_GUIDE.md` — the 10-screen product spec and design tokens
