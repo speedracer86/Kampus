@@ -314,6 +314,8 @@ export function App() {
         if (type === 'set_allow_blitz') setS('allowBlitz', payload);
         if (type === 'set_sprints') setS('sprints', payload);
         if (type === 'set_vacation') setS('vacation', payload);
+        if (type === 'set_business_coach') setS('businessCoach', payload);
+        if (type === 'set_sound') setS('sound', payload);
       }} />;
   }
 

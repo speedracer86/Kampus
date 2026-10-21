@@ -16,13 +16,13 @@ const pay = (rows, reason, cap = DEFAULT_CAP_CENTS) => {
 };
 
 describe('rates — effort only', () => {
-  it('pays the four efforts at the published rates', () => {
-    expect(RATES).toEqual({ lesson: 50, quiz: 100, test: 150, streak5: 50 });
+  it('pays each effort at its published rate', () => {
+    expect(RATES).toEqual({ lesson: 50, quiz: 100, test: 150, streak5: 50, field: 50 });
   });
 
   it('has no rate that depends on a score, and no way to pass one in', () => {
     // Every earning reason is an action, not an outcome.
-    expect(Object.keys(RATES)).toEqual(['lesson', 'quiz', 'test', 'streak5']);
+    expect(Object.keys(RATES)).toEqual(['lesson', 'quiz', 'test', 'streak5', 'field']);
     const { rows } = award([], { reason: 'quiz', day: 'Mon', week: W, score: 20, accuracy: 1 });
     expect(rows[0].cents).toBe(RATES.quiz);          // the extra fields change nothing
     expect(Object.keys(rows[0])).not.toContain('score');
@@ -188,6 +188,6 @@ describe('the receipt', () => {
   });
 
   it('lists how you earn, straight from the rates', () => {
-    expect(howYouEarn().map(h => h.cents)).toEqual([50, 100, 150, 50]);
+    expect(howYouEarn().map(h => h.cents)).toEqual([50, 100, 150, 50, 50]);
   });
 });

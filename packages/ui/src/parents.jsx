@@ -191,6 +191,12 @@ export function GrownUps({ data, onEvent = () => {} }) {
           <SettingRow label="Shop vacation mode" sub="Freezes the business: no reputation drift while you're away.">
             <Toggle on={!!s.vacation} onChange={v => onEvent('set_vacation', v)} />
           </SettingRow>
+          <SettingRow label="Business coach" sub="Karla's one-line tips on the business screen.">
+            <Toggle on={s.businessCoach !== false} onChange={v => onEvent('set_business_coach', v)} />
+          </SettingRow>
+          <SettingRow label="Sound" sub="The register and the count-ups. Motion and sound both off in reduced-motion mode.">
+            <Toggle on={s.sound !== false} onChange={v => onEvent('set_sound', v)} />
+          </SettingRow>
         </div>)}
       </div>
     </div>

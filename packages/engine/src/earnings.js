@@ -18,12 +18,14 @@ export const RATES = {
   quiz: 100,      // took a unit quiz
   test: 150,      // took the grade test
   streak5: 50,    // five-day streak
+  field: 50,      // a field assignment, done with a grown-up (PLAY_SYSTEM §7)
 };
 export const RATE_LABEL = {
   lesson: "Finished today's lesson",
   quiz: 'Took a unit quiz',
   test: 'Took the grade test',
   streak5: 'Five-day streak',
+  field: 'Field assignment',
 };
 
 /** Weekly cap options a grown-up can choose, in cents. */
