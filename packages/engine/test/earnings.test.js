@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  RATES, RATE_LABEL, CAP_OPTIONS, DEFAULT_CAP_CENTS,
+  RATES, RATE_LABEL, KID_LABEL, labelFor, CAP_OPTIONS, DEFAULT_CAP_CENTS,
   PENDING, APPROVED, DEFERRED, HELD, GIVEN, REFUNDED,
   earnedThisWeek, pendingEarnings, capRemaining, award, heldCents, availableCents,
   wouldExceedCap, approveEarning, deferEarning, undoEarning, approveAllEarned,
@@ -28,8 +28,17 @@ describe('rates — effort only', () => {
     expect(Object.keys(rows[0])).not.toContain('score');
   });
 
-  it("labels rows in the kid's own terms", () => {
-    expect(RATE_LABEL.lesson).toBe("Finished today's lesson");
+  it('speaks two vocabularies: the world to the kid, plain words to a grown-up', () => {
+    expect(RATE_LABEL.quiz).toBe('Took a unit quiz');        // the approvals queue
+    expect(KID_LABEL.quiz).toBe('Sat Inspection Day');       // her receipt
+    expect(KID_LABEL.test).toBe('Sat the License');
+    expect(labelFor('test', 'kid')).toBe('Sat the License');
+    expect(labelFor('test')).toBe('Took the grade test');
+    // Every rate must be sayable to both audiences.
+    for (const r of Object.keys(RATES)) {
+      expect(RATE_LABEL[r], r).toBeTruthy();
+      expect(KID_LABEL[r], r).toBeTruthy();
+    }
   });
 });
 
@@ -166,6 +175,7 @@ describe('the receipt', () => {
     const m = receiptModel(rows, { name: 'Tom', week: W, number: 42 });
     expect(m.number).toBe('0042');
     expect(m.earned).toHaveLength(2);
+    expect(m.earned.map(e => e.label)).toContain('Sat Inspection Day');   // her words, not the ledger's
     expect(m.subtotal).toBe(150);
     expect(m.capLeft).toBe(350);
     expect(m.waitingOnGrownUp).toBe(0);

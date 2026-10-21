@@ -2,7 +2,7 @@
 
 128 lesson days · 8 units. Generated from packages/curriculum — edit the source, not this file.
 
-## 3-1 · Equal groups: meet × and ÷ (weeks 1–4, Trade Tycoon)
+## 3-1 · Equal groups: meet × and ÷ (weeks 1–4, The Market)
 
 *Multiplication as equal groups you can see and count — the idea the whole year stands on.*
 
@@ -31,7 +31,7 @@
 
 **Days (16):** 4 new · 4 guided · 5 mixed · 2 review · 1 quiz — ends day 16 (quiz)
 
-## 3-2 · Fact fluency I (×2, 5, 10, 3, 4) (weeks 5–8, Trade Tycoon)
+## 3-2 · Fact fluency I (×2, 5, 10, 3, 4) (weeks 5–8, The Market)
 
 *The friendly fact families first, until they are quick and calm.*
 
@@ -87,7 +87,7 @@
 
 **Days (16):** 4 new · 4 guided · 5 mixed · 2 review · 1 quiz — ends day 48 (quiz)
 
-## 3-4 · Fact fluency II (×6, 7, 8, 9) + patterns (weeks 13–16, Trade Tycoon)
+## 3-4 · Fact fluency II (×6, 7, 8, 9) + patterns (weeks 13–16, The Market)
 
 *The harder families, each one built from a fact she already owns.*
 
@@ -112,7 +112,7 @@
 
 **Days (16):** 3 new · 3 guided · 6 mixed · 3 review · 1 quiz — ends day 64 (quiz)
 
-## 3-5 · Fractions as numbers (weeks 17–21, Fraction Factory)
+## 3-5 · Fractions as numbers (weeks 17–21, The Kitchen)
 
 *A fraction is a number with a place on the line — not a pizza slice.*
 
@@ -140,7 +140,7 @@
 
 **Days (20):** 4 new · 4 guided · 8 mixed · 3 review · 1 quiz — ends day 84 (quiz)
 
-## 3-6 · Area & perimeter (weeks 22–25, Equation Lab)
+## 3-6 · Area & perimeter (weeks 22–25, The Workshop)
 
 *Area is multiplication you can walk around in.*
 
@@ -157,7 +157,7 @@
 
 **Days (16):** 1 new · 1 guided · 9 mixed · 4 review · 1 quiz — ends day 100 (quiz)
 
-## 3-7 · Time, money & measurement (weeks 26–28, Trade Tycoon)
+## 3-7 · Time, money & measurement (weeks 26–28, The Market)
 
 *Clocks, change, and grams — the measuring math of a working stand.*
 

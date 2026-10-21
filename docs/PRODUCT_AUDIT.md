@@ -97,7 +97,7 @@ teach."** The owner's instinct was better than the test suite.
 4. **Wishlist rows while images load/fail** — the preview Worker (§B6) will
    miss sometimes; design the tile fallback (store-colored initial? product
    emoji by category?) so a missing image never reads as broken.
-5. **World names** — owner finds "Trade Tycoon" unfriendly. Propose 3 naming
+5. **World names** — owner finds "The Market" unfriendly. Propose 3 naming
    families for the four worlds (money/ratios · fractions · negatives/weather ·
    algebra), each set coherent and readable by an 8-year-old AND not babyish at
    13 (the age-dial test). Candidates to beat: The Market · The Kitchen · The

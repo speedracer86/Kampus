@@ -49,7 +49,7 @@
 
 **Days (20):** 3 new · 3 guided · 9 mixed · 4 review · 1 quiz — ends day 36 (quiz)
 
-## 5-3 · Adding unlike fractions (weeks 10–14, Fraction Factory)
+## 5-3 · Adding unlike fractions (weeks 10–14, The Kitchen)
 
 *Different denominators just need a common name first.*
 
@@ -74,7 +74,7 @@
 
 **Days (20):** 3 new · 3 guided · 9 mixed · 4 review · 1 quiz — ends day 56 (quiz)
 
-## 5-4 · Fraction × and ÷ (weeks 15–19, Fraction Factory)
+## 5-4 · Fraction × and ÷ (weeks 15–19, The Kitchen)
 
 *Scaling recipes up and cutting them down — multiplication and division grow up.*
 
@@ -101,7 +101,7 @@
 
 **Days (20):** 4 new · 4 guided · 8 mixed · 3 review · 1 quiz — ends day 76 (quiz)
 
-## 5-5 · Volume & the coordinate plane (weeks 20–23, Equation Lab)
+## 5-5 · Volume & the coordinate plane (weeks 20–23, The Workshop)
 
 *Filling boxes and naming points — space gets numbers.*
 
@@ -122,7 +122,7 @@
 
 **Days (16):** 2 new · 2 guided · 8 mixed · 3 review · 1 quiz — ends day 92 (quiz)
 
-## 5-6 · Expressions & order of operations (weeks 24–27, Equation Lab)
+## 5-6 · Expressions & order of operations (weeks 24–27, The Workshop)
 
 *Why everyone must read a math sentence the same way.*
 

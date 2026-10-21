@@ -187,7 +187,7 @@ export function HomeStack({ data, onEvent = () => {} }) {
     <span style={{ color: color.muted }}>, then the stand opens.</span>
   </>;
 
-  const unitLine = d.unit && `unit ${d.unit.unit} of ${d.unit.units} · ${d.unit.lessonsDone} of ${d.unit.lessonsTotal} lessons · grade test opens after unit ${d.unit.units}`;
+  const unitLine = d.unit && `unit ${d.unit.unit} of ${d.unit.units} · ${d.unit.lessonsDone} of ${d.unit.lessonsTotal} lessons · the License opens after unit ${d.unit.units}`;
 
   return <div ref={ref} style={{ ...hBase, background: color.ground, minHeight: '100%', padding: phone ? '20px 16px 40px' : '48px' }}>
     <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid',

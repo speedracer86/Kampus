@@ -30,7 +30,7 @@ Flat vector blob characters doing activities. Shared palette (corals, golds, blu
 | Role | File |
 | --- | --- |
 | Kid avatars | `Thinker`, `Magic`, `Skating`, `Explore` |
-| World mascots | `Ice_cream` (The Kitchen), `Cash` (The Store), `Rain` (The Trip), `Learning` (The Build) |
+| World mascots | `Ice_cream` (The Kitchen), `Cash` (The Market), `Rain` (Outside), `Learning` (The Workshop) |
 | Celebration / ≥80% round | `Party` |
 | Test pass | `Winner` |
 | Test intro | `Target` |

@@ -49,12 +49,20 @@ export const gradePurple = ['#C7B8F0', '#B3A0EA', '#9E87E2', '#8A6FD9'];
 export const graduation = '#6E4FCC';
 export const purpleFor = (i) => gradePurple[Math.min(Math.max(i, 0), gradePurple.length - 1)];
 
+/* The world string table — ONE source for every world name in the product
+   (POLISH_TASKS Task 0). Keyed by worldId; colors are unchanged from §0, and the
+   mascots are the ASSETS.md role assignments. Nothing anywhere should hard-code a
+   world name: import `world` or call worldName(). */
 export const world = {
-  fractions: { color: '#F0AFCE', name: 'Fraction Factory', blob: 'Ice_cream' },
-  trade: { color: '#F4BE93', name: 'Trade Tycoon', blob: 'Cash' },
-  weather: { color: '#5E9FE0', name: 'Weather Station', blob: 'Rain' },
-  equations: { color: '#8F97DE', name: 'Equation Lab', blob: 'Learning' },
+  fractions: { id: 'fractions', topic: 'frac', color: '#F0AFCE', name: 'The Kitchen', blob: 'Ice_cream' },
+  ratios: { id: 'ratios', topic: 'ratio', color: '#F4BE93', name: 'The Market', blob: 'Cash' },
+  integers: { id: 'integers', topic: 'int', color: '#5E9FE0', name: 'Outside', blob: 'Rain' },
+  equations: { id: 'equations', topic: 'alg', color: '#8F97DE', name: 'The Workshop', blob: 'Learning' },
 };
+/** Internal topic code -> worldId. Topic codes are not display names and never were. */
+export const WORLD_BY_TOPIC = Object.fromEntries(Object.values(world).map(w => [w.topic, w]));
+export const worldName = (idOrTopic) =>
+  (world[idOrTopic] || WORLD_BY_TOPIC[idOrTopic] || {}).name || '';
 export const worldTint = (c, pct = 24) => `color-mix(in oklab, ${c} ${pct}%, white)`;
 
 // Inter Tight is the app font. IBM Plex Mono is the ONLY exception, and only on

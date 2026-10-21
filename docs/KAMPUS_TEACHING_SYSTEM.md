@@ -61,25 +61,25 @@ Framework: 36-week homeschool year = 32 teaching weeks + 4 flex (fall catch-up, 
 ### Grade 3 — "the multiplication year" (≈130 lessons)
 | Wks | Unit | World | Core skills |
 |---|---|---|---|
-| 1–4 | Equal groups: meet × and ÷ | Trade Tycoon | equal groups ★, arrays/areaModel, × as repeated + ★, ÷ as sharing ★ |
-| 5–8 | Fact fluency I (×2,5,10,3,4) | Trade Tycoon | multFact/divFact by family ★(family-sequenced), missing factor |
+| 1–4 | Equal groups: meet × and ÷ | The Market | equal groups ★, arrays/areaModel, × as repeated + ★, ÷ as sharing ★ |
+| 5–8 | Fact fluency I (×2,5,10,3,4) | The Market | multFact/divFact by family ★(family-sequenced), missing factor |
 | 9–12 | Place value & big add/sub | Number Mine | addBig, subBig, rounding ★(3.NBT), two-step stories |
-| 13–16 | Fact fluency II (×6,7,8,9) + patterns | Trade Tycoon | harder families, patternNext, distributive-as-trick ★ |
-| 17–21 | Fractions as numbers | Fraction Factory | unit fractions, on the number line ★, equivalence, compare |
-| 22–25 | Area & perimeter | Equation Lab | areaModel, perimeter ★, decompose rooms ★ |
-| 26–28 | Time, money & measurement | Trade Tycoon | elapsed time ★, money word problems ★, grams/liters ★ |
+| 13–16 | Fact fluency II (×6,7,8,9) + patterns | The Market | harder families, patternNext, distributive-as-trick ★ |
+| 17–21 | Fractions as numbers | The Kitchen | unit fractions, on the number line ★, equivalence, compare |
+| 22–25 | Area & perimeter | The Workshop | areaModel, perimeter ★, decompose rooms ★ |
+| 26–28 | Time, money & measurement | The Market | elapsed time ★, money word problems ★, grams/liters ★ |
 | 29–32 | Data + year review | Stand | picture/bar graphs ★, mixed review, grade test |
 
 ### Grade 4 — "big numbers, equivalent fractions" (≈130 lessons)
 | Wks | Unit | World | Core skills |
 |---|---|---|---|
 | 1–4 | Place value to 1M, add/sub | Number Mine | addBig/subBig large, rounding, comparisons |
-| 5–9 | Multi-digit × and ÷ | Trade Tycoon | mulDigit, divRem, multCompare, factors/multiples ★ |
-| 10–13 | Measurement & conversions | Weather Station | km/m, kg/g, time ★, unit word problems ★ |
-| 14–18 | Fraction equivalence & ordering | Fraction Factory | eqFrac, cmpFrac, addSameDen, mixedImp |
-| 19–22 | Fraction × whole, line plots | Fraction Factory | fracOfSet, ×whole ★, line plots ★ |
-| 23–26 | Decimals meet money | Fraction Factory | decNotation, decCompare, +tenths/hundredths ★ |
-| 27–29 | Angles & shapes | Equation Lab | angle measure ★, classify ★ |
+| 5–9 | Multi-digit × and ÷ | The Market | mulDigit, divRem, multCompare, factors/multiples ★ |
+| 10–13 | Measurement & conversions | Outside | km/m, kg/g, time ★, unit word problems ★ |
+| 14–18 | Fraction equivalence & ordering | The Kitchen | eqFrac, cmpFrac, addSameDen, mixedImp |
+| 19–22 | Fraction × whole, line plots | The Kitchen | fracOfSet, ×whole ★, line plots ★ |
+| 23–26 | Decimals meet money | The Kitchen | decNotation, decCompare, +tenths/hundredths ★ |
+| 27–29 | Angles & shapes | The Workshop | angle measure ★, classify ★ |
 | 30–32 | Year review + grade test | all | mixed, test |
 
 ### Grade 5 — "fractions and decimals get real" (≈130 lessons)
@@ -87,42 +87,42 @@ Framework: 36-week homeschool year = 32 teaching weeks + 4 flex (fall catch-up, 
 |---|---|---|---|
 | 1–4 | Place value & powers of ten | Decimal Depths | powTen, decimal place value ★, rounding decimals ★ |
 | 5–9 | Decimal operations | Decimal Depths | decAdd, decMul, decDiv, money contexts |
-| 10–14 | Fraction add/sub (unlike) | Fraction Factory | addUnlikeDen, subFrac, estimation ★ |
-| 15–19 | Fraction × and ÷ | Fraction Factory | mulFrac, fracOfSet, unitFracDiv, scaling ★ |
-| 20–23 | Volume & the coordinate plane | Equation Lab | volumeBox, coordinate graphing ★ |
-| 24–27 | Expressions & order of operations | Equation Lab | orderOps(Paren), evalX, numerical patterns |
+| 10–14 | Fraction add/sub (unlike) | The Kitchen | addUnlikeDen, subFrac, estimation ★ |
+| 15–19 | Fraction × and ÷ | The Kitchen | mulFrac, fracOfSet, unitFracDiv, scaling ★ |
+| 20–23 | Volume & the coordinate plane | The Workshop | volumeBox, coordinate graphing ★ |
+| 24–27 | Expressions & order of operations | The Workshop | orderOps(Paren), evalX, numerical patterns |
 | 28–32 | Conversions, data + year review | Stand | conversions ★, line plots ★, test |
 
 ### Grade 6 — "ratios, negatives, the birth of algebra" (≈130 lessons)
 | Wks | Unit | World | Core skills |
 |---|---|---|---|
-| 1–5 | Ratios & rates | Trade Tycoon | unitRate, simplifyRatio, ratioShare, tape diagrams ★ |
-| 6–9 | Percent | Trade Tycoon | easyPct, pctOf, findWhole, frac2pct |
-| 10–13 | Fraction ÷ fraction, decimal fluency | Fraction Factory | divFrac, decimal ops fluency, frac↔dec |
-| 14–18 | Rational numbers | Weather Station | addInt, cmpInt, absVal, opposites, coordinate plane ★ |
-| 19–24 | Expressions & equations | Equation Lab | evalX, oneStep±×, twoStep, depVar, exponents intro ★ |
-| 25–27 | Area, surface area, volume | Equation Lab | triangles/composite ★, nets ★ |
+| 1–5 | Ratios & rates | The Market | unitRate, simplifyRatio, ratioShare, tape diagrams ★ |
+| 6–9 | Percent | The Market | easyPct, pctOf, findWhole, frac2pct |
+| 10–13 | Fraction ÷ fraction, decimal fluency | The Kitchen | divFrac, decimal ops fluency, frac↔dec |
+| 14–18 | Rational numbers | Outside | addInt, cmpInt, absVal, opposites, coordinate plane ★ |
+| 19–24 | Expressions & equations | The Workshop | evalX, oneStep±×, twoStep, depVar, exponents intro ★ |
+| 25–27 | Area, surface area, volume | The Workshop | triangles/composite ★, nets ★ |
 | 28–32 | Statistics (the Stand unit) + review | Stand | meanMedian, variability ★, histograms ★, test |
 
 ### Grade 7 — "proportional reasoning everywhere" (≈130 lessons)
 | Wks | Unit | World | Core skills |
 |---|---|---|---|
-| 1–5 | Proportional relationships | Trade Tycoon | propSolve, unit rate w/ fractions ★, graphs of prop. ★ |
-| 6–10 | Rational number operations | Weather Station | subNeg, mulInt, divInt, mixedInt, doubleSub |
-| 11–15 | Expressions & equations | Equation Lab | distrib, combineLike, twoStepNeg, inequalities ★ |
-| 16–20 | Percent in the wild | Trade Tycoon | tipCalc, discountTax, simpleInterest, pctChange, markup ★, tax ★ |
+| 1–5 | Proportional relationships | The Market | propSolve, unit rate w/ fractions ★, graphs of prop. ★ |
+| 6–10 | Rational number operations | Outside | subNeg, mulInt, divInt, mixedInt, doubleSub |
+| 11–15 | Expressions & equations | The Workshop | distrib, combineLike, twoStepNeg, inequalities ★ |
+| 16–20 | Percent in the wild | The Market | tipCalc, discountTax, simpleInterest, pctChange, markup ★, tax ★ |
 | 21–24 | Statistics & sampling | Stand | sampling ★, comparing distributions ★ |
 | 25–27 | Probability | Stand | probSimple, compound events ★ |
-| 28–32 | Geometry + year review | Equation Lab | scale drawings ★, angle equations ★, circles ★, test |
+| 28–32 | Geometry + year review | The Workshop | scale drawings ★, angle equations ★, circles ★, test |
 
 ### Grade 8 — "lines, functions, the leap" (≈130 lessons)
 | Wks | Unit | World | Core skills |
 |---|---|---|---|
 | 1–4 | Exponents & scientific notation | Power Plant | powersG, sciNotG, exponent rules ★ |
-| 5–9 | Linear equations | Equation Lab | multiStepG, x-both-sides ★, special cases ★ |
+| 5–9 | Linear equations | The Workshop | multiStepG, x-both-sides ★, special cases ★ |
 | 10–14 | Slope & linear relationships | Slope City | slope2G, y=mx+b ★, graphing lines ★ |
-| 15–18 | Systems | Equation Lab | sysSolve, substitution ★, word systems ★ |
-| 19–23 | Functions | Equation Lab | funcEval, funcRate, compare functions ★, linear vs non ★ |
+| 15–18 | Systems | The Workshop | sysSolve, substitution ★, word systems ★ |
+| 19–23 | Functions | The Workshop | funcEval, funcRate, compare functions ★, linear vs non ★ |
 | 24–26 | Pythagorean & irrationals | Power Plant | pythag, approxRoot, distance ★ |
 | 27–29 | Bivariate data | Stand | scatter plots ★, trend lines ★ |
 | 30–32 | Year review + grade test | all | mixed, test |

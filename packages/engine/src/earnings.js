@@ -20,6 +20,9 @@ export const RATES = {
   streak5: 50,    // five-day streak
   field: 50,      // a field assignment, done with a grown-up (PLAY_SYSTEM §7)
 };
+/* Two vocabularies for one ledger row (POLISH_TASKS Task 0). A grown-up approving
+   an earning needs to know what it was — "a unit quiz". The kid reading her own
+   receipt lives in the world, where it was Inspection Day. Same row, same money. */
 export const RATE_LABEL = {
   lesson: "Finished today's lesson",
   quiz: 'Took a unit quiz',
@@ -27,6 +30,16 @@ export const RATE_LABEL = {
   streak5: 'Five-day streak',
   field: 'Field assignment',
 };
+export const KID_LABEL = {
+  lesson: "Finished today's lesson",
+  quiz: 'Sat Inspection Day',
+  test: 'Sat the License',
+  streak5: 'Five days running',
+  field: 'Field assignment',
+};
+/** The wording for an audience: 'kid' (her receipt) or 'grownup' (the approvals queue). */
+export const labelFor = (reason, audience = 'grownup') =>
+  (audience === 'kid' ? KID_LABEL : RATE_LABEL)[reason] || reason;
 
 /** Weekly cap options a grown-up can choose, in cents. */
 export const CAP_OPTIONS = [300, 500, 800];
@@ -163,7 +176,8 @@ export function receiptModel(rows = [], { name = 'you', week, cap = DEFAULT_CAP_
   return {
     name,
     number: String(number).padStart(4, '0'),
-    earned: earned.map(r => ({ day: r.day, label: r.label, cents: r.cents })),
+    // The receipt is hers, so it speaks her world's words.
+    earned: earned.map(r => ({ day: r.day, label: labelFor(r.reason, 'kid') || r.label, cents: r.cents })),
     subtotal: sum(earned),
     cap,
     capLeft: capRemaining(rows, week, cap),
@@ -176,6 +190,6 @@ export function receiptModel(rows = [], { name = 'you', week, cap = DEFAULT_CAP_
 }
 
 /** The "How you earn" list §0 prints on the ground under the receipt. */
-export function howYouEarn() {
-  return Object.keys(RATES).map(reason => ({ reason, label: RATE_LABEL[reason], cents: RATES[reason] }));
+export function howYouEarn(audience = 'kid') {
+  return Object.keys(RATES).map(reason => ({ reason, label: labelFor(reason, audience), cents: RATES[reason] }));
 }

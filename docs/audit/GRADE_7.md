@@ -2,7 +2,7 @@
 
 128 lesson days · 7 units. Generated from packages/curriculum — edit the source, not this file.
 
-## 7-1 · Proportional relationships (weeks 1–5, Trade Tycoon)
+## 7-1 · Proportional relationships (weeks 1–5, The Market)
 
 *When two things grow in lockstep — and how to use one to find the other.*
 
@@ -27,7 +27,7 @@
 
 **Days (20):** 3 new · 3 guided · 9 mixed · 4 review · 1 quiz — ends day 20 (quiz)
 
-## 7-2 · Rational number operations (weeks 6–10, Weather Station)
+## 7-2 · Rational number operations (weeks 6–10, Outside)
 
 *Full command of negatives: gains, losses, and chains of both.*
 
@@ -60,7 +60,7 @@
 
 **Days (20):** 6 new · 6 guided · 5 mixed · 2 review · 1 quiz — ends day 40 (quiz)
 
-## 7-3 · Expressions & equations (weeks 11–15, Equation Lab)
+## 7-3 · Expressions & equations (weeks 11–15, The Workshop)
 
 *Rewriting before solving — the algebra habit that makes hard things easy.*
 
@@ -89,7 +89,7 @@
 
 **Days (20):** 4 new · 4 guided · 8 mixed · 3 review · 1 quiz — ends day 60 (quiz)
 
-## 7-4 · Percent in the wild (weeks 16–20, Trade Tycoon)
+## 7-4 · Percent in the wild (weeks 16–20, The Market)
 
 *Tips, discounts, interest, markup — the percent math that runs a business.*
 
@@ -158,7 +158,7 @@
 
 **Days (12):** 1 new · 1 guided · 6 mixed · 3 review · 1 quiz — ends day 108 (quiz)
 
-## 7-7 · Geometry + the year in review (weeks 28–32, Equation Lab)
+## 7-7 · Geometry + the year in review (weeks 28–32, The Workshop)
 
 *Scale drawings and circles, the year mixed back together, the grade test.*
 

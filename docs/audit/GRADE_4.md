@@ -29,7 +29,7 @@
 
 **Days (16):** 4 new · 4 guided · 5 mixed · 2 review · 1 quiz — ends day 16 (quiz)
 
-## 4-2 · Multi-digit × and ÷ (weeks 5–9, Trade Tycoon)
+## 4-2 · Multi-digit × and ÷ (weeks 5–9, The Market)
 
 *Batches times batches, and what the remainder really means.*
 
@@ -58,7 +58,7 @@
 
 **Days (20):** 4 new · 4 guided · 8 mixed · 3 review · 1 quiz — ends day 36 (quiz)
 
-## 4-3 · Measurement & conversions (weeks 10–13, Weather Station)
+## 4-3 · Measurement & conversions (weeks 10–13, Outside)
 
 *Kilometers to meters, kilograms to grams — bigger unit, smaller count.*
 
@@ -79,7 +79,7 @@
 
 **Days (16):** 2 new · 2 guided · 8 mixed · 3 review · 1 quiz — ends day 52 (quiz)
 
-## 4-4 · Fraction equivalence & ordering (weeks 14–18, Fraction Factory)
+## 4-4 · Fraction equivalence & ordering (weeks 14–18, The Kitchen)
 
 *Different names for the same amount, and how to tell which is more.*
 
@@ -105,7 +105,7 @@
 
 **Days (20):** 4 new · 4 guided · 8 mixed · 3 review · 1 quiz — ends day 72 (quiz)
 
-## 4-5 · Fractions × whole numbers (weeks 19–22, Fraction Factory)
+## 4-5 · Fractions × whole numbers (weeks 19–22, The Kitchen)
 
 *Three quarters, four times — fractions start doing work.*
 
@@ -129,7 +129,7 @@
 
 **Days (16):** 3 new · 3 guided · 6 mixed · 3 review · 1 quiz — ends day 88 (quiz)
 
-## 4-6 · Decimals meet money (weeks 23–26, Fraction Factory)
+## 4-6 · Decimals meet money (weeks 23–26, The Kitchen)
 
 *Tenths and hundredths are coins — decimals arrive as money she already knows.*
 
@@ -157,7 +157,7 @@
 
 **Days (16):** 4 new · 4 guided · 5 mixed · 2 review · 1 quiz — ends day 104 (quiz)
 
-## 4-7 · Angles & shapes (weeks 27–29, Equation Lab)
+## 4-7 · Angles & shapes (weeks 27–29, The Workshop)
 
 *Turns, corners, and the names shapes earn.*
 

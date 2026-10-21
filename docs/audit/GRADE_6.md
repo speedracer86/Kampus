@@ -2,7 +2,7 @@
 
 128 lesson days · 7 units. Generated from packages/curriculum — edit the source, not this file.
 
-## 6-1 · Ratios & rates (weeks 1–5, Trade Tycoon)
+## 6-1 · Ratios & rates (weeks 1–5, The Market)
 
 *Per-cup, per-hour, per-dollar — the comparison tool behind every good deal.*
 
@@ -31,7 +31,7 @@
 
 **Days (20):** 4 new · 4 guided · 8 mixed · 3 review · 1 quiz — ends day 20 (quiz)
 
-## 6-2 · Percent (weeks 6–9, Trade Tycoon)
+## 6-2 · Percent (weeks 6–9, The Market)
 
 *Out of a hundred: discounts, tips, and what the sale sign really says.*
 
@@ -60,7 +60,7 @@
 
 **Days (16):** 4 new · 4 guided · 5 mixed · 2 review · 1 quiz — ends day 36 (quiz)
 
-## 6-3 · Fraction ÷ fraction, decimal fluency (weeks 10–13, Fraction Factory)
+## 6-3 · Fraction ÷ fraction, decimal fluency (weeks 10–13, The Kitchen)
 
 *How many quarter-cups fit in three halves — division finishes growing up.*
 
@@ -91,7 +91,7 @@
 
 **Days (16):** 5 new · 5 guided · 4 mixed · 1 review · 1 quiz — ends day 52 (quiz)
 
-## 6-4 · Rational numbers (weeks 14–18, Weather Station)
+## 6-4 · Rational numbers (weeks 14–18, Outside)
 
 *Below zero is still a number — temperature, debt, and distance from zero.*
 
@@ -118,7 +118,7 @@
 
 **Days (20):** 4 new · 4 guided · 8 mixed · 3 review · 1 quiz — ends day 72 (quiz)
 
-## 6-5 · Expressions & equations (weeks 19–24, Equation Lab)
+## 6-5 · Expressions & equations (weeks 19–24, The Workshop)
 
 *Letters stand for numbers you don’t know yet — and equations find them.*
 
@@ -155,7 +155,7 @@
 
 **Days (24):** 6 new · 6 guided · 8 mixed · 3 review · 1 quiz — ends day 96 (quiz)
 
-## 6-6 · Area, surface area & volume (weeks 25–27, Equation Lab)
+## 6-6 · Area, surface area & volume (weeks 25–27, The Workshop)
 
 *Breaking shapes into pieces you already know how to measure.*
 

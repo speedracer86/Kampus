@@ -319,7 +319,7 @@ export function approxRoot() {
 /* ---------- registration ----------
    Placement mirrors the curriculum plan: each generator joins the world whose
    identity fits its context (stats/probability feed off the Lemonade Stand,
-   volume lives in Equation Lab's formula work, percents in Trade Tycoon). */
+   volume lives in The Workshop's formula work, percents in The Market). */
 /* Minification-proof name registry: object-literal keys are strings, so the skill
    index can resolve these even where fn.name has been mangled by a bundler. */
 export const EXPANSION_GENERATORS = {

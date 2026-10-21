@@ -433,7 +433,7 @@ export function App() {
           unit={state.tiers[tierKey(state.grade, topic)] || 1}
           intro={isQuiz
             ? 'Inspection Day. Ten questions on this unit, plus a few from earlier — the stand stays shut this morning. No timer, and Read it to me stays on. Nothing here can hurt your business.'
-            : `${testIntroCopy(state.grade)} Pass it and the Grade ${state.grade} district gets built.`}
+            : `${testIntroCopy(state.grade)} Pass it and you earn the Grade ${state.grade} License — the district gets built.`}
           onStart={() => setPapers(isQuiz ? buildUnitQuizFromPlan(state) : buildGradeTest({ grade: state.grade }))} />
       </div>;
     }

@@ -1,4 +1,9 @@
-/* Unit quiz (§0 8a/8b) and grade test (§0 10a/10b).
+/* Inspection Day (§0 8a/8b) and the License (§0 10a/10b) — what the code calls the
+   unit quiz and the grade test.
+
+   POLISH_TASKS Task 0: the kid never reads "unit quiz" or "grade test". She sits an
+   Inspection and earns a License. Grown-ups keeps the plain words, because a parent
+   needs to know what it is, not what it is called in the world.
 
    Both run the same shell: an intro of plain rule rows, then the questions with a
    map of every slot, then results. Nothing is marked right or wrong until the kid
@@ -43,7 +48,7 @@ export function AssessmentIntro({ kind = 'quiz', grade, unit, intro, onStart, ph
   ];
   return <div style={{ ...aBase, display: phone ? 'block' : 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
     <div>
-      <Kicker style={{ marginBottom: 14 }}>{kind === 'quiz' ? `Unit ${unit} quiz` : `Grade ${grade} test`}</Kicker>
+      <Kicker style={{ marginBottom: 14 }}>{kind === 'quiz' ? `Unit ${unit} · Inspection Day` : `Grade ${grade} · the License`}</Kicker>
       <div style={{ borderTop: `1px solid ${color.rule}` }}>
         {rows.map(([k, v]) => <div key={k} style={{ display: 'flex', justifyContent: 'space-between', gap: 16,
           padding: '13px 0', borderBottom: `1px solid ${color.rule}`, fontSize: 15 }}>
@@ -53,7 +58,7 @@ export function AssessmentIntro({ kind = 'quiz', grade, unit, intro, onStart, ph
     </div>
     <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 36, marginTop: phone ? 20 : 0 }}>
       <h2 style={{ fontSize: phone ? 28 : 40, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 12px' }}>
-        {kind === 'quiz' ? 'Ready for the unit quiz?' : `Grade ${grade} test`}</h2>
+        {kind === 'quiz' ? 'Ready for Inspection Day?' : `The Grade ${grade} License`}</h2>
       <p style={{ fontSize: 18, lineHeight: 1.5, color: color.muted, margin: '0 0 28px' }}>{intro}</p>
       <Button variant="ink" size="lg" onClick={onStart}>Start</Button>
     </div>
@@ -101,7 +106,7 @@ export function AssessmentRunner({ kind = 'quiz', questions = [], onHandIn, onEx
         {onExit && <button onClick={onExit} style={{ ...aBase, border: 'none', cursor: 'pointer', background: color.surface,
           borderRadius: radius.full, padding: '8px 16px', fontSize: 13, fontWeight: 700 }}>Exit</button>}
         <span style={{ fontSize: 13, fontWeight: 700, color: color.muted }}>
-          {kind === 'quiz' ? 'Unit quiz' : 'Grade test'} · {at + 1} of {questions.length}</span>
+          {kind === 'quiz' ? 'Inspection Day' : 'the License'} · {at + 1} of {questions.length}</span>
         <span style={{ flex: 1 }} />
         <span style={{ ...aBase, background: color.surface, borderRadius: radius.full, padding: '7px 13px', fontSize: 13, fontWeight: 700 }}>Untimed</span>
       </div>

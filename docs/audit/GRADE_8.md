@@ -23,7 +23,7 @@
 
 **Days (16):** 2 new · 2 guided · 8 mixed · 3 review · 1 quiz — ends day 16 (quiz)
 
-## 8-2 · Linear equations (weeks 5–9, Equation Lab)
+## 8-2 · Linear equations (weeks 5–9, The Workshop)
 
 *Solving anything linear — including equations with x on both sides.*
 
@@ -64,7 +64,7 @@
 
 **Days (20):** 2 new · 2 guided · 10 mixed · 5 review · 1 quiz — ends day 56 (quiz)
 
-## 8-4 · Systems of equations (weeks 15–18, Equation Lab)
+## 8-4 · Systems of equations (weeks 15–18, The Workshop)
 
 *Two conditions at once — where the lines cross is the answer. Break-even lives here.*
 
@@ -81,7 +81,7 @@
 
 **Days (16):** 1 new · 1 guided · 9 mixed · 4 review · 1 quiz — ends day 72 (quiz)
 
-## 8-5 · Functions (weeks 19–23, Equation Lab)
+## 8-5 · Functions (weeks 19–23, The Workshop)
 
 *A machine that turns inputs into outputs — price in, demand out.*
 

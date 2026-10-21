@@ -129,10 +129,15 @@ untouched lines.**
   `apps/web/src/worlds.js`, `packages/ui/src/tokens.js` (`world` map), and the engine's
   `GRADE_WORLDS`. `worlds.js` gives `alg` the `Idea` blob while `tokens.js` says `Learning`.
   Reconcile deliberately rather than patching one call site.
-- **World names are settled: Fraction Factory · Trade Tycoon · Weather Station ·
-  Equation Lab.** The deliverable's §1.3 still lists an abandoned renaming (The Kitchen /
-  The Store / The Trip / The Build); §0's Brief v4 retrofit supersedes it and the code
-  matches §0. Ignore §1.3 on this point.
+- **World names live in ONE string table**, `packages/ui/src/tokens.js` `world`, keyed by
+  worldId (`fractions`, `ratios`, `integers`, `equations`): **The Kitchen · The Market ·
+  Outside · The Workshop**, owner-confirmed in ROUND3. Never hard-code a world name —
+  import `world` or call `worldName(idOrTopic)`. The design deliverable's §1.3 and its
+  own ASSETS still show two earlier namings from previous rounds; both are abandoned,
+  so take world names from the table and not from the handoff. Topic codes (`frac`,
+  `ratio`, `int`, `alg`) are internal and are not display names.
+  Grepping the repo for a retired world name should return zero hits — that is the
+  Task 0 done-condition and it stays true only if nothing quotes them, including docs.
 - **The pre-§0 components are gone** — `Gallery.jsx`, `gallery-preview.jsx`, `home.jsx`,
   `flows.jsx`, `parent.jsx`, `gamify.jsx`, and the old Home pieces inside `app.jsx`. Their
   §0 replacements are `home-stack.jsx`, `question.jsx`, `lesson.jsx` and `interactives.jsx`;
