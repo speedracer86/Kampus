@@ -17,3 +17,13 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+
+      # The unit suite cannot see the class of bug that has twice reached main:
+      # generators lost to minification, and a screen never wired to its engine.
+      # Both are only visible in the bundle a kid actually loads, so CI runs the
+      # built site in a real browser. `npm run test:webapp` rebuilds and serves
+      # apps/web/dist as a plain static host — no dev server, no HMR.
+      - name: Install Chromium for the built-bundle suite
+        run: npx playwright install --with-deps chromium
+      - name: E2E against the built bundle
+        run: node tests/test_webapp.mjs
