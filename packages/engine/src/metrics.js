@@ -84,3 +84,38 @@ export function returnRate(days = [], { window = 7, from } = {}) {
   const inWindow = uniq.filter(d => d > start && d <= end);
   return { active: inWindow.length, window, returned: inWindow.length > 0 };
 }
+
+/** A lesson that assembled with nothing to practise. Never a silent success. */
+EVENTS.LESSON_EMPTY = 'lesson_empty';
+
+/**
+ * Is this lesson actually playable? (AUDIT B4)
+ *
+ * A lesson may not reach "done" — or pay its real-money $0.50 — unless the moves
+ * that do the teaching actually ran questions. Guided and prove-it are the two that
+ * matter: guided is where the skill is practised with help, prove-it is where she
+ * shows it without. Warm-up and mixed can legitimately be thin.
+ *
+ * This is the alarm for the bug class that already shipped once: generators that
+ * fail to resolve produce moves with zero questions, and without this check the
+ * lesson sails through to "done" and pays out for nothing.
+ *
+ * @param {Array<{id: string, questions?: Array}>} moves
+ * @returns {{playable: boolean, missing: string[]}}
+ */
+export const REQUIRED_MOVES = ['guided', 'prove'];
+export function lessonReadiness(moves = []) {
+  const missing = REQUIRED_MOVES.filter(id => {
+    const move = moves.find(m => m.id === id);
+    return !move || !(move.questions?.length > 0);
+  });
+  return { playable: missing.length === 0, missing };
+}
+
+/**
+ * Did the run itself do the work? Guards the payout at the END of a lesson, where
+ * `answered` counts questions actually answered per move.
+ */
+export function lessonEarnsPay(answered = {}) {
+  return REQUIRED_MOVES.every(id => (answered[id] || 0) > 0);
+}

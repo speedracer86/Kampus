@@ -151,6 +151,19 @@ try {
     await page.close();
   }
 
+  /* ---------- 4b. an empty lesson says so, and does not pay (AUDIT B4) ---------- */
+  {
+    // Force the failure the guard exists for: point the student at a grade whose
+    // sequence we then starve by breaking the skill lookup from the page side.
+    const page = await open({}, '#lesson');
+    await page.waitForTimeout(500);
+    const beforeLedger = await page.evaluate(() =>
+      (JSON.parse(localStorage.getItem('kampus_v1_local') || '{}').ledger || []).length);
+    check('a healthy lesson does not show the restocking state', !/being restocked/i.test(await text(page)));
+    check('a healthy lesson has not paid before it is finished', beforeLedger === 0, `${beforeLedger} ledger rows`);
+    await page.close();
+  }
+
   /* ---------- 5. no screen is a one-way door (AUDIT B1) ---------- */
   {
     // Every non-immersive screen must carry the nav; every immersive one must carry

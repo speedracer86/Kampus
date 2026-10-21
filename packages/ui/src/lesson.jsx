@@ -19,6 +19,21 @@ const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
 const MOVE_LABEL = { warmup: 'Warm-up', new: 'New idea', guided: 'Guided', mixed: 'Mixed', prove: 'Prove it' };
 
+/* Mirrors packages/engine/src/metrics.js lessonReadiness/lessonEarnsPay, for the same
+   reason defaultPricer mirrors payout.js: this library is zero-dependency by contract,
+   so it cannot import the engine. The engine is the tested source of truth; these two
+   predicates are four lines each and are kept deliberately trivial so they cannot
+   drift in behaviour. AUDIT B4. */
+const REQUIRED_MOVES = ['guided', 'prove'];
+const lessonReadiness = (moves = []) => {
+  const missing = REQUIRED_MOVES.filter(id => {
+    const m = moves.find(x => x.id === id);
+    return !m || !(m.questions?.length > 0);
+  });
+  return { playable: missing.length === 0, missing };
+};
+const lessonEarnsPay = (answered = {}) => REQUIRED_MOVES.every(id => (answered[id] || 0) > 0);
+
 /** Mirrors packages/engine/src/payout.js so the library stays dependency-free.
     apps/web passes the engine's own payout() in as `pricer`; this is the fallback. */
 const MULT = (s) => (s >= 10 ? 3 : s >= 6 ? 2 : s >= 3 ? 1.5 : 1);
@@ -191,6 +206,9 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
   const [at, setAt] = React.useState(0);          // move index
   const [qi, setQi] = React.useState(0);          // question index inside the move
   const [progress, setProgress] = React.useState({});
+  // Questions actually ANSWERED per move. A lesson pays only if the teaching moves
+  // really ran (AUDIT B4) — assembling them is not the same as doing them.
+  const [answered, setAnswered] = React.useState({});
   const [earned, setEarned] = React.useState(0);
   const [streak, setStreak] = React.useState(0);
   const [tokensLeft, setTokensLeft] = React.useState(tokensPerRun);
@@ -215,6 +233,13 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
   const finishMove = () => {
     onEvent('move_complete', { move: move.id });
     if (at + 1 < moves.length) { setAt(at + 1); setQi(0); setFresh(false); resetUi(); return; }
+    // No "done" and no real money unless the teaching moves actually ran questions.
+    // A silent success here is how an empty lesson would pay out for nothing.
+    if (!lessonEarnsPay(answered)) {
+      onEvent('lesson_empty', { reason: 'required moves did not run', answered });
+      setPhase('empty');
+      return;
+    }
     onEvent('lesson_complete', { kredits: earned, rewardCents });
     setPhase('done');
   };
@@ -234,6 +259,7 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
       const payout = pricer({ tier, streak: s, firstTry: ui.tries === 0, teachUsed: ui.teachUsed, tokenUsed: ui.tokenUsed });
       setStreak(s); setEarned(e => e + payout.amount);
       setProgress(p => ({ ...p, [move.id]: { done: Math.min(questions.length, (p[move.id]?.done || 0) + 1) } }));
+      setAnswered(a => ({ ...a, [move.id]: (a[move.id] || 0) + 1 }));
       onEvent('answer', { right: true, move: move.id, gain: payout.amount, streak: s, firstTry: ui.tries === 0, teachUsed: ui.teachUsed, tokenUsed: ui.tokenUsed });
       setUi(u => ({ ...u, feedback: 'correct', picked: i, payout }));
       setTimeout(nextQuestion, 1400);
@@ -254,6 +280,13 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
     resetUi();
   };
 
+  // Assembly-time check: if the lesson came back without its teaching moves, say so
+  // plainly rather than presenting a hollow lesson (AUDIT B4).
+  const readiness = lessonReadiness(moves);
+  React.useEffect(() => {
+    if (!readiness.playable) onEvent('lesson_empty', { reason: 'assembled empty', missing: readiness.missing });
+  }, [readiness.playable]);
+
   const frame = (children) => <div ref={ref} style={{ ...lBase, background: color.ground, minHeight: '100%', padding: phone ? '18px 16px 40px' : '28px 48px 56px' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10 }}>
@@ -268,6 +301,17 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
       {children}
     </div>
   </div>;
+
+  if (!readiness.playable || phase === 'empty') return frame(
+    <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 24 : 36, maxWidth: 560 }}>
+      <Kicker style={{ marginBottom: 10 }}>Back in a moment</Kicker>
+      <h2 style={{ fontSize: phone ? 26 : 34, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 12px' }}>
+        This lesson is being restocked.</h2>
+      <p style={{ fontSize: 17, lineHeight: 1.5, color: color.muted, margin: '0 0 24px' }}>
+        Nothing you did wrong — today's questions didn't come through. Try free practice
+        while we sort it, and this one will be here tomorrow.</p>
+      <Button variant="ink" onClick={onExit}>Back to Today</Button>
+    </div>);
 
   if (phase === 'done') return frame(<LessonDone earned={earned} rewardCents={rewardCents} moves={moves}
     onAgain={() => { setAt(0); setQi(0); setEarned(0); setStreak(0); setTokensLeft(tokensPerRun); resetUi(); setPhase('run'); }}
