@@ -6,7 +6,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
   firstReview, review, dayNumber, problemsForSkill,
-  awayFeed, buildStage, seasonFor, unlocks as bizUnlocks,
+  awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { Shell } from '@kampus/ui/app';
@@ -90,19 +90,16 @@ function homeStackData(state) {
     name: state.name || 'there',
     bank: state.kredits,
     weekKredits: state.week.earned,
-    grades: [3, 4, 5, 6, 7, 8].map(g => {
-      const passed = !!state.passed[g];
+    // Grade states and the folded "earlier grades" card come from the engine, so the
+    // placed-vs-locked distinction is one rule with tests rather than a ternary here.
+    ...(() => {
+      const states = gradeStates({ grade, passed: state.passed || {}, tests: state.tests || {}, earned: state.testEarned || {} });
+      const { earlier, rows } = foldGradeStack(states);
       return {
-        grade: g,
-        status: passed ? 'passed' : g === grade ? 'current' : 'locked',
-        // Brief v4: a test score, never a letter grade or a percentage.
-        test: passed ? (state.tests?.[g] || '18/20') : undefined,
-        earned: passed ? (state.testEarned?.[g] || 0) : undefined,
-        unit: g === grade ? curTier : undefined,
-        units: 7,
-        graduated: passed && g === 8,
+        earlierGrades: earlier,
+        grades: rows.map(r => (r.state === 'current' ? { ...r, unit: curTier, units: 7 } : r)),
       };
-    }),
+    })(),
     unit: (({ unit, units, lessonsDone, lessonsTotal }) => ({ unit, units, lessonsDone, lessonsTotal }))(yearProgress(state)),
     lesson: todayCard(state),
     practice: TOPIC_ORDER.map(topic => ({

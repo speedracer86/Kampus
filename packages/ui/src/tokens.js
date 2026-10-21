@@ -47,6 +47,9 @@ export const glassBlur = 'saturate(1.8) blur(20px)';
 // earns `graduation`. Never world colors — §0.
 export const gradePurple = ['#C7B8F0', '#B3A0EA', '#9E87E2', '#8A6FD9'];
 export const graduation = '#6E4FCC';
+/** The folded "Earlier grades · Review anytime" card (§0b). Lighter than the ramp:
+    these grades are hers to revisit, not trophies she won. */
+export const earlierGrades = '#DCD2F6';
 export const purpleFor = (i) => gradePurple[Math.min(Math.max(i, 0), gradePurple.length - 1)];
 
 /* The world string table — ONE source for every world name in the product

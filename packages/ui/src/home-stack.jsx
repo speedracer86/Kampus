@@ -6,7 +6,7 @@
 
    Stateless apart from the Today/Week switch; everything else arrives as data and
    leaves through onEvent. */
-import { color, type, radius, shadow, font, numeral, money, signed, purpleFor, graduation } from './tokens.js';
+import { color, type, radius, shadow, font, numeral, money, signed, purpleFor, graduation, earlierGrades } from './tokens.js';
 import { Kicker, Chip, PillLabel, Blob } from './primitives.jsx';
 import { useWidth } from './util.jsx';
 
@@ -18,52 +18,77 @@ const MOVES = ['Warm-up', 'New idea', 'Guided', 'Mixed', 'Prove it'];
  * grade is ink with lime unit dots, locked grades are the flat locked fill. Opening a
  * passed grade grows its padding and pushes the cards below down (§0).
  */
-export function GradeStack({ grades = [], onPick, phone }) {
+export function GradeStack({ grades = [], earlier, onPick, phone }) {
   const [open, setOpen] = React.useState(null);
-  const passedSoFar = (i) => grades.slice(0, i).filter(g => g.status === 'passed').length;
+  const [foldOpen, setFoldOpen] = React.useState(false);
+  const passedSoFar = (i) => grades.slice(0, i).filter(g => g.state === 'passed').length;
+
+  /* The folded card for grades she placed past. It is NOT the purple ramp: those are
+     Licenses she earned, and showing five of them for work she skipped would be a
+     lie about her record (Task 3). */
+  const earlierCard = earlier && <div style={{ ...hBase, background: earlierGrades, color: color.ink,
+    borderRadius: `${radius.gradeCard}px ${radius.gradeCard}px 0 0`, padding: '20px', marginBottom: -14,
+    position: 'relative', zIndex: grades.length + 1, boxShadow: shadow.stackTop, cursor: 'pointer' }}
+    onClick={() => setFoldOpen(o => !o)}>
+    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
+      <span style={{ ...numeral(phone ? 30 : 38) }}>{earlier.range}</span>
+      <span style={{ fontSize: 12.5, fontWeight: 700, opacity: .7 }}>{foldOpen ? 'Hide' : 'Review anytime'}</span>
+    </div>
+    <div style={{ fontSize: 13.5, fontWeight: 600, opacity: .75, marginTop: 4 }}>Earlier grades</div>
+    {foldOpen && <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {earlier.grades.map(g => <button key={g} onClick={(e) => { e.stopPropagation(); onPick && onPick({ grade: g, state: 'placed' }); }}
+        style={{ ...hBase, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+          background: 'rgba(255,255,255,.75)', border: 'none', borderRadius: radius.md, padding: '10px 14px',
+          fontSize: 14.5, fontWeight: 700, cursor: 'pointer', color: color.ink }}>
+        <span>Grade {g}</span><span style={{ fontSize: 12.5, fontWeight: 700, opacity: .7 }}>Review</span>
+      </button>)}
+    </div>}
+  </div>;
 
   return <div style={{ ...hBase, position: 'relative' }}>
+    {earlierCard}
     {grades.map((g, i) => {
-      const passed = g.status === 'passed', current = g.status === 'current', locked = g.status === 'locked';
-      const isOpen = open === g.grade && passed;
+      const { state } = g;
+      const passed = state === 'passed', current = state === 'current';
+      const graduated = state === 'graduation' && g.graduated;
+      const locked = state === 'locked' || (state === 'graduation' && !g.graduated);
+      const isOpen = open === g.grade && (passed || graduated);
       const last = i === grades.length - 1;
-      const bg = passed ? (g.graduated ? graduation : purpleFor(passedSoFar(i))) : current ? color.ink : color.locked;
-      const fg = locked ? color.disabledText : '#fff';
+      const bg = graduated ? graduation
+        : passed ? purpleFor(passedSoFar(i))
+          : current ? color.ink
+            : state === 'placed' ? earlierGrades : color.locked;
+      const fg = locked ? color.disabledText : state === 'placed' ? color.ink : '#fff';
       return <div key={g.grade}
-        onMouseEnter={() => passed && setOpen(g.grade)}
-        onMouseLeave={() => passed && setOpen(null)}
-        onClick={() => { if (passed) setOpen(o => (o === g.grade ? null : g.grade)); onPick && onPick(g); }}
+        onMouseEnter={() => (passed || graduated) && setOpen(g.grade)}
+        onMouseLeave={() => (passed || graduated) && setOpen(null)}
+        onClick={() => { if (passed || graduated) setOpen(o => (o === g.grade ? null : g.grade)); onPick && onPick(g); }}
         style={{
           ...hBase, background: bg, color: fg, cursor: locked ? 'default' : 'pointer',
-          // Top corners only, except the bottom card which is fully rounded (§0).
           borderRadius: last ? radius.gradeCard : `${radius.gradeCard}px ${radius.gradeCard}px 0 0`,
           padding: isOpen ? '30px 20px 28px' : '22px 20px 20px',
-          marginTop: i === 0 ? 0 : -14,
+          marginTop: i === 0 && !earlier ? 0 : -14,
           transition: `padding .25s cubic-bezier(.32,.72,.33,1)`,
-          // Top card carries the highlight only; the rest also get the seam hairline.
-          boxShadow: i === 0
-            ? (passed && g.teach ? shadow.stackTopGold : shadow.stackTop)
-            : `${passed && g.teach ? shadow.stackTopGold : shadow.stackTop}, ${shadow.stackEdge}`,
+          boxShadow: i === 0 && !earlier ? shadow.stackTop : `${shadow.stackTop}, ${shadow.stackEdge}`,
           position: 'relative', zIndex: grades.length - i,
-          // Grade 8 fades into the ground over the last 48px (§0).
-          maskImage: last && locked ? 'linear-gradient(to bottom, #000 calc(100% - 48px), transparent)' : undefined,
-          WebkitMaskImage: last && locked ? 'linear-gradient(to bottom, #000 calc(100% - 48px), transparent)' : undefined,
         }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
           <span style={{ ...numeral(phone ? 34 : 44), color: fg }}>{g.grade}</span>
           <span style={{ fontSize: 12.5, fontWeight: 700, opacity: locked ? 1 : .72 }}>
-            {passed ? 'Passed' : current ? `Unit ${g.unit} of ${g.units}` : 'Locked'}</span>
+            {graduated ? 'Graduated' : state === 'graduation' ? 'Graduation'
+              : passed ? 'License earned' : current ? `Unit ${g.unit} of ${g.units}` : 'Locked'}</span>
         </div>
+        {/* Locked cards say what earns them, rather than only that they are shut. */}
+        {g.sub && !current && <div style={{ fontSize: 12.5, fontWeight: 600, opacity: .72, marginTop: 4 }}>{g.sub}</div>}
         {current && <div style={{ display: 'flex', gap: 5, marginTop: 12 }}>
           {Array.from({ length: g.units || 7 }, (_, u) => <span key={u} style={{ width: 9, height: 9, borderRadius: radius.full,
             background: u < (g.unit || 0) ? color.lime : 'rgba(255,255,255,.22)' }} />)}
         </div>}
         {isOpen && <div style={{ display: 'flex', gap: 8, marginTop: 14, flexWrap: 'wrap' }}>
-          {/* Brief v4: a test score, never a letter grade or a percentage. */}
           {g.test && <span style={{ ...hBase, background: 'rgba(255,255,255,.9)', color: color.ink, borderRadius: radius.full,
             padding: '6px 12px', fontSize: 12.5, fontWeight: 700 }}>Test {g.test}</span>}
-          {typeof g.earned === 'number' && <span style={{ ...hBase, background: color.ink, color: '#fff', borderRadius: radius.full,
-            padding: '6px 12px', fontSize: 12.5, fontWeight: 700 }}>{signed(g.earned)}</span>}
+          {typeof g.earned === 'number' && g.earned > 0 && <span style={{ ...hBase, background: color.ink, color: '#fff',
+            borderRadius: radius.full, padding: '6px 12px', fontSize: 12.5, fontWeight: 700 }}>{signed(g.earned)}</span>}
         </div>}
       </div>;
     })}
@@ -208,7 +233,7 @@ export function HomeStack({ data, onEvent = () => {} }) {
       </div>
 
       <div>
-        <GradeStack grades={d.grades || []} phone={phone} onPick={(g) => onEvent('grade', g)} />
+        <GradeStack grades={d.grades || []} earlier={d.earlierGrades} phone={phone} onPick={(g) => onEvent('grade', g)} />
         {unitLine && <div style={{ fontSize: 12.5, fontWeight: 600, color: color.muted, marginTop: 14, lineHeight: 1.5 }}>{unitLine}</div>}
       </div>
 
