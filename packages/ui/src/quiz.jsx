@@ -192,8 +192,12 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
         padding: '7px 14px', fontWeight: 700, fontSize: 15, opacity: hudOp, transition: 'opacity .3s' }}><KreditCoin />{st.kredits}</div></div>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: isChoice ? 1180 : 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
       <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => speak(q.text)} />
-      <div style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: '.12em', color: streakColors[TITLE(st.streak)], margin: '10px 0 2px', opacity: hudOp, transition: 'opacity .3s' }}>
-        {TITLE(st.streak)}{st.streak > 0 ? ` · ${st.streak} STREAK · ×${MULT(st.streak)}` : ''}</div>
+      {/* PLAY_SYSTEM §4: no streak flames anywhere, ever — a chain on screen is a chain
+          that can break. The multiplier still pays and still shows in the payout pills,
+          where it reads as an earning, not as something to protect. */}
+      {st.streak >= 3 && <div style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: '.12em',
+        color: color.greenDeep, margin: '10px 0 2px', opacity: hudOp, transition: 'opacity .3s' }}>
+        ×{MULT(st.streak)} ON EACH ANSWER</div>}
       {!isChoice && <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>{q.text}</h2>}
       {!isChoice && q.teach && !st.teachOpen && !st.feedback && <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <Button variant="gold" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: true }))}>

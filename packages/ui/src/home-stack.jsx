@@ -7,7 +7,7 @@
    Stateless apart from the Today/Week switch; everything else arrives as data and
    leaves through onEvent. */
 import { color, type, radius, shadow, font, numeral, money, signed, purpleFor, graduation } from './tokens.js';
-import { Kicker, Chip, PillLabel } from './primitives.jsx';
+import { Kicker, Chip, PillLabel, Blob } from './primitives.jsx';
 import { useWidth } from './util.jsx';
 
 const hBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -147,11 +147,16 @@ export function PracticeRow({ item, onPlay, onBlitz, phone }) {
 }
 
 /** The lime band at the foot of the sheet. Gated until today's lesson is done. */
-export function StandBand({ gated, onOpen, onStartLesson, phone }) {
+export function StandBand({ gated, onOpen, onStartLesson, stage, blobDir = '/blobs/', phone }) {
   return <div style={{ ...hBase, background: color.lime, padding: phone ? '18px 20px' : '20px 32px',
     display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-    <span style={{ flex: 1, minWidth: 200, fontSize: 16, fontWeight: 600, color: color.limeBody }}>
-      {gated ? 'Class first, then the register opens.' : 'The stand is open for the day.'}</span>
+    {/* The growth loop, felt on every open: her stand as it currently stands. */}
+    {stage && <span style={{ width: 48, height: 48, flex: 'none', display: 'grid', placeItems: 'center' }}>
+      <Blob name={stage.blob} size={44} dir={blobDir} /></span>}
+    <span style={{ flex: 1, minWidth: 180, fontSize: 16, fontWeight: 600, color: color.limeBody }}>
+      {gated ? 'Class first, then the register opens.' : 'The stand is open for the day.'}
+      {stage && <span style={{ display: 'block', fontSize: 13, fontWeight: 600, opacity: .75, marginTop: 2 }}>
+        {stage.label} · {stage.index + 1} of {stage.total}</span>}</span>
     {gated
       ? <button onClick={onStartLesson} style={{ ...hBase, border: 'none', cursor: 'pointer', borderRadius: radius.full,
         padding: '11px 18px', fontSize: 13.5, fontWeight: 700, background: 'rgba(255,255,255,.55)', color: color.limeBody }}>
@@ -188,9 +193,14 @@ export function HomeStack({ data, onEvent = () => {} }) {
     <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid',
       gridTemplateColumns: phone ? '1fr' : '340px 1fr', columnGap: 48, rowGap: phone ? 24 : 30, alignItems: 'start' }}>
 
-      <div style={{ display: 'flex', alignItems: 'flex-end', minHeight: phone ? 0 : 96 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', minHeight: phone ? 0 : 96 }}>
         <h1 style={{ fontSize: phone ? 24 : 28, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.32, margin: 0 }}>
           {greeting}</h1>
+        {/* The care loop: what happened at her stand overnight. News, not a nudge,
+            and never a streak — §4 bans the chain that can break. */}
+        {(d.feed || []).length > 0 && <div style={{ marginTop: 10 }}>
+          {d.feed.map(line => <div key={line.id} style={{ fontSize: 14, lineHeight: 1.45, color: color.muted }}>{line.text}</div>)}
+        </div>}
       </div>
 
       <div style={{ minHeight: phone ? 0 : 96 }}>
@@ -210,7 +220,7 @@ export function HomeStack({ data, onEvent = () => {} }) {
             onPlay={(it) => onEvent('practice', it)}
             onBlitz={(it) => setBlitz(b => ({ ...b, [it.id]: !b[it.id] }))} />)}
         </> : <WeekView runs={d.runs || []} phone={phone} onEvent={onEvent} />}
-        <StandBand gated={d.standGated} phone={phone}
+        <StandBand gated={d.standGated} phone={phone} stage={d.standStage} blobDir={d.blobDir}
           onOpen={() => onEvent('stand', {})} onStartLesson={() => onEvent('start_lesson', d.lesson)} />
       </div>
     </div>

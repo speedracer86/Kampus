@@ -65,7 +65,7 @@ function EarnedRow({ row, overLimit, onApprove, onHold, onUndo, phone }) {
 }
 
 /**
- * data: {kid{name, grade, day, streak}, pending[], asks[], approvedThisWeek, cap,
+ * data: {kid{name, grade, day, daysPlayed}, pending[], asks[], approvedThisWeek, cap,
  *        progress[], stats[], settings{cap, lessonLength, allowBlitz, sprints, vacation}}
  */
 export function GrownUps({ data, onEvent = () => {} }) {
@@ -94,7 +94,9 @@ export function GrownUps({ data, onEvent = () => {} }) {
       <div>
         <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 4px' }}>{kid.name || 'Your kid'}</h1>
         <div style={{ fontSize: 14, color: color.muted, fontWeight: 600 }}>
-          Grade {kid.grade} · day {kid.day} · {kid.streak}-day streak</div>
+          {/* Days played, not a streak: §4 bans the chain on the kid's side, and showing
+              a parent one just moves the guilt. */}
+          Grade {kid.grade} · day {kid.day} · {kid.daysPlayed || 0} days played</div>
 
         <div style={{ marginTop: 22 }}>
           {TABS.map(([id, label, count]) => <button key={id} onClick={() => setTab(id)}

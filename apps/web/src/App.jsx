@@ -6,6 +6,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
   firstReview, review, dayNumber, problemsForSkill,
+  awayFeed, buildStage, seasonFor, unlocks as bizUnlocks,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { NavBar } from '@kampus/ui/app';
@@ -52,6 +53,12 @@ function buildUnitQuizFromPlan(state) {
   return [...unitQs, ...reviewQs];
 }
 
+/** Whole days since she last opened the app; 1 when we have never seen her. */
+const daysSince = (iso) => {
+  if (!iso) return 1;
+  return Math.max(0, Math.round((Date.now() - Date.parse(iso + 'T12:00:00Z')) / 86400000));
+};
+
 const dayName = () => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
 
 /* Seed wishlists until a grown-up sets their own in Grown-ups (Step 8). */
@@ -96,6 +103,14 @@ function homeStackData(state) {
       blitz: false,
     })),
     standGated: state.lessonDoneDay !== today,
+    // Care loop + growth loop (PLAY_SYSTEM §4/§6).
+    feed: awayFeed({ ...ensureBiz(state), gates: gatesFor(state) }, {
+      daysAway: daysSince(state.lastSeenDay),
+      season: seasonFor(new Date()),
+      unlocks: bizUnlocks({ ...ensureBiz(state), gates: gatesFor(state) }),
+    }),
+    standStage: buildStage(ensureBiz(state)),
+    blobDir: BLOB_DIR,
     runs: (state.recentRuns || []).slice(0, 7).map((r, i) => ({ day: i, world: r.world, color: r.color, kredits: 0 })),
   };
 }
@@ -269,7 +284,7 @@ export function App() {
     const setS = (k, v) => update(s => { s.settings = { ...(s.settings || {}), [k]: v }; return s; });
     return <GrownUps
       data={{
-        kid: { name: state.name || 'Your kid', grade: state.grade, day: Object.keys(state.days || {}).length, streak: state.streak || 0 },
+        kid: { name: state.name || 'Your kid', grade: state.grade, day: Object.keys(state.days || {}).length, daysPlayed: Object.keys(state.days || {}).length },
         // Waiting first, then recently decided — §0 keeps closed rows visible with an Undo.
         pending: [
           ...ledger.filter(r => r.cents > 0 && r.status === 'pending'),
