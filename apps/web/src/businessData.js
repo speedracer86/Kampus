@@ -52,7 +52,7 @@ export function registerGate(state) {
   const lessonDone = state.lessonDoneDay === today();
   if (day?.type === 'quiz') return { ok: false, label: 'Closed for inspection', reason: 'Inspection Day — the stand stays shut this morning.' };
   if (state.settings?.vacation) return { ok: false, label: 'On vacation', reason: 'The stand is closed for a few days. Nothing drifts while you’re away.' };
-  if (!lessonDone) return { ok: false, label: 'Start today’s lesson →', reason: 'Class is out after today’s lesson. Then the stand can open.' };
+  if (!lessonDone) return { ok: false, lesson: true, label: 'Start today’s lesson →', reason: 'Class is out after today’s lesson. Then the stand can open.' };
   return { ok: true, label: 'Open for the day →', tip: 'Everything’s set. Open when you’re ready.' };
 }
 

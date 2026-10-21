@@ -73,7 +73,7 @@ function LeftColumn({ biz, unlocks, blobDir, phone }) {
 }
 
 /** Prep: only the controls introduced so far, in the order they were introduced. */
-function Prep({ biz, unlocks, estimate, stock, onPrice, onStock, onOpen, canOpen, promos, onPromo, nextRung, phone }) {
+function Prep({ biz, unlocks, estimate, stock, onPrice, onStock, onOpen, onLesson, canOpen, promos, onPromo, nextRung, phone }) {
   const type = biz.type || {};
   return <>
     {unlocks.price && <div style={{ padding: phone ? '18px 20px' : '22px 32px', borderBottom: `1px solid ${color.rule}` }}>
@@ -135,9 +135,14 @@ function Prep({ biz, unlocks, estimate, stock, onPrice, onStock, onOpen, canOpen
         {canOpen.ok ? canOpen.tip : canOpen.reason}</span>
       {canOpen.ok
         ? <Button variant="ink" onClick={onOpen}>{canOpen.label}</Button>
-        : <button disabled style={{ ...bBase, border: 'none', borderRadius: radius.full, padding: '11px 18px',
-          fontSize: 13.5, fontWeight: 700, background: 'rgba(255,255,255,.55)', color: color.limeBody }}>
-          {canOpen.label}</button>}
+        : canOpen.lesson
+          // The gate's whole job is to send her to class — a dead button here is a trap.
+          ? <button onClick={onLesson} style={{ ...bBase, border: 'none', cursor: 'pointer', borderRadius: radius.full,
+            padding: '11px 18px', fontSize: 13.5, fontWeight: 700, background: 'rgba(255,255,255,.75)', color: color.limeBody }}>
+            {canOpen.label}</button>
+          : <button disabled style={{ ...bBase, border: 'none', borderRadius: radius.full, padding: '11px 18px',
+            fontSize: 13.5, fontWeight: 700, background: 'rgba(255,255,255,.55)', color: color.limeBody }}>
+            {canOpen.label}</button>}
     </div>
   </>;
 }
@@ -279,10 +284,11 @@ export function BusinessScreen({ data, blobDir = '/blobs/', onEvent = () => {} }
             {phase === 'prep' && <Prep biz={biz} unlocks={u} estimate={d.estimate} stock={d.stock || []}
               promos={d.promos} nextRung={d.nextRung} canOpen={d.canOpen || { ok: false, label: 'Open', reason: '' }}
               onPrice={(p) => onEvent('price', p)} onStock={(k, delta) => onEvent('stock', { key: k, delta })}
-              onPromo={(p) => onEvent('promo', p)} onOpen={() => onEvent('open_day', {})} phone={phone} />}
+              onPromo={(p) => onEvent('promo', p)} onLesson={() => onEvent('start_lesson', {})}
+              onOpen={() => { setPhase('open'); onEvent('open_day', {}); }} phone={phone} />}
             {phase === 'open' && <OpenDay queue={d.queue || []} counters={d.counters || { served: 0, missed: 0, left: 0 }}
               onServe={() => onEvent('serve_next', {})} onServeRest={() => onEvent('serve_rest', {})}
-              onClose={() => onEvent('close_books', {})} blobDir={blobDir} phone={phone} />}
+              onClose={() => { setPhase('ledger'); onEvent('close_books', {}); }} blobDir={blobDir} phone={phone} />}
             {phase === 'ledger' && <Ledger result={d.result} phone={phone} />}
             {phase === 'grow' && <Grow ladder={d.ladder} phone={phone} />}
           </div>

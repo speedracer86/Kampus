@@ -17,7 +17,9 @@ import { AssessmentIntro, AssessmentRunner, UnitQuizResults, GradeTestResults } 
 import { RewardsScreen } from '@kampus/ui/rewards';
 import { GrownUps } from '@kampus/ui/parents';
 import { BusinessScreen } from '@kampus/ui/business';
-import { businessData, ensureBiz, gatesFor, today as bizToday } from './businessData.js';
+import { businessData, ensureBiz, gatesFor, today as bizToday,
+  dailyTick, buySupplies, customersForDay, openDay, closeDay } from './businessData.js';
+import { capabilities, lemonCount } from '@kampus/engine';
 import { PinGate } from '@kampus/ui/pin-gate';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
 import { unitById } from '@kampus/curriculum';
@@ -260,20 +262,93 @@ export function App() {
   };
 
   if (screen === 'business') {
-    return <BusinessScreen data={businessData(state)} blobDir={BLOB_DIR}
-      onEvent={(type, payload) => {
-        if (type === 'price') update(s => { s.biz = { ...ensureBiz(s), price: payload }; return s; });
-        if (type === 'stock') update(s => {
-          s.order = { ...(s.order || {}), [payload.key]: Math.max(0, (s.order?.[payload.key] || 0) + payload.delta) };
-          return s;
-        });
-        if (type === 'promo') update(s => { s.promo = payload.id === 'none' ? null : payload.id; return s; });
-        if (type === 'karla_dismiss') update(s => {
-          if (payload?.key) s.karlaSeen = { ...(s.karlaSeen || {}), [payload.key]: true };
-          return s;
-        });
-        if (type === 'open_day') setScreen('business');
-      }} />;
+    // The business lives INSIDE the shell — losing the nav here was a one-way door.
+    return <div style={{ minHeight: '100vh', background: color.sidebar }}>
+      <NavBar
+        items={[
+          { id: 'home', label: 'Play', dot: color.green },
+          { id: 'business', label: 'Business', dot: color.lime },
+          { id: 'shop', label: 'Shop', dot: '#8F97DE' },
+          { id: 'rewards', label: 'Rewards', dot: color.gold },
+          { id: 'parent', label: 'Grown-ups', dot: color.textFaint },
+        ]}
+        active="business"
+        onNav={(id) => setScreen(id === 'parent' ? 'parents' : id === 'home' ? 'home' : id)}
+        weekLabel={`+$${state.week.earned} this week`}
+        kredits={state.kredits}
+        avatar={state.name || 'K'}
+        avatarColor={WORLDS[state.lastTopic]?.color}
+      />
+      <BusinessScreen data={businessData(state)} blobDir={BLOB_DIR}
+        onEvent={(type, payload) => {
+          if (type === 'start_lesson') {
+            const { day } = currentDay(state);
+            setScreen(day?.type === 'quiz' ? 'quiz' : day?.type === 'test' ? 'test' : 'lesson');
+          }
+          if (type === 'price') update(s => { s.biz = { ...ensureBiz(s), price: payload }; return s; });
+          if (type === 'stock') update(s => {
+            s.order = { ...(s.order || {}), [payload.key]: Math.max(0, (s.order?.[payload.key] || 0) + payload.delta) };
+            return s;
+          });
+          if (type === 'promo') update(s => { s.promo = payload.id === 'none' ? null : payload.id; return s; });
+          if (type === 'karla_dismiss') update(s => {
+            if (payload?.key) s.karlaSeen = { ...(s.karlaSeen || {}), [payload.key]: true };
+            return s;
+          });
+          if (type === 'open_day') update(s => {
+            // Morning: the world ticks, the order is bought, the line forms.
+            let biz = { ...ensureBiz(s), gates: gatesFor(s) };
+            biz = dailyTick(biz, bizToday()).biz;
+            if (Object.values(s.order || {}).some(n => n > 0)) {
+              const bought = buySupplies(biz, s.order, bizToday(), s.kredits || 0);
+              if (!bought.error) { biz = bought.biz; s.kredits = Math.round(((s.kredits || 0) - bought.cost) * 100) / 100; }
+            }
+            const queue = customersForDay(biz, { forecast: 'sunny', grade: s.grade });
+            const servable = capabilities(biz.band).inventory
+              ? Math.min(lemonCount(biz), biz.sugar ?? 0, biz.cups ?? 0)
+              : queue.length;
+            s.biz = biz;
+            s.order = {};
+            s.dayQueue = queue.map((c, i) => ({ ...c, status: i === 0 ? 'next' : 'waiting' }));
+            s.dayServable = servable;
+            s.dayCounters = { served: 0, missed: 0, left: servable };
+            return s;
+          });
+          if (type === 'serve_next' || type === 'serve_rest') update(s => {
+            // Per-tap serving is theater over the engine's math: stock decides, in order.
+            const q = [...(s.dayQueue || [])];
+            const serveOne = () => {
+              const i = q.findIndex(c => c.status === 'next' || c.status === 'waiting');
+              if (i < 0) return false;
+              const servedSoFar = q.filter(c => c.status === 'served').length;
+              q[i] = { ...q[i], status: servedSoFar < (s.dayServable ?? q.length) ? 'served' : 'soldout' };
+              return true;
+            };
+            if (type === 'serve_next') serveOne(); else while (serveOne());
+            const up = q.findIndex(c => c.status === 'waiting');
+            if (up >= 0) q[up] = { ...q[up], status: 'next' };
+            const served = q.filter(c => c.status === 'served').length;
+            s.dayQueue = q;
+            s.dayCounters = { served, missed: q.filter(c => c.status === 'soldout').length,
+              left: Math.max(0, (s.dayServable ?? q.length) - served) };
+            return s;
+          });
+          if (type === 'close_books') update(s => {
+            // The engine's day is authoritative; the taps were its preview.
+            const biz = { ...ensureBiz(s), gates: gatesFor(s) };
+            const { biz: after, result } = openDay(biz, s.dayQueue || [], bizToday());
+            s.biz = closeDay(after, result, bizToday());
+            s.kredits = Math.round(((s.kredits || 0) + (result.revenue || 0)) * 100) / 100;
+            s.dayQueue = [];
+            s.dayCounters = { served: result.served, missed: result.missed, left: 0 };
+            return s;
+          });
+          if (type === 'event_action') update(s => {
+            if (payload?.kind === 'comeback') s.promo = 'comeback';
+            return s;
+          });
+        }} />
+    </div>;
   }
 
   if (screen === 'parents') {
@@ -436,7 +511,7 @@ export function App() {
         { id: 'parent', label: 'Grown-ups', dot: color.textFaint },
       ]}
       active="home"
-      onNav={(id) => setScreen(id === 'home' ? 'home' : id)}
+      onNav={(id) => setScreen(id === 'parent' ? 'parents' : id === 'home' ? 'home' : id)}
       weekLabel={`+$${state.week.earned} this week`}
       kredits={state.kredits}
       avatar={state.name || 'K'}
