@@ -18,10 +18,10 @@ describe('the sequence a student actually plays', () => {
 
   it('teaches a skill before it is practised, or refreshes one taught in an earlier grade', () => {
     /* Review units deliberately refresh rather than re-teach, so a guided day may carry a
-       skill first taught in an earlier grade. KNOWN_GAPS holds the one case that is
-       neither — recorded in docs/KAMPUS_INVENTORY.md rather than re-authored, per the
-       bank's "do not improve content" rule. Anything NEW still fails here. */
-    const KNOWN_GAPS = new Set(['6:meanMedian']);
+       skill first taught in an earlier grade. The one former gap (6:meanMedian) was
+       resolved by the bank owner: hybrid final units now teach first-appearance skills.
+       The pin stays as an empty set so any NEW case fails here by name. */
+    const KNOWN_GAPS = new Set([]);
     const taughtIn = (grade) => new Set(lessonsFor(grade).filter(d => d.type === 'new').map(d => d.skill));
     for (const g of GRADES) {
       const earlier = new Set(GRADES.filter(x => x < g).flatMap(x => [...taughtIn(x)]));

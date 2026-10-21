@@ -27,14 +27,16 @@ const TITLES = {
   test: () => 'The Grade Test',
 };
 
-function buildUnit(unit, isFinal) {
+function buildUnit(unit, isFinal, taughtBefore) {
   const weeks = unit.weeks[1] - unit.weeks[0] + 1;
   const slots = weeks * 4;
   const days = [];
   for (const key of unit.skills) {
-    // The final unit is the year in review: its skills were all taught earlier,
-    // so they get a guided refresh day each — never a second "new" lesson.
-    if (!isFinal) days.push({ type: 'new', skill: key });
+    // The final unit is mostly the year in review: skills taught earlier get a
+    // guided refresh day, never a second "new" lesson. But some final units are
+    // hybrids (grade 6's Stand unit introduces statistics) — a skill appearing
+    // for the FIRST time still gets its real teach-first day, wherever it lands.
+    if (!isFinal || !taughtBefore.has(key)) days.push({ type: 'new', skill: key });
     days.push({ type: 'guided', skill: key });
   }
   // Interleave the remaining practice: mixed, mixed, review, repeating — mixed
@@ -61,7 +63,12 @@ const cache = {};
 export function lessonsFor(grade) {
   if (cache[grade]) return cache[grade];
   const units = YEAR[grade];
-  const seq = units.flatMap((u, i) => buildUnit(u, i === units.length - 1));
+  const taught = new Set();
+  const seq = units.flatMap((u, i) => {
+    const days = buildUnit(u, i === units.length - 1, taught);
+    for (const s of u.skills) taught.add(s);
+    return days;
+  });
   cache[grade] = seq.map((d, n) => ({ n: n + 1, ...d }));
   return cache[grade];
 }

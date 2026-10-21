@@ -50,19 +50,25 @@ describe('the lesson sequence', () => {
     }
   });
 
-  it('gives every unit skill a teach-first day and a guided day — review units refresh, never re-teach', () => {
+  it('every skill gets exactly one teach-first day the FIRST time it appears — later units refresh, never re-teach', () => {
     for (const g of GRADES) {
       const seq = lessonsFor(g);
       const last = YEAR[g][YEAR[g].length - 1];
+      const before = new Set(YEAR[g].slice(0, -1).flatMap(u => u.skills));
       for (const u of YEAR[g]) {
         for (const s of u.skills) {
           const days = seq.filter(d => d.unit === u.id && d.skill === s);
-          expect(days.some(d => d.type === 'new'), `${u.id}/${s} new`).toBe(u !== last);
+          // in the final unit, only a first-appearance skill (a hybrid unit's new
+          // content, like grade 6 statistics) gets a 'new' day
+          const wantsNew = u !== last || !before.has(s);
+          expect(days.some(d => d.type === 'new'), `${u.id}/${s} new`).toBe(wantsNew);
           expect(days.some(d => d.type === 'guided'), `${u.id}/${s} guided`).toBe(true);
         }
       }
-      // nothing in the review unit is presented as brand-new
-      expect(seq.filter(d => d.unit === last.id && d.type === 'new')).toEqual([]);
+      // ...and every skill in the year has a teach-first day SOMEWHERE
+      for (const s of new Set(YEAR[g].flatMap(u => u.skills))) {
+        expect(seq.some(d => d.type === 'new' && d.skill === s), `grade ${g}/${s} taught`).toBe(true);
+      }
     }
   });
 

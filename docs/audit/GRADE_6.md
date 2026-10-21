@@ -42,10 +42,12 @@
 - **Benchmark percents** — 10% is "divide by ten" — build every other percent from it.
     - Find 10% first: 20% of 45: 10% is 4.5
     - Scale up or down: double it → 9
+    - Hands on: shade exactly 20%: Tap blocks until the bar reads 20% — watch the dollars follow.
     - Your turn: 10% of $38 = ? → **3.80**
 - **Percent of a number** — "Percent of" means multiply: turn the percent into a decimal first.
     - Percent → decimal: 25% = 0.25
     - Multiply: 0.25 × $2.00 = $0.50 off
+    - Hands on: shade 25% of $2.00: Shade until the readout shows the exact discount.
     - Your turn: 30% of 60 = ? → **18**
 - **Finding the whole from a percent** — When you know the part and its percent, divide to rebuild the whole.
     - Part ÷ percent-as-decimal: 15 is 30% of what? 15 ÷ 0.30 = 50
@@ -53,6 +55,7 @@
 - **Fraction → percent** — Rename the fraction out of 100 — that count IS the percent.
     - Scale the bottom to 100: 3/4 = 75/100
     - Read the top: → 75%
+    - Hands on: shade 2/5 of the bar: Two fifths of 20 blocks — the readout tells you the percent.
     - Your turn: 2/5 as a percent → **40%**
 
 **Days (16):** 4 new · 4 guided · 5 mixed · 2 review · 1 quiz — ends day 36 (quiz)
@@ -190,10 +193,11 @@
 - **Percent of a number** — "Percent of" means multiply: turn the percent into a decimal first.
     - Percent → decimal: 25% = 0.25
     - Multiply: 0.25 × $2.00 = $0.50 off
+    - Hands on: shade 25% of $2.00: Shade until the readout shows the exact discount.
     - Your turn: 30% of 60 = ? → **18**
 - **Two-step equations** — Peel the onion outside-in: undo the + or − first, then the ×.
     - Undo the add/subtract: 2t + 5 = 29 → 2t = 24
     - Undo the multiply: t = 24 ÷ 2 = 12
     - Your turn: 3x + 4 = 19 → **5**
 
-**Days (20):** 3 guided · 11 mixed · 5 review · 1 test — ends day 128 (test)
+**Days (20):** 1 new · 3 guided · 10 mixed · 5 review · 1 test — ends day 128 (test)

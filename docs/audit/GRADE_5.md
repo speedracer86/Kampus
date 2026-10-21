@@ -137,6 +137,7 @@
 - **Order of operations** — × and ÷ go before + and −, reading left to right.
     - Multiply first: 3 + 4 × 5: the 4 × 5 happens first
     - Then add: 3 + 20 = 23 (not 35!)
+    - Spot the mistake in a friend’s work: One of these lines is wrong — tap it.
     - Your turn: 20 − 2 × 6 = ? → **8**
 - **Evaluating expressions** — Swap the letter for its number, then follow order of operations.
     - Substitute: x = 4: 3x + 2 → 3(4) + 2

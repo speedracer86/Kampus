@@ -102,14 +102,17 @@
 - **Tips and totals** — A tip is a percent of the bill — slide to 10% and build from there.
     - 10% is one slide: 15% of $12: 10% is $1.20
     - Add the pieces: + half of that (5%) = $0.60 → $1.80
+    - Hands on: collect the 15% tip: Split the $12 bill into tenths, cut one in half, collect exactly 15%.
     - Your turn: 20% tip on $35 = ? → **7.00**
 - **Discounts** — Discount comes off first; tax goes on what you ACTUALLY pay.
     - Take the discount: 20% off $2.50 → $2.00
     - Tax the new price: +10% of $2.00 → $2.20 (not back to $2.50!)
+    - Spot the mistake in the customer’s bet: He says it "comes back to $2.50." Tap the line that’s wrong.
     - Your turn: 10% off $40, then 5% tax — final price? → **37.80**
 - **Simple interest** — Interest = principal × rate × time. Three numbers, one multiply.
     - Line up P, r, t: $200 at 5% for 2 years
     - Multiply through: 200 × 0.05 × 2 = $20
+    - Hands on: collect ONE year of interest: Split the $200, then pick out exactly 5% — that’s one year’s worth.
     - Your turn: $100 at 4% for 3 years — interest? → **12**
 - **Percent change** — Percent change = the change ÷ the ORIGINAL, read as a percent.
     - Find the change: 40 → 50 changed by 10
@@ -168,6 +171,7 @@
 - **Tips and totals** — A tip is a percent of the bill — slide to 10% and build from there.
     - 10% is one slide: 15% of $12: 10% is $1.20
     - Add the pieces: + half of that (5%) = $0.60 → $1.80
+    - Hands on: collect the 15% tip: Split the $12 bill into tenths, cut one in half, collect exactly 15%.
     - Your turn: 20% tip on $35 = ? → **7.00**
 - **Two-step equations with negatives** — Same two-step undo — the negatives just ride along.
     - Undo the constant: −2x + 6 = 14 → −2x = 8
@@ -182,4 +186,4 @@
     - Multiply: 4 × 6 = 24 tiles cover it
     - Your turn: A 3 × 9 floor — how many tiles? → **27**
 
-**Days (20):** 4 guided · 10 mixed · 5 review · 1 test — ends day 128 (test)
+**Days (20):** 4 guided · 1 new · 10 mixed · 4 review · 1 test — ends day 128 (test)

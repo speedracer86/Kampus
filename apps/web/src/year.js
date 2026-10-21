@@ -75,7 +75,8 @@ function teachMoves(skill) {
   if (!t) return null;
   const steps = [
     { id: 'big', title: 'Big idea', prompt: t.bigIdea, body: t.bigIdea, takeaway: t.bigIdea },
-    ...(t.steps || []).map((s, i) => ({ id: `s${i}`, title: s.do, prompt: s.do, body: s.ex, takeaway: s.ex })),
+    ...(t.steps || []).map((s, i) => ({ id: `s${i}`, title: s.do, prompt: s.do, body: s.ex, takeaway: s.ex,
+      interactive: s.interactive, config: s.config })),
   ];
   if (t.yourTurn) steps.push({
     id: 'try', title: 'Try it', prompt: t.yourTurn.q,

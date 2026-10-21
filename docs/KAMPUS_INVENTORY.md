@@ -140,14 +140,13 @@ the machine that *holds families* (backend + parent reports).
 Recorded rather than fixed: the bank is owner-reviewed and PROMPT.md forbids re-authoring
 its content. These are enrichment items, not blockers — the runner skips nothing.
 
-- **Grade 6, day 109 practises `meanMedian` with no lesson behind it.** The day is
-  `guided`, but the bank only introduces `meanMedian` as a `new` day in grades 7 and 8, so
-  a grade-6 student meets guided practice for a skill she has never been taught. The
-  runner degrades sanely (the generator exists, and "Teach me" still shows its steps), but
-  the intended first teach is missing. Either add a `new` day for it in unit 6-7, or move
-  the skill out of that unit's list. Pinned by `KNOWN_GAPS` in
-  `packages/engine/test/year-wiring.test.js`, so any *other* skill in this situation fails
-  the suite.
+- ~~**Grade 6, day 109 practises `meanMedian` with no lesson behind it.**~~ **Resolved
+  by the bank owner (Oct 21):** the sequence builder now recognises hybrid final units —
+  a skill appearing for the FIRST time in the year's last unit (grade 6's Stand unit
+  introducing statistics) gets its real teach-first `new` day; only previously-taught
+  skills are held to the refresh-never-re-teach rule. `meanMedian` now has a `new` day in
+  unit 6-7, asserted by bank.test.js ("every skill in the year has a teach-first day
+  SOMEWHERE"). The `KNOWN_GAPS` pin in `year-wiring.test.js` can drop to an empty list.
 - For contrast and as the rule: grade 7, day 112 practises `areaModel` without a grade-7
   teach day, and that one is correct — `areaModel` is taught new in grades 3–6, and unit
   7-7 is explicitly "Geometry + the year in review". Review units refresh; they do not
