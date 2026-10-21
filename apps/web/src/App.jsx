@@ -9,7 +9,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   awayFeed, buildStage, seasonFor, unlocks as bizUnlocks,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
-import { NavBar } from '@kampus/ui/app';
+import { Shell } from '@kampus/ui/app';
 import { HomeStack } from '@kampus/ui/home-stack';
 import { QuizRound } from '@kampus/ui/quiz';
 import { DailyLesson } from '@kampus/ui/lesson';
@@ -60,6 +60,15 @@ const daysSince = (iso) => {
   if (!iso) return 1;
   return Math.max(0, Math.round((Date.now() - Date.parse(iso + 'T12:00:00Z')) / 86400000));
 };
+
+/* The nav, defined once. Shop is deliberately absent: a menu item that does nothing
+   teaches the kid the menu lies, so it returns when a shop exists (AUDIT B1). */
+const NAV_ITEMS = [
+  { id: 'home', label: 'Play', dot: color.green },
+  { id: 'business', label: 'Business', dot: color.lime },
+  { id: 'rewards', label: 'Rewards', dot: color.gold },
+  { id: 'parents', label: 'Grown-ups', dot: color.textFaint },
+];
 
 const dayName = () => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
 
@@ -189,6 +198,16 @@ export function App() {
     [screen, topic, roundNonce] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
+  /** Everything the frame needs, so no screen assembles its own chrome. */
+  const shellProps = (active) => ({
+    items: NAV_ITEMS, active,
+    onNav: (id) => setScreen(id),
+    weekLabel: `+$${state.week.earned} this week`,
+    kredits: state.kredits,
+    avatar: state.name || 'K',
+    avatarColor: WORLDS[state.lastTopic]?.color,
+  });
+
   const update = mutate => setState(prev => {
     const next = mutate(structuredClone(prev));
     save(studentId, next);
@@ -262,23 +281,7 @@ export function App() {
   };
 
   if (screen === 'business') {
-    // The business lives INSIDE the shell — losing the nav here was a one-way door.
-    return <div style={{ minHeight: '100vh', background: color.sidebar }}>
-      <NavBar
-        items={[
-          { id: 'home', label: 'Play', dot: color.green },
-          { id: 'business', label: 'Business', dot: color.lime },
-          { id: 'shop', label: 'Shop', dot: '#8F97DE' },
-          { id: 'rewards', label: 'Rewards', dot: color.gold },
-          { id: 'parent', label: 'Grown-ups', dot: color.textFaint },
-        ]}
-        active="business"
-        onNav={(id) => setScreen(id === 'parent' ? 'parents' : id === 'home' ? 'home' : id)}
-        weekLabel={`+$${state.week.earned} this week`}
-        kredits={state.kredits}
-        avatar={state.name || 'K'}
-        avatarColor={WORLDS[state.lastTopic]?.color}
-      />
+    return <Shell {...shellProps('business')}>
       <BusinessScreen data={businessData(state)} blobDir={BLOB_DIR}
         onEvent={(type, payload) => {
           if (type === 'start_lesson') {
@@ -348,7 +351,7 @@ export function App() {
             return s;
           });
         }} />
-    </div>;
+    </Shell>;
   }
 
   if (screen === 'parents') {
@@ -357,7 +360,7 @@ export function App() {
     const ledger = state.ledger || [];
     const cap = state.settings?.cap ?? DEFAULT_CAP_CENTS;
     const setS = (k, v) => update(s => { s.settings = { ...(s.settings || {}), [k]: v }; return s; });
-    return <GrownUps
+    return <Shell {...shellProps('parents')}><GrownUps
       data={{
         kid: { name: state.name || 'Your kid', grade: state.grade, day: Object.keys(state.days || {}).length, daysPlayed: Object.keys(state.days || {}).length },
         // Waiting first, then recently decided — §0 keeps closed rows visible with an Undo.
@@ -391,12 +394,12 @@ export function App() {
         if (type === 'set_vacation') setS('vacation', payload);
         if (type === 'set_business_coach') setS('businessCoach', payload);
         if (type === 'set_sound') setS('sound', payload);
-      }} />;
+      }} /></Shell>;
   }
 
   if (screen === 'rewards') {
     const ledger = state.ledger || [];
-    return <RewardsScreen
+    return <Shell {...shellProps('rewards')}><RewardsScreen
       data={{
         receipt: receiptModel(ledger, { name: state.name || null, week: weekKey(), cap: state.settings?.cap ?? DEFAULT_CAP_CENTS, goal: state.goal, number: ledger.length + 1 }),
         howYouEarn: howYouEarn(),
@@ -414,7 +417,7 @@ export function App() {
           s.wishlist = (s.wishlist || DEMO_STORE).concat({ id: `w${Date.now()}`, name: payload.link.replace(/^https?:\/\//, '').slice(0, 40), store: 'Link', cents: 1000 });
           return s;
         });
-      }} />;
+      }} /></Shell>;
   }
 
   if (screen === 'quiz' || screen === 'test') {
@@ -430,6 +433,7 @@ export function App() {
     if (!papers) {
       return <div style={{ minHeight: '100vh', background: color.ground, padding: 48 }}>
         <AssessmentIntro kind={isQuiz ? 'quiz' : 'test'} grade={state.grade}
+          onExit={() => { setPapers(null); setScreen('home'); }}
           unit={state.tiers[tierKey(state.grade, topic)] || 1}
           intro={isQuiz
             ? 'Inspection Day. Ten questions on this unit, plus a few from earlier — the stand stays shut this morning. No timer, and Read it to me stays on. Nothing here can hurt your business.'
@@ -477,7 +481,7 @@ export function App() {
           return { amount: p.total, pills: p.parts.map(label => ({ label, kind: /streak/.test(label) ? 'streak' : /first/.test(label) ? 'first' : /blitz/.test(label) ? 'blitz' : /token/.test(label) ? 'token' : 'help' })) }; }}
         onEvent={onLessonEvent}
         onExit={() => setScreen('home')}
-        onShop={() => setScreen('home')}
+        onDone={() => setScreen('home')}
       />
     </div>;
   }
@@ -501,22 +505,7 @@ export function App() {
     </div>;
   }
 
-  return <div style={{ minHeight: '100vh', background: color.sidebar }}>
-    <NavBar
-      items={[
-        { id: 'home', label: 'Play', dot: color.green },
-        { id: 'business', label: 'Business', dot: color.lime },
-        { id: 'shop', label: 'Shop', dot: '#8F97DE' },
-        { id: 'rewards', label: 'Rewards', dot: color.gold },
-        { id: 'parent', label: 'Grown-ups', dot: color.textFaint },
-      ]}
-      active="home"
-      onNav={(id) => setScreen(id === 'parent' ? 'parents' : id === 'home' ? 'home' : id)}
-      weekLabel={`+$${state.week.earned} this week`}
-      kredits={state.kredits}
-      avatar={state.name || 'K'}
-      avatarColor={WORLDS[state.lastTopic]?.color}
-    />
+  return <Shell {...shellProps('home')}>
     <HomeStack
       data={homeStackData(state)}
       onEvent={(type, payload) => {
@@ -528,5 +517,5 @@ export function App() {
         if (type === 'stand') setScreen('business');
       }}
     />
-  </div>;
+  </Shell>;
 }

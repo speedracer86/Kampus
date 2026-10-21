@@ -32,6 +32,23 @@ export function NavBar({ items, active, onNav, weekLabel, kredits, avatar, avata
     </div></div></nav>;
 }
 
+/**
+ * The app frame. One place owns the nav, so no screen can accidentally render
+ * without it — that mistake has already shipped twice (the business screen and,
+ * before it, Rewards and Grown-ups), and each time it made the screen a one-way
+ * door with no way back.
+ *
+ * Immersive screens (a lesson, an inspection, a run) deliberately do NOT use this:
+ * they hide the chrome to protect attention, and carry their own Exit instead.
+ */
+export function Shell({ items, active, onNav, weekLabel, kredits, avatar, avatarColor, onShop, children }) {
+  return <div style={{ ...base, minHeight: '100vh', background: color.ground }}>
+    <NavBar items={items} active={active} onNav={onNav} weekLabel={weekLabel}
+      kredits={kredits} avatar={avatar} avatarColor={avatarColor} onShop={onShop} />
+    {children}
+  </div>;
+}
+
 function NavItem({ label, dot, active, onClick }) {
   const [hover, setHover] = React.useState(false);
   return <button onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}

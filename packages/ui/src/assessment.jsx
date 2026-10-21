@@ -38,7 +38,7 @@ function Dots({ dots = [], size = 14 }) {
 }
 
 /** The shared intro: plain rule rows, no cards (§0). */
-export function AssessmentIntro({ kind = 'quiz', grade, unit, intro, onStart, phone }) {
+export function AssessmentIntro({ kind = 'quiz', grade, unit, intro, onStart, onExit, phone }) {
   const rows = [
     ['Questions', kind === 'quiz' ? '10' : '20'],
     ['Timer', 'None'],
@@ -46,7 +46,12 @@ export function AssessmentIntro({ kind = 'quiz', grade, unit, intro, onStart, ph
     ['Reward', dollars(kind === 'quiz' ? 100 : 150) + ' for taking it'],
     ['Retake', kind === 'quiz' ? 'Any time' : 'After a repair plan'],
   ];
-  return <div style={{ ...aBase, display: phone ? 'block' : 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
+  return <div style={{ ...aBase }}>
+    {/* An immersive screen hides the nav, so it has to offer its own way out —
+        otherwise changing your mind means reloading the app (AUDIT B1). */}
+    {onExit && <button onClick={onExit} style={{ ...aBase, border: 'none', cursor: 'pointer', background: color.surface,
+      borderRadius: radius.full, padding: '8px 16px', fontSize: 13, fontWeight: 700, marginBottom: 20 }}>Exit</button>}
+    <div style={{ display: phone ? 'block' : 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
     <div>
       <Kicker style={{ marginBottom: 14 }}>{kind === 'quiz' ? `Unit ${unit} · Inspection Day` : `Grade ${grade} · the License`}</Kicker>
       <div style={{ borderTop: `1px solid ${color.rule}` }}>
@@ -61,6 +66,7 @@ export function AssessmentIntro({ kind = 'quiz', grade, unit, intro, onStart, ph
         {kind === 'quiz' ? 'Ready for Inspection Day?' : `The Grade ${grade} License`}</h2>
       <p style={{ fontSize: 18, lineHeight: 1.5, color: color.muted, margin: '0 0 28px' }}>{intro}</p>
       <Button variant="ink" size="lg" onClick={onStart}>Start</Button>
+    </div>
     </div>
   </div>;
 }

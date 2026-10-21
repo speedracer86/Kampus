@@ -151,7 +151,41 @@ try {
     await page.close();
   }
 
-  /* ---------- 5. rewards and grown-ups reachable and intact ---------- */
+  /* ---------- 5. no screen is a one-way door (AUDIT B1) ---------- */
+  {
+    // Every non-immersive screen must carry the nav; every immersive one must carry
+    // an Exit. This is the bug class that shipped three times — business, rewards,
+    // grown-ups — so it is checked per screen rather than spot-checked.
+    for (const [hash, name] of [['', 'home'], ['#business', 'business'], ['#rewards', 'rewards']]) {
+      const page = await open({ lessonDoneDay: new Date().toISOString().slice(0, 10) }, hash);
+      await page.waitForTimeout(350);
+      const nav = await page.evaluate(() =>
+        ['Play', 'Business', 'Rewards', 'Grown-ups'].every(l =>
+          [...document.querySelectorAll('button')].some(b => b.textContent.trim() === l)));
+      check(`${name} renders inside the shell`, nav);
+      await page.close();
+    }
+    for (const [hash, name] of [['#lesson', 'lesson'], ['#quiz', 'inspection']]) {
+      const page = await open({}, hash);
+      await page.waitForTimeout(400);
+      const exit = await page.evaluate(() =>
+        [...document.querySelectorAll('button')].some(b => /^(Exit|✕)$/.test(b.textContent.trim())));
+      check(`${name} is immersive but keeps an Exit`, exit);
+      await page.close();
+    }
+    // A menu item that does nothing teaches the kid the menu lies.
+    {
+      const page = await open();
+      const hasShop = await page.evaluate(() =>
+        [...document.querySelectorAll('button')].some(b => b.textContent.trim() === 'Shop'));
+      check('no Shop in the nav until a shop exists', !hasShop);
+      const dead = await page.evaluate(() => document.body.innerText.includes('Open the shop'));
+      check('nothing offers to open a shop that does not exist', !dead);
+      await page.close();
+    }
+  }
+
+  /* ---------- 6. rewards and grown-ups reachable and intact ---------- */
   {
     const page = await open({}, '#rewards');
     await page.waitForTimeout(400);

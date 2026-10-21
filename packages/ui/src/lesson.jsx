@@ -144,7 +144,7 @@ export function ReteachView({ teach, onContinue, label = 'Try one →', phone })
 }
 
 /** Done: what today paid, in Kredits and in real money. */
-export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onShop, phone }) {
+export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, phone }) {
   return <div style={{ ...lBase, display: phone ? 'block' : 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
     <div>
       <Kicker style={{ marginBottom: 14 }}>Today’s lesson</Kicker>
@@ -169,7 +169,9 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onShop, p
       </div>
       <div style={{ display: 'flex', gap: 10, marginTop: 26, flexWrap: 'wrap' }}>
         <Button variant="outline" onClick={onAgain}>Run it again</Button>
-        <Button variant="ink" onClick={onShop}>Open the shop →</Button>
+        {/* There is no shop yet, and a button that goes nowhere teaches her the
+            app lies. It points home until a shop exists (AUDIT B1). */}
+        <Button variant="ink" onClick={onDone}>Back to Today</Button>
       </div>
     </div>
   </div>;
@@ -181,7 +183,7 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onShop, p
  * pricer: ({tier, streak, firstTry, teachUsed, tokenUsed}) -> {amount, pills} — pass the engine's payout().
  */
 export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 50,
-  pricer = defaultPricer, onEvent = () => {}, onExit, onShop }) {
+  pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
   const moves = lesson.moves || [];
@@ -269,7 +271,7 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
 
   if (phase === 'done') return frame(<LessonDone earned={earned} rewardCents={rewardCents} moves={moves}
     onAgain={() => { setAt(0); setQi(0); setEarned(0); setStreak(0); setTokensLeft(tokensPerRun); resetUi(); setPhase('run'); }}
-    onShop={onShop} phone={phone} />);
+    onDone={onDone || onExit} phone={phone} />);
 
   if (phase === 'snag') {
     const sn = move.snag;
