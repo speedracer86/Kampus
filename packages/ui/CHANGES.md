@@ -351,3 +351,32 @@ yes, so `earnings.js` changed shape (this supersedes part of Step 7):
   a grown-up has actually okayed. `receiptModel()` gained `waitingOnGrownUp`.
 - `deferEarning()` / `undoEarning()` back the Hold and Undo buttons; both are reversible
   and neither destroys a row.
+
+## The pilot-ready campaign (Phases A–D)
+
+Driven by `PROMPT.md`, with precedence `KAMPUS_PLAY_SYSTEM.md` > `BUSINESS_CLEANUP.md` >
+`START_HERE.md` > the older docs. §0 stayed binding for every visual throughout.
+
+- **`question.jsx`** gained `selected` (show a pick without revealing right or wrong, for
+  quizzes) and `snag` (the "no pay, just a look" variant, which also suppresses the help
+  stack — having the move is precisely what she lacks).
+- **`lesson.jsx`** gained the Snag phase before the teach panel, and now plays the real
+  128-day sequence rather than demo content.
+- **`home-stack.jsx`** gained the care-loop feed under the greeting, the stand's
+  build-out thumbnail on the lime band, and an assessment-day variant that does not draw
+  a five-move spine for a quiz.
+- **`assessment.jsx`** is Inspection Day and the License, assembled from the bank's own
+  `quizSkills()`.
+- **New: `business.jsx`** — the Living Business, revealed one system per open day per
+  BUSINESS_CLEANUP. Karla as a strip rather than a modal, an Ask Karla pill, and the six
+  declutter rules (one event strip, a sentence not a stat row, three stock columns until
+  drift, promos as a pill row, the ladder behind a Grow pill).
+- **`parents.jsx`** gained the business-coach and sound toggles.
+- **`quiz.jsx`** lost its running streak chain, and **`parents.jsx`** lost the parent's
+  "N-day streak" — PLAY_SYSTEM §4 bans the chain that can break, and showing a parent one
+  only moves the guilt. The multiplier still pays; it reads as an earning in the payout
+  pills.
+
+Engine modules added: `sources.js` (the three-source rule), `skill-index.js`
+(`problemsForSkill`), `assessment.js`, `earnings.js`, `review.js`, `business-types.js`,
+`seasons.js`, `care.js`, `market.js`, `field.js`, `metrics.js`.

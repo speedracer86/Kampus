@@ -26,7 +26,7 @@ GitHub work goes through the `gh` CLI (already authenticated) — not an MCP ser
 npm test && npm run build
 ```
 
-Both must be clean: 187 passing tests, build exits 0. CI (`.github/workflows/ci.yml`) runs
+Both must be clean: 312 passing tests, build exits 0. CI (`.github/workflows/ci.yml`) runs
 exactly this on every push to `main` and every PR, so a red run here is a red run there.
 
 **If you touched `index.html`**, also run the end-to-end suite:
@@ -42,6 +42,28 @@ and a passing grade test.
 
 **Coverage gap:** `apps/web` has no tests of its own. Verify it with `npm run build` plus a
 look in the browser.
+
+## Which doc wins
+
+When the docs conflict, follow this order — it is the campaign's, and it is why some
+older guidance is deliberately not followed:
+
+1. `docs/KAMPUS_PLAY_SYSTEM.md` — the Snag, the three-source rule, business types, the
+   four loops, the ADHD laws.
+2. `design-incoming/BUSINESS_CLEANUP.md` — the Opening Week and Karla.
+3. `design-incoming/START_HERE.md` — the original ten-step build.
+4. The older docs (`KAMPUS_TEACHING_SYSTEM`, `KAMPUS_BUSINESS_SIM`).
+
+`design-incoming/design_handoff_kampus/STYLE_GUIDE.md` **§0 stays binding for every
+visual** regardless of the above.
+
+Two sets of invariants are enforced by tests rather than intentions, in
+`packages/engine/test/adhd-laws.test.js` and `year-wiring.test.js`:
+
+- **The ADHD laws** — untimed by default, no punitive mechanics, no streak display
+  anywhere, nothing dies, absence is never punished.
+- **The §5 rule** — a quiz or test can never hurt the business: no reputation loss, no
+  closure, nothing taken. A miss produces a repair plan.
 
 ## Architecture
 
@@ -68,7 +90,9 @@ look in the browser.
 
 | Path | What it is |
 |---|---|
-| `packages/engine/src/` | Generators, adaptive tiers, economy, quiz adapter — all pure |
+| `packages/engine/src/` | All pure: generators, adaptive tiers, economy, assessment, earnings, review, business, seasons, market, field assignments, metrics |
+| `packages/curriculum/src/` | The authored bank — 45 units, 128-day sequences, Snags, teach panels. Owner-reviewed: verify, never re-author |
+| `apps/web/src/year.js` | The seam between the bank (what is taught) and the engine (the questions) |
 | `packages/ui/src/tokens.js` | Every design token; the only legal source of color |
 | `packages/ui/src/` | Component library, at §0 values |
 | `apps/web/src/App.jsx` | The vertical slice wiring engine ↔ component library |
