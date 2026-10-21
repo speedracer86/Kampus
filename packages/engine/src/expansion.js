@@ -320,6 +320,14 @@ export function approxRoot() {
    Placement mirrors the curriculum plan: each generator joins the world whose
    identity fits its context (stats/probability feed off the Lemonade Stand,
    volume lives in Equation Lab's formula work, percents in Trade Tycoon). */
+/* Minification-proof name registry: object-literal keys are strings, so the skill
+   index can resolve these even where fn.name has been mangled by a bundler. */
+export const EXPANSION_GENERATORS = {
+  areaModel, twoStepStory, decNotation, decCompare, multCompare, powTen, decDiv,
+  unitFracDiv, volumeBox, meanMedian, depVar, tipCalc, discountTax, simpleInterest,
+  probSimple, funcEval, funcRate, sysSolve, pythag, approxRoot,
+};
+
 const EXPANSION = [
   [3, 'ratio', 2, areaModel],
   [3, 'ratio', 3, twoStepStory],

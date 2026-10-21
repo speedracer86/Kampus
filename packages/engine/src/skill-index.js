@@ -5,10 +5,16 @@
    as the generator functions, except that the expansion generators carry a trailing
    `G` (the bank says `decAdd`, the generator is `decAddG`). That single suffix is the
    whole mapping; everything else resolves by name. */
-import { CURRICULUM } from './curriculum.js';
-import './expansion.js';                 // registering side effect: must run before indexing
+import { CURRICULUM, R } from './curriculum.js';
+import { EXPANSION_GENERATORS } from './expansion.js';   // import also runs its registration
 import { assembleProblem } from './adaptive.js';
 import { sourceFor } from './sources.js';
+
+/* Explicit, minification-proof names first: object-literal keys survive any bundler.
+   The fn.name scan below remains for generators that live only in GEN's arrays —
+   which is why the web build sets esbuild keepNames (see apps/web/vite.config.js);
+   without it, fn.name is mangled and those generators vanish from production. */
+const NAMED = { ...R, ...EXPANSION_GENERATORS };
 
 /** name -> {fn, topic, tiers[]} for every generator the curriculum can serve. */
 export const GENERATOR_INDEX = (() => {
@@ -26,7 +32,8 @@ export const GENERATOR_INDEX = (() => {
 
 /** The generator behind a bank skill key, or undefined. */
 export function generatorForSkill(skillKey) {
-  return (GENERATOR_INDEX.get(skillKey) || GENERATOR_INDEX.get(`${skillKey}G`))?.fn;
+  return NAMED[skillKey] || NAMED[`${skillKey}G`]
+    || (GENERATOR_INDEX.get(skillKey) || GENERATOR_INDEX.get(`${skillKey}G`))?.fn;
 }
 
 /** Does this skill have a working generator? The bank's `gaps` lists are the ones that don't. */
