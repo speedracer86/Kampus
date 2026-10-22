@@ -7,6 +7,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
   firstReview, review, dayNumber, problemsForSkill,
   awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack, wishTile, storeNameOf,
+  weekPlan, weekHeader, comingUp, weekOffsetFor,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { Shell } from '@kampus/ui/app';
@@ -22,7 +23,7 @@ import { businessData, ensureBiz, gatesFor, today as bizToday,
 import { capabilities, lemonCount } from '@kampus/engine';
 import { PinGate } from '@kampus/ui/pin-gate';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
-import { unitById } from '@kampus/curriculum';
+import { unitById, lessonsFor } from '@kampus/curriculum';
 import { load, save, append, DEFAULT_STUDENT_ID } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
@@ -119,7 +120,19 @@ function homeStackData(state) {
     }),
     standStage: buildStage(ensureBiz(state)),
     blobDir: BLOB_DIR,
-    runs: (state.recentRuns || []).slice(0, 7).map((r, i) => ({ day: i, world: r.world, color: r.color, kredits: 0 })),
+    // The week plan, from the real sequence (Task 2). `history` is the day map the
+    // lesson runner writes, so past days show what she actually did and what it paid.
+    week: (() => {
+      const sequence = lessonsFor(state.grade) || [];
+      const offsetWeeks = state.weekOffset || 0;
+      const days = weekPlan({ sequence, pointer: state.lessonPointer || 0, history: state.history || {}, offsetWeeks });
+      return {
+        days,
+        header: weekHeader(days, offsetWeeks),
+        comingUp: comingUp({ sequence, pointer: state.lessonPointer || 0 }),
+        earnedCents: days.reduce((n, d) => n + (d.earnedCents || 0), 0),
+      };
+    })(),
   };
 }
 
@@ -239,6 +252,8 @@ export function App() {
           ? (s.review || []).map(r => (r.skill === day.skill ? review(r, true, dayNumber()) : r))
           : (s.review || []).concat(firstReview(day.skill, dayNumber()));
       }
+      s.history = { ...(s.history || {}),
+        [new Date().toISOString().slice(0, 10)]: { lessonN: (s.lessonPointer || 0) + 1, earnedCents: payload.rewardCents } };
       s.lessonPointer = Math.min((s.lessonPointer || 0) + 1, seq.length - 1);
       s.ledger = award(s.ledger || [], { reason: 'lesson', day: dayName(), week: weekKey() }).rows;
       return s;
@@ -518,6 +533,11 @@ export function App() {
         }
         if (type === 'practice') startRound(payload.id, { blitz: !!payload.blitz });
         if (type === 'stand') setScreen('business');
+        if (type === 'week_page') update(s => { s.weekOffset = (s.weekOffset || 0) + (payload === 'next' ? 1 : -1); return s; });
+        if (type === 'week_jump') update(s => {
+          s.weekOffset = weekOffsetFor(payload.index, { sequence: lessonsFor(s.grade) || [], pointer: s.lessonPointer || 0 });
+          return s;
+        });
       }}
     />
   </Shell>;

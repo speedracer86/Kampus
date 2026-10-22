@@ -244,7 +244,7 @@ export function HomeStack({ data, onEvent = () => {} }) {
           {(d.practice || []).map((p, i) => <PracticeRow key={i} item={{ ...p, blitz: !!blitz[p.id] }} phone={phone}
             onPlay={(it) => onEvent('practice', it)}
             onBlitz={(it) => setBlitz(b => ({ ...b, [it.id]: !b[it.id] }))} />)}
-        </> : <WeekView runs={d.runs || []} phone={phone} onEvent={onEvent} />}
+        </> : <WeekView week={d.week} phone={phone} onEvent={onEvent} />}
         <StandBand gated={d.standGated} phone={phone} stage={d.standStage} blobDir={d.blobDir}
           onOpen={() => onEvent('stand', {})} onStartLesson={() => onEvent('start_lesson', d.lesson)} />
       </div>
@@ -252,28 +252,76 @@ export function HomeStack({ data, onEvent = () => {} }) {
   </div>;
 }
 
-/** Week view: a 7-column calendar of run cards; today is an ink "+ Next run" tile (§0). */
-function WeekView({ runs, phone, onEvent }) {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+/**
+ * Week view (§0b). Seven cells that each say what the day is, plus "Coming up".
+ * It used to draw seven dashes, which answered nobody's question — a kid and a
+ * parent should both be able to see what this week holds at a glance.
+ */
+function WeekView({ week, phone, onEvent }) {
+  const days = week?.days || [];
+  const header = week?.header || {};
+  const cell = (d) => {
+    const base = { ...hBase, borderRadius: radius.dayCell, padding: phone ? '14px 16px' : '16px 14px',
+      minHeight: phone ? 0 : 118, display: 'flex', flexDirection: 'column', gap: 6 };
+    if (d.kind === 'test') return { ...base, background: graduation, color: '#fff' };
+    if (d.kind === 'quiz') return { ...base, background: color.held, color: color.ink };
+    if (d.status === 'today') return { ...base, background: color.ink, color: '#fff' };
+    if (d.status === 'done') return { ...base, background: color.fill, color: color.ink };
+    if (d.kind === 'rest') return { ...base, background: 'transparent', boxShadow: `inset 0 0 0 1.5px rgba(35,37,43,.08)`, color: color.muted };
+    return { ...base, background: color.surface, boxShadow: `inset 0 0 0 1.5px rgba(35,37,43,.12)`, color: color.ink };
+  };
+  const kicker = (d) => {
+    if (d.status === 'today') return { text: 'Today', tone: color.lime };
+    if (d.kind === 'quiz') return { text: 'Inspection Day', tone: color.goldDeep };
+    if (d.kind === 'test') return { text: 'The License', tone: 'rgba(255,255,255,.85)' };
+    return null;
+  };
+
   return <div style={{ padding: phone ? '20px' : '24px 32px' }}>
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${phone ? 4 : 7}, 1fr)`, gap: 8 }}>
-      {days.map((dow, i) => {
-        const run = runs.find(r => r.day === i);
-        const today = runs.today === i || (!run && i === new Date().getDay() - 1);
-        return <div key={dow}>
-          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.1em', color: color.muted, marginBottom: 6 }}>{dow.toUpperCase()}</div>
-          {today
-            ? <button onClick={() => onEvent('start_lesson', {})} style={{ ...hBase, width: '100%', border: 'none', cursor: 'pointer',
-              background: color.ink, color: '#fff', borderRadius: radius.dayCell, padding: '18px 10px', fontSize: 13, fontWeight: 700 }}>+ Next run</button>
-            : <div style={{ background: color.fill, borderRadius: radius.dayCell, padding: '14px 10px', minHeight: 72 }}>
-              {run ? <>
-                <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: radius.full, background: run.color, marginBottom: 8 }} />
-                <div style={{ fontSize: 12.5, fontWeight: 700, lineHeight: 1.3 }}>{run.world}</div>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: color.greenDeep, marginTop: 4 }}>{signed(run.kredits)}</div>
-              </> : <span style={{ fontSize: 12.5, color: color.muted }}>—</span>}
-            </div>}
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, flexWrap: 'wrap', marginBottom: 18 }}>
+      <Kicker>{header.label}</Kicker>
+      <span style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-.02em' }}>{header.range}</span>
+      {week?.earnedCents > 0 && <span style={{ fontSize: 15, fontWeight: 700, color: color.greenDeep }}>
+        +{(week.earnedCents / 100).toFixed(2).replace(/^/, '$')} earned</span>}
+      <span style={{ flex: 1 }} />
+      {['prev', 'next'].map(dir => <button key={dir} onClick={() => onEvent('week_page', dir)}
+        style={{ ...hBase, width: 34, height: 34, borderRadius: radius.full, border: 'none', cursor: 'pointer',
+          background: color.ink, color: '#fff', fontSize: 15 }}>{dir === 'prev' ? '←' : '→'}</button>)}
+    </div>
+
+    <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : 'repeat(7, 1fr)', gap: 8 }}>
+      {days.map(d => {
+        const k = kicker(d);
+        return <div key={d.date} style={cell(d)}>
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.1em', opacity: .75 }}>{d.dow.toUpperCase()}</div>
+          {k && <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.08em', color: k.tone }}>{k.text.toUpperCase()}</div>}
+          {d.title && <div style={{ fontSize: 13, fontWeight: 600, lineHeight: 1.25 }}>{d.title}</div>}
+          {d.kind === 'rest' && !d.title && <div style={{ fontSize: 13, fontWeight: 600 }}>Rest day</div>}
+          {d.status === 'done' && d.earnedCents > 0 && <div style={{ fontSize: 12.5, fontWeight: 700, color: color.greenDeep }}>
+            ✓ +${(d.earnedCents / 100).toFixed(2)}</div>}
+          {d.status === 'today' && d.kind !== 'rest' && <button onClick={() => onEvent('start_lesson', d)}
+            style={{ ...hBase, marginTop: 'auto', border: 'none', cursor: 'pointer', background: color.surface,
+              color: color.ink, borderRadius: radius.full, padding: '7px 12px', fontSize: 12.5, fontWeight: 700 }}>Start</button>}
         </div>;
       })}
     </div>
+
+    {(week?.comingUp || []).length > 0 && <div style={{ marginTop: 24 }}>
+      <Kicker style={{ marginBottom: 8 }}>Coming up</Kicker>
+      <div style={{ borderTop: `1px solid ${color.rule}` }}>
+        {week.comingUp.map(u => <button key={u.kind} onClick={() => onEvent('week_jump', u)}
+          style={{ ...hBase, display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left',
+            background: 'none', border: 'none', borderBottom: `1px solid ${color.rule}`, padding: '14px 0', cursor: 'pointer' }}>
+          <span style={{ width: 44, height: 44, borderRadius: radius.full, flex: 'none', display: 'grid', placeItems: 'center',
+            background: u.kind === 'test' ? graduation : color.held, color: u.kind === 'test' ? '#fff' : color.goldDeep,
+            fontSize: 16, fontWeight: 800 }}>{u.kind === 'test' ? '★' : '✓'}</span>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: 17, fontWeight: 600 }}>{u.label}</span>
+            <span style={{ display: 'block', fontSize: 13.5, color: color.muted, marginTop: 2 }}>
+              {u.lessonsToGo === 0 ? 'Today' : `${u.lessonsToGo} ${u.lessonsToGo === 1 ? 'lesson' : 'lessons'} to go`}</span>
+          </span>
+        </button>)}
+      </div>
+    </div>}
   </div>;
 }
