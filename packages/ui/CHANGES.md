@@ -439,3 +439,18 @@ both resolved in favour of §0, which outranks them:
 including the onboarding happy path, the five-move lesson, the business day, the week view
 and the teach layouts); `tests/test_layouts.mjs` renders the four layouts at 1280 and 390
 (18 checks). Both run in CI. 376 unit tests.
+
+### After the sweep: the Task 0 condition was not actually met
+
+"Grep for a retired world name returns zero hits" passed while six of them were still
+in both copies of `GRADE_WORLDS` — unread by the React app, overwritten at load by the
+legacy one. Removing them exposed the real problem: the bank names a world on every
+unit, fourteen units still use the pre-rename names, and `worldForUnit` looked them up
+against the string table and fell through to a fractions default. The lesson runner
+keys the adaptive tier on that, so **236 of 768 lesson days were reading and writing
+the fractions tier whatever they were teaching**.
+
+`packages/engine/src/unit-world.js` now does the translation, mapped off the per-grade
+world map the engine shipped before the rename rather than guessed at. The bank keeps
+its own wording, as the do-not-re-author rule requires. The grep check is rescoped to
+the surfaces that render and is a test now, not a claim.

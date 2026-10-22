@@ -7,12 +7,22 @@
 import {
   lessonsFor, unitById, unitSpan, yearShape, snagFor, teachFor, teachStepsFor, quizSkills, YEAR,
 } from '@kampus/curriculum';
-import { problemsForSkill, dueQueue, dayNumber, hasGenerator, snagChoices } from '@kampus/engine';
+import { problemsForSkill, dueQueue, dayNumber, hasGenerator, snagChoices, unitTopic } from '@kampus/engine';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
-const WORLD_BY_NAME = Object.fromEntries(TOPIC_ORDER.map(t => [WORLDS[t].name, { id: t, ...WORLDS[t] }]));
-/** A unit names its world in the bank's words; fall back so an unknown name never crashes a day. */
-export const worldForUnit = (unit) => WORLD_BY_NAME[unit?.world] || { id: 'frac', ...WORLDS.frac };
+/**
+ * The world a unit is taught in. The bank names it in its own words, several of
+ * which predate the rename, so the engine's `unitTopic` does the reconciliation
+ * (see packages/engine/src/unit-world.js — it is not a cosmetic mapping; the
+ * lesson runner keys the adaptive tier on what this returns).
+ *
+ * `world: 'all'` is a deliberately mixed unit and gets no single world, so it
+ * falls back rather than claiming one.
+ */
+export const worldForUnit = (unit) => {
+  const topic = unitTopic(unit?.world);
+  return topic ? { id: topic, ...WORLDS[topic] } : { id: 'frac', ...WORLDS.frac };
+};
 
 /** Where the student is in the year. The pointer is an index into lessonsFor(grade). */
 export function currentDay(state) {

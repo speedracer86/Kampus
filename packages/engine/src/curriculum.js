@@ -206,32 +206,39 @@ function slope2G(){
     `${dspN(y2-y1)} ÷ ${dx} = <b>${dspN(m)}</b>.`]);
 }
 
-/* ---- per-grade worlds & problem pools ---- */
+/* ---- per-grade worlds & problem pools ----
+   No display names here. World names live in exactly one place — the string table
+   in packages/ui/src/tokens.js (POLISH_TASKS Task 0) — and this map carries only
+   what changes per grade: the icon and the one-line description of what that grade
+   does in that world. It used to carry a name too, which is how six retired names
+   (Number Mine, Puzzle Lab, Decimal Depths, Frozen Obby, Power Plant, Slope City)
+   survived the rename: nothing in the React app read them, and the legacy app
+   overwrote them at load, so the grep-to-zero check passed while they sat here. */
 const GRADE_WORLDS = {
-  3:{int:{name:'Number Mine',icon:'⛏️',desc:'adding & subtracting big numbers'},
-     frac:{name:'The Kitchen',icon:'🏭',desc:'first fractions: pieces & shares'},
-     ratio:{name:'The Market',icon:'💰',desc:'times tables & fair trades'},
-     alg:{name:'Puzzle Lab',icon:'🧩',desc:'mystery numbers & patterns'}},
-  4:{int:{name:'Number Mine',icon:'⛏️',desc:'big ×, ÷ and rounding'},
-     frac:{name:'The Kitchen',icon:'🏭',desc:'equivalent fractions & comparing'},
-     ratio:{name:'The Market',icon:'💰',desc:'fact fluency & money problems'},
-     alg:{name:'Puzzle Lab',icon:'🧩',desc:'mystery numbers & patterns'}},
-  5:{int:{name:'Decimal Depths',icon:'🌊',desc:'decimals & order of operations'},
-     frac:{name:'The Kitchen',icon:'🏭',desc:'adding & multiplying fractions'},
-     ratio:{name:'The Market',icon:'💰',desc:'unit rates & scaling up'},
-     alg:{name:'The Workshop',icon:'🧪',desc:'order of operations & variables'}},
-  6:{int:{name:'Frozen Obby',icon:'❄️',desc:'negative numbers (below zero!)'},
-     frac:{name:'The Kitchen',icon:'🏭',desc:'fractions ↔ decimals & percents'},
-     ratio:{name:'The Market',icon:'💰',desc:'ratios, percents & proportions'},
-     alg:{name:'The Workshop',icon:'🧪',desc:'one & two-step equations'}},
-  7:{int:{name:'Frozen Obby',icon:'❄️',desc:'all four operations with negatives'},
-     frac:{name:'The Kitchen',icon:'🏭',desc:'multiply & divide fractions'},
-     ratio:{name:'The Market',icon:'💰',desc:'proportions & percent change'},
-     alg:{name:'The Workshop',icon:'🧪',desc:'two-step equations & distributing'}},
-  8:{int:{name:'Power Plant',icon:'⚡',desc:'exponents, roots & scientific notation'},
-     frac:{name:'The Kitchen',icon:'🏭',desc:'fraction · decimal · percent fluency'},
-     ratio:{name:'Slope City',icon:'📈',desc:'slope & heavy-duty percents'},
-     alg:{name:'The Workshop',icon:'🧪',desc:'x on both sides & combining terms'}}
+  3:{int:{icon:'⛏️',desc:'adding & subtracting big numbers'},
+     frac:{icon:'🏭',desc:'first fractions: pieces & shares'},
+     ratio:{icon:'💰',desc:'times tables & fair trades'},
+     alg:{icon:'🧩',desc:'mystery numbers & patterns'}},
+  4:{int:{icon:'⛏️',desc:'big ×, ÷ and rounding'},
+     frac:{icon:'🏭',desc:'equivalent fractions & comparing'},
+     ratio:{icon:'💰',desc:'fact fluency & money problems'},
+     alg:{icon:'🧩',desc:'mystery numbers & patterns'}},
+  5:{int:{icon:'🌊',desc:'decimals & order of operations'},
+     frac:{icon:'🏭',desc:'adding & multiplying fractions'},
+     ratio:{icon:'💰',desc:'unit rates & scaling up'},
+     alg:{icon:'🧪',desc:'order of operations & variables'}},
+  6:{int:{icon:'❄️',desc:'negative numbers (below zero!)'},
+     frac:{icon:'🏭',desc:'fractions ↔ decimals & percents'},
+     ratio:{icon:'💰',desc:'ratios, percents & proportions'},
+     alg:{icon:'🧪',desc:'one & two-step equations'}},
+  7:{int:{icon:'❄️',desc:'all four operations with negatives'},
+     frac:{icon:'🏭',desc:'multiply & divide fractions'},
+     ratio:{icon:'💰',desc:'proportions & percent change'},
+     alg:{icon:'🧪',desc:'two-step equations & distributing'}},
+  8:{int:{icon:'⚡',desc:'exponents, roots & scientific notation'},
+     frac:{icon:'🏭',desc:'fraction · decimal · percent fluency'},
+     ratio:{icon:'📈',desc:'slope & heavy-duty percents'},
+     alg:{icon:'🧪',desc:'x on both sides & combining terms'}}
 };
 const CURRICULUM = {
   3:{int:{1:[addBigG(20,99), subBigG(20,99)], 2:[addBigG(100,999), subBigG(100,999)], 3:[addBigG(100,999), subBigG(100,999), multFactG(9)]},

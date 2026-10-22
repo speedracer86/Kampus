@@ -153,10 +153,12 @@ untouched lines.**
   `ratio`, `int`, `alg`) are internal and are not display names.
   Grepping the repo for a retired world name should return zero hits — that is the
   Task 0 done-condition and it stays true only if nothing quotes them, including docs.
-  World *identity* is still assembled from three files — `apps/web/src/worlds.js` (blob
-  and copy), `tokens.js` `world` (name and colour) and the engine's `GRADE_WORLDS` (what
-  each grade's world teaches). The names agree now; the blob for `alg` still differs
-  (`Idea` vs `Learning`). Reconcile deliberately rather than patching one call site.
+- **A unit's `world` is bank vocabulary, not a display name.** The bank names a world on
+  every unit and predates the rename, so fourteen of the 45 units say `Number Mine`,
+  `Decimal Depths`, `Frozen Obby`, `Power Plant`, `Slope City` or `The Stand`. The engine's
+  `unitTopic()` (`packages/engine/src/unit-world.js`) translates; **never look a unit's
+  world up by name against the string table** — the seam used to, fell through to a `frac`
+  default, and keyed 236 of 768 lesson days' adaptive tier on the wrong world.
 - **The pre-§0 components are gone** — `Gallery.jsx`, `gallery-preview.jsx`, `home.jsx`,
   `flows.jsx`, `parent.jsx`, `gamify.jsx`, and the old Home pieces inside `app.jsx`. Their
   §0 replacements are `home-stack.jsx`, `question.jsx`, `lesson.jsx` and `interactives.jsx`;

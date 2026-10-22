@@ -86,3 +86,42 @@ describe('no punitive mechanics in the money', () => {
     expect(DEFAULT_CAP_CENTS).toBeGreaterThan(0);
   });
 });
+
+/* Not an ADHD law — a naming one, and it lives here because this is the file that
+   already walks the source for things that must not exist anywhere.
+
+   POLISH_TASKS Task 0's done-condition is that a retired world name returns zero
+   hits. It passed for a while without being true: six of them sat in both copies of
+   GRADE_WORLDS, unread by the React app and overwritten at load by the legacy one.
+
+   The check is scoped to the surfaces that RENDER. `unit-world.js` names the
+   retired worlds on purpose — it is the translation layer that maps them onto
+   topics — and the bank keeps its own wording because it is owner-authored. What
+   must never happen again is one of these names reaching a screen. */
+describe('the retired world names never reach a screen', () => {
+  const RETIRED = ['Number Mine', 'Puzzle Lab', 'Decimal Depths', 'Frozen Obby',
+    'Power Plant', 'Slope City', 'The Store', 'The Trip', 'The Build'];
+  // Everything a kid or a grown-up can actually see.
+  const SURFACES = ['packages/ui/src', 'apps/web/src', 'index.html'];
+
+  it('appears nowhere in the rendering surfaces', async () => {
+    const { readdirSync, readFileSync, statSync, existsSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const root = new URL('../../../', import.meta.url).pathname;
+
+    const files = [];
+    const walk = (p) => {
+      if (!existsSync(p)) return;
+      if (!statSync(p).isDirectory()) return void files.push(p);
+      for (const e of readdirSync(p)) walk(join(p, e));
+    };
+    SURFACES.forEach(s => walk(join(root, s)));
+
+    const hits = [];
+    for (const f of files.filter(f => /\.(js|jsx|html)$/.test(f))) {
+      const text = readFileSync(f, 'utf8');
+      for (const name of RETIRED) if (text.includes(name)) hits.push(`${f.replace(root, '')}: ${name}`);
+    }
+    expect(hits).toEqual([]);
+  });
+});
