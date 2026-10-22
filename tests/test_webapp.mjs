@@ -431,6 +431,41 @@ try {
     await page.close();
   }
 
+  /* ---------- 11. a worded Snag is a scene and a reveal, not a rigged quiz (B7) ----
+     Grade 6 opens on unit 6-1, whose Snag answer is "The 8-pack (43¢ vs 45¢)". The
+     old shaping put that next to 12, 7 and 9: she wins by shape. */
+  {
+    const page = await open({ grade: 6, name: 'Talia', lessonPointer: 0 }, '#lesson');
+    await page.waitForTimeout(600);
+    // Play the warm-up until the Snag is on screen.
+    for (let i = 0; i < 10; i++) {
+      if (/THE SNAG/i.test(await text(page))) break;
+      await answerOne(page);
+      await page.waitForTimeout(140);
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => !x.disabled && !x.innerText.includes('\n')
+          && /^(Next|Continue|Keep going|Got it)/.test(x.innerText.trim()));
+        if (b) b.click();
+      });
+      await page.waitForTimeout(200);
+    }
+    let t = await text(page);
+    check('the Snag is reached', /THE SNAG/i.test(t), t.slice(0, 70).replace(/\n/g, ' '));
+    check('a worded Snag offers no fake choices', !t.includes('The 8-pack (43¢ vs 45¢)')
+      && t.includes('Show me what it was'), t.match(/Show me[^\n]*/)?.[0] || '');
+    // The tell the old build had: the answer sat among bare integers.
+    const numeric = await page.evaluate(() => [...document.querySelectorAll('button')]
+      .filter(b => /^\d\n/.test(b.innerText.trim())).length);
+    check('no multiple-choice buttons on a worded Snag', numeric === 0, `${numeric} choice buttons`);
+
+    await clickText(page, 'Show me what it was');
+    await page.waitForTimeout(250);
+    t = await text(page);
+    check('the reveal shows the authored answer in full', t.includes('The 8-pack (43¢ vs 45¢)'));
+    check('the reveal still leads to the move', /Show me the move/.test(t));
+    await page.close();
+  }
+
   check('no uncaught page errors anywhere', pageErrors.length === 0, pageErrors.slice(0, 2).join(' | '));
 } finally {
   await browser.close();

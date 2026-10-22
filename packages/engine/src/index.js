@@ -22,5 +22,6 @@ export * from './metrics.js';
 export * from './grades.js';
 export * from './wishlist.js';
 export * from './week.js';
+export * from './snag.js';
 export { payout, FIRST_TRY_BONUS, BLITZ_MULT, TEACH_TOKENS_PER_RUN, BLITZ_FAST_MS } from './payout.js';
 export * from './business.js';

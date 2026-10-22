@@ -7,7 +7,7 @@
 import {
   lessonsFor, unitById, unitSpan, yearShape, snagFor, teachFor, teachStepsFor, quizSkills, YEAR,
 } from '@kampus/curriculum';
-import { problemsForSkill, dueQueue, dayNumber, hasGenerator } from '@kampus/engine';
+import { problemsForSkill, dueQueue, dayNumber, hasGenerator, snagChoices } from '@kampus/engine';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
 const WORLD_BY_NAME = Object.fromEntries(TOPIC_ORDER.map(t => [WORLDS[t].name, { id: t, ...WORLDS[t] }]));
@@ -91,22 +91,6 @@ function teachMoves(skill) {
   return steps.length ? { steps } : null;
 }
 
-/**
- * The bank gives a Snag its scene, question and answer but no distractors — it was
- * written as a scene, not a quiz. Build near misses around the answer so the one
- * allowed attempt is a real attempt rather than a single button marked "correct".
- */
-export function snagChoices(ans) {
-  const n = parseFloat(String(ans).replace(/[^\d.-]/g, ''));
-  if (!Number.isFinite(n)) return [String(ans)];
-  const near = [...new Set([n + 1, n - 1, Math.round(n * 1.5), Math.round(n / 2), n + 3])]
-    .filter(v => v !== n && v > 0).slice(0, 3);
-  const prefix = String(ans).startsWith('$') ? '$' : '';
-  const shaped = [String(ans), ...near.map(v => prefix + v)];
-  // deterministic shuffle so the answer is not always first
-  return shaped.sort((a, b) => (String(a).length + a.charCodeAt(0)) - (String(b).length + b.charCodeAt(0)));
-}
-
 /** Scaffolds fade across a guided move: the last two carry none (§0). */
 const fade = (qs) => qs.map((q, i) => (i < qs.length - 2
   ? { ...q, scaffold: q.hint, scaffoldLevel: i === 0 ? 'lots' : 'some' }
@@ -137,7 +121,12 @@ export function buildDayLesson(state) {
     const snag = day.snag ? snagFor(day.snag) : null;
     if (teach) moves.push({
       id: 'new', meta: '2–3 min', teach,
-      snag: snag && { scene: snag.scene, q: snag.q, ans: snag.ans, answers: snagChoices(snag.ans) },
+      // answers: null means "no honest distractors exist" — the Snag renders as a
+      // scene with a reveal rather than a multiple choice she can win by shape (B7).
+      snag: snag && (() => {
+        const choices = snagChoices(snag.ans);
+        return { scene: snag.scene, q: snag.q, ans: snag.ans, answers: choices.length > 1 ? choices : null };
+      })(),
     });
   }
 

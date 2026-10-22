@@ -185,6 +185,24 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   </div>;
 }
 
+/** A Snag with no honest distractors: the question, then the answer on request.
+    Nothing is scored here either way — the Snag never pays and never penalises. */
+export function SnagReveal({ sn, shown, onReveal, phone }) {
+  return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32 }}>
+    <h2 style={{ fontSize: phone ? 24 : 34, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.25, margin: 0 }}>{sn.q}</h2>
+    {shown
+      ? <div style={{ marginTop: 22, background: color.greenTint, borderRadius: radius.dayCell, padding: phone ? '16px 18px' : '20px 24px' }}>
+        <Kicker style={{ marginBottom: 6 }}>What it was</Kicker>
+        <div style={{ fontSize: phone ? 26 : 34, fontWeight: 600, color: color.greenDeep }}>{sn.ans}</div>
+      </div>
+      : <>
+        <p style={{ fontSize: 17, color: color.muted, lineHeight: 1.5, marginTop: 16 }}>
+          Say it out loud or just think it. Then look — this one is not marked.</p>
+        <Button variant="outline" style={{ marginTop: 18 }} onClick={onReveal}>Show me what it was</Button>
+      </>}
+  </div>;
+}
+
 /** The New idea / re-teach view: title, lede, three ruled step rows, last value green. */
 export function ReteachView({ teach, onContinue, label = 'Try one →', phone }) {
   return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 36 }}>
@@ -364,18 +382,25 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
 
   if (phase === 'snag') {
     const sn = move.snag;
+    /* A Snag is authored as a scene, not a quiz, so it only gets buttons when the
+       answer is a plain number and real near misses exist (B7). Otherwise it is a
+       scene and a reveal: think about it, then look. Four choices where one is
+       "The 8-pack (43¢ vs 45¢)" and the rest are bare integers is not a question —
+       she wins it by shape and learns nothing. */
+    const pickable = (sn.answers?.length || 0) > 1;
     return frame(<div>
       <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32, marginBottom: 18 }}>
         <Kicker style={{ marginBottom: 10 }}>The snag</Kicker>
         <p style={{ fontSize: phone ? 18 : 22, lineHeight: 1.45, margin: 0 }}>{sn.scene}</p>
       </div>
-      <Question
+      {pickable ? <Question
         snag
-        question={{ text: sn.q, answers: sn.answers || [String(sn.ans)],
-          correct: (sn.answers || [String(sn.ans)]).indexOf(String(sn.ans)) }}
+        question={{ text: sn.q, answers: sn.answers, correct: sn.answers.indexOf(String(sn.ans)) }}
         context="lesson" tokensLeft={tokensLeft} feedback={null}
         onAnswer={() => { onEvent('snag_attempt', { move: move.id }); setSnagTried(true); }}
         onHelp={() => {}} />
+        : <SnagReveal sn={sn} shown={snagTried} phone={phone}
+          onReveal={() => { onEvent('snag_attempt', { move: move.id, revealed: true }); setSnagTried(true); }} />}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginTop: 20 }}>
         <span style={{ fontSize: 16, color: color.muted, flex: 1, minWidth: 220 }}>
           {snagTried ? 'You don’t have the move for this one yet. Here it is.' : 'Have a go. It costs nothing either way.'}</span>
