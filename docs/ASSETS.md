@@ -39,7 +39,7 @@ Flat vector blob characters doing activities. Shared palette (corals, golds, blu
 | Shop | `Shopping` |
 | Grown-ups | `Analytics` |
 | Empty: nothing pending | `Timer` |
-| Empty: no runs yet | `Coffee` |
+| Empty: no runs yet | `Timer` |
 | Empty: no stand result | `Vision` |
 
 ### 1.4 Full inventory (80) with suggested uses
@@ -47,7 +47,7 @@ Flat vector blob characters doing activities. Shared palette (corals, golds, blu
 **Learning & making** — `Learning`★, `Artboard` (themes), `Drone`, `Emailing` (parent digest), `Idea` (hints/tips), `Laptop`, `Note`, `Painting` (themes), `Photography`, `Settings` (settings), `Target`★, `Tasks` (checklists), `Vision`★, `Work`, `Writing` (open-answer future mode), `Analytics`★.
 **People & moods** — `Thinker`★, `Magic`★, `Explore`★, `Coach` (parent onboarding/tips), `Selfie` (profile), `Talk` (read-aloud/voice), `Attract`, `Love` (favorites), `Party`★, `Winner`★, `Singing`.
 **Sports & movement** (breaks, streaks, "go move around") — `Badminton`, `Basketball`, `Bowling`, `Boxing`, `Cyclist`, `Football`, `Golf`, `Hunting`, `Jumping`, `Kettlebell`, `Lifter`, `Ping-pong`, `Pull-up`, `Runner`, `Skating`★, `Surfing`, `Swimmer`, `Volleyball`, `Play` (recess).
-**Daily life** — `Coffee`★, `Eating`, `Gardening`, `Hydration` (break reminders), `Ice_cream`★, `Plants` (growth streaks), `Rain`★, `Timer`★.
+**Daily life** — `Eating`, `Gardening`, `Hydration` (break reminders), `Ice_cream`★, `Plants` (growth streaks), `Rain`★, `Timer`★.
 ★ = already assigned (§1.3).
 
 ---
@@ -121,3 +121,20 @@ Draw it in the same grammar: 24 viewBox, 1.8–2px ink stroke, round caps, one f
 
 ### Emoji surfaces (only place emoji is allowed)
 Shop pets `🐸 🐙 🐧 🐉` and theme icons `📄 🍑 🌙 🌸 🌿` at 30px in shop cards. Nowhere else.
+
+
+## Removed: Coffee, Invoice, Talk (Oct 2026)
+
+These three shipped without their `<style>` block, so every shape fell back to black —
+they referenced `st0/st1/st2` classes that no longer existed in the file. The design
+deliverable's copies are byte-identical and equally broken, so the original colours are
+not recoverable from anything in the repo or the handoff.
+
+POLISH_TASKS offered "recolor them with inline fills … or drop them". Recolouring means
+inventing the art, which §1.1 of this document forbids outright ("Never recolor"), and a
+trial render confirmed the classes do not even map consistently across the three files
+(in `Talk` the `st0` shape is a full-canvas rect; in `Invoice` the body is `st2`). They
+are dropped rather than guessed at. None was referenced in code.
+
+The inventory is 78 blobs plus `Target-2`. If these three are wanted back, they need
+re-exporting from the source project with their fills intact — not patching here.
