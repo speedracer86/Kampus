@@ -18,7 +18,9 @@
     "./assessment": "./src/assessment.jsx",
     "./rewards": "./src/rewards.jsx",
     "./parents": "./src/parents.jsx",
-    "./business": "./src/business.jsx"
+    "./business": "./src/business.jsx",
+    "./pin-pad": "./src/pin-pad.jsx",
+    "./onboarding": "./src/onboarding.jsx"
   },
   "peerDependencies": {
     "react": ">=18"

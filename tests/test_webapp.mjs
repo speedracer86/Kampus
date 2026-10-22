@@ -74,6 +74,15 @@ async function open(state = {}, hash = '') {
   return page;
 }
 
+/** A device nobody has set up: no seeded save, so onboarding is what loads. */
+async function openBlank(hash = '') {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+  page.on('pageerror', e => pageErrors.push(e.message.slice(0, 200)));
+  page.on('console', m => { if (m.type() === 'error' && !/favicon|status of 40\d/.test(m.text())) pageErrors.push(m.text().slice(0, 200)); });
+  await page.goto(`http://localhost:${PORT}/${hash}`, { waitUntil: 'networkidle' });
+  return page;
+}
+
 const text = (page) => page.evaluate(() => document.body.innerText);
 const clickText = async (page, label) => page.evaluate((l) => {
   const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim() === l || x.textContent.includes(l));
@@ -219,6 +228,117 @@ try {
     check('no wishlist tile is an empty square without the preview service', blanks === 0, `${blanks} blank`);
     const glyphs = await page.evaluate(() => (document.body.innerText.match(/[🧸📘🎨🎮⚽✨🔗]/gu) || []).length);
     check('fallback tiles still say what the thing is', glyphs >= 2, `${glyphs} glyphs`);
+    await page.close();
+  }
+
+  /* ---------- 7. onboarding: a blank device all the way to playing ----------
+     This is the only path a real first user takes, and until now nothing covered it.
+     It is also the one flow where a dead button means the app cannot be started at
+     all, so it is driven click by click rather than by seeding state. */
+  {
+    const page = await openBlank();
+    let t = await text(page);
+    check('a blank device opens on setup, not on an empty home', t.includes('This is Kampus'), t.slice(0, 60).replace(/\n/g, ' '));
+
+    await clickText(page, 'Bet. Set it up');
+    await page.waitForTimeout(150);
+    await page.fill('input', 'parent@example.com');
+    await clickText(page, 'Send me the link');
+    await page.waitForTimeout(150);
+    check('the magic link step says plainly that it is not wired up', (await text(page)).includes('Not wired up yet'));
+
+    await clickText(page, 'Continue');
+    await page.waitForTimeout(150);
+    t = await text(page);
+    check('the COPPA line ships verbatim', t.includes('We keep her first name. That’s it.'));
+
+    await page.fill('input', 'Maya');
+    await clickText(page, 'Next');
+    await page.waitForTimeout(150);
+
+    /* The PIN pad, twice — this is also the ADHD check: a mismatch must not lock
+       her out or start a countdown, it must just say so and let her retry. */
+    const tapPin = async (digits) => {
+      for (const d of digits) {
+        await page.evaluate((x) => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === x)?.click(), d);
+      }
+      await page.waitForTimeout(60);
+    };
+    await tapPin('1234');
+    await tapPin('9999');
+    t = await text(page);
+    check('a mismatched PIN starts over without a lockout', t.includes('didn’t match') && !/wait|try again in|locked/i.test(t));
+
+    await tapPin('1234');
+    await tapPin('1234');
+    await page.waitForTimeout(600);
+    t = await text(page);
+    check('setup reaches the grade step after the PIN', t.includes('Where should she start'), t.slice(0, 60).replace(/\n/g, ' '));
+
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /GRADE\s*5/.test(b.innerText))?.click());
+    await clickText(page, 'Next');
+    await page.waitForTimeout(150);
+    check('defaults step offers a weekly limit and a lesson length', (await text(page)).includes('Weekly limit'));
+
+    await clickText(page, 'Next');
+    await page.waitForTimeout(150);
+    t = await text(page);
+    check('the hand-over summary shows the real answers back', t.includes('Maya') && t.includes('Grade 5') && t.includes('$5.00'));
+
+    await clickText(page, 'Give it to Maya');
+    await page.waitForTimeout(250);
+    check('student first run greets her by name', (await text(page)).includes('Hey Maya'));
+
+    await clickText(page, 'Let’s go');
+    await page.waitForTimeout(150);
+    check('she picks a starting world from the one string table', (await text(page)).includes('The Kitchen'));
+
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.includes('The Market'))?.click());
+    await clickText(page, 'Next');
+    await page.waitForTimeout(200);
+    await clickText(page, 'Start');
+    await page.waitForTimeout(500);
+    t = await text(page);
+    check('onboarding ends on a playable home, not a dead end', /Hi Maya/.test(t) && /lessons/.test(t), t.slice(0, 80).replace(/\n/g, ' '));
+
+    const saved = await page.evaluate(() => {
+      const fam = JSON.parse(localStorage.getItem('kampus_v1_family') || 'null');
+      const id = fam?.students?.[0]?.id;
+      return { fam, me: id ? JSON.parse(localStorage.getItem(`kampus_v1_${id}`) || 'null') : null };
+    });
+    check('the profile is written through the student-keyed store', saved.me?.name === 'Maya' && saved.me?.grade === 5,
+      JSON.stringify({ name: saved.me?.name, grade: saved.me?.grade }));
+    check('her PIN is on the roster row, not loose in her game state', saved.fam?.students?.[0]?.pin === '1234');
+    check('reloading after onboarding goes straight to play', await (async () => {
+      await page.reload({ waitUntil: 'networkidle' });
+      return (await text(page)).includes('Hi Maya');
+    })());
+    await page.close();
+  }
+
+  /* ---------- 8. the doorway, and the grown-ups PIN it sets ---------- */
+  {
+    const page = await openBlank('#doorway');
+    await page.evaluate(() => {
+      localStorage.setItem('kampus_v1_family', JSON.stringify({ parentEmail: null, parentPin: null,
+        students: [{ id: 'a', name: 'Maya', pin: '1234', worldTopic: 'ratio' }, { id: 'b', name: 'Theo', pin: '4321', worldTopic: 'int' }] }));
+      localStorage.setItem('kampus_v1_a', JSON.stringify({ grade: 5, name: 'Maya' }));
+      localStorage.setItem('kampus_v1_b', JSON.stringify({ grade: 7, name: 'Theo' }));
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    let t = await text(page);
+    check('two kids on a device get asked who is playing', t.includes('Who’s this?') && t.includes('Maya') && t.includes('Theo'));
+    check('the doorway offers the grown-up side too', t.includes('Grown-ups'));
+
+    // The tile holds an initial and the name, so match on contains, not equals.
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.includes('Theo'))?.click());
+    await page.waitForTimeout(150);
+    check('picking a kid asks for her PIN by name', (await text(page)).includes('Hi Theo.'));
+    for (const d of '4321') await page.evaluate((x) => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === x)?.click(), d);
+    await page.waitForTimeout(700);
+    t = await text(page);
+    // Distinct from the pad's own "Hi Theo." — this must be the shell, on his grade.
+    check('the right PIN lands on that kid’s own home', /Hi Theo,/.test(t) && t.includes('Rewards'), t.slice(0, 70).replace(/\n/g, ' '));
     await page.close();
   }
 

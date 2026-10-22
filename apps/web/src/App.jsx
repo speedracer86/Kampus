@@ -22,9 +22,11 @@ import { businessData, ensureBiz, gatesFor, today as bizToday,
   dailyTick, buySupplies, customersForDay, openDay, closeDay } from './businessData.js';
 import { capabilities, lemonCount } from '@kampus/engine';
 import { PinGate } from '@kampus/ui/pin-gate';
+import { ParentSetup, StudentFirstRun, Doorway } from '@kampus/ui/onboarding';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
 import { unitById, lessonsFor } from '@kampus/curriculum';
-import { load, save, append, DEFAULT_STUDENT_ID } from './store.js';
+import { load, save, append, DEFAULT_STUDENT_ID,
+  loadFamily, saveFamily, createStudent, updateStudent } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
 const ROUND_LENGTH = 12;
@@ -187,7 +189,11 @@ function homeData(state) {
 export function App() {
   // One student per device until family profiles exist; the id is chosen here, not
   // inside store.js, so adding a profile switcher touches only this line.
-  const [studentId] = useState(DEFAULT_STUDENT_ID);
+  /* Who is on the device, and who is playing. The roster lives at the family key;
+     a student's own state lives under her id. A device that has never been set up
+     has an empty roster, which is what puts onboarding in front of everything. */
+  const [family, setFamily] = useState(loadFamily);
+  const [studentId, setStudentId] = useState(() => loadFamily().students[0]?.id || DEFAULT_STUDENT_ID);
   const [state, setState] = useState(() => load(studentId));
   // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
   // repro). Home remains the default; the hash is read once, not watched.
@@ -198,6 +204,17 @@ export function App() {
   const [paper, setPaper] = useState(null);     // graded quiz / test result
   const [papers, setPapers] = useState(null);   // the assembled question sheet
   const [pinOk, setPinOk] = useState(false);    // parent gate, per session
+  // Onboarding routing: 'setup' | 'firstrun' | 'doorway' | null (play as usual).
+  const [gate, setGate] = useState(() => {
+    const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
+    if (h === 'setup' || h === 'doorway') return h;
+    const f = loadFamily();
+    // A device with a save but no roster predates profiles — leave it alone.
+    if (!f.students.length) return load(DEFAULT_STUDENT_ID).name ? null : 'setup';
+    // One kid walks straight in; her PIN is for telling two kids apart.
+    return f.students.length > 1 ? 'doorway' : null;
+  });
+  const [pending, setPending] = useState(null);  // the profile mid-first-run
   const [topic, setTopic] = useState(state.lastTopic);
   const [blitzOn, setBlitzOn] = useState(false);
 
@@ -292,6 +309,56 @@ export function App() {
     if (type === 'again') setRoundNonce(n => n + 1);
   };
 
+  /** Make a roster row the live student, and load her state. */
+  const becomeStudent = (id) => {
+    setStudentId(id);
+    setState(load(id));
+    setPinOk(false);
+    setScreen('home');
+  };
+
+  /* ---- onboarding (§0a) sits in front of everything, before any nav exists ---- */
+  if (gate === 'setup') {
+    return <ParentSetup blobDir={BLOB_DIR}
+      onPickProfile={() => setGate('doorway')}
+      onDone={({ name, pin, grade, settings }) => {
+        const id = createStudent({ name, pin, grade, settings, parentEmail: null });
+        setFamily(loadFamily());
+        setStudentId(id);
+        setState(load(id));
+        setPending({ id, name, pin, grade });
+        setGate('firstrun');
+      }} />;
+  }
+
+  if (gate === 'firstrun') {
+    return <StudentFirstRun profile={pending} blobDir={BLOB_DIR}
+      onDone={({ worldId }) => {
+        const topicOf = { fractions: 'frac', ratios: 'ratio', integers: 'int', equations: 'alg' };
+        const t = topicOf[worldId] || 'frac';
+        updateStudent(pending.id, { worldTopic: t });
+        setFamily(loadFamily());
+        update(s => { s.onboarded = true; s.lastTopic = t; return s; });
+        setTopic(t);
+        setPending(null);
+        setGate(null);
+        // A queued placement check is the first thing she sees, not a grade she was given.
+        setScreen(pending?.grade === 'placement' ? 'test' : 'home');
+      }} />;
+  }
+
+  if (gate === 'doorway') {
+    return <Doorway profiles={family.students} parentPin={family.parentPin} blobDir={BLOB_DIR}
+      onSetup={() => setGate('setup')}
+      onEnterStudent={(p) => { becomeStudent(p.id); setGate(null); }}
+      onEnterParent={(entered) => {
+        if (!family.parentPin) { const f = { ...loadFamily(), parentPin: entered }; saveFamily(f); setFamily(f); }
+        setPinOk(true);
+        setGate(null);
+        setScreen('parents');
+      }} />;
+  }
+
   if (screen === 'business') {
     return <Shell {...shellProps('business')}>
       <BusinessScreen data={businessData(state)} blobDir={BLOB_DIR}
@@ -367,8 +434,17 @@ export function App() {
   }
 
   if (screen === 'parents') {
-    if (!pinOk) return <PinGate pin={state.pin || '1234'} blobDir={BLOB_DIR}
-      onPass={() => setPinOk(true)} onCancel={() => setScreen('home')} />;
+    // The family PIN, not the kid's: her unlock PIN must not open this side. Unset
+    // means the pad runs in 'set' mode and the first grown-up through chooses it.
+    if (!pinOk) return <PinGate pin={family.parentPin || state.pin || null} blobDir={BLOB_DIR}
+      onPass={(entered) => {
+        if (!family.parentPin && !state.pin) {
+          const f = { ...loadFamily(), parentPin: entered };
+          saveFamily(f); setFamily(f);
+        }
+        setPinOk(true);
+      }}
+      onCancel={() => setScreen('home')} />;
     const ledger = state.ledger || [];
     const cap = state.settings?.cap ?? DEFAULT_CAP_CENTS;
     const setS = (k, v) => update(s => { s.settings = { ...(s.settings || {}), [k]: v }; return s; });

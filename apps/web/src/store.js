@@ -16,6 +16,68 @@ const eventsKey = (studentId) => `kampus_v1_${studentId}_events`;
 /** Stand-in until profiles exist: one local student per device. */
 export const DEFAULT_STUDENT_ID = 'local';
 
+/* The family roster. One record per device holding who lives here, so the doorway
+   (§0a 15a–15f) can ask "who's this?" without reading every student's state.
+
+   Kept deliberately thin: ids, display names, the kid's unlock PIN, and the
+   grown-ups PIN. Everything else about a student lives in that student's own
+   state under their own key, which is what lets a server shard by student later. */
+const FAMILY_KEY = 'kampus_v1_family';
+
+export function freshFamily() {
+  return { parentEmail: null, parentPin: null, students: [] };
+}
+
+export function loadFamily() {
+  try {
+    const raw = localStorage.getItem(FAMILY_KEY);
+    return raw ? { ...freshFamily(), ...JSON.parse(raw) } : freshFamily();
+  } catch {
+    return freshFamily();
+  }
+}
+
+export function saveFamily(family) {
+  try {
+    localStorage.setItem(FAMILY_KEY, JSON.stringify(family));
+  } catch {
+    /* same bargain as save(): play continues, persistence doesn't */
+  }
+}
+
+/**
+ * Write one student out of onboarding's answers: a roster row plus that student's
+ * own state. Returns the new student id, which the caller makes active.
+ *
+ * `grade: 'placement'` means the grown-up chose "let Kampus find her level" — we
+ * park her at the lowest grade and set placementQueued, because a placement check
+ * she has not sat yet must not look like a grade she was assigned.
+ */
+export function createStudent({ name, pin, grade, settings, parentEmail }) {
+  const family = loadFamily();
+  const id = `s${Date.now().toString(36)}`;
+  const placement = grade === 'placement';
+  save(id, {
+    ...freshState(),
+    name,
+    grade: placement ? 3 : grade,
+    placementQueued: placement,
+    settings: { ...(settings || {}) },
+  });
+  saveFamily({
+    ...family,
+    parentEmail: parentEmail ?? family.parentEmail,
+    students: [...family.students, { id, name, pin, worldTopic: null }],
+  });
+  return id;
+}
+
+/** Patch one roster row (her colour after first run, a renamed profile). */
+export function updateStudent(id, patch) {
+  const family = loadFamily();
+  saveFamily({ ...family, students: family.students.map(s => (s.id === id ? { ...s, ...patch } : s)) });
+}
+
 /** How many events to keep client-side. The server is the real log; this is a buffer. */
 const EVENT_BUFFER = 500;
 
@@ -36,6 +98,7 @@ export function freshState() {
     review: [],          // review.js entries: {skill, step, due, reviews, lapses}
     earnings: [],        // real-dollar ledger rows, integer cents
     onboarded: false,
+    placementQueued: false,
     avatar: 'Thinker',
   };
 }
