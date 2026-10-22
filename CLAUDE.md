@@ -162,8 +162,10 @@ untouched lines.**
 - **The pre-§0 components are gone** — `Gallery.jsx`, `gallery-preview.jsx`, `home.jsx`,
   `flows.jsx`, `parent.jsx`, `gamify.jsx`, and the old Home pieces inside `app.jsx`. Their
   §0 replacements are `home-stack.jsx`, `question.jsx`, `lesson.jsx` and `interactives.jsx`;
-  `pin-gate.jsx` is the one piece carried over. Recover from git history rather than
-  reviving a file.
+  `pin-gate.jsx` is the one piece carried over. They live on two archive tags, not on
+  any branch — `git show archive/pre-world-rename:packages/ui/src/home.jsx`, or
+  `archive/pre-monorepo-ui` for the standalone `ui/` workspace that `packages/ui`
+  replaced. Read from a tag rather than reviving a file.
 - **Topic codes are not display names.** Internally: `frac`, `ratio`, `int`, `alg`.
 - **Two different test runners.** Vitest for the packages, a plain Node + Playwright script
   for `test:e2e`. `npm test` does not run the e2e suite.
