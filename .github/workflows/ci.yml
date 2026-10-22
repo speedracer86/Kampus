@@ -27,3 +27,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: E2E against the built bundle
         run: node tests/test_webapp.mjs
+
+      # The four §0b teach layouts, desktop and phone, including the clause that
+      # matters: a wrong pick shows the hint and never locks the step.
+      - name: The teach-layout gallery
+        run: node tests/test_layouts.mjs

@@ -311,7 +311,7 @@ export function Doorway({ profiles = [], parentPin, onEnterStudent, onEnterParen
       <h1 style={{ fontSize: phone ? 30 : 40, fontWeight: 600, letterSpacing: '-.03em', margin: '0 0 30px' }}>Who’s this?</h1>
       <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : 'repeat(3, 1fr)', gap: 14 }}>
         {profiles.map(p => <button key={p.id} onClick={() => setWho(p)}
-          style={{ ...oBase, border: 'none', cursor: 'pointer', background: color.fill, borderRadius: radius.lg,
+          style={{ ...oBase, border: 'none', cursor: 'pointer', background: color.surface, borderRadius: radius.lg,
             padding: 26, display: 'flex', flexDirection: phone ? 'row' : 'column', alignItems: 'center', gap: 16 }}>
           <span style={{ width: phone ? 72 : 112, height: phone ? 72 : 112, borderRadius: radius.full, flex: 'none',
             background: WORLD_BY_TOPIC[p.worldTopic]?.color || world.fractions.color, color: color.ink,
@@ -320,10 +320,10 @@ export function Doorway({ profiles = [], parentPin, onEnterStudent, onEnterParen
           <span style={{ fontSize: 20, fontWeight: 600 }}>{p.name}</span>
         </button>)}
         <button onClick={() => setWho('parent')}
-          style={{ ...oBase, border: 'none', cursor: 'pointer', background: color.fill, borderRadius: radius.lg,
+          style={{ ...oBase, border: 'none', cursor: 'pointer', background: color.surface, borderRadius: radius.lg,
             padding: 26, display: 'flex', flexDirection: phone ? 'row' : 'column', alignItems: 'center', gap: 16 }}>
           <span style={{ width: phone ? 72 : 112, height: phone ? 72 : 112, borderRadius: radius.full, flex: 'none',
-            background: color.surface, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+            background: color.fill, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
             <Blob name="Coach" size={phone ? 56 : 84} dir={blobDir} /></span>
           <span style={{ fontSize: 20, fontWeight: 600 }}>Grown-ups</span>
         </button>

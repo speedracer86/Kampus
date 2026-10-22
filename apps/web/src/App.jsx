@@ -1,7 +1,7 @@
 /* Phase-0 vertical slice: Home → pick a world → QuizRound fed by @kampus/engine → back home.
    Proves the engine ↔ component-library contract end to end. The remaining screens
    (shop, rewards, stand, grown-ups, onboarding, grade tests) arrive in Phase 3. */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
@@ -215,6 +215,8 @@ export function App() {
     return f.students.length > 1 ? 'doorway' : null;
   });
   const [pending, setPending] = useState(null);  // the profile mid-first-run
+  const deepLink = useRef(typeof location !== 'undefined'
+    && ['lesson', 'quiz', 'test', 'rewards', 'parents', 'business'].includes(location.hash.slice(1)));
   const [topic, setTopic] = useState(state.lastTopic);
   const [blitzOn, setBlitzOn] = useState(false);
 
@@ -314,6 +316,10 @@ export function App() {
     setStudentId(id);
     setState(load(id));
     setPinOk(false);
+    // A deep link survives the doorway exactly once: #lesson on a two-kid device
+    // should still open the lesson after she says who she is, but switching
+    // profiles later goes home rather than dropping the next kid mid-screen.
+    if (deepLink.current) { deepLink.current = false; return; }
     setScreen('home');
   };
 

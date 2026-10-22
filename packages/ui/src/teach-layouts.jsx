@@ -60,7 +60,10 @@ export function FaceoffLayout({ step, onSolve, phone }) {
     const win = isPick && i === answer, lose = isPick && i !== answer;
     return <button key={i} onClick={() => { if (picked === null) { setPicked(i); onSolve(i === answer); } }}
       style={{ ...tBase, flex: 1, minWidth: phone ? '100%' : 230, border: 'none', textAlign: 'left',
-        cursor: picked === null ? 'pointer' : 'default', borderRadius: radius.xl, padding: phone ? 20 : 26,
+        cursor: picked === null ? 'pointer' : 'default', borderRadius: radius.xl,
+        // The "or" disc overlaps both cards by 24px, so the inner edge pads past it.
+        padding: phone ? 20 : 26,
+        ...(phone ? {} : { [i === 0 ? 'paddingRight' : 'paddingLeft']: 58 }),
         background: win ? color.greenTint : lose ? color.redTint : color.fill,
         boxShadow: win ? `inset 0 0 0 2px ${color.green}` : lose ? `inset 0 0 0 2px ${color.red}` : 'none' }}>
       <Kicker style={{ marginBottom: 8 }}>{c.label}</Kicker>

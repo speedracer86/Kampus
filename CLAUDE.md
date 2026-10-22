@@ -9,9 +9,11 @@ npm workspaces monorepo. `npm install` once at the root installs everything.
 
 ```bash
 npm install                   # root only — installs all workspaces
-npm test                      # unit tests: 123 vitest tests (engine + curriculum)
+npm test                      # unit tests: 376 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
+npm run test:webapp           # build apps/web, serve dist/, drive it: 57 checks
+npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build
 
@@ -24,10 +26,18 @@ GitHub work goes through the `gh` CLI (already authenticated) — not an MCP ser
 
 ```bash
 npm test && npm run build
+PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-Both must be clean: 312 passing tests, build exits 0. CI (`.github/workflows/ci.yml`) runs
-exactly this on every push to `main` and every PR, so a red run here is a red run there.
+All must be clean: 376 passing unit tests, build exits 0, 57/57 webapp checks. CI
+(`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
+and every PR, so a red run here is a red run there.
+
+**`npm test` cannot see the class of bug that has twice reached main** — generators lost
+to minification, and a screen never wired to its engine. Both were invisible to vitest by
+construction and only showed up in the bundle a kid loads. If you touched `apps/web`,
+`packages/ui`, or anything the bundle resolves by name, `test:webapp` is the suite that
+matters.
 
 **If you touched `index.html`**, also run the end-to-end suite:
 
@@ -40,8 +50,10 @@ problems, then drives onboarding, a full round with a wrong answer and second-lo
 teach-mode Kredit halving, focus mode, shop, rewards + parent approval, the lemonade stand,
 and a passing grade test.
 
-**Coverage gap:** `apps/web` has no tests of its own. Verify it with `npm run build` plus a
-look in the browser.
+**Coverage gap:** `apps/web` has no vitest suite of its own — `tests/test_webapp.mjs`
+covers it from the outside instead, against the built bundle. Logic that deserves unit
+tests belongs in `packages/engine`, which is why `snagChoices` lives there and not in
+`year.js`.
 
 ## Which doc wins
 
@@ -68,10 +80,11 @@ Two sets of invariants are enforced by tests rather than intentions, in
 ## Architecture
 
 - **Two live front ends, deliberately.** `index.html` is the complete v1 app that families
-  use today (vanilla JS, no build). `apps/web` is the React rebuild, currently a **Phase-0
-  vertical slice** — Home → pick a world → quiz round → home, and nothing else. Screens
-  absent there (shop, rewards, stand, grown-ups, onboarding, grade tests) still exist only
-  in `index.html`. Changing one does **not** change the other.
+  use today (vanilla JS, no build). `apps/web` is the React rebuild and now carries the
+  product: onboarding, the doorway, Home, the five-move lesson, Inspection Day and the
+  License, the business day, Rewards and Grown-ups. **The shop is the one screen still
+  only in `index.html`**, which is why it is absent from the nav rather than present and
+  dead. Changing one front end does **not** change the other.
 - **`packages/engine` is the math brain and is strictly pure.** Generators, adaptive tier
   rules, and economy math as ES modules with no DOM and no state of its own — callers own
   all state. This is what makes the whole thing testable headlessly; keep it that way.
@@ -94,11 +107,17 @@ Two sets of invariants are enforced by tests rather than intentions, in
 | `packages/curriculum/src/` | The authored bank — 45 units, 128-day sequences, Snags, teach panels. Owner-reviewed: verify, never re-author |
 | `apps/web/src/year.js` | The seam between the bank (what is taught) and the engine (the questions) |
 | `packages/ui/src/tokens.js` | Every design token; the only legal source of color |
-| `packages/ui/src/` | Component library, at §0 values |
-| `apps/web/src/App.jsx` | The vertical slice wiring engine ↔ component library |
+| `packages/ui/src/` | Component library, at §0/§0a/§0b values |
+| `packages/ui/src/teach-layouts.jsx` | The four §0b teach-step layouts, the takeaway band, the voice row |
+| `packages/ui/src/onboarding.jsx` | Parent setup, student first run, the doorway (§0a) |
+| `packages/ui/src/pin-pad.jsx` | The one PIN pad, used in all four places a PIN is asked |
+| `packages/curriculum/src/teach-steps.js` | TeachStep data: the four authored reference skills + the mechanical walk conversion |
+| `apps/web/src/App.jsx` | The app's routing and the wiring of engine ↔ component library |
 | `apps/web/src/store.js` | Persistence surface (swap point for Supabase) |
 | `index.html` | The legacy v1 app, still complete and shipping |
 | `tests/test_kampus.js` | Playwright suite for the legacy app |
+| `tests/test_webapp.mjs` | The suite that matters: the BUILT React bundle in a real browser |
+| `tests/test_layouts.mjs` | The §0b layout gallery at 1280 and 390 |
 | `docs/KAMPUS_BUILD_PLAN.md` | Where this is going: Supabase, multi-family, sync |
 | `docs/DEPLOYMENT.md` | Stack, domains, Cloudflare Pages settings, the multi-tenant schema |
 | `docs/STYLE_GUIDE.md` | Palette, type scale, motion, grade-band sizing |
@@ -125,10 +144,6 @@ untouched lines.**
 - **`apps/web/public/` is generated and gitignored.** `scripts/sync-blobs.mjs` copies blobs
   from `packages/ui/blobs` on every `predev`/`prebuild`. Never hand-edit or commit it; add
   new illustrations to `packages/ui/blobs`.
-- **World identity is defined in three places** and they don't fully agree:
-  `apps/web/src/worlds.js`, `packages/ui/src/tokens.js` (`world` map), and the engine's
-  `GRADE_WORLDS`. `worlds.js` gives `alg` the `Idea` blob while `tokens.js` says `Learning`.
-  Reconcile deliberately rather than patching one call site.
 - **World names live in ONE string table**, `packages/ui/src/tokens.js` `world`, keyed by
   worldId (`fractions`, `ratios`, `integers`, `equations`): **The Kitchen · The Market ·
   Outside · The Workshop**, owner-confirmed in ROUND3. Never hard-code a world name —
@@ -138,6 +153,10 @@ untouched lines.**
   `ratio`, `int`, `alg`) are internal and are not display names.
   Grepping the repo for a retired world name should return zero hits — that is the
   Task 0 done-condition and it stays true only if nothing quotes them, including docs.
+  World *identity* is still assembled from three files — `apps/web/src/worlds.js` (blob
+  and copy), `tokens.js` `world` (name and colour) and the engine's `GRADE_WORLDS` (what
+  each grade's world teaches). The names agree now; the blob for `alg` still differs
+  (`Idea` vs `Learning`). Reconcile deliberately rather than patching one call site.
 - **The pre-§0 components are gone** — `Gallery.jsx`, `gallery-preview.jsx`, `home.jsx`,
   `flows.jsx`, `parent.jsx`, `gamify.jsx`, and the old Home pieces inside `app.jsx`. Their
   §0 replacements are `home-stack.jsx`, `question.jsx`, `lesson.jsx` and `interactives.jsx`;
@@ -150,6 +169,15 @@ untouched lines.**
   (~150MB). Without it, run `npx playwright install chromium` first.
 - **`index.html` is hand-maintained, not generated** from the packages. There's no build
   that produces it — edit it directly and re-run `test:e2e`.
+- **A generator resolved by `fn.name` dies under minification.** This shipped: the bundle
+  renamed all 79 generator functions, so production lessons were empty while dev and
+  vitest were green. `skill-index.js` now resolves through explicit registries and
+  `esbuild keepNames: true` in `apps/web/vite.config.js` is load-bearing —
+  `packages/engine/test/minification.test.js` bundles with and without it and fails if the
+  fix is undone. **Never add a code path that looks a function up by its `.name`.**
+- **A hook in a `.js` file builds clean and throws at runtime.** `jsxInject` supplies React
+  to `.jsx` only, so a file using `React.useState` must be `.jsx`. The extension is
+  load-bearing; this is why `util.js` is `util.jsx`.
 - **Library files use bare `React.useState` with no import** — `apps/web/vite.config.js`
   injects React via `jsxInject`. Any other bundler needs the same shim.
 - **Saves migrate.** The legacy app imports a `mathminer_v1` localStorage save on first load.

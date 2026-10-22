@@ -380,3 +380,62 @@ Driven by `PROMPT.md`, with precedence `KAMPUS_PLAY_SYSTEM.md` > `BUSINESS_CLEAN
 Engine modules added: `sources.js` (the three-source rule), `skill-index.js`
 (`problemsForSkill`), `assessment.js`, `earnings.js`, `review.js`, `business-types.js`,
 `seasons.js`, `care.js`, `market.js`, `field.js`, `metrics.js`.
+
+## Round 3 (ROUND3.md, Oct 2026)
+
+Twelve items, in order. §0 stayed binding; §0a (onboarding) and §0b (polish) are
+additive layers on it, and both arrived in this round. Precedence unchanged.
+
+**Items 1–7** are recorded above and in git: the production-lesson fix and
+`docs/PRODUCT_AUDIT.md`, the world rename behind one string table (B1 Task 0), one
+`Shell` owning the nav (B1), the lesson completion guard (B4), the grade stack's
+placed-vs-passed states (Task 3), the wishlist tiles and the preview Worker scaffold
+(Task 4), and the week plan from the real 128-day sequence (Task 2).
+
+**Item 8 · Onboarding (§0a).**
+- **New: `pin-pad.jsx`** — the one PIN pad, used in all four places a PIN is asked for.
+  No lockouts and no countdowns, per the ADHD laws: a wrong PIN clears the dots, says so
+  once, and lets her try again.
+- **New: `onboarding.jsx`** — `ParentSetup` (13a–13r), `StudentFirstRun` (14a–14h) and
+  `Doorway` (15a–15f) on one §0a frame. The magic-link step is a local mock and says so
+  on the screen; Supabase auth is Phase 2.
+- **`pin-gate.jsx`** now wraps `PinPad` instead of drawing its own keypad. It runs in
+  'set' mode the first time through, because §0a gives setup no step for a grown-ups PIN
+  and the kid's own unlock PIN must not open the grown-up side.
+- **Blobs: `Coffee.svg`, `Invoice.svg` and `Talk.svg` are gone.** All three referenced
+  `st0/st1/st2` with no `<style>` block, so every shape fell back to black, and the
+  deliverable's copies are byte-identical. The colours are not recoverable and §1.1 says
+  never recolor, so they were dropped rather than guessed at. `Target-2.svg` added; the
+  set is 78. See `docs/ASSETS.md`.
+
+**Item 9 · Teach steps (§0b Task 1, split).**
+- **New: `teach-layouts.jsx`** — `WalkLayout`, `FaceoffLayout`, `LineLayout`, `BarLayout`,
+  plus `TakeawayBand`, `NotesCounter` and `VoiceRow`. A step is data; the runner picks the
+  component by `layout`. Every layout shows the hint on a wrong pick and never locks.
+- **`lesson.jsx`** `TeachSteps` gained `{stepIdx, solved[], notes[]}`, the takeaway band,
+  the 4-cell notes counter beside the cheat-sheet kicker, and the voice band — which comes
+  from the grade (a: 3–4 auto-reads, b: 5–6 disc only, c: 7–8 the pill), not from a
+  setting. The older prompt/body step shape still renders, so un-upgraded panels work.
+- Authoring was split per ROUND3 and stayed split: four authored reference skills
+  (`eqFrac` → bar, `unitRate` → faceoff, `addInt` → line, `twoStep` → walk) in
+  `packages/curriculum/src/teach-steps.js`, and every other panel converted mechanically
+  from its authored `{do, ex}` pairs. A test asserts the converter never paraphrases.
+
+**Item 10 · `SnagReveal` (AUDIT B7).** A Snag whose answer is not a plain number now
+renders as the scene, the question, and "Show me what it was". Six of the 45 authored
+Snags were being fed through numeric distractor generation, which put the answer among
+bare integers where she could win it by shape. `snagChoices` moved to
+`packages/engine/src/snag.js` and returns `[]` for anything it cannot shape honestly.
+
+**Two deliberate deviations from §0a/§0b**, both caught in a rendered screenshot and
+both resolved in favour of §0, which outranks them:
+- The doorway's profile tiles are **white**, not the `#F5F7F9` §0a names. That value is
+  also the page ground, so on the real page the tiles were invisible. §0's own rule —
+  ground stays paper, cards stay white — settles it.
+- The face-off cards pad their inner edge past the 48px "or" disc, which overlaps both
+  cards by 24px. Without it the right card's count and price started underneath the disc.
+
+**Items 11–12 · The suites.** `tests/test_webapp.mjs` drives the built bundle (57 checks,
+including the onboarding happy path, the five-move lesson, the business day, the week view
+and the teach layouts); `tests/test_layouts.mjs` renders the four layouts at 1280 and 390
+(18 checks). Both run in CI. 376 unit tests.

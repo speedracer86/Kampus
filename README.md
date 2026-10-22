@@ -12,20 +12,22 @@ Two things live in this repo:
 | Path | What it is |
 |---|---|
 | `index.html` | The complete v1 app (markup, styles, logic, embedded illustrations). Open in any browser — no install, no server. |
-| `packages/engine` | The math brain as pure ES modules: ~80 problem generators with teach steps (v1 set + Phase 1 expansion covering every grade's full major work), grade 3–8 curriculum pools, adaptive tier logic, economy math. Fully unit-tested. |
-| `packages/curriculum` | Common Core (CCSS) skill taxonomy + major-work coverage reporting. After Phase 1, its tests assert every grade's complete major work is covered. |
-| `packages/ui` | The React component library from the design handoff (plain JSX, zero dependencies, inline-styled from `tokens.js`). See its README for the architecture contract; `CHANGES.md` for local divergences. |
-| `apps/web` | The v2 React app (Vite). Currently a working vertical slice: Home → world → full quiz round with teach mode, streaks, and Kredit earnings, persisted locally. |
+| `packages/engine` | The math brain as pure ES modules: 79 problem generators (v1 set + Phase 1 expansion covering every grade's full major work), grade 3–8 curriculum pools, adaptive tier logic, the real-money ledger, assessment, review scheduling, the business sim. 347 unit tests. |
+| `packages/curriculum` | The authored bank — Common Core skill taxonomy, 45 units, six 128-day sequences, Snags, teach panels and TeachStep data — plus major-work coverage reporting. Owner-reviewed: verify, never re-author. 29 unit tests. |
+| `packages/ui` | The React component library (plain JSX, zero dependencies, inline-styled from `tokens.js`) at §0/§0a/§0b values: 78 blob illustrations, the five-move lesson, the four teach-step layouts, onboarding, assessments, Rewards, Grown-ups. See its README for the architecture contract; `CHANGES.md` for every divergence. |
+| `apps/web` | The v2 React app (Vite): onboarding and the family doorway, Home with the week plan and grade stack, the five-move daily lesson, Inspection Day and the License, the business day, Rewards with the real-money receipt, and Grown-ups. Persisted locally, keyed by student. |
 | `docs/` | Product docs: design spec, style guide, curriculum & engagement plan, build plan. |
-| `tests/` | v1's end-to-end Playwright suite (still runs against `index.html`). |
+| `tests/` | The browser suites: `test_webapp.mjs` drives the built v2 bundle (57 checks), `test_layouts.mjs` the teach layouts at two widths (18), `test_kampus.js` the v1 app. |
 
 ## Develop
 
 ```bash
 npm install          # workspace install (Node 20+)
-npm test             # engine + curriculum unit tests (Vitest)
+npm test             # 376 engine + curriculum unit tests (Vitest)
 npm run dev          # v2 app dev server (Vite)
 npm run build        # v2 production build
+npm run test:webapp  # build, serve dist/, drive it in a real browser (57 checks)
+npm run test:layouts # the four teach-step layouts, desktop + phone (18 checks)
 npm run test:e2e     # v1 end-to-end suite (needs Playwright browsers)
 ```
 
@@ -33,7 +35,11 @@ No environment variables yet; Phase 2 (Supabase backend) introduces them and wil
 
 ## Testing philosophy
 
-The engine is pure functions, so the heavy testing is headless and fast: a 10,800-problem fuzz across every grade × topic × tier runs in under a second. The curriculum package's tests double as living documentation of standards coverage: after Phase 1 they assert every grade's complete Common Core major work is covered, and fail on regression.
+The engine is pure functions, so the heavy testing is headless and fast: a 10,800-problem fuzz across every grade × topic × tier runs in under a second. The curriculum package's tests double as living documentation of standards coverage — they assert every grade's complete Common Core major work is covered, and fail on regression.
+
+Unit tests are not enough here, and we know that empirically. Two bugs reached `main` that every vitest test was blind to by construction: generators resolved by `fn.name`, which the production bundle renames, so real lessons were empty while dev was green; and a screen that was never wired to the engine behind it. Both are only visible in the bundle a kid actually loads, so `tests/test_webapp.mjs` builds `apps/web`, serves `dist/` as a plain static host, and drives it with a real browser — no dev server, no HMR, no source maps doing us favours. CI runs it on every push.
+
+Two sets of invariants are tests rather than intentions: the **ADHD laws** (untimed by default, no punitive mechanics, no streak display anywhere, nothing dies, absence never punished) and the **§5 rule** (a quiz or test can never hurt the business). They live in `packages/engine/test/adhd-laws.test.js` and `year-wiring.test.js`.
 
 ## Docs
 
