@@ -14,6 +14,7 @@ import { Button, Kicker } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
 import { Question } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
+import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -84,19 +85,42 @@ export function LessonSpine({ moves, active, progress, earned, tokensLeft, onJum
 }
 
 /** The teach phase: cheat-sheet column on the left, one step at a time on the right.
-    Each step gates Next — reading is not enough, the step has to be solved. */
-export function TeachSteps({ teach, onDone, onEvent = () => {}, phone }) {
+    Each step gates Next — reading is not enough, the step has to be solved.
+
+    Two shapes of step are supported. A §0b step carries `layout` and its payload
+    and renders through TEACH_LAYOUTS; the older shape (prompt/body, optional
+    `interactive`) still renders as it did, so panels the bank has not upgraded
+    keep working. Lesson state is {stepIdx, solved[], notes[]} — notes are what
+    "Write it down" appends, and they are the cheat-sheet column she keeps. */
+export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', onDone, onEvent = () => {}, phone }) {
   const steps = teach.steps || [];
   const [at, setAt] = React.useState(0);
-  const [solved, setSolved] = React.useState(() => steps.map(s => !s.interactive));
+  // A step with nothing to solve is solved on arrival; a layout or an interactive
+  // has to be done. Next reads this array and nothing else.
+  const [solved, setSolved] = React.useState(() => steps.map(s => !s.interactive && !s.layout));
+  const [notes, setNotes] = React.useState([]);
+  const [fresh, setFresh] = React.useState(null);     // the note highlighted for one beat
+  const [quiet, setQuiet] = React.useState(false);
   const step = steps[at];
   const canNext = solved[at];
   const setSolvedAt = (i, v) => setSolved(s => (s[i] === v ? s : s.map((x, j) => (j === i ? v : x))));
 
   const Interactive = step?.interactive ? INTERACTIVES[step.interactive] : null;
+  const Layout = step?.layout ? TEACH_LAYOUTS[step.layout] : null;
+  const mode = voiceMode(grade);
+
+  const writeNote = () => {
+    const note = step?.takeaway;
+    if (!note || notes.includes(note)) return;
+    setNotes(n => [...n, note]);
+    setFresh(note);
+    onEvent('note_written', { index: at, note });
+    setTimeout(() => setFresh(null), 1400);
+  };
 
   const column = <div>
-    <Kicker style={{ marginBottom: 14 }}>Kampus Class · 2–3 min</Kicker>
+    <Kicker style={{ marginBottom: 14 }}>
+      Kampus Class · 2–3 min<NotesCounter count={notes.length} /></Kicker>
     {steps.map((s, i) => {
       const isDone = i < at && solved[i], isNow = i === at;
       return <button key={i} onClick={() => i <= at && setAt(i)} style={{ ...lBase, display: 'flex', gap: 14, width: '100%',
@@ -110,17 +134,39 @@ export function TeachSteps({ teach, onDone, onEvent = () => {}, phone }) {
           {i < steps.length - 1 && <span style={{ width: 1.5, flex: 1, minHeight: 26, background: 'rgba(35,37,43,.14)' }} />}
         </span>
         <span style={{ paddingBottom: 18 }}>
-          <span style={{ display: 'block', fontSize: 20, fontWeight: 700, color: isNow || isDone ? color.ink : color.muted }}>{s.title}</span>
+          <span style={{ display: 'block', fontSize: 20, fontWeight: 700, color: isNow || isDone ? color.ink : color.muted }}>
+            {s.title || s.verb || `Step ${i + 1}`}</span>
           {isDone && s.takeaway && <span style={{ display: 'block', fontSize: 17, fontWeight: 400, color: color.muted, marginTop: 4 }}>{s.takeaway}</span>}
         </span>
       </button>;
     })}
+    {/* The notes she wrote down, in the column she will look at during the mission. */}
+    {!!notes.length && <div style={{ marginTop: 6 }}>
+      <Kicker style={{ marginBottom: 10 }}>Your notes</Kicker>
+      {notes.map(n => <div key={n} style={{ fontSize: 16, lineHeight: 1.4, padding: '10px 12px', marginBottom: 6,
+        borderRadius: 12, background: fresh === n ? color.greenTint : 'transparent',
+        transition: 'background .5s ease' }}>{n}</div>)}
+    </div>}
   </div>;
 
+  const kicker = step?.layout
+    ? `New idea · step ${at + 1} of ${steps.length}${step.verb ? ` · ${step.verb}` : ''}`
+    : null;
+  const promptSize = phone ? 23 : (String(step?.prompt || '').length > 56 ? 32 : 34);
+
   const body = <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 20 : 32 }}>
-    <h2 style={{ fontSize: phone ? 24 : 36, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.2, margin: '0 0 22px' }}>{step?.prompt}</h2>
+    {mode !== 'c' && <VoiceRow mode={mode} text={step?.speak || step?.prompt} worldColor={worldColor || color.ink}
+      quiet={quiet} onQuiet={setQuiet} speak={speak} blobDir={blobDir} phone={phone} />}
+    {kicker && <Kicker style={{ marginBottom: 10 }}>{kicker}</Kicker>}
+    <h2 style={{ fontSize: Layout ? (mode === 'a' && !phone ? 40 : promptSize) : (phone ? 24 : 36),
+      fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.2, margin: '0 0 22px' }}>{step?.prompt}</h2>
+    {Layout && <Layout step={step} solved={solved[at]} phone={phone}
+      onSolve={(ok) => { setSolvedAt(at, ok); if (ok) onEvent('teach_solved', { index: at, layout: step.layout }); }} />}
     {Interactive && <Interactive {...(step.config || {})} onSolve={(ok) => setSolvedAt(at, ok)} />}
-    {!Interactive && step?.body && <div style={{ fontSize: 18, lineHeight: 1.55 }}>{step.body}</div>}
+    {!Interactive && !Layout && step?.body && <div style={{ fontSize: 18, lineHeight: 1.55 }}>{step.body}</div>}
+    {/* The takeaway band only opens once the step is actually solved. */}
+    {canNext && step?.takeaway && <TakeawayBand note={step.takeaway} written={notes.includes(step.takeaway)}
+      onWrite={writeNote} phone={phone} />}
     <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 28, paddingTop: 20, borderTop: `1px solid ${color.rule}` }}>
       <Button variant="outline" size="sm" disabled={at === 0} onClick={() => setAt(a => Math.max(0, a - 1))}>Back</Button>
       <Button variant="ink" size="sm" disabled={!canNext} onClick={() => {
@@ -132,9 +178,8 @@ export function TeachSteps({ teach, onDone, onEvent = () => {}, phone }) {
   </div>;
 
   return <div style={{ ...lBase }}>
-    {step?.prompt && <button onClick={() => speak(step.prompt)} style={{ ...lBase, border: 'none', cursor: 'pointer',
-      background: color.surface, borderRadius: radius.full, padding: '8px 15px', fontSize: 13, fontWeight: 700, marginBottom: 14 }}>
-      Read it to me</button>}
+    {mode === 'c' && step?.prompt && <div style={{ marginBottom: 14 }}>
+      <VoiceRow mode="c" text={step.speak || step.prompt} speak={speak} /></div>}
     {phone ? <>{body}<div style={{ marginTop: 20 }}>{column}</div></>
       : <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>{column}{body}</div>}
   </div>;
@@ -197,8 +242,8 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, p
  * lesson: {title, unit, world, moves:[{id, meta, questions?, teach?, teachFree?, scaffoldFades?}], reteach?}
  * pricer: ({tier, streak, firstTry, teachUsed, tokenUsed}) -> {amount, pills} — pass the engine's payout().
  */
-export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 50,
-  pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
+export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rewardCents = 50,
+  blobDir = '/blobs/', pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
   const moves = lesson.moves || [];
@@ -340,7 +385,9 @@ export function DailyLesson({ lesson, tier = 1, tokensPerRun = 3, rewardCents = 
     </div>);
   }
 
+  // The grade picks the voice mode, and the world picks the companion's colour.
   if (phase === 'teach') return frame(<TeachSteps teach={move.teach} phone={phone} onEvent={onEvent}
+    grade={grade} worldColor={lesson.world?.color} blobDir={blobDir}
     onDone={() => { onEvent('move_complete', { move: move.id }); setProgress(p => ({ ...p, [move.id]: { done: 1 } })); finishMove(); }} />);
 
   if (phase === 'reteach') return frame(<ReteachView teach={lesson.reteach} phone={phone} label="2 fresh ones →"

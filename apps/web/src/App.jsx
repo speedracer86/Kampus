@@ -571,6 +571,8 @@ export function App() {
       <DailyLesson
         lesson={lesson}
         tier={state.tiers[tierKey(state.grade, topic)] || 1}
+        grade={state.grade}
+        blobDir={BLOB_DIR}
         pricer={(a) => { const p = payout({ ...a, bonusPct: bonusPct(state.owned) });
           return { amount: p.total, pills: p.parts.map(label => ({ label, kind: /streak/.test(label) ? 'streak' : /first/.test(label) ? 'first' : /blitz/.test(label) ? 'blitz' : /token/.test(label) ? 'token' : 'help' })) }; }}
         onEvent={onLessonEvent}

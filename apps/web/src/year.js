@@ -5,7 +5,7 @@
    module is the seam between them and authors nothing: every title, Snag and teach
    panel here comes from packages/curriculum verbatim. */
 import {
-  lessonsFor, unitById, unitSpan, yearShape, snagFor, teachFor, quizSkills, YEAR,
+  lessonsFor, unitById, unitSpan, yearShape, snagFor, teachFor, teachStepsFor, quizSkills, YEAR,
 } from '@kampus/curriculum';
 import { problemsForSkill, dueQueue, dayNumber, hasGenerator } from '@kampus/engine';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
@@ -69,20 +69,26 @@ function warmUpQuestions(state, unit, tier, ctx) {
   return pool.flatMap(s => draw(s, Math.max(1, tier - 1), 1, ctx)).slice(0, 2);
 }
 
-/** The bank's teach panel, as the cheat-sheet steps the runner renders. */
+/**
+ * The bank's teach panel as §0b TeachSteps: authored layouts where they exist,
+ * the mechanical walk conversion everywhere else (packages/curriculum teach-steps).
+ *
+ * A panel that declares an interactive keeps it — those seven are owner-declared
+ * and outrank a converted walk row.
+ */
 function teachMoves(skill) {
   const t = teachFor(skill);
   if (!t) return null;
-  const steps = [
-    { id: 'big', title: 'Big idea', prompt: t.bigIdea, body: t.bigIdea, takeaway: t.bigIdea },
-    ...(t.steps || []).map((s, i) => ({ id: `s${i}`, title: s.do, prompt: s.do, body: s.ex, takeaway: s.ex,
-      interactive: s.interactive, config: s.config })),
-  ];
-  if (t.yourTurn) steps.push({
-    id: 'try', title: 'Try it', prompt: t.yourTurn.q,
-    body: `Work it through — the answer is ${t.yourTurn.a}.`, takeaway: `${t.yourTurn.q} → ${t.yourTurn.a}`,
-  });
-  return { steps };
+  const declared = (t.steps || []).filter(s => s.interactive);
+  const steps = (teachStepsFor(skill) || []).map((s, i) => ({
+    id: `t${i}`,
+    title: s.verb ? s.verb[0].toUpperCase() + s.verb.slice(1) : `Step ${i + 1}`,
+    ...s,
+  }));
+  // Hands-on steps the bank declared, appended so neither source is lost.
+  declared.forEach((s, i) => steps.push({ id: `i${i}`, title: s.do, prompt: s.do, body: s.ex,
+    takeaway: s.ex, interactive: s.interactive, config: s.config }));
+  return steps.length ? { steps } : null;
 }
 
 /**

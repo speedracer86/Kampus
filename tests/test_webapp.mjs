@@ -89,6 +89,38 @@ const clickText = async (page, label) => page.evaluate((l) => {
   if (b) { b.click(); return true; } return false;
 }, label);
 
+/** Answer by trial: click each choice until one is not rejected. The lesson gates
+    forward progress on a correct answer, which is the point — a test that wants to
+    reach a later move has to actually get there. */
+async function answerOne(page) {
+  for (let k = 1; k <= 4; k++) {
+    await page.evaluate((n) => [...document.querySelectorAll('button')]
+      .find(b => b.innerText.trim().startsWith(n + '\n'))?.click(), String(k));
+    await page.waitForTimeout(170);
+    if (!/Try again/.test(await text(page))) return true;
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Try again')?.click());
+    await page.waitForTimeout(120);
+  }
+  return false;
+}
+
+/** Play the warm-up and the Snag until the teach panel is on screen. */
+async function driveToTeach(page) {
+  for (let i = 0; i < 14; i++) {
+    if (/STEP \d OF \d/i.test(await text(page))) return true;
+    await answerOne(page);
+    await page.waitForTimeout(160);
+    // Spine labels carry a newline; the real forward button does not.
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => !x.disabled && !x.innerText.includes('\n')
+        && /^(Show me the move|Next|Continue|Keep going|Got it)/.test(x.innerText.trim()));
+      if (b) b.click();
+    });
+    await page.waitForTimeout(220);
+  }
+  return /STEP \d OF \d/i.test(await text(page));
+}
+
 try {
   /* ---------- 1. the home screen loads at all ---------- */
   {
@@ -339,6 +371,63 @@ try {
     t = await text(page);
     // Distinct from the pad's own "Hi Theo." — this must be the shell, on his grade.
     check('the right PIN lands on that kid’s own home', /Hi Theo,/.test(t) && t.includes('Rewards'), t.slice(0, 70).replace(/\n/g, ' '));
+    await page.close();
+  }
+
+  /* ---------- 9. teach steps: the layouts render and gate Next (§0b) ----------
+     The teach panel is the one screen where "it rendered" is not enough: if Next
+     is live before the step is solved, the whole teach-first design is decorative.
+     Reaching it means playing the warm-up and the Snag, which is also the only
+     proof that the teach phase is reachable at all. */
+  {
+    const page = await open({ grade: 7, name: 'Talia', lessonPointer: 0 }, '#lesson');
+    await page.waitForTimeout(600);
+    const arrived = await driveToTeach(page);
+    let t = await text(page);
+    check('the teach phase is reachable and opens on a numbered §0b step', arrived,
+      t.match(/NEW IDEA[^\n]*/i)?.[0] || t.slice(0, 70).replace(/\n/g, ' '));
+
+    const nextState = () => page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => /^(Next|Start the mission)/.test(x.innerText.trim()));
+      return b ? { disabled: b.disabled, label: b.innerText.trim() } : null;
+    });
+    check('Next is disabled while the step is unsolved', (await nextState())?.disabled === true, JSON.stringify(await nextState()));
+    check('the walk layout offers the next line one tap at a time', t.includes('Tap for the next line'));
+
+    for (let i = 0; i < 8; i++) {
+      const tapped = await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Tap for the next line');
+        if (b) { b.click(); return true; } return false;
+      });
+      if (!tapped) break;
+      await page.waitForTimeout(90);
+    }
+    t = await text(page);
+    check('revealing the walk solves the step and releases Next', (await nextState())?.disabled === false);
+    check('solving the step opens the takeaway band', /for your notes/i.test(t) && t.includes('Write it down'));
+
+    await clickText(page, 'Write it down');
+    await page.waitForTimeout(300);
+    t = await text(page);
+    check('writing it down drops the note into the cheat-sheet column', /your notes/i.test(t) && t.includes('Written ✓'));
+
+    // Grades 7–8 are voice band c: the pill, never the auto-reading companion.
+    check('grades 7–8 keep the quiet "Read it to me" pill', t.includes('Read it to me') && !/Reading it to you/.test(t));
+    await page.close();
+  }
+
+  /* ---------- 10. voice band follows the grade, not a setting ---------- */
+  {
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 0 }, '#lesson');
+    await page.waitForTimeout(600);
+    const arrived = await driveToTeach(page);
+    const t = await text(page);
+    check('a grade-4 teach panel was reached', arrived, t.slice(0, 70).replace(/\n/g, ' '));
+    check('grades 3–4 get the reading companion, not the pill',
+      /Reading it to you|Ready when you are/.test(t) && !t.includes('Read it to me'),
+      t.match(/Read[^\n]*|Ready[^\n]*/)?.[0] || '');
+    check('the companion offers Again, Slower and Quiet — and no timer',
+      t.includes('Again') && t.includes('Slower') && t.includes('Quiet'));
     await page.close();
   }
 

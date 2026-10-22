@@ -20,7 +20,8 @@
     "./parents": "./src/parents.jsx",
     "./business": "./src/business.jsx",
     "./pin-pad": "./src/pin-pad.jsx",
-    "./onboarding": "./src/onboarding.jsx"
+    "./onboarding": "./src/onboarding.jsx",
+    "./teach-layouts": "./src/teach-layouts.jsx"
   },
   "peerDependencies": {
     "react": ">=18"
