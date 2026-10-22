@@ -204,6 +204,17 @@ try {
     await page.waitForTimeout(400);
     const t = await text(page);
     check('rewards prints a receipt with two-decimal money', /KAMPUS BANK/.test(t) && /\$\d+\.\d\d/.test(t));
+
+    /* Task 4's done-condition, checked in the state we actually ship in: no preview
+       service is deployed, so EVERY wishlist tile is a fallback. None may be blank. */
+    const blanks = await page.evaluate(() => [...document.querySelectorAll('div')].filter(d => {
+      const st = getComputedStyle(d);
+      return st.borderRadius === '16px' && d.offsetWidth === 64
+        && !d.textContent.trim() && !st.backgroundImage.includes('url');
+    }).length);
+    check('no wishlist tile is an empty square without the preview service', blanks === 0, `${blanks} blank`);
+    const glyphs = await page.evaluate(() => (document.body.innerText.match(/[🧸📘🎨🎮⚽✨🔗]/gu) || []).length);
+    check('fallback tiles still say what the thing is', glyphs >= 2, `${glyphs} glyphs`);
     await page.close();
   }
 

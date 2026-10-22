@@ -1,0 +1,12 @@
+name = "kampus-preview"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+# Deployment is the owner's step:
+#   cd workers/preview && npx wrangler deploy
+# Then point the app at it with VITE_PREVIEW_URL (see workers/preview/README.md).
+# Until it is deployed the wishlist degrades to its designed fallback tiles, so
+# shipping without this Worker is a supported state, not a broken one.
+
+[observability]
+enabled = true

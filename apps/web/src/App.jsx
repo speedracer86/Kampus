@@ -6,7 +6,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
   firstReview, review, dayNumber, problemsForSkill,
-  awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack,
+  awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack, wishTile, storeNameOf,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { Shell } from '@kampus/ui/app';
@@ -74,8 +74,8 @@ const dayName = () => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date
 
 /* Seed wishlists until a grown-up sets their own in Grown-ups (Step 8). */
 const DEMO_STORE = [
-  { id: 's1', name: 'Lego Speed Champions', store: 'Amazon', cents: 2400 },
-  { id: 's2', name: 'Sticker book', store: 'Target', cents: 600 },
+  { id: 's1', name: 'Lego Speed Champions', store: 'Amazon', url: 'https://www.amazon.com/dp/x', cents: 2400, category: 'toy', fetch: 'miss' },
+  { id: 's2', name: 'Sticker book', store: 'Target', url: 'https://www.target.com/p/y', cents: 600, category: 'art', fetch: 'miss' },
 ];
 const DEMO_HOME_REWARDS = [
   { id: 'h1', name: 'Pick what we watch tonight', sub: 'One film, your call', cents: 200, icon: '📺' },
@@ -402,7 +402,8 @@ export function App() {
         howYouEarn: howYouEarn(),
         available: availableCents(ledger),
         goal: state.goal?.id,
-        store: state.wishlist || DEMO_STORE,
+        // Every row carries its tile state, so a failed preview still looks designed.
+        store: (state.wishlist || DEMO_STORE).map(it => ({ ...it, tile: wishTile(it) })),
         home: state.homeRewards || DEMO_HOME_REWARDS,
         waiting: ledger.filter(r => r.status === 'held').map(r => ({ id: r.id, label: r.label, cents: Math.abs(r.cents) })),
       }}
@@ -411,7 +412,12 @@ export function App() {
         if (type === 'cancel') update(s => { s.ledger = cancelAsk(s.ledger || [], payload.id); return s; });
         if (type === 'save') update(s => { s.goal = { id: payload.id, name: payload.name, cents: payload.cents }; return s; });
         if (type === 'paste' && payload.link) update(s => {
-          s.wishlist = (s.wishlist || DEMO_STORE).concat({ id: `w${Date.now()}`, name: payload.link.replace(/^https?:\/\//, '').slice(0, 40), store: 'Link', cents: 1000 });
+          // No preview service wired yet, so the item resolves straight to its
+          // fallback tile rather than sitting on a spinner (Task 4).
+          s.wishlist = (s.wishlist || DEMO_STORE).concat({
+            id: `w${Date.now()}`, url: payload.link, name: '', store: storeNameOf(payload.link),
+            cents: 1000, fetch: 'miss',
+          });
           return s;
         });
       }} /></Shell>;

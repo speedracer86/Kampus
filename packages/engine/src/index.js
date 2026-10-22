@@ -20,5 +20,6 @@ export * from './market.js';
 export * from './field.js';
 export * from './metrics.js';
 export * from './grades.js';
+export * from './wishlist.js';
 export { payout, FIRST_TRY_BONUS, BLITZ_MULT, TEACH_TOKENS_PER_RUN, BLITZ_FAST_MS } from './payout.js';
 export * from './business.js';

@@ -6,13 +6,48 @@
    lesson. The right column is the wishlist: things a kid picks and a grown-up okays.
 
    Presentational. The ledger and every total come from @kampus/engine's earnings.js. */
-import { color, radius, font, numeral, dollars } from './tokens.js';
+import { color, radius, font, numeral, dollars, confetti } from './tokens.js';
 import { Kicker } from './primitives.jsx';
 import { useWidth } from './util.jsx';
 
 const rBase = { fontFamily: font.family, boxSizing: 'border-box' };
 const mono = { fontFamily: font.mono, fontSize: 13, lineHeight: 1.45, color: color.ink };
 const DASHED = `1.5px dashed rgba(35,37,43,.3)`;   // allowed on the receipt only (§0)
+
+/**
+ * The wishlist tile. Four states, and none of them is an empty grey square — a
+ * preview that failed must look like something that was designed (Task 4).
+ * `tile` comes from the engine's wishTile(), which owns the rules; this picks the
+ * colour, because only tokens.js knows a hex.
+ */
+export function WishTile({ tile, size = 64, phone }) {
+  const box = { ...rBase, width: phone ? 52 : size, height: phone ? 52 : size, borderRadius: 16,
+    flex: 'none', position: 'relative', overflow: 'hidden' };
+  if (!tile) return <div style={{ ...box, background: color.fill }} />;
+
+  if (tile.state === 'shimmer') {
+    return <div style={{ ...box, background: color.fill }}>
+      <style>{`@keyframes kampusShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+      <div style={{ position: 'absolute', inset: 0, animation: 'kampusShimmer 1.2s infinite',
+        background: `linear-gradient(90deg, transparent, rgba(255,255,255,.75), transparent)` }} />
+    </div>;
+  }
+  if (tile.state === 'photo') {
+    // Photo on white: product shots are usually cut out, and a tint behind them muddies.
+    return <div style={{ ...box, background: color.surface, backgroundImage: `url(${tile.imageUrl})`,
+      backgroundSize: 'cover', backgroundPosition: 'center' }} />;
+  }
+  if (tile.state === 'tinted') {
+    const base = confetti[tile.tintIndex % confetti.length];
+    return <div style={{ ...box, background: `color-mix(in oklab, ${base} 24%, white)`,
+      display: 'grid', placeItems: 'center' }}>
+      <span style={{ fontSize: 28, fontWeight: 600, color: color.ink }}>{tile.initial}</span>
+      <span style={{ position: 'absolute', right: 4, bottom: 4, width: 22, height: 22, borderRadius: radius.full,
+        background: color.surface, display: 'grid', placeItems: 'center', fontSize: 12 }}>{tile.glyph}</span>
+    </div>;
+  }
+  return <div style={{ ...box, background: color.track, display: 'grid', placeItems: 'center', fontSize: 20 }}>🔗</div>;
+}
 
 function Row({ left, right, bold, muted }) {
   return <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12,
@@ -94,11 +129,14 @@ export function StoreRow({ item, available, state, onAsk, onSave, phone }) {
   return <div style={{ ...rBase, display: 'grid', alignItems: 'center', gap: 18,
     gridTemplateColumns: phone ? '52px 1fr' : '64px 1fr 170px 128px',
     padding: phone ? '16px 20px' : '16px 32px', borderBottom: `1px solid ${color.rule}` }}>
-    <div style={{ width: phone ? 52 : 64, height: phone ? 52 : 64, borderRadius: 16, background: color.fill,
-      backgroundImage: item.image ? `url(${item.image})` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+    <WishTile tile={item.tile} phone={phone} />
     <div>
-      <div style={{ fontSize: 18, fontWeight: 600 }}>{item.name}</div>
-      <div style={{ fontSize: 13.5, color: color.muted, marginTop: 2 }}>{item.store} · {dollars(item.cents)}</div>
+      <div style={{ fontSize: 18, fontWeight: 600 }}>{item.name || item.tile?.title}</div>
+      <div style={{ fontSize: 13.5, color: color.muted, marginTop: 2 }}>
+        {item.tile?.needsDetails
+          ? <>Add details</>
+          : <>{item.store || item.tile?.store} · {dollars(item.cents)}</>}
+      </div>
     </div>
     {!phone && <div>
       <div style={{ height: 6, borderRadius: 3, background: color.track, overflow: 'hidden' }}>
