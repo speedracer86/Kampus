@@ -454,3 +454,23 @@ the fractions tier whatever they were teaching**.
 world map the engine shipped before the rename rather than guessed at. The bank keeps
 its own wording, as the do-not-re-author rule requires. The grep check is rescoped to
 the surfaces that render and is a test now, not a claim.
+
+### Placement check (Oct 2026)
+
+**New: `placement.jsx`** — `PlacementIntro`, `PlacementRunner`, `PlacementResult`.
+
+Deliberately not built on `AssessmentRunner`. That component shows the whole paper
+with a question map, blanks and a hand-in, which is right for Inspection Day and
+wrong here: a placement check is adaptive, so the next question depends on the last
+answer and there is nothing to jump back to. A map she could not use would be a lie
+about how the screen works.
+
+The screen shows no score, no right/wrong mark, no tally and no money, because the
+check must never read as an exam. Help is capped at "Read it": a hint would tell us
+she can do work she cannot yet do alone, which is the one thing this screen is for.
+The progress bar never moves backwards — a settled topic shortens the check, and a
+bar that lost ground would read as a penalty.
+
+The adaptive state machine is `packages/engine/src/placement.js`; the component
+renders one question and reports one answer, per the zero-dependency contract.
+

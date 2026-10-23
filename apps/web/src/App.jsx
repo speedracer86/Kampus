@@ -7,6 +7,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
   firstReview, review, dayNumber, problemsForSkill,
   awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack, wishTile, storeNameOf,
+  startPlacement, nextProbe, recordProbe, placementDone, placementProgress, placementResult, placementQuestion,
   weekPlan, weekHeader, comingUp, weekOffsetFor,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
@@ -23,6 +24,7 @@ import { businessData, ensureBiz, gatesFor, today as bizToday,
 import { capabilities, lemonCount } from '@kampus/engine';
 import { PinGate } from '@kampus/ui/pin-gate';
 import { ParentSetup, StudentFirstRun, Doorway } from '@kampus/ui/onboarding';
+import { PlacementIntro, PlacementRunner, PlacementResult } from '@kampus/ui/placement';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
 import { unitById, lessonsFor } from '@kampus/curriculum';
 import { load, save, append, DEFAULT_STUDENT_ID,
@@ -199,7 +201,11 @@ export function App() {
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
     const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    return ['lesson', 'quiz', 'test', 'rewards', 'parents', 'business'].includes(h) ? h : 'home';
+    if (['lesson', 'quiz', 'test', 'rewards', 'parents', 'business', 'placement'].includes(h)) return h;
+    // A queued placement check outranks Home: a kid whose grown-up chose "find her
+    // level" has not been placed yet, so Home would be showing her someone else's
+    // year. Exiting the check clears the flag, so this is an offer and not a trap.
+    return load(loadFamily().students[0]?.id || DEFAULT_STUDENT_ID).placementQueued ? 'placement' : 'home';
   });
   const [paper, setPaper] = useState(null);     // graded quiz / test result
   const [papers, setPapers] = useState(null);   // the assembled question sheet
@@ -215,8 +221,10 @@ export function App() {
     return f.students.length > 1 ? 'doorway' : null;
   });
   const [pending, setPending] = useState(null);  // the profile mid-first-run
+  // The placement check: engine state machine + the question it is currently asking.
+  const [placement, setPlacement] = useState(null);
   const deepLink = useRef(typeof location !== 'undefined'
-    && ['lesson', 'quiz', 'test', 'rewards', 'parents', 'business'].includes(location.hash.slice(1)));
+    && ['lesson', 'quiz', 'test', 'rewards', 'parents', 'business', 'placement'].includes(location.hash.slice(1)));
   const [topic, setTopic] = useState(state.lastTopic);
   const [blitzOn, setBlitzOn] = useState(false);
 
@@ -348,8 +356,10 @@ export function App() {
         setTopic(t);
         setPending(null);
         setGate(null);
-        // A queued placement check is the first thing she sees, not a grade she was given.
-        setScreen(pending?.grade === 'placement' ? 'test' : 'home');
+        // A queued placement check is the first thing she sees — NOT the Grade 3
+        // License, which is what this used to route to: that one pays, promotes and
+        // prints a repair plan, none of which the setup screen promised.
+        setScreen(pending?.grade === 'placement' ? 'placement' : 'home');
       }} />;
   }
 
@@ -362,6 +372,56 @@ export function App() {
         setPinOk(true);
         setGate(null);
         setScreen('parents');
+      }} />;
+  }
+
+  /* ---- the placement check (§0a 13k) ---------------------------------------
+     Untimed, pays nothing, costs nothing, and ends on a grade rather than a pass
+     or a fail — all four promised on the setup screen and enforced in
+     packages/engine/src/placement.js. The engine is the state machine; this owns
+     only which question is on screen. */
+  if (screen === 'placement') {
+    if (!placement) {
+      return <PlacementIntro name={state.name} blobDir={BLOB_DIR}
+        onExit={() => { update(s => { s.placementQueued = false; return s; }); setScreen('home'); }}
+        onStart={() => {
+          const machine = startPlacement();
+          setPlacement({ machine, question: placementQuestion(nextProbe(machine)) });
+          append(studentId, { type: 'placement_start', payload: {} });
+        }} />;
+    }
+
+    if (placement.result) {
+      return <PlacementResult result={placement.result} name={state.name} blobDir={BLOB_DIR}
+        onStart={() => {
+          update(s => {
+            s.grade = placement.result.grade;
+            s.placementQueued = false;
+            s.lessonPointer = 0;
+            return s;
+          });
+          setPlacement(null);
+          setScreen('home');
+        }} />;
+    }
+
+    return <PlacementRunner question={placement.question}
+      progress={placementProgress(placement.machine)}
+      onExit={() => {
+        // She chose to stop. Clear the flag rather than re-offering on every load.
+        update(s => { s.placementQueued = false; return s; });
+        append(studentId, { type: 'placement_exit', payload: { asked: placement.machine.asked } });
+        setPlacement(null); setScreen('home');
+      }}
+      onAnswer={(choice) => {
+        const right = choice === placement.question.answerIndex;
+        const machine = recordProbe(placement.machine, right);
+        if (placementDone(machine)) {
+          const result = placementResult(machine);
+          append(studentId, { type: 'placement_done', payload: { grade: result.grade, perTopic: result.perTopic, asked: machine.asked } });
+          return setPlacement({ machine, result });
+        }
+        setPlacement({ machine, question: placementQuestion(nextProbe(machine)) });
       }} />;
   }
 

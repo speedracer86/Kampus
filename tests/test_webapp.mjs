@@ -53,6 +53,21 @@ await new Promise(r => server.listen(PORT, r));
 const browser = await chromium.launch(process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME } : {});
 const pageErrors = [];
 
+/** Cut the page off from the network.
+
+    The suite tests OUR bundle. The page pulls Inter Tight from Google Fonts, and
+    letting it do that in a test makes the run depend on a third-party CDN: a stalled
+    request never settles, so `waitUntil: 'networkidle'` hangs the whole suite rather
+    than failing one check. Blocking it keeps the run hermetic and fast. We assert
+    text and structure, never pixels, so the substituted font changes nothing. */
+async function sealOffsite(page) {
+  await page.route('**://*/**', (route) => {
+    const url = route.request().url();
+    if (url.includes(`localhost:${PORT}`) || url.startsWith('data:') || url.startsWith('blob:')) return route.continue();
+    return route.abort();
+  });
+}
+
 /** A fresh page with seeded state, loaded from the built bundle. */
 async function open(state = {}, hash = '') {
   const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
@@ -65,8 +80,10 @@ async function open(state = {}, hash = '') {
     const t = m.text();
     if (m.type() !== 'error') return;
     if (/favicon/.test(t) || /status of 40\d/.test(t)) return;   // the response hook names these properly
+    if (/ERR_FAILED|ERR_QUIC|ERR_NETWORK|ERR_CONNECTION/.test(t)) return;   // sealOffsite aborts these
     pageErrors.push(t.slice(0, 200));
   });
+  await sealOffsite(page);
   await page.addInitScript(s => {
     localStorage.setItem('kampus_v1_local', JSON.stringify(s));
   }, { grade: 7, name: 'Talia', lessonPointer: 0, kredits: 400, review: [], passed: {}, ...state });
@@ -78,7 +95,15 @@ async function open(state = {}, hash = '') {
 async function openBlank(hash = '') {
   const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
   page.on('pageerror', e => pageErrors.push(e.message.slice(0, 200)));
-  page.on('console', m => { if (m.type() === 'error' && !/favicon|status of 40\d/.test(m.text())) pageErrors.push(m.text().slice(0, 200)); });
+  // Offsite failures (the Google Fonts stylesheet) are not defects in our bundle,
+  // and letting a third-party CDN blip fail the suite makes it flaky for no signal.
+  page.on('console', m => {
+    const t = m.text();
+    if (m.type() !== 'error') return;
+    if (/favicon|status of 40\d|ERR_FAILED|ERR_QUIC|ERR_NETWORK|ERR_CONNECTION/.test(t)) return;   // sealOffsite aborts these
+    pageErrors.push(t.slice(0, 200));
+  });
+  await sealOffsite(page);
   await page.goto(`http://localhost:${PORT}/${hash}`, { waitUntil: 'networkidle' });
   return page;
 }
@@ -463,6 +488,103 @@ try {
     t = await text(page);
     check('the reveal shows the authored answer in full', t.includes('The 8-pack (43¢ vs 45¢)'));
     check('the reveal still leads to the move', /Show me the move/.test(t));
+    await page.close();
+  }
+
+  /* ---------- 12. "find her level" runs a placement check, not the License ------
+     This path used to route into the Grade 3 grade test: it paid $1.50, could
+     promote her a grade and printed a repair plan on a miss, while the setup screen
+     promised an untimed check that doesn't pay and doesn't cost. */
+  {
+    const page = await openBlank();
+    // Straight through setup, choosing "Not sure" at the grade step.
+    await clickText(page, 'Bet. Set it up');
+    await page.waitForTimeout(150);
+    await page.fill('input', 'parent@example.com');
+    await clickText(page, 'Send me the link');
+    await page.waitForTimeout(150);
+    await clickText(page, 'Continue');
+    await page.waitForTimeout(150);
+    await page.fill('input', 'Nia');
+    await clickText(page, 'Next');
+    await page.waitForTimeout(150);
+    const tapPin = async (digits) => {
+      for (const d of digits) await page.evaluate((x) => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === x)?.click(), d);
+      await page.waitForTimeout(80);
+    };
+    await tapPin('1234'); await tapPin('1234');
+    await page.waitForTimeout(600);
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Let Kampus find her level/.test(b.innerText))?.click());
+    await clickText(page, 'Next');
+    await page.waitForTimeout(150);
+    await clickText(page, 'Next');
+    await page.waitForTimeout(150);
+    check('the summary says placement, not a grade she was given', (await text(page)).includes('Placement check'));
+
+    await clickText(page, 'Give it to Nia');
+    await page.waitForTimeout(250);
+    await clickText(page, 'Let’s go');
+    await page.waitForTimeout(150);
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.includes('The Market'))?.click());
+    await clickText(page, 'Next');
+    await page.waitForTimeout(200);
+    await clickText(page, 'Start');
+    await page.waitForTimeout(500);
+
+    let t = await text(page);
+    check('she lands on the placement check, not the License', /Let’s see where you start/.test(t) && !/License|Grade test/i.test(t),
+      t.slice(0, 80).replace(/\n/g, ' '));
+    check('the check repeats the four promises the setup screen made',
+      t.includes('No timer') && t.includes('Doesn’t pay') && t.includes('Doesn’t cost') && /About 15 minutes/.test(t));
+
+    await clickText(page, 'Start →');
+    await page.waitForTimeout(400);
+    t = await text(page);
+    check('the check says untimed where a test would put a clock', t.includes('Untimed'));
+    // NB: not /\d+\/\d+/ — the questions are full of fractions. A tally would read
+    // "4 of 24" or name a score, so look for that instead.
+    check('no score, no tally, no money on screen',
+      !/\$\d/.test(t) && !/\b\d+\s*(of|out of)\s*\d+\b/i.test(t) && !/score|correct so far|right so far/i.test(t),
+      t.match(/\$\d[^\n]*|\b\d+\s*(of|out of)\s*\d+\b/i)?.[0] || '');
+    check('no help beyond reading it aloud', t.includes('Read it') && !t.includes('Teach me') && !t.includes('Show me'));
+
+    // Answer every question; any choice is fine, nothing is scored against her.
+    let asked = 0;
+    for (let i = 0; i < 40; i++) {
+      const clicked = await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => /^\d\n/.test(x.innerText.trim()));
+        if (b) { b.click(); return true; } return false;
+      });
+      if (!clicked) break;
+      asked++;
+      await page.waitForTimeout(110);
+      await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Check')?.click());
+      await page.waitForTimeout(110);
+      if (/You’re starting at/.test(await text(page))) break;
+    }
+    t = await text(page);
+    check('the check ends by itself inside 24 questions', /You’re starting at/.test(t), `${asked} asked`);
+    check('it ends on a grade, not a pass or a fail', /You’re starting at/.test(t)
+      && !/passed|failed|repair/i.test(t), t.slice(0, 90).replace(/\n/g, ' '));
+    check('it shows where each world starts her', /where each world starts you/i.test(t) && t.includes('The Kitchen'));
+
+    await clickText(page, 'Let’s go, Nia');
+    await page.waitForTimeout(500);
+    t = await text(page);
+    check('the placed grade carries through to a playable home', /Hi Nia/.test(t) && /lessons/.test(t), t.slice(0, 70).replace(/\n/g, ' '));
+
+    const saved = await page.evaluate(() => {
+      const fam = JSON.parse(localStorage.getItem('kampus_v1_family') || 'null');
+      const me = JSON.parse(localStorage.getItem(`kampus_v1_${fam.students[0].id}`) || 'null');
+      return { grade: me.grade, queued: me.placementQueued, earned: me.week?.earned, ledger: (me.ledger || []).length };
+    });
+    check('the grade it found is written to her profile', saved.grade >= 3 && saved.grade <= 8, `grade ${saved.grade}`);
+    check('the flag is cleared, so she is not asked again', saved.queued === false);
+    check('the check paid her nothing', saved.earned === 0 && saved.ledger === 0,
+      `earned ${saved.earned}, ${saved.ledger} ledger rows`);
+
+    await page.reload({ waitUntil: 'networkidle' });
+    check('reloading goes to her year, not back into the check', /Hi Nia/.test(await text(page)));
     await page.close();
   }
 

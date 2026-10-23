@@ -24,5 +24,6 @@ export * from './wishlist.js';
 export * from './week.js';
 export * from './snag.js';
 export * from './unit-world.js';
+export * from './placement.js';
 export { payout, FIRST_TRY_BONUS, BLITZ_MULT, TEACH_TOKENS_PER_RUN, BLITZ_FAST_MS } from './payout.js';
 export * from './business.js';
