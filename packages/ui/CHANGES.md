@@ -515,3 +515,22 @@ Fixed at source (`finishMove` sets the phase in the same batch) and guarded in
 so the suite cannot tell them apart; both are kept, and the e2e fails on a blank
 screen if both are reverted.
 
+### Business moments reach the screen (Oct 23)
+
+**New: `MomentCard` in `business.jsx`.** `makeMoment` has always generated the
+math a customer in the line actually asks for — from her price, her stock, today's
+market, which PLAY_SYSTEM §2 calls the crown jewel of the three-source rule — and
+`customersForDay` has always attached up to three per day. No screen ever asked
+them.
+
+A customer carrying a moment now stops the line until it is answered, and the card
+renders above the queue: under it, a 26-customer day put the question that stopped
+everything below the fold. "Serve the rest" serves everyone up to that customer and
+then asks, so the fast path stays useful without letting the math be skipped in one
+tap.
+
+It is a question, not a gate. A wrong answer shows the working and the customer is
+served anyway — the §5 rule has to hold for questions standing inside the business
+— and it pays nothing, because serving the line is the job and the profit is the
+reward.
+

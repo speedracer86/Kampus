@@ -103,6 +103,12 @@ export function businessData(state) {
     ladder: LADDER.map((r, i) => ({ ...r, owned: i === 0 })),
     canOpen: registerGate(state),
     queue: state.dayQueue || [],
+    // The customer the line is waiting on, when they came with a math moment
+    // (engine: makeMoment). Null unless one is actually open.
+    moment: (() => {
+      const q = (state.dayQueue || [])[state.dayMomentAt ?? -1];
+      return q?.moment ? { moment: q.moment, customer: q } : null;
+    })(),
     counters: state.dayCounters || { served: 0, missed: 0, left: 0 },
     result: biz.ledger?.[biz.ledger.length - 1] || null,
   };

@@ -107,7 +107,6 @@ teach."** The owner's instinct was better than the test suite.
 ## Deferred, tracked, not forgotten
 
 Shop screen (design exists in old handoff only — needs a §0 round before build),
-moments in the open-day queue (engine makes them; screen doesn't render them yet),
 business-type picker (blocked on onboarding round, seam ready),
 campus/graduation celebration, sound & juice pass, stand build-out
 art, pilot report rendering. Plus the bank owner's list: authored wrongs for
@@ -118,3 +117,5 @@ ship.
 + `packages/ui/src/placement.jsx`). It replaced a route into the Grade 3 License,
 which paid $1.50, could promote her a grade and printed a repair plan on a miss —
 none of which the setup screen promised.
+
+**Done since:** business moments are asked by the open-day queue (`MomentCard`).

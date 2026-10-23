@@ -151,7 +151,67 @@ const discBtn = { ...bBase, width: 40, height: 40, borderRadius: radius.full, bo
   background: color.fill, fontSize: 18, fontWeight: 700, cursor: 'pointer', color: color.ink };
 
 /** Open day: one customer per tap, no clock. */
-function OpenDay({ queue, counters, onServe, onServeRest, onClose, blobDir, phone }) {
+
+/** A business moment: the math a customer in the line actually asks for.
+
+    These come from `makeMoment` in the engine — generated from live state she owns
+    (her price, her stock, today's market), which PLAY_SYSTEM §2 calls the crown
+    jewel of the three-source rule. Up to three are attached to the day's queue.
+
+    It is a question, not a gate. A wrong answer shows the working and the customer
+    is served anyway: the §5 rule says a quiz can never hurt the business, and that
+    has to hold for the questions standing *inside* the business too. It pays
+    nothing either — serving the line is the job, and the day's profit is the
+    reward. */
+export function MomentCard({ moment, customer, onAnswer, onDone, blobDir = '/blobs/', phone }) {
+  const [picked, setPicked] = React.useState(null);
+  // Authored wrongs, ordered deterministically so the answer is not always first —
+  // the same ordering the snag bank uses.
+  const choices = React.useMemo(() => [String(moment.ans), ...(moment.wrongs || []).map(String)]
+    .sort((a, b) => (a.length + a.charCodeAt(0)) - (b.length + b.charCodeAt(0))), [moment]);
+  const right = picked !== null && choices[picked] === String(moment.ans);
+  // Steps carry <b> for emphasis; this library renders text, so strip the markup
+  // rather than reaching for dangerouslySetInnerHTML.
+  const plain = (t) => String(t).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+
+  return <div style={{ ...bBase, borderTop: `1px solid ${color.rule}`, padding: phone ? '20px' : '26px 32px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+      <span style={{ width: 44, height: 44, borderRadius: radius.full, background: color.fill, flex: 'none',
+        display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+        <Blob name={customer?.blob || 'Selfie'} size={32} dir={blobDir} /></span>
+      <div>
+        <Kicker>{customer?.name || 'A customer'} asks</Kicker>
+        <div style={{ fontSize: 12.5, color: color.muted, marginTop: 2 }}>{moment.skill}</div>
+      </div>
+    </div>
+
+    <div style={{ fontSize: phone ? 19 : 24, fontWeight: 600, lineHeight: 1.35, marginBottom: 18 }}>{plain(moment.q)}</div>
+
+    <div style={{ display: 'grid', gap: 10, gridTemplateColumns: phone ? '1fr' : '1fr 1fr' }}>
+      {choices.map((c, i) => {
+        const isPick = picked === i;
+        const win = isPick && right, lose = isPick && !right;
+        return <button key={c} onClick={() => { if (picked === null) { setPicked(i); onAnswer?.(c === String(moment.ans)); } }}
+          style={{ ...bBase, textAlign: 'left', border: 'none', cursor: picked === null ? 'pointer' : 'default',
+            borderRadius: radius.md, padding: '15px 18px', fontSize: 16.5, fontWeight: 600,
+            background: win ? color.greenTint : lose ? color.redTint : color.fill,
+            boxShadow: win ? `inset 0 0 0 2px ${color.green}` : lose ? `inset 0 0 0 2px ${color.red}` : 'none',
+            color: color.ink }}>{c}</button>;
+      })}
+    </div>
+
+    {picked !== null && <div style={{ marginTop: 18 }}>
+      <div style={{ fontSize: 16.5, fontWeight: 700, color: right ? color.greenDeep : color.ink, marginBottom: right ? 0 : 10 }}>
+        {right ? 'That’s it.' : `It was ${moment.ans}. Here’s the working:`}</div>
+      {!right && <ol style={{ margin: 0, paddingLeft: 20, fontSize: 16, lineHeight: 1.6, color: color.mutedDeep }}>
+        {(moment.steps || []).map((st, i) => <li key={i} style={{ marginBottom: 5 }}>{plain(st)}</li>)}</ol>}
+      <Button variant="ink" style={{ marginTop: 16 }} onClick={onDone}>
+        {right ? 'Serve them →' : 'Serve them anyway →'}</Button>
+    </div>}
+  </div>;
+}
+
+function OpenDay({ queue, counters, onServe, onServeRest, onClose, moment, onMomentAnswer, onMomentDone, blobDir, phone }) {
   const done = queue.every(q => q.status && q.status !== 'next' && q.status !== 'waiting');
   return <>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, padding: phone ? '18px 20px' : '22px 32px' }}>
@@ -161,6 +221,11 @@ function OpenDay({ queue, counters, onServe, onServeRest, onClose, blobDir, phon
           <div style={{ ...numeral(36), color: c }}>{v}</div>
         </div>)}
     </div>
+    {/* The moment sits ABOVE the line. It was rendered under the queue, which on a
+        26-customer day put the question that stopped everything below the fold —
+        she would have had to scroll past the whole line to find out why. */}
+    {moment && <MomentCard moment={moment.moment} customer={moment.customer} blobDir={blobDir} phone={phone}
+      onAnswer={onMomentAnswer} onDone={onMomentDone} />}
     <div style={{ borderTop: `1px solid ${color.rule}` }}>
       {queue.map((q, i) => <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
         padding: phone ? '14px 20px' : '16px 32px', borderBottom: `1px solid ${color.rule}` }}>
@@ -175,11 +240,12 @@ function OpenDay({ queue, counters, onServe, onServeRest, onClose, blobDir, phon
           {q.status === 'served' ? 'Served' : q.status === 'soldout' ? 'Sold out' : q.status === 'next' ? 'Next' : 'Waiting'}</span>
       </div>)}
     </div>
-    <div style={{ display: 'flex', gap: 10, padding: phone ? '18px 20px' : '20px 32px', flexWrap: 'wrap' }}>
+    {/* The serve controls are hidden while a moment is open: the line waits. */}
+    {!moment && <div style={{ display: 'flex', gap: 10, padding: phone ? '18px 20px' : '20px 32px', flexWrap: 'wrap' }}>
       {!done && <Button variant="outline" onClick={onServeRest}>Serve the rest</Button>}
       {!done && <Button variant="ink" onClick={onServe}>Serve next</Button>}
       {done && <Button variant="ink" onClick={onClose}>Close the books →</Button>}
-    </div>
+    </div>}
   </>;
 }
 
@@ -288,6 +354,9 @@ export function BusinessScreen({ data, blobDir = '/blobs/', onEvent = () => {} }
               onOpen={() => { setPhase('open'); onEvent('open_day', {}); }} phone={phone} />}
             {phase === 'open' && <OpenDay queue={d.queue || []} counters={d.counters || { served: 0, missed: 0, left: 0 }}
               onServe={() => onEvent('serve_next', {})} onServeRest={() => onEvent('serve_rest', {})}
+              moment={d.moment}
+              onMomentAnswer={(right) => onEvent('moment_answer', { right, skill: d.moment?.moment?.skill })}
+              onMomentDone={() => onEvent('moment_done', {})}
               onClose={() => { setPhase('ledger'); onEvent('close_books', {}); }} blobDir={blobDir} phone={phone} />}
             {phase === 'ledger' && <Ledger result={d.result} phone={phone} />}
             {phase === 'grow' && <Grow ladder={d.ladder} phone={phone} />}

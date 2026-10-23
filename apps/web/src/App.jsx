@@ -75,6 +75,17 @@ const NAV_ITEMS = [
   { id: 'parents', label: 'Grown-ups', dot: color.textFaint },
 ];
 
+/** Exactly one customer is "Next": the first who has not been dealt with. */
+function markNext(q) {
+  let marked = false;
+  for (let i = 0; i < q.length; i++) {
+    if (q[i].status === 'served' || q[i].status === 'soldout') continue;
+    q[i] = { ...q[i], status: !marked ? 'next' : 'waiting' };
+    marked = true;
+  }
+  return q;
+}
+
 const dayName = () => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()];
 
 /* Seed wishlists until a grown-up sets their own in Grown-ups (Step 8). */
@@ -460,6 +471,7 @@ export function App() {
             s.dayQueue = queue.map((c, i) => ({ ...c, status: i === 0 ? 'next' : 'waiting' }));
             s.dayServable = servable;
             s.dayCounters = { served: 0, missed: 0, left: servable };
+            s.dayMomentAt = -1;
             return s;
           });
           if (type === 'serve_next' || type === 'serve_rest') update(s => {
@@ -468,15 +480,45 @@ export function App() {
             const serveOne = () => {
               const i = q.findIndex(c => c.status === 'next' || c.status === 'waiting');
               if (i < 0) return false;
+              // A customer who came with a math moment stops the line until it is
+              // answered. "Serve the rest" serves everyone up to them and then asks:
+              // the fast path stays useful, but the math is never skipped in one tap —
+              // these are the world-sourced questions (PLAY_SYSTEM §2), not filler.
+              if (q[i].moment && !q[i].momentDone) { s.dayMomentAt = i; return false; }
               const servedSoFar = q.filter(c => c.status === 'served').length;
               q[i] = { ...q[i], status: servedSoFar < (s.dayServable ?? q.length) ? 'served' : 'soldout' };
               return true;
             };
             if (type === 'serve_next') serveOne(); else while (serveOne());
-            const up = q.findIndex(c => c.status === 'waiting');
-            if (up >= 0) q[up] = { ...q[up], status: 'next' };
+            // Exactly one "Next". This used to mark the first waiting customer
+            // without clearing the old marker, so when a moment stopped the line the
+            // queue showed two people as next at once.
+            markNext(q);
             const served = q.filter(c => c.status === 'served').length;
             s.dayQueue = q;
+            s.dayCounters = { served, missed: q.filter(c => c.status === 'soldout').length,
+              left: Math.max(0, (s.dayServable ?? q.length) - served) };
+            return s;
+          });
+          // A moment never changes the day: openDay reads stock and orders, never
+          // answers. Getting it wrong costs her nothing — the §5 rule has to hold for
+          // the questions standing inside the business too — and it pays nothing
+          // either, because serving the line is the job and the profit is the reward.
+          if (type === 'moment_answer') {
+            append(studentId, { type: 'business_moment', payload: { right: !!payload?.right, skill: payload?.skill } });
+          }
+          if (type === 'moment_done') update(s => {
+            const i = s.dayMomentAt ?? -1;
+            if (i < 0) return s;
+            const q = [...(s.dayQueue || [])];
+            q[i] = { ...q[i], momentDone: true };
+            // Now serve the customer she just worked out, and move the line on.
+            const servedSoFar = q.filter(c => c.status === 'served').length;
+            q[i] = { ...q[i], status: servedSoFar < (s.dayServable ?? q.length) ? 'served' : 'soldout' };
+            markNext(q);
+            const served = q.filter(c => c.status === 'served').length;
+            s.dayQueue = q;
+            s.dayMomentAt = -1;
             s.dayCounters = { served, missed: q.filter(c => c.status === 'soldout').length,
               left: Math.max(0, (s.dayServable ?? q.length) - served) };
             return s;

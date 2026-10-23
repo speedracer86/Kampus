@@ -258,10 +258,22 @@ export function customersForDay(biz, { forecast = 'sunny', marketingPct = 0, gra
     queue.push({ persona: persona.id, name: persona.name, blob: persona.blob,
       order: { cups: 1 + (random() < 0.25 ? 1 : 0) + (random() < 0.08 ? 1 : 0) }, isRegular });
   }
-  // sprinkle up to 3 math moments through the line (never the first customer — let her settle in)
+  // Sprinkle up to 3 math moments through the line (never the first customer — let
+  // her settle in).
+  //
+  // The draw is BOUNDED. This was `while (slots.size < momentCount)` with no limit,
+  // which terminates under Math.random only by luck: `random` is an injected
+  // parameter, so any sequence that keeps landing on the same index — a constant
+  // stub, a seeded generator in a short cycle — spins forever and takes the app
+  // with it. Collisions now give up after a fixed number of tries and the rest of
+  // the slots are filled by walking the line.
   const momentCount = Math.min(3, Math.max(1, Math.floor(count / 8)));
   const slots = new Set();
-  while (slots.size < momentCount && queue.length > 1) slots.add(1 + Math.floor(random() * (queue.length - 1)));
+  const spread = Math.max(0, queue.length - 1);
+  for (let tries = 0; slots.size < momentCount && spread > 0 && tries < momentCount * 8; tries++) {
+    slots.add(1 + Math.floor(random() * spread));
+  }
+  for (let i = 1; slots.size < momentCount && i < queue.length; i++) slots.add(i);
   for (const s of slots) queue[s].moment = makeMoment(biz, queue[s], grade, random);
   return queue;
 }
@@ -280,8 +292,15 @@ export function makeMoment(biz, customer, grade = 6, random = Math.random) {
     const total = cups * price;
     const paid = total < 5 ? 5 : 10;
     const ans = paid - total;
+    // Candidates in order of plausibility, then the first three that are distinct
+    // and not the answer: `ans + 1` and `paid - cups` collide at some prices, and a
+    // question that lists the same option twice is a question she cannot get right.
+    const near = [ans + 1, ans - 1, ans + 2, paid - cups, total, ans - 2]
+      .filter(v => v >= 0 && v !== ans)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .slice(0, 3);
     return q(`${customer.name} buys ${cups} cup${cups > 1 ? 's' : ''} at $${price} and pays with $${paid}. Change?`,
-      `$${ans}`, [`$${ans + 1}`, `$${Math.max(0, ans - 1)}`, `$${paid - cups}`], 'Making change', [
+      `$${ans}`, near.map(v => `$${v}`), 'Making change', [
         `First find what they owe: ${cups} × $${price} = $${total}.`,
         `Count up from $${total} to $${paid}: change is <b>$${ans}</b>.`]);
   }
@@ -290,8 +309,11 @@ export function makeMoment(biz, customer, grade = 6, random = Math.random) {
     const each = biz.marketPrices.lemons;
     const bagQty = 12, bagCost = Math.round(each * bagQty * 0.85 * 100) / 100;
     const bagEach = Math.round(bagCost / bagQty * 100) / 100;
+    // All three read the same: the answer used to be the only one carrying the
+    // computed price, which let her pick it by shape without dividing (the B7 tell).
+    // The figure belongs in the working, not in the option.
     return q(`Restock time: lemons are $${each.toFixed(2)} each, or a bag of ${bagQty} for $${bagCost.toFixed(2)}. Which is cheaper per lemon?`,
-      `the bag ($${bagEach.toFixed(2)} each)`, [`single lemons`, `they're the same`], 'Unit price', [
+      `the bag`, [`single lemons`, `they're the same`], 'Unit price', [
         `Unit price = bag cost ÷ how many: $${bagCost.toFixed(2)} ÷ ${bagQty} = $${bagEach.toFixed(2)}.`,
         `$${bagEach.toFixed(2)} < $${each.toFixed(2)}, so <b>the bag</b> wins.`]);
   }
@@ -300,14 +322,22 @@ export function makeMoment(biz, customer, grade = 6, random = Math.random) {
   const discPct = 25;
   const discPrice = Math.round(price * (1 - discPct / 100) * 100) / 100;
   const stillProfit = discPrice > unitCost;
+  // Same rule: both the yes and the no carry a per-cup figure, so the margin has to
+  // be worked out rather than spotted. The third option is the honest "don't know".
+  const gap = Math.abs(discPrice - unitCost).toFixed(2);
   return q(`${customer.name} asks for ${discPct}% off a big order. Your cost per cup is $${unitCost.toFixed(2)}, price $${price.toFixed(2)}. Still profitable?`,
-    stillProfit ? `yes — $${(discPrice - unitCost).toFixed(2)}/cup` : `no — you'd lose $${(unitCost - discPrice).toFixed(2)}/cup`,
-    [stillProfit ? `no — you'd lose money` : `yes — easily`, `can't tell without more info`], 'Margin after discount', [
+    stillProfit ? `yes — $${gap}/cup` : `no — you'd lose $${gap}/cup`,
+    [stillProfit ? `no — you'd lose $${gap}/cup` : `yes — $${gap}/cup`, `can't tell without more info`],
+    'Margin after discount', [
       `Discounted price: $${price.toFixed(2)} × ${(100 - discPct) / 100} = $${discPrice.toFixed(2)}.`,
       `Compare to cost $${unitCost.toFixed(2)}: margin is <b>$${(discPrice - unitCost).toFixed(2)}</b> per cup${stillProfit ? ' — deal.' : ' — counter-offer.'}`]);
 }
-const q = (text, ans, wrongs, skill, steps) => ({ prompt: 'Business moment', q: text, ans: String(ans),
-  wrongs: wrongs.map(String), skill, steps, moment: true });
+const q = (text, ans, wrongs, skill, steps) => ({
+  prompt: 'Business moment', q: text, ans: String(ans),
+  // Dedupe at the funnel: a repeated option, or a "wrong" equal to the answer, makes
+  // the question unanswerable. Same guard the lesson funnel carries.
+  wrongs: wrongs.map(String).filter((w, i, a) => w !== String(ans) && a.indexOf(w) === i),
+  skill, steps, moment: true });
 
 /* ---------- opening and closing a day ---------- */
 

@@ -58,6 +58,32 @@ const browser = await chromium.launch(process.env.PW_CHROME ? { executablePath: 
 const pageErrors = [];
 
 
+
+/** The moment the app currently has open, read from its own state.
+
+    Not scraped from the page: climbing the DOM for an unlabelled card walked up to
+    <body> and called the nav bar a set of answer choices. The store knows exactly
+    which customer is being asked and what the answer is, so the test clicks real
+    options by their real labels. */
+const openMoment = (page) => page.evaluate(() => {
+  const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+  const c = (s.dayQueue || [])[s.dayMomentAt ?? -1];
+  return c?.moment ? { q: c.moment.q, ans: String(c.moment.ans), wrongs: (c.moment.wrongs || []).map(String),
+    skill: c.moment.skill, name: c.name } : null;
+});
+
+/** Answer whatever moment is open — `right: false` picks a real wrong on purpose. */
+async function answerMoment(page, { right = false } = {}) {
+  const m = await openMoment(page);
+  if (!m) return null;
+  const label = right ? m.ans : m.wrongs[0];
+  await page.evaluate((l) => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === l)?.click(), label);
+  await page.waitForTimeout(220);
+  await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Serve them/.test(b.innerText))?.click());
+  await page.waitForTimeout(280);
+  return m;
+}
+
 /* ---------------------------------------------------------------------------
    Full-sequence teach driver.
 
@@ -278,8 +304,15 @@ try {
     const queued = await page.evaluate(() => document.body.innerText.match(/SERVED\n(\d+)/)?.[1]);
     check('opening the day forms a queue', queued === '0' && /Waiting|Next/.test(await text(page)));
 
+    // A customer carrying a math moment stops the line, by design, so "Serve the
+    // rest" no longer runs the whole day in one tap.
     await clickText(page, 'Serve the rest');
     await page.waitForTimeout(500);
+    for (let i = 0; i < 8; i++) {
+      if (!await answerMoment(page)) break;
+      await clickText(page, 'Serve the rest');
+      await page.waitForTimeout(350);
+    }
     await clickText(page, 'Close the books');
     await page.waitForTimeout(700);
     const t = await text(page);
@@ -795,6 +828,90 @@ try {
         t.trim().length < 80 ? `screen is ${t.trim().length} chars — blank` : (t.match(/STEP \d+ OF \d+/i)?.[0] || ''));
     }
     await page.close();
+  }
+
+  /* ---------- 14. the queue asks for its math (business moments) ----------
+     makeMoment generates questions from state she owns — her price, her stock,
+     today's market — which PLAY_SYSTEM §2 calls the crown jewel of the three-source
+     rule. They were attached to every day's queue and no screen ever asked them. */
+  {
+    const today = new Date().toISOString().slice(0, 10);
+    const page = await open({ grade: 6, name: 'Talia', kredits: 400, lessonDoneDay: today }, '#business');
+    await page.waitForTimeout(400);
+    await clickText(page, 'Open for the day');
+    await page.waitForTimeout(500);
+
+    let m = null;
+    for (let i = 0; i < 14; i++) {
+      m = await openMoment(page);
+      if (m) break;
+      if (!await clickText(page, 'Serve next')) break;
+      await page.waitForTimeout(220);
+    }
+    let t = await text(page);
+    check('a customer in the line asks for the math', !!m, t.slice(0, 80).replace(/\n/g, ' '));
+    if (!m) { await page.close(); }
+    else {
+      check('the question reaches the screen, not just the store', t.includes(m.q.replace(/<[^>]*>/g, '').slice(0, 30)),
+        m.q.slice(0, 60));
+      check('the moment names the skill it is practising', t.includes(m.skill), m.skill);
+      check('it is built from her own numbers, not a costume',
+        /\$\d/.test(m.q) && !/Maria|a store offers/i.test(m.q));
+
+      const options = [m.ans, ...m.wrongs];
+      const onScreen = await page.evaluate((opts) => opts.filter(o =>
+        [...document.querySelectorAll('button')].some(b => b.innerText.trim() === o)).length, options);
+      check('every option is on screen as a real button', onScreen === options.length, `${onScreen}/${options.length}`);
+      check('no option is repeated', new Set(options).size === options.length, JSON.stringify(options));
+      const withFigures = options.filter(o => /\d/.test(o)).length;
+      check('the answer is not the only choice carrying a figure',
+        withFigures === 0 || withFigures >= 2, `${withFigures} of ${options.length}`);
+
+      check('"Serve the rest" cannot skip past an open moment', (await clickText(page, 'Serve the rest')) === false);
+      check('the line shows exactly one customer as Next', (await page.evaluate(() =>
+        (document.body.innerText.match(/\nNext\n/g) || []).length)) <= 1);
+      // The question that stopped the line must be above the line, not under 26 rows.
+      check('the moment is above the queue, not below the fold', await page.evaluate((q) => {
+        const t = document.body.innerText;
+        return t.indexOf(q.slice(0, 24)) < t.indexOf('Waiting');
+      }, m.q.replace(/<[^>]*>/g, '')), '');
+
+      // Wrong on purpose: the §5 rule has to hold for questions inside the business.
+      const before = await page.evaluate(() => {
+        const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+        return { kredits: s.kredits, biz: JSON.stringify(s.biz || null) };
+      });
+      await page.evaluate((l) => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === l)?.click(), m.wrongs[0]);
+      await page.waitForTimeout(300);
+      t = await text(page);
+      check('a miss shows the working rather than just marking it wrong',
+        /Here.s the working/.test(t) && m.ans.split(' ')[0] && t.includes(m.ans),
+        t.match(/Here.s the working[^\n]*/)?.[0] || t.slice(0, 80).replace(/\n/g, ' '));
+
+      await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Serve them/.test(b.innerText))?.click());
+      await page.waitForTimeout(350);
+      const after = await page.evaluate(() => {
+        const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+        return { kredits: s.kredits, biz: JSON.stringify(s.biz || null) };
+      });
+      check('getting it wrong costs her nothing', after.kredits === before.kredits && after.biz === before.biz);
+      t = await text(page);
+      check('the customer is served either way — a question never costs her the sale',
+        /Serve next|Serve the rest|Close the books/.test(t), t.slice(0, 80).replace(/\n/g, ' '));
+
+      // Finish the day, answering any further moments.
+      for (let i = 0; i < 8; i++) {
+        await clickText(page, 'Serve the rest');
+        await page.waitForTimeout(320);
+        if (!await answerMoment(page)) break;
+      }
+      await clickText(page, 'Close the books');
+      await page.waitForTimeout(700);
+      t = await text(page);
+      check('the day still closes with a ledger after the moments', /Revenue/.test(t) && /Profit/.test(t),
+        t.slice(0, 80).replace(/\n/g, ' '));
+      await page.close();
+    }
   }
 
   check('no uncaught page errors anywhere', pageErrors.length === 0, pageErrors.slice(0, 2).join(' | '));
