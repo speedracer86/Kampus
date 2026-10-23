@@ -96,8 +96,10 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   // The steps are state because "Show me another one" grows them: the second worked
   // example (and the plan-B representation, for the wall skills) splices in before
   // the final Try it, so the extra teaching never skips the unpaid check at the end.
-  const [steps, setSteps] = React.useState(() => teach.steps || []);
-  const more = teach.more || [];
+  const [steps, setSteps] = React.useState(() => teach?.steps || []);
+  // Never dereference a missing teach: the phase/move mismatch above is fixed at
+  // source, but rendering nothing beats taking the application down with it.
+  const more = teach?.more || [];
   const [expanded, setExpanded] = React.useState(false);
   const [at, setAt] = React.useState(0);
   // A step with nothing to solve is solved on arrival; a layout or an interactive
@@ -288,6 +290,10 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, p
  * lesson: {title, unit, world, moves:[{id, meta, questions?, teach?, teachFree?, scaffoldFades?}], reteach?}
  * pricer: ({tier, streak, firstTry, teachUsed, tokenUsed}) -> {amount, pills} — pass the engine's payout().
  */
+/** Which phase a move opens in. A function rather than only an effect, because
+    advancing has to set `at` and `phase` in the SAME batch — see finishMove. */
+const phaseFor = (m) => (m?.snag ? 'snag' : (m?.teach && !m.questions) ? 'teach' : 'run');
+
 export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rewardCents = 50,
   blobDir = '/blobs/', pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
@@ -311,9 +317,8 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
   const move = moves[at];
   // A move that teaches opens with its Snag (PLAY_SYSTEM §1) before the teach panel.
   React.useEffect(() => {
-    if (move?.snag) { setPhase('snag'); setSnagTried(false); }
-    else if (move?.teach && !move.questions) setPhase('teach');
-    else setPhase('run');
+    setPhase(phaseFor(move));
+    if (move?.snag) setSnagTried(false);
   }, [at]);
 
   const questions = fresh && move?.fresh ? move.fresh : (move?.questions || []);
@@ -323,7 +328,16 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
 
   const finishMove = () => {
     onEvent('move_complete', { move: move.id });
-    if (at + 1 < moves.length) { setAt(at + 1); setQi(0); setFresh(false); resetUi(); return; }
+    if (at + 1 < moves.length) {
+      // Set the phase HERE, not only in the effect on [at]. The effect runs after
+      // render, so advancing alone left one render with `at` on the next move while
+      // `phase` was still the old one — and a teach phase pointing at a move with no
+      // teach data threw, which unmounted the whole app. Clicking "Start the mission"
+      // blanked the screen for every kid, every lesson with a New idea.
+      setPhase(phaseFor(moves[at + 1]));
+      setAt(at + 1); setQi(0); setFresh(false); resetUi();
+      return;
+    }
     // No "done" and no real money unless the teaching moves actually ran questions.
     // A silent success here is how an empty lesson would pay out for nothing.
     if (!lessonEarnsPay(answered)) {

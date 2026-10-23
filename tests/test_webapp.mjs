@@ -13,6 +13,10 @@
 
    Usage: npm run test:webapp     (PW_CHROME points at an existing Chromium) */
 import { chromium } from 'playwright';
+// The seam itself, imported in Node: the test knows which steps a day assembles and
+// what each layout's right answer is, so it can solve them honestly instead of
+// guessing or reaching into the page for the answer.
+import { buildDayLesson, currentDay } from '../apps/web/src/year.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -52,6 +56,83 @@ await new Promise(r => server.listen(PORT, r));
 
 const browser = await chromium.launch(process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME } : {});
 const pageErrors = [];
+
+
+/* ---------------------------------------------------------------------------
+   Full-sequence teach driver.
+
+   The earlier teach checks only ever reached step 1, which is how an unkeyed
+   layout component — every step after the first arriving pre-revealed and
+   unsolvable — got past them. With the bank now authoring 3-5 steps per skill and
+   the depth pass splicing in more, the path is long enough that "it rendered" says
+   almost nothing. So this walks a whole sequence to "Start the mission", solving
+   each layout the way a kid would and checking the Next button at every beat.
+
+   Answers come from the bank via year.js, not from the page: a test that reads the
+   answer out of the DOM would pass against a screen showing the wrong one. */
+
+/** The chrome around a step; everything else inside the sheet belongs to the layout. */
+const CHROME = ['Back', 'Next', 'Start the mission →', 'Show me another one', 'Write it down',
+  'Read it to me', 'Again', 'Slower', 'Quiet', 'Unmute', 'Exit', 'Written ✓'];
+
+/** The layout's own controls, in document order, scoped to the step sheet. */
+const layoutButtons = (page) => page.evaluate((chrome) => {
+  const next = [...document.querySelectorAll('button')].find(b => /^(Next|Start the mission)/.test(b.innerText.trim()));
+  if (!next) return [];
+  let sheet = next.parentElement;
+  while (sheet && !sheet.querySelector('h2')) sheet = sheet.parentElement;
+  if (!sheet) return [];
+  return [...sheet.querySelectorAll('button')]
+    .map((b, i) => ({ i, text: b.innerText.trim() }))
+    .filter(b => !chrome.includes(b.text));
+}, CHROME);
+
+const clickLayoutButton = (page, nth) => page.evaluate(({ chrome, nth }) => {
+  const next = [...document.querySelectorAll('button')].find(b => /^(Next|Start the mission)/.test(b.innerText.trim()));
+  let sheet = next.parentElement;
+  while (sheet && !sheet.querySelector('h2')) sheet = sheet.parentElement;
+  const own = [...sheet.querySelectorAll('button')].filter(b => !chrome.includes(b.innerText.trim()));
+  own[nth]?.click();
+  return own.length;
+}, { chrome: CHROME, nth });
+
+const nextButton = (page) => page.evaluate(() => {
+  const b = [...document.querySelectorAll('button')].find(x => /^(Next|Start the mission)/.test(x.innerText.trim()));
+  return b ? { disabled: b.disabled, label: b.innerText.trim() } : null;
+});
+
+/** Solve one step the way its layout is meant to be solved. */
+async function solveStep(page, step) {
+  if (step.layout === 'walk') {
+    for (let i = 0; i < 12; i++) {
+      const tapped = await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Tap for the next line');
+        if (b) { b.click(); return true; } return false;
+      });
+      if (!tapped) break;
+      await page.waitForTimeout(70);
+    }
+    return 'revealed every row';
+  }
+  if (step.layout === 'bar') {
+    // Segments in order; clicking the Nth shades N.
+    await clickLayoutButton(page, step.bar.target - 1);
+    await page.waitForTimeout(90);
+    return `shaded ${step.bar.target}/${step.bar.parts}`;
+  }
+  if (step.layout === 'line') {
+    // Ticks run min..max in document order.
+    await clickLayoutButton(page, step.line.answer - step.line.min);
+    await page.waitForTimeout(90);
+    return `tapped ${step.line.answer}`;
+  }
+  if (step.layout === 'faceoff') {
+    await clickLayoutButton(page, step.faceoff.answer);
+    await page.waitForTimeout(90);
+    return `picked card ${step.faceoff.answer}`;
+  }
+  return 'no layout';
+}
 
 /** Cut the page off from the network.
 
@@ -620,6 +701,99 @@ try {
 
     await page.reload({ waitUntil: 'networkidle' });
     check('reloading goes to her year, not back into the check', /Hi Nia/.test(await text(page)));
+    await page.close();
+  }
+
+  /* ---------- 13. a whole authored teach sequence, one grade per band ----------
+     Day 1 of grades 3, 6 and 8, step 1 to "Start the mission", every layout solved
+     the way a kid would solve it. Each failure names the skill, so a bank patch that
+     breaks a step points at itself rather than at the suite. */
+  for (const grade of [3, 6, 8]) {
+    const seed = { grade, name: 'Talia', lessonPointer: 0, tiers: {}, recent: {}, review: [], passed: {} };
+    const day = currentDay(seed).day;
+    const skill = day?.skill || `grade ${grade} day 1`;
+    const lesson = buildDayLesson(seed);
+    const teach = (lesson?.moves || []).find(m => m.teach)?.teach;
+
+    if (!teach) { check(`${skill}: day 1 assembles a teach phase`, false, `grade ${grade} has no New idea move`); continue; }
+
+    const page = await open(seed, '#lesson');
+    await page.waitForTimeout(500);
+    const arrived = await driveToTeach(page);
+    check(`${skill}: the teach phase is reachable`, arrived, `grade ${grade}`);
+    if (!arrived) { await page.close(); continue; }
+
+    let steps = [...teach.steps];
+    const more = teach.more || [];
+    let expanded = false;
+    let ok = true, note = '';
+    // A step she already solved stays solved when she comes back to it after asking
+    // for another example, so Next is correctly live on a repeat visit.
+    const firstVisit = new Set();
+
+    for (let i = 0; i < steps.length && ok; i++) {
+      const step = steps[i];
+      const onScreen = await text(page);
+
+      // The sequence the test computed must be the sequence on screen; if the bank
+      // and the seam ever disagree, say so here rather than failing mysteriously below.
+      if (step.prompt && !onScreen.includes(step.prompt.slice(0, 28))) {
+        ok = false; note = `step ${i + 1} on screen is not "${step.prompt.slice(0, 40)}"`;
+        break;
+      }
+
+      const before = await nextButton(page);
+      // A one-row walk has nothing to reveal, so it is solved on arrival and Next is
+      // correctly live — asserting otherwise would be the test inventing a rule.
+      const preSolved = step.layout === 'walk' && (step.walk?.rows?.length || 0) <= 1;
+      const revisit = firstVisit.has(step.prompt);
+      firstVisit.add(step.prompt);
+      const needsSolving = !!step.layout && !preSolved && !revisit;
+      if (needsSolving && before?.disabled !== true) {
+        ok = false; note = `step ${i + 1} (${step.layout}) had Next live before it was solved`;
+        break;
+      }
+
+      const how = await solveStep(page, step);
+      const after = await nextButton(page);
+      if (after?.disabled !== false) {
+        ok = false; note = `step ${i + 1} (${step.layout}) still dead after ${how}`;
+        break;
+      }
+
+      // One expansion per sequence, taken on the last step: the extra example goes
+      // in BEFORE the Try it, so the unpaid check stays last.
+      if (i === steps.length - 1 && more.length && !expanded) {
+        await clickText(page, 'Show me another one');
+        await page.waitForTimeout(250);
+        expanded = true;
+        steps = [...steps.slice(0, -1), ...more, steps[steps.length - 1]];
+        // The view does NOT advance: `at` stays put and the first extra step takes
+        // that index, so the same i must be re-processed against the new sequence.
+        i -= 1;
+        continue;
+      }
+
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')].find(x => /^(Next|Start the mission)/.test(x.innerText.trim()));
+        if (b && !b.disabled) b.click();
+      });
+      await page.waitForTimeout(220);
+    }
+
+    check(`${skill}: every step solves and releases Next`, ok, note);
+    if (ok) {
+      check(`${skill}: the expansion ran and the Try it stayed last`, expanded === (more.length > 0),
+        `more=${more.length}, expanded=${expanded}`);
+      // The sequence is over. "Not on a step" is NOT enough — a blank screen
+      // satisfies that, and a blank screen is exactly what this used to produce:
+      // finishing the teach phase unmounted the whole app. Assert the lesson is
+      // actually there.
+      const t = await text(page);
+      check(`${skill}: the sequence ends in the mission, not a blank screen`,
+        !/STEP \d+ OF \d+/i.test(t) && /Warm-up[\s\S]*Prove it/.test(t) && t.trim().length > 80,
+        t.trim().length < 80 ? `screen is ${t.trim().length} chars — blank` : (t.match(/STEP \d+ OF \d+/i)?.[0] || ''));
+    }
     await page.close();
   }
 

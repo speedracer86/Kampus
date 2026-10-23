@@ -12,7 +12,7 @@ npm install                   # root only — installs all workspaces
 npm test                      # unit tests: 420 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 73 checks
+npm run test:webapp           # build apps/web, serve dist/, drive it: 85 checks
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build
@@ -29,7 +29,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 420 passing unit tests, build exits 0, 73/73 webapp checks. CI
+All must be clean: 420 passing unit tests, build exits 0, 85/85 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -181,6 +181,14 @@ untouched lines.**
   `esbuild keepNames: true` in `apps/web/vite.config.js` is load-bearing —
   `packages/engine/test/minification.test.js` bundles with and without it and fails if the
   fix is undone. **Never add a code path that looks a function up by its `.name`.**
+- **Phase and move must advance in the same batch.** `DailyLesson` keeps `phase` and
+  `at` as separate state. Advancing with `setAt` alone left one render where `at`
+  pointed at the next move while `phase` was still `teach`, so `TeachSteps` got
+  `undefined` and threw — which unmounted the whole app. Clicking "Start the mission"
+  blanked the screen for every kid on every lesson with a New idea, and no test saw it
+  because none had ever finished a teach phase. `finishMove` now calls
+  `setPhase(phaseFor(moves[at + 1]))` next to `setAt`; the `useEffect` on `[at]` is a
+  backstop, not the mechanism.
 - **Key a step's layout component by the step, not by position.** Two consecutive
   steps of the same layout are the same component type, so React reuses the instance
   and the next step inherits the previous one's reveal state — arriving pre-revealed

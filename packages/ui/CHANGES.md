@@ -494,3 +494,24 @@ not understood. "Teach more than once" lands as three changes:
 
 Data lives in `packages/curriculum/src/teach-depth.js` (SECOND_EXAMPLES for all 79
 skills, PLAN_B for 10); the seam work is in `apps/web/src/year.js`.
+
+### Full-sequence teach coverage, and the crash it found (Oct 23)
+
+`tests/test_webapp.mjs` now walks a whole authored teach sequence to "Start the
+mission" for one grade per band (3, 6, 8), solving every layout the way a kid would
+— walks by tapping every row, line/bar/faceoff by the real answer, which the test
+gets from the bank through `year.js` rather than by reading the page. Each check is
+named by the skill, so a bank patch that breaks a step points at itself.
+
+It immediately found a crash on the most common path in the product. `DailyLesson`
+holds `phase` and `at` as separate state, and `finishMove` advanced `at` while
+leaving `phase` to a `useEffect` that runs after render. That left one render with
+`at` on the next move and `phase` still `teach`, so `TeachSteps` dereferenced an
+undefined `teach` and threw — unmounting the entire app. **Clicking "Start the
+mission" blanked the screen for every kid, on every lesson with a New idea.**
+
+Fixed at source (`finishMove` sets the phase in the same batch) and guarded in
+`TeachSteps` (`teach?.steps` / `teach?.more`). Either fix alone prevents the blank,
+so the suite cannot tell them apart; both are kept, and the e2e fails on a blank
+screen if both are reverted.
+
