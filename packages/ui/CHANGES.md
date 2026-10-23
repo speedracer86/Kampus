@@ -474,3 +474,23 @@ bar that lost ground would read as a penalty.
 The adaptive state machine is `packages/engine/src/placement.js`; the component
 renders one question and reports one answer, per the zero-dependency contract.
 
+## Teach depth: "Show me another one" (owner directive, Oct 2026)
+
+Play-testing verdict from the family: the lessons are thin — one worked example per
+skill, and the re-teach after a missed prove-it replayed the very panel she had just
+not understood. "Teach more than once" lands as three changes:
+
+- **`TeachSteps` grows on request.** `teach.more` carries a second worked example
+  (same strategy, fresh surface) and, for the ten classic wall skills, a plan-B
+  REPRESENTATION — the bar when symbols failed, money when the bar did. A
+  `Show me another one` outline button on the final step splices them in before the
+  Try it, which stays last and still gates the mission. Never auto-shown: a kid who
+  got it the first time is not made to sit through a second telling.
+- **Re-teach shows new work.** `ReteachView` now receives the second example
+  (kicker `Same idea, new numbers`) rather than the original panel; the old panel
+  remains the fallback for any skill without one.
+- **Event:** `teach_more { count }` when the extra example is opened, so the pilot
+  report can say which skills needed a second telling.
+
+Data lives in `packages/curriculum/src/teach-depth.js` (SECOND_EXAMPLES for all 79
+skills, PLAN_B for 10); the seam work is in `apps/web/src/year.js`.

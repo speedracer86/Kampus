@@ -12,18 +12,18 @@ Two things live in this repo:
 | Path | What it is |
 |---|---|
 | `index.html` | The complete v1 app (markup, styles, logic, embedded illustrations). Open in any browser — no install, no server. |
-| `packages/engine` | The math brain as pure ES modules: 79 problem generators (v1 set + Phase 1 expansion covering every grade's full major work), grade 3–8 curriculum pools, adaptive tier logic, the real-money ledger, assessment, review scheduling, the business sim. 347 unit tests. |
-| `packages/curriculum` | The authored bank — Common Core skill taxonomy, 45 units, six 128-day sequences, Snags, teach panels and TeachStep data — plus major-work coverage reporting. Owner-reviewed: verify, never re-author. 29 unit tests. |
+| `packages/engine` | The math brain as pure ES modules: 79 problem generators (v1 set + Phase 1 expansion covering every grade's full major work), grade 3–8 curriculum pools, adaptive tier logic, the real-money ledger, assessment, review scheduling, the business sim. 373 unit tests. |
+| `packages/curriculum` | The authored bank — Common Core skill taxonomy, 45 units, six 128-day sequences, Snags, teach panels and TeachStep data — plus major-work coverage reporting. Owner-reviewed: verify, never re-author. 47 unit tests. |
 | `packages/ui` | The React component library (plain JSX, zero dependencies, inline-styled from `tokens.js`) at §0/§0a/§0b values: 78 blob illustrations, the five-move lesson, the four teach-step layouts, onboarding, assessments, Rewards, Grown-ups. See its README for the architecture contract; `CHANGES.md` for every divergence. |
 | `apps/web` | The v2 React app (Vite): onboarding and the family doorway, Home with the week plan and grade stack, the five-move daily lesson, Inspection Day and the License, the business day, Rewards with the real-money receipt, and Grown-ups. Persisted locally, keyed by student. |
 | `docs/` | Product docs: design spec, style guide, curriculum & engagement plan, build plan. |
-| `tests/` | The browser suites: `test_webapp.mjs` drives the built v2 bundle (57 checks), `test_layouts.mjs` the teach layouts at two widths (18), `test_kampus.js` the v1 app. |
+| `tests/` | The browser suites: `test_webapp.mjs` drives the built v2 bundle (73 checks), `test_layouts.mjs` the teach layouts at two widths (18), `test_kampus.js` the v1 app. |
 
 ## Develop
 
 ```bash
 npm install          # workspace install (Node 20+)
-npm test             # 376 engine + curriculum unit tests (Vitest)
+npm test             # 420 engine + curriculum unit tests (Vitest)
 npm run dev          # v2 app dev server (Vite)
 npm run build        # v2 production build
 npm run test:webapp  # build, serve dist/, drive it in a real browser (57 checks)

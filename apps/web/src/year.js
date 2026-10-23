@@ -6,6 +6,7 @@
    panel here comes from packages/curriculum verbatim. */
 import {
   lessonsFor, unitById, unitSpan, yearShape, snagFor, teachFor, teachStepsFor, quizSkills, YEAR,
+  moreStepsFor, SECOND_EXAMPLES,
 } from '@kampus/curriculum';
 import { problemsForSkill, dueQueue, dayNumber, hasGenerator, snagChoices, unitTopic } from '@kampus/engine';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
@@ -98,7 +99,43 @@ function teachMoves(skill) {
   // Hands-on steps the bank declared, appended so neither source is lost.
   declared.forEach((s, i) => steps.push({ id: `i${i}`, title: s.do, prompt: s.do, body: s.ex,
     takeaway: s.ex, interactive: s.interactive, config: s.config }));
-  return steps.length ? { steps } : null;
+  // The depth pass: a second worked example (plus a plan-B representation for the
+  // wall skills), offered behind "Show me another one" — never forced on a kid who
+  // got it the first time.
+  const more = (moreStepsFor(skill) || []).map((s, i) => ({
+    id: `m${i}`,
+    title: s.verb ? s.verb[0].toUpperCase() + s.verb.slice(1) : `Another ${i + 1}`,
+    ...s,
+  }));
+  return steps.length ? { steps, more } : null;
+}
+
+/** ReteachView rows from a TeachStep — the SECOND example, so the re-teach after a
+    missed prove-it shows fresh work, never the panel she just didn't get. */
+function reteachRowsFrom(step) {
+  if (step.walk) return step.walk.rows.map(r => ({ lead: '', how: r.how, value: r.value }));
+  if (step.line) {
+    const { start, delta, answer, unit } = step.line;
+    return [
+      { lead: '', how: 'start at', value: `${start}${unit || ''}` },
+      { lead: '', how: step.hint, value: `${delta >= 0 ? '+' : ''}${delta}` },
+      { lead: '', how: 'lands on', value: `${answer}${unit || ''}` },
+    ];
+  }
+  if (step.bar) {
+    const { parts, target, context } = step.bar;
+    return [
+      { lead: '', how: context, value: `${target}/${parts}` },
+      { lead: '', how: 'shaded, that is', value: `${target} of ${parts}` },
+    ];
+  }
+  if (step.faceoff) {
+    const win = step.faceoff.cards[step.faceoff.answer];
+    return [
+      { lead: '', how: step.faceoff.why, value: win?.label || '' },
+    ];
+  }
+  return [];
 }
 
 /** Scaffolds fade across a guided move: the last two carry none (§0). */
@@ -134,7 +171,7 @@ export function buildDayLesson(state) {
       // answers: null means "no honest distractors exist" — the Snag renders as a
       // scene with a reveal rather than a multiple choice she can win by shape (B7).
       snag: snag && (() => {
-        const choices = snagChoices(snag.ans);
+        const choices = snagChoices(snag.ans, snag.wrongs);
         return { scene: snag.scene, q: snag.q, ans: snag.ans, answers: choices.length > 1 ? choices : null };
       })(),
     });
@@ -153,6 +190,11 @@ export function buildDayLesson(state) {
     questions: draw(skill || mixPool[0], tier, 3, ctx),
     fresh: draw(skill || mixPool[0], tier, 2, ctx) });
 
+  // The re-teach after a missed prove-it shows the SECOND worked example — fresh
+  // numbers, same strategy — rather than replaying the panel that didn't land
+  // (owner directive: teach more than once). The old panel stays as the fallback
+  // for any skill without a second example.
+  const second = (SECOND_EXAMPLES[skill] || [])[0];
   const reteachSource = teachFor(skill);
   return {
     title: day.title,
@@ -160,7 +202,12 @@ export function buildDayLesson(state) {
     world,
     day,
     moves: moves.filter(m => (m.questions?.length || m.teach)),
-    reteach: reteachSource ? {
+    reteach: second ? {
+      kicker: 'Same idea, new numbers',
+      title: second.prompt,
+      lede: second.hint || unit?.focus || '',
+      rows: reteachRowsFrom(second),
+    } : reteachSource ? {
       kicker: 'Go over it',
       title: reteachSource.bigIdea,
       lede: unit?.focus || '',

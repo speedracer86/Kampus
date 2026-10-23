@@ -21,6 +21,12 @@
    Which is why a skill with no authored panel gets no steps at all rather than a
    generated one — a teach panel nobody wrote is worse than none. */
 import { TEACH } from './teach.js';
+import { AUTHORED_STEPS } from './teach-steps-bank.js';
+export { AUTHORED_STEPS };
+// The depth pass: a second worked example per skill, plan-B representations for
+// the wall skills, and `moreStepsFor()` which concatenates them for the
+// "show me another one" path. Owner directive: teach more than once.
+export { SECOND_EXAMPLES, PLAN_B, moreStepsFor } from './teach-depth.js';
 
 export const LAYOUTS = ['walk', 'faceoff', 'line', 'bar'];
 
@@ -177,9 +183,10 @@ export function walkStepsFrom(panel) {
   return steps.length ? steps : null;
 }
 
-/** The authored reference set if this skill is in it, else the mechanical walk. */
+/** Authored steps first (reference set, then the authored bank); the mechanical
+    walk remains only as the safety net for any future skill not yet authored. */
 export function teachStepsFor(skill) {
-  return REFERENCE_STEPS[skill] || walkStepsFrom(TEACH[skill]);
+  return REFERENCE_STEPS[skill] || AUTHORED_STEPS[skill] || walkStepsFrom(TEACH[skill]);
 }
 
 /** Skills whose steps are authored per layout rather than converted. */

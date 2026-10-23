@@ -18,9 +18,17 @@ const MINUS = /−/g;
 /**
  * Near-miss choices for a Snag answer, or [] when the answer is not a plain
  * number. [] means "render the reveal" — it is a signal, not a failure.
+ *
+ * Authored wrongs win: when the bank supplies a snag's own `wrongs` (sentence
+ * answers get hand-written near misses), those ARE the choice set — no shaping,
+ * no shape-based tell, same deterministic ordering.
  */
-export function snagChoices(ans) {
+export function snagChoices(ans, wrongs) {
   const raw = String(ans).trim();
+  if (Array.isArray(wrongs) && wrongs.length >= 2) {
+    return [raw, ...wrongs.map(w => String(w).trim())]
+      .sort((a, b) => (a.length + a.charCodeAt(0)) - (b.length + b.charCodeAt(0)));
+  }
   const norm = raw.replace(MINUS, '-');
   if (!PLAIN.test(norm)) return [];
 
@@ -53,4 +61,4 @@ export function snagChoices(ans) {
 }
 
 /** Does this Snag get buttons, or a scene and a reveal? */
-export const snagIsPickable = (ans) => snagChoices(ans).length > 1;
+export const snagIsPickable = (ans, wrongs) => snagChoices(ans, wrongs).length > 1;

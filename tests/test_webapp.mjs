@@ -438,6 +438,38 @@ try {
 
     // Grades 7–8 are voice band c: the pill, never the auto-reading companion.
     check('grades 7–8 keep the quiet "Read it to me" pill', t.includes('Read it to me') && !/Reading it to you/.test(t));
+
+    /* Teach depth: on the FINAL step, "Show me another one" splices in the second
+       worked example before the Try it. Thin lessons were the family's verdict;
+       this is the affordance that answers it, so it is checked in the bundle. */
+    const tapWalk = async () => {
+      for (let i = 0; i < 8; i++) {
+        const tapped = await page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Tap for the next line');
+          if (b) { b.click(); return true; } return false;
+        });
+        if (!tapped) break;
+        await page.waitForTimeout(90);
+      }
+    };
+    await clickText(page, 'Next');
+    await page.waitForTimeout(300);
+    t = await text(page);
+    check('the final step offers "Show me another one"', t.includes('Show me another one'), t.slice(0, 90).replace(/\n/g, ' '));
+    const before = t;
+    await clickText(page, 'Show me another one');
+    await page.waitForTimeout(300);
+    t = await text(page);
+    check('another one is ANOTHER one: a fresh example she has not seen',
+      !t.includes('Show me another one') && t !== before && /step \d+ of 3/i.test(t),
+      t.match(/step \d+ of \d+/i)?.[0] || t.slice(0, 90).replace(/\n/g, ' '));
+    await tapWalk();
+    await clickText(page, 'Next');
+    await page.waitForTimeout(300);
+    await tapWalk();
+    t = await text(page);
+    check('the Try it still gates the mission after the extra example',
+      t.includes('Start the mission'), t.slice(0, 90).replace(/\n/g, ' '));
     await page.close();
   }
 
@@ -456,9 +488,12 @@ try {
     await page.close();
   }
 
-  /* ---------- 11. a worded Snag is a scene and a reveal, not a rigged quiz (B7) ----
-     Grade 6 opens on unit 6-1, whose Snag answer is "The 8-pack (43¢ vs 45¢)". The
-     old shaping put that next to 12, 7 and 9: she wins by shape. */
+  /* ---------- 11. a worded Snag is a REAL choice now (B7 + the bank's wrongs) ----
+     Grade 6 opens on unit 6-1, whose Snag answer is "The 8-pack (43¢ vs 45¢)".
+     B7 banned the rigged set (the answer among bare integers). The bank then
+     authored real wrongs for every worded Snag, so the honest end state is four
+     same-shaped choices — and the reveal path stays as the fallback for any
+     future snag without authored wrongs (unit-tested in the engine). */
   {
     const page = await open({ grade: 6, name: 'Talia', lessonPointer: 0 }, '#lesson');
     await page.waitForTimeout(600);
@@ -476,18 +511,18 @@ try {
     }
     let t = await text(page);
     check('the Snag is reached', /THE SNAG/i.test(t), t.slice(0, 70).replace(/\n/g, ' '));
-    check('a worded Snag offers no fake choices', !t.includes('The 8-pack (43¢ vs 45¢)')
-      && t.includes('Show me what it was'), t.match(/Show me[^\n]*/)?.[0] || '');
-    // The tell the old build had: the answer sat among bare integers.
+    check('a worded Snag offers its authored choices', t.includes('The 8-pack (43¢ vs 45¢)')
+      && t.includes('The 12-pack (45¢ vs 43¢)'), t.match(/The 8-pack[^\n]*/)?.[0] || '');
+    // The tell the old build had: the answer sat among bare integers. Now every
+    // choice is a worded sentence — zero bare-number buttons on a worded Snag.
     const numeric = await page.evaluate(() => [...document.querySelectorAll('button')]
-      .filter(b => /^\d\n/.test(b.innerText.trim())).length);
-    check('no multiple-choice buttons on a worded Snag', numeric === 0, `${numeric} choice buttons`);
+      .filter(b => /^-?\$?\d+(?:\.\d+)?$/.test(b.innerText.trim().replace(/^\d\n/, ''))).length);
+    check('no bare-number choices beside a worded answer', numeric === 0, `${numeric} bare-number buttons`);
 
-    await clickText(page, 'Show me what it was');
-    await page.waitForTimeout(250);
+    await clickText(page, 'The 8-pack (43¢ vs 45¢)');
+    await page.waitForTimeout(300);
     t = await text(page);
-    check('the reveal shows the authored answer in full', t.includes('The 8-pack (43¢ vs 45¢)'));
-    check('the reveal still leads to the move', /Show me the move/.test(t));
+    check('picking the right deal lands and leads on', /Show me the move|That.s it|Next/i.test(t), t.slice(0, 120));
     await page.close();
   }
 
