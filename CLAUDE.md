@@ -13,6 +13,7 @@ npm test                      # unit tests: 428 vitest tests (engine + curriculu
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
 npm run test:webapp           # build apps/web, serve dist/, drive it: 149 checks
+node tests/test_webapp.mjs teach    # one spec only (core|business|onboarding|teach|money)
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build
@@ -118,7 +119,9 @@ Two sets of invariants are enforced by tests rather than intentions, in
 | `apps/web/src/store.js` | Persistence surface (swap point for Supabase) |
 | `index.html` | The legacy v1 app, still complete and shipping |
 | `tests/test_kampus.js` | Playwright suite for the legacy app |
-| `tests/test_webapp.mjs` | The suite that matters: the BUILT React bundle in a real browser |
+| `tests/test_webapp.mjs` | The runner for the suite that matters: the BUILT bundle in a real browser |
+| `tests/webapp/harness.mjs` | Its machinery: static host, browser, check recorder, and the drivers that play a lesson, sit a paper, solve a layout |
+| `tests/webapp/*.spec.mjs` | The checks themselves, five specs that run concurrently |
 | `tests/test_layouts.mjs` | The §0b layout gallery at 1280 and 390 |
 | `docs/KAMPUS_BUILD_PLAN.md` | Where this is going: Supabase, multi-family, sync |
 | `docs/DEPLOYMENT.md` | Stack, domains, Cloudflare Pages settings, the multi-tenant schema |
@@ -171,6 +174,10 @@ untouched lines.**
 - **Topic codes are not display names.** Internally: `frac`, `ratio`, `int`, `alg`.
 - **Two different test runners.** Vitest for the packages, a plain Node + Playwright script
   for `test:e2e`. `npm test` does not run the e2e suite.
+- **The webapp specs run concurrently** against one host and one browser. They are
+  independent because a Playwright page carries its own storage — so a spec must not
+  assume anything another spec did, and must not reach for a fixed port or a shared
+  file. Each buffers its own output; the runner prints it per spec.
 - **The browser suites pick their own port.** Both ask the OS for one (`listen(0)`)
   rather than hard-coding it. A fixed port meant an interrupted run left the socket
   held and the *next* run died on EADDRINUSE before it started.
