@@ -547,3 +547,13 @@ can be driven to either outcome deliberately. It found three things: the repair
 plan scheduled nothing, passing the License skipped the first lesson of the new
 grade, and the §5 rule had never been checked on these screens at all.
 
+### The money path, driven end to end (Oct 26)
+
+`AssessmentRunner` aside, nothing here changed: the money path was already right,
+and the point of this pass was to prove it against the built bundle rather than
+against the engine alone. Effort earns a pending row at the full rate, a grown-up
+approves it behind the PIN, the weekly cap binds at APPROVAL (an over-cap row reads
+"Over limit" and is refused without changing anything), Hold and Undo are both
+reversible, "Approve all" stops cleanly at the cap, and the receipt counts only
+what was okayed.
+

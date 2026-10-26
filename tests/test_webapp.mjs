@@ -17,6 +17,7 @@ import { chromium } from 'playwright';
 // what each layout's right answer is, so it can solve them honestly instead of
 // guessing or reaching into the page for the answer.
 import { buildDayLesson, currentDay } from '../apps/web/src/year.js';
+import { weekKey } from '@kampus/engine';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -25,7 +26,10 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DIST = path.join(ROOT, 'apps/web/dist');
-const PORT = 4178;
+// Chosen by the OS, not hard-coded. A hard-coded port means an interrupted run
+// leaves the socket held and the NEXT run dies on EADDRINUSE before it starts —
+// which is a test suite that breaks because of how the last one ended.
+let PORT = 0;
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
   '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png' };
 
@@ -52,13 +56,78 @@ const server = createServer(async (req, res) => {
     res.writeHead(404); res.end('not found');
   }
 });
-await new Promise(r => server.listen(PORT, r));
+await new Promise(r => server.listen(0, r));
+PORT = server.address().port;
 
 const browser = await chromium.launch(process.env.PW_CHROME ? { executablePath: process.env.PW_CHROME } : {});
 const pageErrors = [];
 
 
 
+
+
+/* ---------------------------------------------------------------------------
+   The money path.
+
+   Effort earns a pending row, a grown-up approves it, the weekly cap binds at
+   APPROVAL rather than at award, and the receipt shows what was actually okayed.
+   This is the part a parent sees and the part that has to be right before anyone
+   pays for the thing, and nothing drove it end to end. */
+
+/** Just the receipt. Slicing from "KAMPUS BANK" to the end of the page swept in the
+    wishlist below it, so a $6.00 sticker book read as the balance. */
+const receiptBlock = (t) => {
+  const start = t.indexOf('KAMPUS BANK');
+  if (start < 0) return '';
+  const rest = t.slice(start);
+  const end = rest.search(/Wish|Saving for|Spend it|Home rewards/i);
+  return end > 0 ? rest.slice(0, end) : rest;
+};
+
+/** The ledger, as stored. */
+const ledger = (page) => page.evaluate(() => {
+  const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+  return (s.ledger || []).map(r => ({ id: r.id, cents: r.cents, status: r.status, reason: r.reason, label: r.label }));
+});
+
+/** Click Approve / Hold / Undo on the row for a named earning.
+
+    Walking up "until the text contains the label" escapes the row at the second
+    level and matches the container holding every row — which is how asking for
+    Inspection Day's Hold held a different earning, and asking for its Undo
+    un-approved a third one. A size threshold is not the fix either: the whole list
+    is only 153 characters here.
+
+    The structural rule is reliable: a row contains exactly ONE button with a given
+    action, so the moment an ancestor holds two, we have left the row. */
+const rowAction = (page, label, action) => page.evaluate(({ label, action }) => {
+  const btns = [...document.querySelectorAll('button')].filter(b => b.innerText.trim() === action);
+  for (const b of btns) {
+    let node = b.parentElement;
+    for (let i = 0; i < 6 && node; i++, node = node.parentElement) {
+      const sameAction = [...node.querySelectorAll('button')].filter(x => x.innerText.trim() === action).length;
+      if (sameAction > 1) break;
+      if ((node.innerText || '').includes(label)) { b.click(); return true; }
+    }
+  }
+  return false;
+}, { label, action });
+
+/** Through the Grown-ups PIN gate, whatever state it is in. */
+async function intoGrownUps(page, pin = '1234') {
+  for (const d of pin) {
+    await page.evaluate((x) => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === x)?.click(), d);
+  }
+  await page.waitForTimeout(700);
+  // First time through, the pad is in 'set' mode and asks for it twice.
+  if (/Once more/i.test(await text(page))) {
+    for (const d of pin) {
+      await page.evaluate((x) => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === x)?.click(), d);
+    }
+    await page.waitForTimeout(700);
+  }
+  return /Approvals|Earned|Nothing waiting/i.test(await text(page));
+}
 
 /* ---------------------------------------------------------------------------
    Assessment driver: sit a whole paper.
@@ -280,6 +349,20 @@ async function openBlank(hash = '') {
 }
 
 const text = (page) => page.evaluate(() => document.body.innerText);
+
+
+/** The app's own week key, so a seeded ledger lands in the week it is testing. */
+async function openBlankWeekKey() {
+  const p = await browser.newPage();
+  await sealOffsite(p);
+  await p.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
+  const wk = await p.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+    return s.week?.key || null;
+  });
+  await p.close();
+  return wk;
+}
 const clickText = async (page, label) => page.evaluate((l) => {
   const b = [...document.querySelectorAll('button')].find(x => x.textContent.trim() === l || x.textContent.includes(l));
   if (b) { b.click(); return true; } return false;
@@ -905,13 +988,13 @@ try {
     await clickText(page, 'Open for the day');
     await page.waitForTimeout(500);
 
-    let m = null;
-    for (let i = 0; i < 14; i++) {
-      m = await openMoment(page);
-      if (m) break;
-      if (!await clickText(page, 'Serve next')) break;
-      await page.waitForTimeout(220);
-    }
+    // "Serve the rest" serves everyone up to the first moment and stops there, so
+    // one click reaches it whatever the queue length. Tapping "Serve next" a fixed
+    // number of times did not: moments sit at random points in a queue that can run
+    // past twenty, so the check passed or failed on the roll of the dice.
+    await clickText(page, 'Serve the rest');
+    await page.waitForTimeout(500);
+    let m = await openMoment(page);
     let t = await text(page);
     check('a customer in the line asks for the math', !!m, t.slice(0, 80).replace(/\n/g, ' '));
     if (!m) { await page.close(); }
@@ -1084,6 +1167,145 @@ try {
     check('a miss does not move her grade', after.grade === 6 && !after.passed?.['6'], JSON.stringify(after));
     check('the repair plan schedules real review, not a scolding', after.review > 0, `${after.review} review entries`);
     check('a missed License still cannot touch the business (§5)', (await bizSnapshot(page)) === before);
+    await page.close();
+  }
+
+  /* ---------- 18. effort → pending → approved → receipt ---------- */
+  {
+    // A week with $4.50 already approved against a $5.00 cap, and three things
+    // waiting: a 50c lesson that fits, and two that cannot both fit.
+    const wk = weekKey();
+    const seedLedger = [
+      { id: 'e1', cents: 450, reason: 'lesson', label: 'Lessons', status: 'approved', day: 'Mon', week: wk },
+      { id: 'e2', cents: 50, reason: 'lesson', label: 'Daily lesson', status: 'pending', day: 'Tue', week: wk },
+      { id: 'e3', cents: 100, reason: 'quiz', label: 'Inspection Day', status: 'pending', day: 'Tue', week: wk },
+    ];
+    const page = await open({ grade: 6, name: 'Talia', ledger: seedLedger,
+      settings: { cap: 500 }, week: { key: wk, earned: 0, spent: 0 } }, '#parents');
+    await page.waitForTimeout(500);
+    check('Grown-ups is behind a PIN', /Grown-ups only|Pick a PIN/i.test(await text(page)));
+    check('the gate opens', await intoGrownUps(page));
+
+    let t = await text(page);
+    check('both waiting rows are shown with what they were for',
+      t.includes('Daily lesson') && t.includes('Inspection Day'), '');
+    // $4.50 of a $5.00 cap is used, so 50c fits and $1.00 does not.
+    const buttons = await page.evaluate(() => [...document.querySelectorAll('button')]
+      .filter(b => /Approve|Over limit/.test(b.innerText.trim()))
+      .map(b => ({ label: b.innerText.trim(), disabled: b.disabled })));
+    check('the cap binds at approval: the row that would pass it reads "Over limit"',
+      buttons.some(b => b.label === 'Over limit' && b.disabled) && buttons.some(b => b.label === 'Approve'),
+      JSON.stringify(buttons));
+
+    // Approving the one that fits.
+    check('Approve is offered on the row that fits', await rowAction(page, 'Daily lesson', 'Approve'));
+    await page.waitForTimeout(400);
+    let rows = await ledger(page);
+    check('approving marks exactly that row approved, at its full rate',
+      rows.find(r => r.id === 'e2')?.status === 'approved' && rows.find(r => r.id === 'e2')?.cents === 50,
+      JSON.stringify(rows.find(r => r.id === 'e2')));
+    check('the row that would pass the cap is untouched',
+      rows.find(r => r.id === 'e3')?.status === 'pending', JSON.stringify(rows.find(r => r.id === 'e3')));
+
+    // Hold, then undo: §0 says a decision is never destructive.
+    await rowAction(page, 'Inspection Day', 'Hold');
+    await page.waitForTimeout(350);
+    rows = await ledger(page);
+    check('Hold defers rather than deletes', rows.find(r => r.id === 'e3')?.status === 'deferred',
+      JSON.stringify(rows.find(r => r.id === 'e3')));
+    check('nothing left the ledger', rows.length === 3, `${rows.length} rows`);
+
+    check('Undo is offered on the row that was just held', await rowAction(page, 'Inspection Day', 'Undo'));
+    await page.waitForTimeout(350);
+    rows = await ledger(page);
+    check('Undo puts it back in the queue', rows.find(r => r.id === 'e3')?.status === 'pending',
+      JSON.stringify(rows.find(r => r.id === 'e3')));
+    check('undoing one row leaves the others alone',
+      rows.find(r => r.id === 'e2')?.status === 'approved', JSON.stringify(rows.find(r => r.id === 'e2')));
+
+    // Approve all must stop cleanly at the cap, not blow through it.
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Approve all/.test(b.innerText))?.click());
+    await page.waitForTimeout(450);
+    rows = await ledger(page);
+    const approved = rows.filter(r => r.status === 'approved').reduce((n, r) => n + r.cents, 0);
+    check('"Approve all" stops at the cap instead of passing it', approved <= 500, `$${(approved / 100).toFixed(2)} approved`);
+    check('the over-cap row is still waiting, not silently dropped',
+      rows.find(r => r.id === 'e3')?.status === 'pending', JSON.stringify(rows.find(r => r.id === 'e3')));
+
+    // The kid's side: the receipt counts approved money only.
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Rewards')?.click());
+    await page.waitForTimeout(500);
+    t = await text(page);
+    // Scoped to the receipt: the page also lists wishlist prices, and an unscoped
+    // regex read a $6.00 sticker book as if it were the balance.
+    const receipt = receiptBlock(t);
+    check('the receipt prints approved money, in two decimals',
+      /KAMPUS BANK/.test(t) && /\$5\.00/.test(receipt),
+      receipt.match(/\$\d+\.\d\d/g)?.slice(0, 4).join(' ') || '');
+    check('the receipt counts only what a grown-up okayed', !/\$6\.00/.test(receipt),
+      receipt.match(/\$6\.00/)?.[0] || '');
+    await page.close();
+  }
+
+  /* ---------- 19. real effort, all the way to the receipt ----------
+     Section 18 drives the rules against a seeded ledger. This one proves the rules
+     are wired to work she actually did: sit Inspection Day, approve what it earned,
+     and watch the receipt move. The quiz is the cheap way to produce a real row —
+     a whole five-move lesson takes a minute of wall clock to say the same thing. */
+  {
+    const page = await open({ grade: 6, name: 'Talia', lessonPointer: 0, kredits: 0, ledger: [] }, '#quiz');
+    await page.waitForTimeout(500);
+    check('nothing is owed before the work', (await ledger(page)).length === 0);
+
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Start|Begin|ready/i.test(b.innerText))?.click());
+    await page.waitForTimeout(500);
+    await sitPaper(page, { score: Infinity });
+
+    let rows = await ledger(page);
+    const earned = rows.find(r => r.reason === 'quiz');
+    check('real work writes one pending row', rows.length === 1 && earned?.status === 'pending', JSON.stringify(rows));
+    check('at the full rate — the cap never shrinks what she did', earned?.cents === 100, `${earned?.cents}c`);
+
+    // The results screen is immersive — it carries no nav, only "Back to Today" —
+    // so the way back to the shell is its own button, not a nav item that isn't there.
+    check('the results screen offers the way back', await clickText(page, 'Back to Today'));
+    await page.waitForTimeout(500);
+
+    // Her side first: she can see it, and it does not count as money yet.
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Rewards')?.click());
+    await page.waitForTimeout(500);
+    let t = await text(page);
+    let receipt = receiptBlock(t);
+    check('the kid sees nothing spendable until a grown-up says yes', /\$0\.00/.test(receipt),
+      receipt.match(/\$\d+\.\d\d/g)?.slice(0, 3).join(' ') || '');
+
+    // The grown-up finds it waiting and says yes.
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Grown-ups')?.click());
+    await page.waitForTimeout(400);
+    await intoGrownUps(page);
+    t = await text(page);
+    check('the grown-up sees the work waiting, in their own words',
+      /Inspection Day|Unit quiz|Quiz/i.test(t) && /\$1\.00/.test(t),
+      t.match(/\$1\.00[^\n]*/)?.[0] || t.slice(0, 80).replace(/\n/g, ' '));
+
+    check('the approve button is on that row', await rowAction(page, '$1.00', 'Approve'));
+    await page.waitForTimeout(400);
+    rows = await ledger(page);
+    check('saying yes approves it without changing the amount',
+      rows[0]?.status === 'approved' && rows[0]?.cents === 100, JSON.stringify(rows));
+
+    // And now it is hers.
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Rewards')?.click());
+    await page.waitForTimeout(500);
+    t = await text(page);
+    receipt = receiptBlock(t);
+    check('the receipt moves once it is approved', /\$1\.00/.test(receipt),
+      receipt.match(/\$\d+\.\d\d/g)?.slice(0, 3).join(' ') || '');
+    // Asserted positively. A scan for "score" matched the receipt's own line —
+    // "Paid for effort. Never for scores." — which is the principle, not a breach.
+    check('the receipt names the work she did, in her words',
+      /Sat Inspection Day/.test(receipt), receipt.match(/Sat [^\n]*/)?.[0] || '');
+    check('and says what it paid for', /Paid for effort\. Never for scores\./.test(receipt));
     await page.close();
   }
 

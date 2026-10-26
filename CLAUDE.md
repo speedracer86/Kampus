@@ -12,7 +12,7 @@ npm install                   # root only — installs all workspaces
 npm test                      # unit tests: 428 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 122 checks
+npm run test:webapp           # build apps/web, serve dist/, drive it: 149 checks
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build
@@ -29,7 +29,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 428 passing unit tests, build exits 0, 122/122 webapp checks. CI
+All must be clean: 428 passing unit tests, build exits 0, 149/149 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -171,6 +171,9 @@ untouched lines.**
 - **Topic codes are not display names.** Internally: `frac`, `ratio`, `int`, `alg`.
 - **Two different test runners.** Vitest for the packages, a plain Node + Playwright script
   for `test:e2e`. `npm test` does not run the e2e suite.
+- **The browser suites pick their own port.** Both ask the OS for one (`listen(0)`)
+  rather than hard-coding it. A fixed port meant an interrupted run left the socket
+  held and the *next* run died on EADDRINUSE before it started.
 - **`PW_CHROME`** points Playwright at an existing Chromium instead of downloading one
   (~150MB). Without it, run `npx playwright install chromium` first.
 - **`index.html` is hand-maintained, not generated** from the packages. There's no build
