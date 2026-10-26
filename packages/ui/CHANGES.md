@@ -534,3 +534,16 @@ served anyway — the §5 rule has to hold for questions standing inside the bus
 — and it pays nothing, because serving the line is the job and the profit is the
 reward.
 
+### Assessments end to end, and a resumable paper (Oct 26)
+
+`AssessmentRunner` takes `initialAnswers` / `initialAt` / `onProgress`, so the app
+can persist a paper in progress. An untimed twenty-question test is exactly the
+thing a kid walks away from, and a reload used to throw away every answer and drop
+her back at the intro.
+
+The suite now sits both papers start to finish — Inspection Day and the License,
+the pass and the miss — reading correctness from the paper the app stored so a run
+can be driven to either outcome deliberately. It found three things: the repair
+plan scheduled nothing, passing the License skipped the first lesson of the new
+grade, and the §5 rule had never been checked on these screens at all.
+

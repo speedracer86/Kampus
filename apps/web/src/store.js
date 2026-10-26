@@ -99,6 +99,7 @@ export function freshState() {
     earnings: [],        // real-dollar ledger rows, integer cents
     onboarded: false,
     placementQueued: false,
+    openPaper: null,      // an assessment in progress, so a reload resumes it
     avatar: 'Thinker',
   };
 }

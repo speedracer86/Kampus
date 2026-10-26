@@ -90,19 +90,33 @@ export function QuestionMap({ total, answers = [], at, onJump, phone }) {
  * The runner. Holds only the answer sheet and position; grading is the engine's job.
  * questions: the engine's tagged questions. onHandIn(answers) when the paper goes in.
  */
-export function AssessmentRunner({ kind = 'quiz', questions = [], onHandIn, onExit }) {
+/**
+ * The paper, all of it, with a map and a hand-in.
+ *
+ * `initialAnswers` / `initialAt` / `onProgress` exist so the caller can persist a
+ * paper in progress. An untimed twenty-question test is exactly the thing a kid
+ * walks away from, and losing every answer to a reload is not a tax this app gets
+ * to charge her.
+ */
+export function AssessmentRunner({ kind = 'quiz', questions = [], initialAnswers, initialAt = 0,
+  onProgress, onHandIn, onExit }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 900;
-  const [answers, setAnswers] = React.useState(() => questions.map(() => null));
-  const [at, setAt] = React.useState(0);
+  const [answers, setAnswers] = React.useState(() =>
+    (initialAnswers?.length === questions.length ? [...initialAnswers] : questions.map(() => null)));
+  const [at, setAt] = React.useState(Math.min(initialAt, Math.max(0, questions.length - 1)));
   const q = questions[at];
   const blanks = answers.reduce((n, a, i) => (a === null ? [...n, i] : n), []);
   const last = at === questions.length - 1;
 
-  const pick = (i) => setAnswers(a => a.map((x, j) => (j === at ? i : x)));
+  const pick = (i) => setAnswers(a => {
+    const next = a.map((x, j) => (j === at ? i : x));
+    onProgress?.(next, at);
+    return next;
+  });
   const advance = () => {
-    if (!last) return setAt(at + 1);
-    if (blanks.length) return setAt(blanks[0]);     // "Go to blank"
+    if (!last) { onProgress?.(answers, at + 1); return setAt(at + 1); }
+    if (blanks.length) { onProgress?.(answers, blanks[0]); return setAt(blanks[0]); }   // "Go to blank"
     onHandIn && onHandIn(answers);
   };
 
@@ -118,7 +132,8 @@ export function AssessmentRunner({ kind = 'quiz', questions = [], onHandIn, onEx
       </div>
 
       {!phone && <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start', marginBottom: 22 }}>
-        <QuestionMap total={questions.length} answers={answers} at={at} onJump={setAt} />
+        <QuestionMap total={questions.length} answers={answers} at={at}
+          onJump={(i) => { onProgress?.(answers, i); setAt(i); }} />
         <span />
       </div>}
 

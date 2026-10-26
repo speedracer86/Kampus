@@ -59,6 +59,67 @@ const pageErrors = [];
 
 
 
+
+/* ---------------------------------------------------------------------------
+   Assessment driver: sit a whole paper.
+
+   Inspection Day and the License are the two screens that decide what she does
+   next — the License writes a grade — and neither had coverage past the intro.
+   Correctness comes from the paper the app persisted, so a run can be driven to a
+   pass or to a repair plan deliberately instead of by luck. */
+
+/** The paper in progress, as the app itself stored it. */
+const openPaper = (page, key = 'kampus_v1_local') => page.evaluate((k) => {
+  const s = JSON.parse(localStorage.getItem(k) || '{}');
+  const p = s.openPaper;
+  return p ? { kind: p.kind, at: p.at, answers: p.answers,
+    correct: p.questions.map(q => q.answerIndex ?? q.correct),
+    n: p.questions.length } : null;
+}, key);
+
+/**
+ * Answer every question and hand in.
+ * `score` is how many to get RIGHT; the rest are answered with a wrong option.
+ */
+async function sitPaper(page, { score = Infinity } = {}) {
+  const paper = await openPaper(page);
+  if (!paper) return null;
+  for (let i = 0; i < paper.n; i++) {
+    const right = paper.correct[i];
+    const pick = i < score ? right : (right === 0 ? 1 : 0);
+    // Options render as "<n>\n<text>"; the nth option button is the nth choice.
+    await page.evaluate((n) => {
+      const btns = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+      btns[n]?.click();
+    }, pick);
+    await page.waitForTimeout(70);
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => /^(Next|Check|Hand it in)/.test(x.innerText.trim()) && !x.disabled);
+      if (b) b.click();
+    });
+    await page.waitForTimeout(90);
+  }
+  // The last Next becomes the hand-in; click whatever commits the paper.
+  for (let i = 0; i < 4; i++) {
+    const done = await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => /Hand it in|Hand in|Finish/i.test(x.innerText.trim()) && !x.disabled);
+      if (b) { b.click(); return true; } return false;
+    });
+    if (done) break;
+    await page.waitForTimeout(150);
+  }
+  await page.waitForTimeout(600);
+  return paper;
+}
+
+/** The business, as stored. §5 is about the BUSINESS: a quiz may write its pending
+    fee to the ledger and move her through the year, and does, so a snapshot that
+    froze those would be testing something the rule never said. */
+const bizSnapshot = (page) => page.evaluate(() => {
+  const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+  return JSON.stringify(s.biz || null);
+});
+
 /** The moment the app currently has open, read from its own state.
 
     Not scraped from the page: climbing the DOM for an unlabelled card walked up to
@@ -191,8 +252,11 @@ async function open(state = {}, hash = '') {
     pageErrors.push(t.slice(0, 200));
   });
   await sealOffsite(page);
+  // Seed ONLY when storage is empty. addInitScript runs on every navigation, so an
+  // unconditional seed silently reset the app on page.reload() — which is the exact
+  // thing several checks are reloading to test.
   await page.addInitScript(s => {
-    localStorage.setItem('kampus_v1_local', JSON.stringify(s));
+    if (!localStorage.getItem('kampus_v1_local')) localStorage.setItem('kampus_v1_local', JSON.stringify(s));
   }, { grade: 7, name: 'Talia', lessonPointer: 0, kredits: 400, review: [], passed: {}, ...state });
   await page.goto(`http://localhost:${PORT}/${hash}`, { waitUntil: 'networkidle' });
   return page;
@@ -912,6 +976,115 @@ try {
         t.slice(0, 80).replace(/\n/g, ' '));
       await page.close();
     }
+  }
+
+  /* ---------- 15. Inspection Day, start to results ---------- */
+  {
+    const page = await open({ grade: 6, name: 'Talia', lessonPointer: 0, kredits: 100 }, '#quiz');
+    await page.waitForTimeout(500);
+    let t = await text(page);
+    check('Inspection Day opens on its intro, untimed and harmless to the stand',
+      /Inspection Day/i.test(t) && /No timer|Timer\nNone/i.test(t) && /hurt your business/i.test(t));
+
+    const before = await bizSnapshot(page);
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Start|Begin|ready/i.test(b.innerText))?.click());
+    await page.waitForTimeout(500);
+    const paper = await openPaper(page);
+    check('the paper assembles ten questions', paper?.n === 10, `${paper?.n} questions`);
+
+    await sitPaper(page, { score: Infinity });
+    t = await text(page);
+    check('sitting the whole paper reaches the results', /How it went/i.test(t), t.slice(0, 80).replace(/\n/g, ' '));
+    check('results speak only Solid / Shaky / Not yet',
+      /(Solid|Shaky|Not yet)/.test(t) && !/\d+%/.test(t) && !/\b[A-F][+-]?\s*grade\b/i.test(t),
+      t.match(/\d+%/)?.[0] || '');
+    check('it pays for taking it, not for getting it right', /For taking it/i.test(t) && /\$1\.00/.test(t),
+      t.match(/\$\d\.\d\d[\s\S]{0,20}For taking it/)?.[0]?.replace(/\n/g, ' ') || '');
+    check('a quiz never touches the business (§5)', (await bizSnapshot(page)) === before);
+
+    const row = await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+      const l = (s.ledger || []).filter(r => r.reason === 'quiz');
+      return { n: l.length, status: l[0]?.status, cents: l[0]?.cents };
+    });
+    check('the fee lands in the ledger as pending, for a grown-up to approve',
+      row.n === 1 && row.status === 'pending' && row.cents === 100, JSON.stringify(row));
+    check('the paper is cleared once handed in',
+      (await openPaper(page)) === null);
+    await page.close();
+  }
+
+  /* ---------- 16. the License: the pass, which writes a grade ---------- */
+  {
+    const page = await open({ grade: 6, name: 'Talia', lessonPointer: 0, kredits: 100, passed: {} }, '#test');
+    await page.waitForTimeout(500);
+    let t = await text(page);
+    check('the License opens on its intro with the two things it costs',
+      /License/i.test(t) && /20/.test(t) && /Read it only/i.test(t));
+
+    const before = await bizSnapshot(page);
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Start|Begin|ready/i.test(b.innerText))?.click());
+    await page.waitForTimeout(500);
+    const paper = await openPaper(page);
+    check('the License paper is twenty questions', paper?.n === 20, `${paper?.n}`);
+
+    // Mid-paper reload: an untimed 20-question test is exactly what a kid walks away from.
+    await page.evaluate((n) => {
+      const btns = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+      btns[n]?.click();
+    }, paper.correct[0]);
+    await page.waitForTimeout(150);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+    t = await text(page);
+    check('a reload mid-paper resumes it rather than starting over',
+      /of 20/.test(t) && !/Start|Begin/i.test(t.slice(0, 60)), t.slice(0, 70).replace(/\n/g, ' '));
+    const resumed = await openPaper(page);
+    check('her answers survive the reload', resumed?.answers.filter(a => a !== null).length >= 1,
+      `${resumed?.answers.filter(a => a !== null).length} kept`);
+
+    await sitPaper(page, { score: Infinity });
+    t = await text(page);
+    check('sitting the whole License reaches the results', /The two checks/i.test(t), t.slice(0, 80).replace(/\n/g, ' '));
+    check('both checks are shown, not a percentage', /16 needed/.test(t) && /Every cluster/.test(t) && !/\d+%/.test(t));
+
+    const after = await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+      return { grade: s.grade, passed: s.passed, districts: s.districts, pointer: s.lessonPointer };
+    });
+    check('passing the License writes the grade and opens the next one',
+      after.passed?.['6'] === true && after.grade === 7, JSON.stringify(after));
+    // The generic "advance a day" used to run on top of the promotion reset, so the
+    // first lesson of every grade from 7 up was skipped.
+    check('the new grade starts on its first day, not its second', after.pointer === 0, `pointer ${after.pointer}`);
+    check('the district is recorded', (after.districts || []).includes(6), JSON.stringify(after.districts));
+    check('the License never touches the business either (§5)', (await bizSnapshot(page)) === before);
+    await page.close();
+  }
+
+  /* ---------- 17. the License: the miss, which is a plan and not a fail ---------- */
+  {
+    const page = await open({ grade: 6, name: 'Talia', lessonPointer: 0, kredits: 100, passed: {}, review: [] }, '#test');
+    await page.waitForTimeout(500);
+    const before = await bizSnapshot(page);
+    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Start|Begin|ready/i.test(b.innerText))?.click());
+    await page.waitForTimeout(500);
+
+    await sitPaper(page, { score: 0 });               // every one wrong, on purpose
+    const t = await text(page);
+    check('missing the License is a repair plan, never a fail screen',
+      /repair|redo|again/i.test(t) && !/\bfail(ed)?\b/i.test(t) && !/\d+%/.test(t),
+      t.match(/\bfail(ed)?\b/i)?.[0] || t.slice(0, 70).replace(/\n/g, ' '));
+    check('it still pays for taking it', /For taking it/i.test(t) && /\$1\.50/.test(t));
+
+    const after = await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+      return { grade: s.grade, passed: s.passed, review: (s.review || []).length };
+    });
+    check('a miss does not move her grade', after.grade === 6 && !after.passed?.['6'], JSON.stringify(after));
+    check('the repair plan schedules real review, not a scolding', after.review > 0, `${after.review} review entries`);
+    check('a missed License still cannot touch the business (§5)', (await bizSnapshot(page)) === before);
+    await page.close();
   }
 
   check('no uncaught page errors anywhere', pageErrors.length === 0, pageErrors.slice(0, 2).join(' | '));

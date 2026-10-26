@@ -5,7 +5,7 @@ import { useState, useMemo, useRef } from 'react';
 import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
-  firstReview, review, dayNumber, problemsForSkill,
+  firstReview, review, dayNumber, problemsForSkill, unitTopic, hasGenerator,
   awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack, wishTile, storeNameOf,
   startPlacement, nextProbe, recordProbe, placementDone, placementProgress, placementResult, placementQuestion,
   weekPlan, weekHeader, comingUp, weekOffsetFor,
@@ -26,7 +26,7 @@ import { PinGate } from '@kampus/ui/pin-gate';
 import { ParentSetup, StudentFirstRun, Doorway } from '@kampus/ui/onboarding';
 import { PlacementIntro, PlacementRunner, PlacementResult } from '@kampus/ui/placement';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
-import { unitById, lessonsFor } from '@kampus/curriculum';
+import { unitById, lessonsFor, YEAR } from '@kampus/curriculum';
 import { load, save, append, DEFAULT_STUDENT_ID,
   loadFamily, saveFamily, createStudent, updateStudent } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
@@ -213,13 +213,19 @@ export function App() {
   const [screen, setScreen] = useState(() => {
     const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
     if (['lesson', 'quiz', 'test', 'rewards', 'parents', 'business', 'placement'].includes(h)) return h;
+    // A paper in progress outranks Home: she was in the middle of it.
+    const open = load(loadFamily().students[0]?.id || DEFAULT_STUDENT_ID).openPaper;
+    if (open?.kind) return open.kind;
     // A queued placement check outranks Home: a kid whose grown-up chose "find her
     // level" has not been placed yet, so Home would be showing her someone else's
     // year. Exiting the check clears the flag, so this is an offer and not a trap.
     return load(loadFamily().students[0]?.id || DEFAULT_STUDENT_ID).placementQueued ? 'placement' : 'home';
   });
   const [paper, setPaper] = useState(null);     // graded quiz / test result
-  const [papers, setPapers] = useState(null);   // the assembled question sheet
+  // The assembled question sheet. Restored from the store when one is in progress:
+  // an untimed twenty-question test is exactly the thing a kid walks away from, and
+  // a reload used to throw away every answer and drop her back at the intro.
+  const [papers, setPapers] = useState(() => load(loadFamily().students[0]?.id || DEFAULT_STUDENT_ID).openPaper?.questions || null);
   const [pinOk, setPinOk] = useState(false);    // parent gate, per session
   // Onboarding routing: 'setup' | 'firstrun' | 'doorway' | null (play as usual).
   const [gate, setGate] = useState(() => {
@@ -640,34 +646,59 @@ export function App() {
           intro={isQuiz
             ? 'Inspection Day. Ten questions on this unit, plus a few from earlier — the stand stays shut this morning. No timer, and Read it to me stays on. Nothing here can hurt your business.'
             : `${testIntroCopy(state.grade)} Pass it and you earn the Grade ${state.grade} License — the district gets built.`}
-          onStart={() => setPapers(isQuiz ? buildUnitQuizFromPlan(state) : buildGradeTest({ grade: state.grade }))} />
+          onStart={() => {
+            const sheet = isQuiz ? buildUnitQuizFromPlan(state) : buildGradeTest({ grade: state.grade });
+            // Persisted so a reload resumes rather than restarts. The sheet carries
+            // its own answerIndex, which the bundle's generators already expose —
+            // this is not a new way to find the answers, just a way not to lose work.
+            update(s => { s.openPaper = { kind: isQuiz ? 'quiz' : 'test', grade: state.grade, questions: sheet, answers: sheet.map(() => null), at: 0 }; return s; });
+            setPapers(sheet);
+          }} />
       </div>;
     }
     return <AssessmentRunner kind={isQuiz ? 'quiz' : 'test'} questions={papers}
-      onExit={() => { setPapers(null); setScreen('home'); }}
+      initialAnswers={state.openPaper?.answers} initialAt={state.openPaper?.at || 0}
+      onProgress={(answers, at) => update(s => {
+        if (s.openPaper) s.openPaper = { ...s.openPaper, answers, at };
+        return s;
+      })}
+      onExit={() => { update(s => { s.openPaper = null; return s; }); setPapers(null); setScreen('home'); }}
       onHandIn={(answers) => {
         const res = isQuiz ? gradeUnitQuiz(papers, answers) : gradeGradeTest({ grade: state.grade, questions: papers, answers });
         append(studentId, { type: isQuiz ? 'quiz_result' : 'test_result', payload: res });
         update(s => {
           s.ledger = award(s.ledger || [], { reason: isQuiz ? 'quiz' : 'test', day: dayName(), week: weekKey() }).rows;
+          let promoted = false;
           if (!isQuiz && res.passed) {
             // The License: the district is built and the next grade opens (PLAY_SYSTEM §5).
             s.passed[state.grade] = true;
             s.tests = { ...(s.tests || {}), [state.grade]: `${res.score}/${res.asked}` };
             s.districts = [...new Set([...(s.districts || []), state.grade])];
-            if (state.grade < 8) { s.grade = state.grade + 1; s.lessonPointer = 0; }
+            if (state.grade < 8) { s.grade = state.grade + 1; s.lessonPointer = 0; promoted = true; }
           }
           if (!isQuiz && !res.passed) {
-            // A repair plan is a schedule, not a punishment: its units go into review.
-            for (const u of res.repairPlan || []) {
-              const skills = (unitById(u.unitId)?.skills) || [];
+            /* A repair plan is a schedule, not a punishment: its clusters go into
+               review. This read `u.unitId`, which the engine has never put on a
+               repair row — the rows are {index, unit, world, reason} — so every miss
+               scheduled exactly nothing and the plan was decoration. The rows are
+               per CLUSTER, and a cluster is a topic, so the units to redo are her
+               grade's units in that topic. Capped per cluster: a three-cluster miss
+               should hand her a week of review, not fifty skills. */
+            const PER_CLUSTER = 4;
+            for (const row of res.repairPlan || []) {
+              const units = (YEAR[state.grade] || []).filter(u => unitTopic(u.world) === row.world);
+              const skills = units.flatMap(u => u.skills || []).filter(hasGenerator).slice(0, PER_CLUSTER);
               for (const sk of skills) if (!(s.review || []).some(r => r.skill === sk)) {
                 s.review = (s.review || []).concat(firstReview(sk, dayNumber()));
               }
             }
           }
           // A quiz or test never touches the business — §5 is an invariant, not a habit.
-          s.lessonPointer = Math.min((s.lessonPointer || 0) + 1, (currentDay(s).seq.length - 1));
+          // Advance a day, UNLESS the License just moved her to a new grade: that sets
+          // the pointer to day 0, and incrementing it again skipped the first lesson
+          // of every grade from 7 up.
+          if (!promoted) s.lessonPointer = Math.min((s.lessonPointer || 0) + 1, (currentDay(s).seq.length - 1));
+          s.openPaper = null;                 // handed in; nothing left to resume
           return s;
         });
         setPapers(null); setPaper(res);
