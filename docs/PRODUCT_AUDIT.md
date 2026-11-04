@@ -110,6 +110,23 @@ Shop screen (design exists in old handoff only — needs a §0 round before buil
 business-type picker (blocked on onboarding round, seam ready),
 campus/graduation celebration, sound & juice pass, stand build-out art.
 
+**Two features are finished in the engine and unreachable from any screen** (found
+Nov 4 by scanning engine modules for consumers — the same shape as the business
+moments, which hid four bugs until a screen finally asked for them):
+
+- **Field assignments** (`field.js`, 10 tests): `ASSIGNMENTS`, `weeklyAssignment`,
+  `buildFieldQuestion`, and the `field` pay reason the earnings ledger already
+  knows. PLAY_SYSTEM §7's "life" source — her actual day, entered by her or a
+  parent. Nothing in `apps/web` or `packages/ui` imports any of it, which is also
+  why `field_submitted` cannot be emitted.
+- **Karla's market** (`market.js`, 8 tests): `makeOffer`, `marketPosts`,
+  `settleOffer`, `valueOf` — the §4 collection loop, NPC-only and deterministic by
+  design. `marketPrices` lives in the business state and drives costs, but no offer
+  is ever made to the kid.
+
+Both need a design round before build. Neither is a bug today — nothing claims they
+exist — but both are written, tested, and paid for already.
+
 **The bank owner's list is closed** (Oct 23 patch): all six worded snags carry
 authored wrongs, and all 79 skills have authored teach steps — nothing is on the
 mechanical fallback. Verified Nov 4.
