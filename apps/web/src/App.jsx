@@ -9,7 +9,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack, wishTile, storeNameOf,
   startPlacement, nextProbe, recordProbe, placementDone, placementProgress, placementResult, placementQuestion,
   weekPlan, weekHeader, comingUp, weekOffsetFor,
-  approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk } from '@kampus/engine';
+  approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk, RATES } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { Shell } from '@kampus/ui/app';
 import { HomeStack } from '@kampus/ui/home-stack';
@@ -306,6 +306,7 @@ export function App() {
         [new Date().toISOString().slice(0, 10)]: { lessonN: (s.lessonPointer || 0) + 1, earnedCents: payload.rewardCents } };
       s.lessonPointer = Math.min((s.lessonPointer || 0) + 1, seq.length - 1);
       s.ledger = award(s.ledger || [], { reason: 'lesson', day: dayName(), week: weekKey() }).rows;
+      append(studentId, { type: 'earn', payload: { reason: 'lesson', cents: RATES.lesson } });
       return s;
     });
   };
@@ -632,6 +633,10 @@ export function App() {
         waiting: ledger.filter(r => r.status === 'held').map(r => ({ id: r.id, label: r.label, cents: Math.abs(r.cents) })),
       }}
       onEvent={(type, payload) => {
+        // Recorded, not just handled: the Rewards screen emitted these and nothing
+        // appended them, so `ask` was in the measured vocabulary and absent from
+        // every log. Emission by a component is not the same as the store keeping it.
+        append(studentId, { type, payload });
         if (type === 'ask') update(s => { s.ledger = ask(s.ledger || [], { name: payload.name, cents: payload.cents, day: dayName() }).rows; return s; });
         if (type === 'cancel') update(s => { s.ledger = cancelAsk(s.ledger || [], payload.id); return s; });
         if (type === 'save') update(s => { s.goal = { id: payload.id, name: payload.name, cents: payload.cents }; return s; });
@@ -666,6 +671,7 @@ export function App() {
             ? 'Inspection Day. Ten questions on this unit, plus a few from earlier — the stand stays shut this morning. No timer, and Read it to me stays on. Nothing here can hurt your business.'
             : `${testIntroCopy(state.grade)} Pass it and you earn the Grade ${state.grade} License — the district gets built.`}
           onStart={() => {
+            append(studentId, { type: isQuiz ? 'quiz_start' : 'test_start', payload: { grade: state.grade } });
             const sheet = isQuiz ? buildUnitQuizFromPlan(state) : buildGradeTest({ grade: state.grade });
             // Persisted so a reload resumes rather than restarts. The sheet carries
             // its own answerIndex, which the bundle's generators already expose —
@@ -687,6 +693,7 @@ export function App() {
         append(studentId, { type: isQuiz ? 'quiz_result' : 'test_result', payload: res });
         update(s => {
           s.ledger = award(s.ledger || [], { reason: isQuiz ? 'quiz' : 'test', day: dayName(), week: weekKey() }).rows;
+          append(studentId, { type: 'earn', payload: { reason: isQuiz ? 'quiz' : 'test', cents: isQuiz ? RATES.quiz : RATES.test } });
           let promoted = false;
           if (!isQuiz && res.passed) {
             // The License: the district is built and the next grade opens (PLAY_SYSTEM §5).

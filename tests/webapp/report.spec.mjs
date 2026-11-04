@@ -25,6 +25,34 @@ function recount(events, week) {
 }
 
 export default async function run(check) {
+  /* The vocabulary is checked statically in the engine, but static analysis already
+     mistook a handler for an emitter once. This plays the app and reads the log the
+     store actually wrote. */
+  {
+    const p2 = await open({ grade: 6, name: 'Talia', lessonPointer: 0, kredits: 400,
+      lessonDoneDay: new Date().toISOString().slice(0, 10) }, '#lesson');
+    await p2.waitForTimeout(600);
+    const logged = async () => p2.evaluate(() =>
+      [...new Set(JSON.parse(localStorage.getItem('kampus_v1_local_events') || '[]').map(e => e.type))]);
+
+    check('opening a lesson records that it started',
+      (await logged()).some(t => /lesson_start/.test(t)), (await logged()).join(', ').slice(0, 90));
+
+    await p2.close();
+
+    // The lesson is immersive and carries no nav, so the stand needs its own page.
+    const p3 = await open({ grade: 6, name: 'Talia', kredits: 400,
+      lessonDoneDay: new Date().toISOString().slice(0, 10) }, '#business');
+    await p3.waitForTimeout(500);
+    await clickText(p3, 'Open for the day');
+    await p3.waitForTimeout(600);
+    check('opening the stand records a stand_open carrying its day',
+      await p3.evaluate(() => JSON.parse(localStorage.getItem('kampus_v1_local_events') || '[]')
+        .some(e => e.type === 'stand_open' && !!e.day)),
+      (await p3.evaluate(() => [...new Set(JSON.parse(localStorage.getItem('kampus_v1_local_events') || '[]').map(e => e.type))].join(', '))).slice(0, 90));
+    await p3.close();
+  }
+
   const week = weekKey();
   const day = (back) => new Date(Date.now() - back * 86400000).toISOString().slice(0, 10);
 

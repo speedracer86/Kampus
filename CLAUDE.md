@@ -9,10 +9,10 @@ npm workspaces monorepo. `npm install` once at the root installs everything.
 
 ```bash
 npm install                   # root only — installs all workspaces
-npm test                      # unit tests: 428 vitest tests (engine + curriculum)
+npm test                      # unit tests: 431 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 170 checks
+npm run test:webapp           # build apps/web, serve dist/, drive it: 172 checks
 node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report)
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
@@ -30,7 +30,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 428 passing unit tests, build exits 0, 170/170 webapp checks. CI
+All must be clean: 431 passing unit tests, build exits 0, 172/172 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -182,7 +182,10 @@ untouched lines.**
   The prefix is fixed at source and `report.js` still accepts the old names, because
   saved logs carry them. **Add an event to `EVENTS` and you must also emit it** —
   several sat in the vocabulary for weeks with no emitter, which is a metric that
-  reads zero however hard a kid works.
+  reads zero however hard a kid works. `packages/engine/test/event-emitters.test.js`
+  enforces this: anything not recorded must be declared there with a reason.
+  Emitting is not recording — a component's `onEvent` only counts once a handler
+  `append`s it.
 - **The webapp specs run concurrently** against one host and one browser. They are
   independent because a Playwright page carries its own storage — so a spec must not
   assume anything another spec did, and must not reach for a fixed port or a shared

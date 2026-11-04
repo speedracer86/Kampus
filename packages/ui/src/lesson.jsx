@@ -298,6 +298,14 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
   blobDir = '/blobs/', pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
+  // Opened at all. Paired with lesson_complete, this is the only way to see how
+  // many lessons are started and not finished — it had no emitter.
+  const announced = React.useRef(false);
+  React.useEffect(() => {
+    if (announced.current) return;
+    announced.current = true;
+    onEvent('lesson_start', { unit: lesson?.unit, title: lesson?.title });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const moves = lesson.moves || [];
 
   const [at, setAt] = React.useState(0);          // move index
@@ -318,7 +326,13 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
   // A move that teaches opens with its Snag (PLAY_SYSTEM §1) before the teach panel.
   React.useEffect(() => {
     setPhase(phaseFor(move));
-    if (move?.snag) setSnagTried(false);
+    if (move?.snag) {
+      setSnagTried(false);
+      // Measured from day one (§8.8). Without it the rollup cannot tell whether
+      // opening with the problem is what pulls her into the lesson — it had no
+      // emitter at all, so that rate read as "no data" forever.
+      onEvent('snag_shown', { move: move.id });
+    }
   }, [at]);
 
   const questions = fresh && move?.fresh ? move.fresh : (move?.questions || []);

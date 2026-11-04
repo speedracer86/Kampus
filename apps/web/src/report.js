@@ -32,6 +32,9 @@ const ALIAS = {
   lesson_teach_used: EVENTS.TEACH_USED,
   lesson_reteach: EVENTS.RETEACH,
   lesson_snag_attempt: EVENTS.SNAG_ATTEMPT,
+  lesson_snag_shown: EVENTS.SNAG_SHOWN,
+  lesson_lesson_start: EVENTS.LESSON_START,
+  lesson_start: EVENTS.LESSON_START,
 };
 
 /** The day an event happened, from whatever the row actually carries. */
