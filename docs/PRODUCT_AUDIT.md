@@ -109,9 +109,11 @@ teach."** The owner's instinct was better than the test suite.
 Shop screen (design exists in old handoff only — needs a §0 round before build),
 business-type picker (blocked on onboarding round, seam ready),
 campus/graduation celebration, sound & juice pass, stand build-out
-art, pilot report rendering. Plus the bank owner's list: authored wrongs for
-sentence snags, richer teach panels for the remaining ~60 skills as interactives
-ship.
+art, pilot report rendering.
+
+**The bank owner's list is closed** (Oct 23 patch): all six worded snags carry
+authored wrongs, and all 79 skills have authored teach steps — nothing is on the
+mechanical fallback. Verified Nov 4.
 
 **Done since:** the placement diagnostic shipped (`packages/engine/src/placement.js`
 + `packages/ui/src/placement.jsx`). It replaced a route into the Grade 3 License,
