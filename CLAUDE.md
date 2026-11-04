@@ -9,11 +9,11 @@ npm workspaces monorepo. `npm install` once at the root installs everything.
 
 ```bash
 npm install                   # root only — installs all workspaces
-npm test                      # unit tests: 437 vitest tests (engine + curriculum)
+npm test                      # unit tests: 442 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 191 checks
-node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report|juice)
+npm run test:webapp           # build apps/web, serve dist/, drive it: 204 checks
+node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report|juice|voice)
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build
@@ -30,7 +30,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 437 passing unit tests, build exits 0, 191/191 webapp checks. CI
+All must be clean: 442 passing unit tests, build exits 0, 204/204 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -110,6 +110,9 @@ Two sets of invariants are enforced by tests rather than intentions, in
 | `apps/web/src/report.js` | The seam for the weekly pilot report: normalises the event log, folds it through weeklyRollup / returnRate / lessonReadiness |
 | `packages/ui/src/report.jsx` | The report a pilot family receives — parent-facing, phone-first |
 | `packages/ui/src/juice.jsx` | Sound and juice: the register, count-ups, confetti — all off under reduced motion |
+| `packages/ui/src/audio-bus.jsx` | The one owner of sound. Refuses parallel play; `isSpeaking()` is what everything else checks |
+| `packages/ui/src/say-it-show-it.jsx` | Karla's lines, highlighted and cued as she speaks |
+| `scripts/generate-voice.mjs` | Clip generation, `--dry` first. Content-addressed: a bank patch pays only for edited lines |
 | `packages/ui/src/tokens.js` | Every design token; the only legal source of color |
 | `packages/ui/src/` | Component library, at §0/§0a/§0b values |
 | `packages/ui/src/teach-layouts.jsx` | The four §0b teach-step layouts, the takeaway band, the voice row |
@@ -149,6 +152,12 @@ untouched lines.**
 
 ## Gotchas
 
+- **Audio never gates.** Nothing in the playback path touches `solved`, `canNext`
+  or Next; a kid can hit Quiet and tap through exactly as before clips existed. And
+  while Karla speaks nothing else sounds or moves — `playRegister` and `Confetti`
+  both check `isSpeaking()` first. Both laws are asserted in `tests/webapp/voice.spec.mjs`.
+- **A step's clips resolve by `voiceRef`, never by screen position.** The second
+  examples are spliced INTO the sequence, so step 4 on screen is `more0` in the bank.
 - **`.env` is gitignored and holds the ElevenLabs key** (docs/VOICE_PASS.md). Never
   print it, never commit it: a key in git history is leaked even once deleted.
 - **The teaching never waits to be asked for.** The second worked example is in

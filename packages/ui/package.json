@@ -24,7 +24,9 @@
     "./teach-layouts": "./src/teach-layouts.jsx",
     "./placement": "./src/placement.jsx",
     "./report": "./src/report.jsx",
-    "./juice": "./src/juice.jsx"
+    "./juice": "./src/juice.jsx",
+    "./audio-bus": "./src/audio-bus.jsx",
+    "./say-it-show-it": "./src/say-it-show-it.jsx"
   },
   "peerDependencies": {
     "react": ">=18"

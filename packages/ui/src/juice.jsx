@@ -18,6 +18,7 @@
 
    Zero-dependency as the package contract requires. */
 import { confetti as CONFETTI_COLORS, spring } from './tokens.js';
+import { isSpeaking } from './audio-bus.jsx';
 
 /** The device's own preference, watched live. */
 export function useReducedMotion() {
@@ -46,6 +47,10 @@ let ctx = null;
  */
 export function playRegister({ muted = false, reduced = false, volume = 0.05 } = {}) {
   if (muted || reduced) return false;
+  // The ducking law: while Karla speaks, nothing else sounds. The register is the
+  // only other sound in the product, so this one line is the whole enforcement —
+  // and it lives here, at the thing that would otherwise intrude.
+  if (isSpeaking()) return false;
   try {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
@@ -115,6 +120,10 @@ export function Confetti({ run = false, pieces = 12, reduced }) {
 
   React.useEffect(() => {
     if (!run || off) return;
+    // Nothing but the active cue moves while Karla speaks (§2). Confetti over a
+    // spoken line is exactly the competing-channel problem the voice pass exists
+    // to solve, so it waits rather than overlapping.
+    if (isSpeaking()) return;
     setOn(true);
     const t = setTimeout(() => setOn(false), 1400);
     return () => clearTimeout(t);

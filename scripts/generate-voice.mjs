@@ -29,6 +29,10 @@ const MANIFEST = path.join(OUT, 'manifest.json');
 
 const DRY = process.argv.includes('--dry');
 const FORCE = process.argv.includes('--force');
+/* Mono-ish 64 kbps is plenty for a voice and halves what a kid on a phone
+   downloads (docs/VOICE_PASS.md §1). Verified in the written files, not assumed:
+   see the bitrate check in scripts/check-voice.mjs. */
+const FORMAT = 'mp3_44100_64';
 
 /* ---- .env, read here rather than depending on a dotenv package ------------- */
 function env() {
@@ -89,13 +93,16 @@ function stale(rows, manifest) {
 }
 
 async function speak(row, { key, voice, model }) {
-  const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}`, {
+  // output_format is a QUERY parameter, not a body field. Sent in the body it is
+  // silently ignored and the account default (128 kbps) comes back instead — which
+  // is how the first run produced clips at twice the size the work order asked for.
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${voice}?output_format=${FORMAT}`;
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'xi-api-key': key, 'Content-Type': 'application/json', Accept: 'audio/mpeg' },
     body: JSON.stringify({
       text: row.say,
       model_id: model,
-      output_format: 'mp3_44100_64',
       voice_settings: { stability: 0.5, similarity_boost: 0.75 },
     }),
   });

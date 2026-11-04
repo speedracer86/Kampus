@@ -16,6 +16,7 @@ import { Question } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
 import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
 import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
+import { SayItShowIt, clipsFor } from './say-it-show-it.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -93,7 +94,8 @@ export function LessonSpine({ moves, active, progress, earned, tokensLeft, onJum
     `interactive`) still renders as it did, so panels the bank has not upgraded
     keep working. Lesson state is {stepIdx, solved[], notes[]} — notes are what
     "Write it down" appends, and they are the cheat-sheet column she keeps. */
-export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', onDone, onEvent = () => {}, phone }) {
+export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', voice, muted = false,
+  onDone, onEvent = () => {}, phone }) {
   // The second worked example is IN teach.steps, spliced in by the seam (year.js)
   // before the final Try it. It used to sit behind a "Show me another one" button;
   // owner verdict, Nov 2026: an opt-in affordance asks for exactly the executive
@@ -162,9 +164,25 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
     : null;
   const promptSize = phone ? 23 : (String(step?.prompt || '').length > 56 ? 32 : 34);
 
+  /* Say-it-show-it takes over the voice row wherever the bank has a script AND the
+     manifest has clips for this step. Everywhere else the old VoiceRow stands, so
+     an unauthored tranche degrades to exactly what shipped before.
+
+     NOTE for anyone touching this: nothing below feeds `solved`, `canNext` or Next
+     in any way. Audio never gates (docs/VOICE_PASS.md §2) and the spec asserts the
+     gating logic is identical with clips present. */
+  // Resolved from the step's own voiceRef, never from its on-screen position.
+  const sayLines = step?.speakLines;
+  const clips = step?.voiceRef && voice?.manifest
+    ? clipsFor(voice.manifest, voice.skill, step.voiceRef.kind, step.voiceRef.index, voice.base)
+    : null;
   const body = <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 20 : 32 }}>
-    {mode !== 'c' && <VoiceRow mode={mode} text={step?.speak || step?.prompt} worldColor={worldColor || color.ink}
-      quiet={quiet} onQuiet={setQuiet} speak={speak} blobDir={blobDir} phone={phone} />}
+    {sayLines?.length
+      ? <SayItShowIt lines={sayLines} clips={clips} muted={muted} phone={phone}
+          speak={speak} fallbackText={step?.speak || step?.prompt}
+          onCue={(cue, i) => onEvent('speak_line', { cue, index: i, step: at })} />
+      : mode !== 'c' && <VoiceRow mode={mode} text={step?.speak || step?.prompt} worldColor={worldColor || color.ink}
+        quiet={quiet} onQuiet={setQuiet} speak={speak} blobDir={blobDir} phone={phone} />}
     {kicker && <Kicker style={{ marginBottom: 10 }}>{kicker}</Kicker>}
     <h2 style={{ fontSize: Layout ? (mode === 'a' && !phone ? 40 : promptSize) : (phone ? 24 : 36),
       fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.2, margin: '0 0 22px' }}>{step?.prompt}</h2>
@@ -283,7 +301,8 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, p
 const phaseFor = (m) => (m?.snag ? 'snag' : (m?.teach && !m.questions) ? 'teach' : 'run');
 
 export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rewardCents = 50,
-  blobDir = '/blobs/', pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
+  blobDir = '/blobs/', voiceManifest = null, voiceBase = '/voice/', muted = false,
+  pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
   // Opened at all. Paired with lesson_complete, this is the only way to see how
@@ -456,7 +475,8 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
 
   // The grade picks the voice mode, and the world picks the companion's colour.
   if (phase === 'teach') return frame(<TeachSteps teach={move.teach} phone={phone} onEvent={onEvent}
-    grade={grade} worldColor={lesson.world?.color} blobDir={blobDir}
+    grade={grade} worldColor={lesson.world?.color} blobDir={blobDir} muted={muted}
+    voice={{ manifest: voiceManifest, base: voiceBase, skill: lesson.skill }}
     onDone={() => { onEvent('move_complete', { move: move.id }); setProgress(p => ({ ...p, [move.id]: { done: 1 } })); finishMove(); }} />);
 
   if (phase === 'reteach') return frame(<ReteachView teach={lesson.reteach} phone={phone} label="2 fresh ones →"

@@ -4,8 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "predev": "node scripts/sync-blobs.mjs",
-    "prebuild": "node scripts/sync-blobs.mjs",
+    "predev": "node scripts/sync-blobs.mjs && node scripts/sync-voice.mjs",
+    "prebuild": "node scripts/sync-blobs.mjs && node scripts/sync-voice.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"

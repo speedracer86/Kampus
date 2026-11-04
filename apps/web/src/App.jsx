@@ -34,6 +34,21 @@ import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
 const ROUND_LENGTH = 12;
 const BLOB_DIR = '/blobs/';
+const VOICE_DIR = '/voice/';
+
+/* Karla's clips, loaded once. A missing manifest is the normal state for a tranche
+   that has not been generated: every step without clips falls back to
+   speechSynthesis, which is what shipped before the voice pass. */
+function useVoiceManifest() {
+  const [manifest, setManifest] = useState(null);
+  useMemo(() => {
+    fetch(`${VOICE_DIR}manifest.json`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(setManifest)
+      .catch(() => setManifest(null));
+  }, []);
+  return manifest;
+}
 
 const tierKey = (grade, topic) => `${grade}_${topic}`;
 
@@ -241,6 +256,7 @@ export function App() {
   const [pending, setPending] = useState(null);  // the profile mid-first-run
   // The placement check: engine state machine + the question it is currently asking.
   const [placement, setPlacement] = useState(null);
+  const voiceManifest = useVoiceManifest();
   const deepLink = useRef(typeof location !== 'undefined'
     && ['lesson', 'quiz', 'test', 'rewards', 'parents', 'business', 'placement'].includes(location.hash.slice(1)));
   const [topic, setTopic] = useState(state.lastTopic);
@@ -740,6 +756,8 @@ export function App() {
         tier={state.tiers[tierKey(state.grade, topic)] || 1}
         grade={state.grade}
         blobDir={BLOB_DIR}
+        voiceManifest={voiceManifest} voiceBase={VOICE_DIR}
+        muted={state.settings?.sound === false}
         pricer={(a) => { const p = payout({ ...a, bonusPct: bonusPct(state.owned) });
           return { amount: p.total, pills: p.parts.map(label => ({ label, kind: /streak/.test(label) ? 'streak' : /first/.test(label) ? 'first' : /blitz/.test(label) ? 'blitz' : /token/.test(label) ? 'token' : 'help' })) }; }}
         onEvent={onLessonEvent}

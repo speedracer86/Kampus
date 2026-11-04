@@ -13,8 +13,16 @@ import {
     what the voice row reads today (speechSynthesis until the generated clips
     land — docs/VOICE_PASS.md), `speakLines` carries the per-line visual cues
     the say-it-show-it playback will drive. */
-const speakProps = (entry) => (entry?.lines?.length
-  ? { speak: entry.lines.map(l => l.say).join(' '), speakLines: entry.lines }
+const speakProps = (entry, kind, index) => (entry?.lines?.length
+  ? {
+    speak: entry.lines.map(l => l.say).join(' '),
+    speakLines: entry.lines,
+    // Where this step's clips live in the manifest. Carried on the step because the
+    // second examples are SPLICED INTO steps below, so a step's on-screen position
+    // no longer matches its slot in the bank — resolving clips by screen index
+    // would play the wrong lines over the right picture.
+    voiceRef: { kind, index },
+  }
   : {});
 import { problemsForSkill, dueQueue, dayNumber, hasGenerator, snagChoices, unitTopic } from '@kampus/engine';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
@@ -104,7 +112,7 @@ function teachMoves(skill) {
     id: `t${i}`,
     title: s.verb ? s.verb[0].toUpperCase() + s.verb.slice(1) : `Step ${i + 1}`,
     ...s,
-    ...speakProps(sp?.steps?.[i]),
+    ...speakProps(sp?.steps?.[i], 'steps', i),
   }));
   // Hands-on steps the bank declared, appended so neither source is lost.
   declared.forEach((s, i) => steps.push({ id: `i${i}`, title: s.do, prompt: s.do, body: s.ex,
@@ -120,7 +128,7 @@ function teachMoves(skill) {
     id: `m${i}`,
     title: s.verb ? s.verb[0].toUpperCase() + s.verb.slice(1) : `Another ${i + 1}`,
     ...s,
-    ...speakProps(sp?.more?.[i]),
+    ...speakProps(sp?.more?.[i], 'more', i),
   }));
   if (second.length && steps.length) {
     // Before the Try it wherever it sits (declared interactives can trail it);
@@ -224,6 +232,8 @@ export function buildDayLesson(state) {
   const reteachSource = teachFor(skill);
   return {
     title: day.title,
+    // The manifest is keyed by skill, so playback needs it on the lesson.
+    skill,
     unit: `${unit?.name || ''} · unit ${yearProgress(state).unit} of ${yearProgress(state).units}`,
     world,
     day,
