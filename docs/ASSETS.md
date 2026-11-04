@@ -138,3 +138,17 @@ are dropped rather than guessed at. None was referenced in code.
 
 The inventory is 78 blobs plus `Target-2`. If these three are wanted back, they need
 re-exporting from the source project with their fills intact — not patching here.
+
+## Target.svg, fixed (Nov 2026)
+
+`Target.svg` had the same defect as the three that were dropped — `class="st0"`
+references with no `<style>` block, so every shape fell back to black — and
+survived that sweep only because no screenshot taken at the time happened to show
+it. It shipped as a silhouette on the placement intro and both onboarding steps
+until the owner supplied the file with its fills.
+
+All 78 blobs are now checked by `packages/engine/test/blob-assets.test.js`: a blob
+that references a class it does not define, or carries no fill at all, fails the
+suite. `Target-2.svg` is the earlier hand-fixed copy and is referenced nowhere —
+removable, but that is an asset call for the owner.
+

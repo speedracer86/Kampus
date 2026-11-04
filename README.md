@@ -23,7 +23,7 @@ Two things live in this repo:
 
 ```bash
 npm install          # workspace install (Node 20+)
-npm test             # 431 engine + curriculum unit tests (Vitest)
+npm test             # 434 engine + curriculum unit tests (Vitest)
 npm run dev          # v2 app dev server (Vite)
 npm run build        # v2 production build
 npm run test:webapp  # build, serve dist/, drive it in a real browser (57 checks)

@@ -9,7 +9,7 @@ npm workspaces monorepo. `npm install` once at the root installs everything.
 
 ```bash
 npm install                   # root only — installs all workspaces
-npm test                      # unit tests: 431 vitest tests (engine + curriculum)
+npm test                      # unit tests: 434 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
 npm run test:webapp           # build apps/web, serve dist/, drive it: 172 checks
@@ -30,7 +30,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 431 passing unit tests, build exits 0, 172/172 webapp checks. CI
+All must be clean: 434 passing unit tests, build exits 0, 172/172 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -148,6 +148,10 @@ untouched lines.**
 
 ## Gotchas
 
+- **A blob that references an undefined class renders as a black silhouette**, with
+  nothing in the console to say so. `packages/engine/test/blob-assets.test.js` fails
+  on any blob whose `class="st0"` has no matching `<style>` rule. Four shipped that
+  way before it existed.
 - **`apps/web/public/` is generated and gitignored.** `scripts/sync-blobs.mjs` copies blobs
   from `packages/ui/blobs` on every `predev`/`prebuild`. Never hand-edit or commit it; add
   new illustrations to `packages/ui/blobs`.

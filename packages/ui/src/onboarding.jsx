@@ -272,7 +272,10 @@ export function StudentFirstRun({ profile, onDone, blobDir = '/blobs/' }) {
         <div style={{ fontSize: 48, fontWeight: 600, marginTop: 6 }}>Grade</div>
         <div style={{ ...numeral(phone ? 120 : 200) }}>{profile?.grade}</div>
       </>}
-      {placement && <Blob name="Target" size={140} dir={blobDir} />}
+      {/* Block + auto margins: the blob is an inline <img>, and left inline it sat
+          BESIDE the round Start button instead of above it. */}
+      {placement && <Blob name="Target" size={140} dir={blobDir}
+        style={{ display: 'block', margin: '0 auto' }} />}
       <button onClick={() => onDone?.({ worldId: pick })}
         style={{ ...oBase, marginTop: 24, width: 128, height: 128, borderRadius: radius.full, border: 'none',
           cursor: 'pointer', background: color.ink, color: '#fff', fontSize: 18, fontWeight: 700 }}>Start</button>
