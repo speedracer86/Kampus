@@ -9,10 +9,10 @@ npm workspaces monorepo. `npm install` once at the root installs everything.
 
 ```bash
 npm install                   # root only — installs all workspaces
-npm test                      # unit tests: 434 vitest tests (engine + curriculum)
+npm test                      # unit tests: 437 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 188 checks
+npm run test:webapp           # build apps/web, serve dist/, drive it: 191 checks
 node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report|juice)
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
@@ -30,7 +30,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 434 passing unit tests, build exits 0, 188/188 webapp checks. CI
+All must be clean: 437 passing unit tests, build exits 0, 191/191 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -149,6 +149,13 @@ untouched lines.**
 
 ## Gotchas
 
+- **`.env` is gitignored and holds the ElevenLabs key** (docs/VOICE_PASS.md). Never
+  print it, never commit it: a key in git history is leaked even once deleted.
+- **The teaching never waits to be asked for.** The second worked example is in
+  every sequence by default — it used to sit behind "Show me another one", and an
+  opt-in extra step asks for exactly the executive function an ADHD kid is short on.
+  Plan-B representations fire automatically on the re-teach, the one struggle signal
+  worth trusting.
 - **Juice is for earning and building moments only** (§8.1) — money arriving, the
   books closing, a License earned. Never on a correct answer, never on a miss, never
   idle. `prefers-reduced-motion` disables ALL of it including sound, read from the
