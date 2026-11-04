@@ -12,8 +12,8 @@ npm install                   # root only — installs all workspaces
 npm test                      # unit tests: 434 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 172 checks
-node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report)
+npm run test:webapp           # build apps/web, serve dist/, drive it: 188 checks
+node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report|juice)
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build
@@ -30,7 +30,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 434 passing unit tests, build exits 0, 172/172 webapp checks. CI
+All must be clean: 434 passing unit tests, build exits 0, 188/188 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -109,6 +109,7 @@ Two sets of invariants are enforced by tests rather than intentions, in
 | `apps/web/src/year.js` | The seam between the bank (what is taught) and the engine (the questions) |
 | `apps/web/src/report.js` | The seam for the weekly pilot report: normalises the event log, folds it through weeklyRollup / returnRate / lessonReadiness |
 | `packages/ui/src/report.jsx` | The report a pilot family receives — parent-facing, phone-first |
+| `packages/ui/src/juice.jsx` | Sound and juice: the register, count-ups, confetti — all off under reduced motion |
 | `packages/ui/src/tokens.js` | Every design token; the only legal source of color |
 | `packages/ui/src/` | Component library, at §0/§0a/§0b values |
 | `packages/ui/src/teach-layouts.jsx` | The four §0b teach-step layouts, the takeaway band, the voice row |
@@ -148,6 +149,10 @@ untouched lines.**
 
 ## Gotchas
 
+- **Juice is for earning and building moments only** (§8.1) — money arriving, the
+  books closing, a License earned. Never on a correct answer, never on a miss, never
+  idle. `prefers-reduced-motion` disables ALL of it including sound, read from the
+  device rather than from a setting; the Grown-ups toggle mutes sound alone.
 - **A blob that references an undefined class renders as a black silhouette**, with
   nothing in the console to say so. `packages/engine/test/blob-assets.test.js` fails
   on any blob whose `class="st0"` has no matching `<style>` rule. Four shipped that

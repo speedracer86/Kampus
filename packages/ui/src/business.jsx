@@ -11,6 +11,7 @@
 import { color, radius, font, numeral, money, signed } from './tokens.js';
 import { Button, Kicker, Chip, Blob } from './primitives.jsx';
 import { useWidth } from './util.jsx';
+import { CountUp, playRegister, useReducedMotion } from './juice.jsx';
 
 const bBase = { fontFamily: font.family, boxSizing: 'border-box' };
 /* Supply prices live in cents (45¢ a lemon). money() rounds to whole dollars, which
@@ -250,7 +251,17 @@ function OpenDay({ queue, counters, onServe, onServeRest, onClose, moment, onMom
 }
 
 /** Ledger: the day's money with its arithmetic showing. */
-function Ledger({ result, phone }) {
+function Ledger({ result, phone, muted = false }) {
+  // The one register sound in the product, on the one moment that earns it: the
+  // books closing. Fired once per result, never again on a re-render.
+  const reduced = useReducedMotion();
+  const rung = React.useRef(null);
+  React.useEffect(() => {
+    if (!result || rung.current === result.day) return;
+    rung.current = result.day;
+    playRegister({ muted, reduced });
+  }, [result, muted, reduced]);
+
   if (!result) return <div style={{ padding: phone ? '20px' : '24px 32px', fontSize: 16, color: color.muted }}>
     No day closed yet. Open the stand and the books fill in.</div>;
   const rows = [
@@ -264,7 +275,7 @@ function Ledger({ result, phone }) {
       <div style={{ fontSize: phone ? 26 : 34, fontWeight: 700, letterSpacing: '-.025em' }}>
         {result.profit > 0 ? 'Profit. W.' : result.profit === 0 ? 'Broke even.' : 'Lost money. Happens.'}</div>
       <div style={{ ...numeral(phone ? 48 : 72), color: result.profit >= 0 ? color.greenDeep : color.loss, marginTop: 8 }}>
-        {signed(result.profit)}</div>
+        <CountUp value={result.profit} from={0} format={signed} reduced={reduced} /></div>
     </div>
     <div style={{ borderTop: `1px solid ${color.rule}` }}>
       {rows.map(([label, v, c]) => <div key={label} style={{ display: 'flex', justifyContent: 'space-between',
@@ -295,7 +306,7 @@ function Grow({ ladder, phone }) {
  * data: {biz, unlocks, karla, estimate, stock, queue, counters, result, ladder, promos,
  *        canOpen:{ok,label,reason,tip}, nextRung, askKarla}
  */
-export function BusinessScreen({ data, blobDir = '/blobs/', onEvent = () => {} }) {
+export function BusinessScreen({ data, blobDir = '/blobs/', muted = false, onEvent = () => {} }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 900;
   const d = data || {};
@@ -358,7 +369,7 @@ export function BusinessScreen({ data, blobDir = '/blobs/', onEvent = () => {} }
               onMomentAnswer={(right) => onEvent('moment_answer', { right, skill: d.moment?.moment?.skill })}
               onMomentDone={() => onEvent('moment_done', {})}
               onClose={() => { setPhase('ledger'); onEvent('close_books', {}); }} blobDir={blobDir} phone={phone} />}
-            {phase === 'ledger' && <Ledger result={d.result} phone={phone} />}
+            {phase === 'ledger' && <Ledger result={d.result} phone={phone} muted={muted} />}
             {phase === 'grow' && <Grow ladder={d.ladder} phone={phone} />}
           </div>
         </div>

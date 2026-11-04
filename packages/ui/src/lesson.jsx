@@ -15,6 +15,7 @@ import { useWidth, speak } from './util.jsx';
 import { Question } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
 import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
+import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -253,7 +254,11 @@ export function ReteachView({ teach, onContinue, label = 'Try one →', phone })
 
 /** Done: what today paid, in Kredits and in real money. */
 export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, phone }) {
-  return <div style={{ ...lBase, display: phone ? 'block' : 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
+  // An earning moment, so: the money counts up and a calm burst lands. No sound —
+  // the one register in the product belongs to the books closing.
+  const reduced = useReducedMotion();
+  return <div style={{ ...lBase, position: 'relative', display: phone ? 'block' : 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
+    <Confetti run reduced={reduced} />
     <div>
       <Kicker style={{ marginBottom: 14 }}>Today’s lesson</Kicker>
       {moves.map(m => <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
@@ -267,7 +272,8 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, p
       <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 14 }}>
         <div style={{ background: color.fill, borderRadius: radius.lg, padding: 22 }}>
           <Kicker style={{ marginBottom: 8 }}>Kredits today</Kicker>
-          <div style={{ ...numeral(56), color: color.greenDeep }}>+${earned}</div>
+          <div style={{ ...numeral(56), color: color.greenDeep }}>
+            <CountUp value={earned} from={0} format={(v) => `+$${v}`} reduced={reduced} /></div>
         </div>
         <div style={{ background: color.fill, borderRadius: radius.lg, padding: 22 }}>
           <Kicker style={{ marginBottom: 8 }}>Real reward</Kicker>

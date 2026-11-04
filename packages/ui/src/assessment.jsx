@@ -14,6 +14,7 @@
 import { color, radius, font, numeral, dollars } from './tokens.js';
 import { Button, Kicker, Chip } from './primitives.jsx';
 import { useWidth } from './util.jsx';
+import { Confetti } from './juice.jsx';
 import { Question } from './question.jsx';
 
 const aBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -223,7 +224,10 @@ export function GradeTestResults({ grade, result, worlds = {}, onDone, onRepair 
 
       <div style={{ marginTop: phone ? 20 : 0 }}>
         {r.passed
-          ? <div style={{ background: color.ink, color: '#fff', borderRadius: 22, padding: phone ? 24 : 36 }}>
+          ? <div style={{ position: 'relative', overflow: 'hidden', background: color.ink, color: '#fff', borderRadius: 22, padding: phone ? 24 : 36 }}>
+            {/* A district built is the building moment §8.1 names. Nothing on a miss:
+                a repair plan is a schedule, and confetti over one would be nagging. */}
+            <Confetti run pieces={16} />
             <h2 style={{ fontSize: phone ? 26 : 36, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 20px' }}>
               The Grade {grade} district is built.</h2>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>

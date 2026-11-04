@@ -573,3 +573,20 @@ the page scores the kid: no percentage, no accuracy, no grade. The one health li
 The component formats and decides nothing; `apps/web/src/report.js` folds the
 figures out of `weeklyRollup` / `returnRate` / `lessonReadiness`.
 
+### Sound and juice (Nov 2026)
+
+**New: `juice.jsx`** — `playRegister`, `CountUp`, `Confetti`, `useReducedMotion`.
+
+Three placements, and no more: the register rings once when the books close, the
+money counts up on a finished lesson and a closed day, and a calm burst lands on a
+finished lesson and on a License earned. §8.1 reserves juice for earning and
+building moments — never idle, never nagging — so there is deliberately none on a
+correct answer (that is just the work) and none on a miss.
+
+`prefers-reduced-motion` disables all of it, sound included, read from the device
+so a kid who set it there never has to find a setting in here. The Grown-ups toggle
+mutes sound on its own, which is what its copy already promised.
+
+The register is synthesised with WebAudio: no audio asset in the repo, no request
+to fail, and any error swallowed — a sound effect must never take a screen down.
+

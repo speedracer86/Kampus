@@ -108,7 +108,7 @@ teach."** The owner's instinct was better than the test suite.
 
 Shop screen (design exists in old handoff only — needs a §0 round before build),
 business-type picker (blocked on onboarding round, seam ready),
-campus/graduation celebration, sound & juice pass, stand build-out art.
+campus/graduation celebration, stand build-out art.
 
 **Two features are finished in the engine and unreachable from any screen** (found
 Nov 4 by scanning engine modules for consumers — the same shape as the business
@@ -139,3 +139,5 @@ none of which the setup screen promised.
 **Done since:** business moments are asked by the open-day queue (`MomentCard`).
 
 **Done since:** the weekly pilot report renders in Grown-ups (`apps/web/src/report.js` + `packages/ui/src/report.jsx`).
+
+**Done since:** the sound & juice pass (`packages/ui/src/juice.jsx`).

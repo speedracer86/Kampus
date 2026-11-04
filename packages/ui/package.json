@@ -23,7 +23,8 @@
     "./onboarding": "./src/onboarding.jsx",
     "./teach-layouts": "./src/teach-layouts.jsx",
     "./placement": "./src/placement.jsx",
-    "./report": "./src/report.jsx"
+    "./report": "./src/report.jsx",
+    "./juice": "./src/juice.jsx"
   },
   "peerDependencies": {
     "react": ">=18"
