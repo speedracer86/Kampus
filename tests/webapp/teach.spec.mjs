@@ -45,9 +45,11 @@ export default async function run(check) {
     // Grades 7–8 are voice band c: the pill, never the auto-reading companion.
     check('grades 7–8 keep the quiet "Read it to me" pill', t.includes('Read it to me') && !/Reading it to you/.test(t));
 
-    /* Teach depth: on the FINAL step, "Show me another one" splices in the second
-       worked example before the Try it. Thin lessons were the family's verdict;
-       this is the affordance that answers it, so it is checked in the bundle. */
+    /* Teach depth, IN the flow: the second worked example is a default step
+       before the Try it, not an opt-in. Owner verdict, Nov 2026 — a "Show me
+       another one" button asks for exactly the executive function an ADHD kid
+       is short on, so the kid who needed it most never tapped it. The sequence
+       itself teaches twice; no button exists. */
     const tapWalk = async () => {
       for (let i = 0; i < 8; i++) {
         const tapped = await page.evaluate(() => {
@@ -58,24 +60,20 @@ export default async function run(check) {
         await page.waitForTimeout(90);
       }
     };
+    check('no opt-in "Show me another one" button exists', !t.includes('Show me another one'));
     await clickText(page, 'Next');
     await page.waitForTimeout(300);
     t = await text(page);
-    check('the final step offers "Show me another one"', t.includes('Show me another one'), t.slice(0, 90).replace(/\n/g, ' '));
-    const before = t;
-    await clickText(page, 'Show me another one');
-    await page.waitForTimeout(300);
-    t = await text(page);
-    check('another one is ANOTHER one: a fresh example she has not seen',
-      !t.includes('Show me another one') && t !== before && /step \d+ of 3/i.test(t),
-      t.match(/step \d+ of \d+/i)?.[0] || t.slice(0, 90).replace(/\n/g, ' '));
+    check('the second worked example arrives by default, before the Try it',
+      /STEP 2 OF 3/i.test(t) && /AGAIN/i.test(t),
+      t.match(/step \d+ of \d+[^\n]*/i)?.[0] || t.slice(0, 90).replace(/\n/g, ' '));
     await tapWalk();
     await clickText(page, 'Next');
     await page.waitForTimeout(300);
     await tapWalk();
     t = await text(page);
-    check('the Try it still gates the mission after the extra example',
-      t.includes('Start the mission'), t.slice(0, 90).replace(/\n/g, ' '));
+    check('the Try it stays last and still gates the mission',
+      /STEP 3 OF 3/i.test(t) && t.includes('Start the mission'), t.slice(0, 90).replace(/\n/g, ' '));
     await page.close();
   }
 
@@ -151,12 +149,10 @@ export default async function run(check) {
     check(`${skill}: the teach phase is reachable`, arrived, `grade ${grade}`);
     if (!arrived) { await page.close(); continue; }
 
+    // The second example is a default step now (no opt-in button), so the computed
+    // sequence already carries it — the walk below exercises the whole thing.
     let steps = [...teach.steps];
-    const more = teach.more || [];
-    let expanded = false;
     let ok = true, note = '';
-    // A step she already solved stays solved when she comes back to it after asking
-    // for another example, so Next is correctly live on a repeat visit.
     const firstVisit = new Set();
 
     for (let i = 0; i < steps.length && ok; i++) {
@@ -189,19 +185,6 @@ export default async function run(check) {
         break;
       }
 
-      // One expansion per sequence, taken on the last step: the extra example goes
-      // in BEFORE the Try it, so the unpaid check stays last.
-      if (i === steps.length - 1 && more.length && !expanded) {
-        await clickText(page, 'Show me another one');
-        await page.waitForTimeout(250);
-        expanded = true;
-        steps = [...steps.slice(0, -1), ...more, steps[steps.length - 1]];
-        // The view does NOT advance: `at` stays put and the first extra step takes
-        // that index, so the same i must be re-processed against the new sequence.
-        i -= 1;
-        continue;
-      }
-
       await page.evaluate(() => {
         const b = [...document.querySelectorAll('button')].find(x => /^(Next|Start the mission)/.test(x.innerText.trim()));
         if (b && !b.disabled) b.click();
@@ -211,8 +194,12 @@ export default async function run(check) {
 
     check(`${skill}: every step solves and releases Next`, ok, note);
     if (ok) {
-      check(`${skill}: the expansion ran and the Try it stayed last`, expanded === (more.length > 0),
-        `more=${more.length}, expanded=${expanded}`);
+      // The depth pass is default-on: a second-example step (seam id m*) sits in
+      // the sequence before the Try it, with no button between the kid and it.
+      const mi = steps.findIndex(s => /^m/.test(s.id || ''));
+      const ti = steps.findIndex(s => s.tryIt);
+      check(`${skill}: the second example is in the default sequence, before the Try it`,
+        mi >= 0 && (ti < 0 || mi < ti), `m at ${mi}, tryIt at ${ti}`);
       // The sequence is over. "Not on a step" is NOT enough — a blank screen
       // satisfies that, and a blank screen is exactly what this used to produce:
       // finishing the teach phase unmounted the whole app. Assert the lesson is

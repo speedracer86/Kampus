@@ -114,4 +114,38 @@ export default async function run(check) {
     check('fallback tiles still say what the thing is', glyphs >= 2, `${glyphs} glyphs`);
     await page.close();
   }
+
+  /* ---------- 7. Teach me is a reveal, not a wall — and never shows raw markup ----
+     The owner's play-test found literal "<b>18</b>" on screen: 106 engine teach
+     strings carry v1-era <b> markup that the legacy renderer ate via innerHTML and
+     React printed as text. The panel also dumped every line at once — prose at the
+     exact moment an overloaded kid asked for help. Now the lines tap in one at a
+     time and the markup renders as emphasis. */
+  {
+    const page = await open({ grade: 3 }, '#lesson');
+    await page.waitForTimeout(600);
+    await clickText(page, 'Teach me');
+    await page.waitForTimeout(200);
+    // The token gate may ask first; either button lands in the panel.
+    if (/Use a token|Teach me anyway/.test(await text(page))) {
+      await clickText(page, 'Use a token') || await clickText(page, 'Teach me anyway');
+      await page.waitForTimeout(200);
+    }
+    let t = await text(page);
+    check('Teach me opens', /TEACH ME/i.test(t), t.slice(0, 80).replace(/\n/g, ' '));
+    check('no raw <b> markup anywhere on the lesson screen', !t.includes('<b>') && !t.includes('</b>'));
+    const counter = t.match(/Tap for the next line · (\d+) of (\d+)/);
+    if (counter) {
+      await clickText(page, 'Tap for the next line');
+      await page.waitForTimeout(150);
+      t = await text(page);
+      const after = t.match(/Tap for the next line · (\d+) of (\d+)/);
+      check('teach lines reveal one tap at a time',
+        after ? Number(after[1]) === Number(counter[1]) + 1 : Number(counter[2]) === Number(counter[1]) + 1,
+        `${counter[1]} of ${counter[2]} → ${after ? after[1] : 'all shown'}`);
+    } else {
+      check('teach panel rendered its content (single line, no reveal needed)', /TEACH ME/i.test(t));
+    }
+    await page.close();
+  }
 }

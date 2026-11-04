@@ -94,18 +94,18 @@ export function LessonSpine({ moves, active, progress, earned, tokensLeft, onJum
     keep working. Lesson state is {stepIdx, solved[], notes[]} — notes are what
     "Write it down" appends, and they are the cheat-sheet column she keeps. */
 export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', onDone, onEvent = () => {}, phone }) {
-  // The steps are state because "Show me another one" grows them: the second worked
-  // example (and the plan-B representation, for the wall skills) splices in before
-  // the final Try it, so the extra teaching never skips the unpaid check at the end.
-  const [steps, setSteps] = React.useState(() => teach?.steps || []);
+  // The second worked example is IN teach.steps, spliced in by the seam (year.js)
+  // before the final Try it. It used to sit behind a "Show me another one" button;
+  // owner verdict, Nov 2026: an opt-in affordance asks for exactly the executive
+  // function an ADHD kid is short on, so the kid who needs it most never taps it.
+  // The full teaching is the default; nothing here is gated on asking.
   // Never dereference a missing teach: the phase/move mismatch above is fixed at
   // source, but rendering nothing beats taking the application down with it.
-  const more = teach?.more || [];
-  const [expanded, setExpanded] = React.useState(false);
+  const steps = teach?.steps || [];
   const [at, setAt] = React.useState(0);
   // A step with nothing to solve is solved on arrival; a layout or an interactive
   // has to be done. Next reads this array and nothing else.
-  const [solved, setSolved] = React.useState(() => (teach.steps || []).map(s => !s.interactive && !s.layout));
+  const [solved, setSolved] = React.useState(() => steps.map(s => !s.interactive && !s.layout));
   const [notes, setNotes] = React.useState([]);
   const [fresh, setFresh] = React.useState(null);     // the note highlighted for one beat
   const [quiet, setQuiet] = React.useState(false);
@@ -116,18 +116,6 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   const Interactive = step?.interactive ? INTERACTIVES[step.interactive] : null;
   const Layout = step?.layout ? TEACH_LAYOUTS[step.layout] : null;
   const mode = voiceMode(grade);
-
-  // Splice the extra example(s) in before the final Try it. `at` sits on the last
-  // step when this is offered, and the first extra step takes that index, so the
-  // view moves straight onto the fresh example; the Try it stays last and still
-  // gates the mission.
-  const showAnother = () => {
-    if (expanded || !more.length) return;
-    setExpanded(true);
-    setSteps(s => [...s.slice(0, -1), ...more, s[s.length - 1]]);
-    setSolved(sv => [...sv.slice(0, -1), ...more.map(m => !m.interactive && !m.layout), sv[sv.length - 1]]);
-    onEvent('teach_more', { count: more.length });
-  };
 
   const writeNote = () => {
     const note = step?.takeaway;
@@ -182,10 +170,9 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
       fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.2, margin: '0 0 22px' }}>{step?.prompt}</h2>
     {/* Keyed by step identity, not left to React's reconciler: two walks in a row
         are the same component type, and an un-keyed layout keeps the previous
-        step's reveal state — the next walk arrives pre-revealed and self-solved
-        (or, spliced in by "Show me another one", pre-revealed and UNSOLVABLE,
-        since its reveal effect never fires). The key makes every step start
-        un-revealed and earn its own solve. */}
+        step's reveal state — the next walk arrives pre-revealed and self-solved,
+        or pre-revealed and UNSOLVABLE, since its reveal effect never re-fires.
+        The key makes every step start un-revealed and earn its own solve. */}
     {Layout && <Layout key={step.id ?? at} step={step} solved={solved[at]} phone={phone}
       onSolve={(ok) => { setSolvedAt(at, ok); if (ok) onEvent('teach_solved', { index: at, layout: step.layout }); }} />}
     {Interactive && <Interactive key={step.id ?? at} {...(step.config || {})} onSolve={(ok) => setSolvedAt(at, ok)} />}
@@ -195,16 +182,11 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
       onWrite={writeNote} phone={phone} />}
     <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 28, paddingTop: 20, borderTop: `1px solid ${color.rule}` }}>
       <Button variant="outline" size="sm" disabled={at === 0} onClick={() => setAt(a => Math.max(0, a - 1))}>Back</Button>
-      <span style={{ display: 'flex', gap: 10 }}>
-        {/* Offered on the final step, before or after she tries it — never forced. */}
-        {at === steps.length - 1 && !expanded && !!more.length &&
-          <Button variant="outline" size="sm" onClick={showAnother}>Show me another one</Button>}
-        <Button variant="ink" size="sm" disabled={!canNext} onClick={() => {
-          onEvent('teach_step', { index: at, id: step?.id });
-          if (at + 1 < steps.length) return setAt(at + 1);
-          onDone();
-        }}>{at + 1 < steps.length ? 'Next' : 'Start the mission →'}</Button>
-      </span>
+      <Button variant="ink" size="sm" disabled={!canNext} onClick={() => {
+        onEvent('teach_step', { index: at, id: step?.id });
+        if (at + 1 < steps.length) return setAt(at + 1);
+        onDone();
+      }}>{at + 1 < steps.length ? 'Next' : 'Start the mission →'}</Button>
     </div>
   </div>;
 

@@ -52,6 +52,35 @@ function HelpGrid({ ids, open, onPick, tokensLeft, teachFree, phone }) {
   </div>;
 }
 
+/** Legacy teach strings carry <b> markup from the v1 renderer, which set them via
+    innerHTML; React shows the tags as text. Bold the marked spans, drop any other
+    angle-bracketed stray. */
+function rich(s) {
+  return String(s ?? '').split(/<b>(.*?)<\/b>/g).map((part, i) =>
+    i % 2
+      ? <strong key={i} style={{ fontWeight: 800 }}>{part}</strong>
+      : part.replace(/<[^>]+>/g, ''));
+}
+
+/** Teach me, one beat at a time. A wall of numbered prose is the wrong thing to
+    hand an overloaded kid (owner verdict, Nov 2026): each line arrives on its own
+    tap — the same move as the walk layout — so reading happens at her pace, and
+    the line that lands the answer arrives last instead of being skimmed past. */
+function TeachReveal({ steps = [], phone }) {
+  const [shown, setShown] = React.useState(1);
+  return <div>
+    {steps.slice(0, shown).map((s, i) => <div key={i} style={{ fontSize: phone ? 16 : 17, lineHeight: 1.5,
+      padding: '10px 0', borderBottom: i < steps.length - 1 ? `1px solid ${color.rule}` : 'none',
+      color: i === steps.length - 1 ? color.greenDeep : color.ink,
+      fontWeight: i === steps.length - 1 ? 600 : 400 }}>{rich(s)}</div>)}
+    {shown < steps.length && <button onClick={() => setShown(n => n + 1)} style={{ ...qBase, display: 'block',
+      width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', height: 48,
+      borderRadius: radius.lg, background: color.track, color: color.muted,
+      fontSize: 14, fontWeight: 600, padding: '0 16px', marginTop: 10 }}>
+      Tap for the next line · {shown} of {steps.length}</button>}
+  </div>;
+}
+
 /** Whatever help the kid opened, in a box under the grid. Teach shows the token gate first. */
 function HelpBox({ open, question, teachConfirm, tokensLeft, teachFree, onTeachConfirm, phone }) {
   if (!open) return null;
@@ -76,9 +105,8 @@ function HelpBox({ open, question, teachConfirm, tokensLeft, teachFree, onTeachC
   return <div style={box}>
     <Kicker style={{ marginBottom: 8 }}>{HELP_LABEL[open]}</Kicker>
     {open === 'teach'
-      ? <ol style={{ margin: 0, paddingLeft: 20, fontSize: 16, lineHeight: 1.6 }}>
-        {(question.teachSteps || []).map((s, i) => <li key={i} style={{ marginBottom: 6 }}>{s}</li>)}</ol>
-      : <div style={{ fontSize: 16, lineHeight: 1.5 }}>{body}</div>}
+      ? <TeachReveal key={question.text} steps={question.teachSteps || []} phone={phone} />
+      : <div style={{ fontSize: 16, lineHeight: 1.5 }}>{rich(body)}</div>}
   </div>;
 }
 

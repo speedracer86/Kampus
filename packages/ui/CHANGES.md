@@ -573,20 +573,32 @@ the page scores the kid: no percentage, no accuracy, no grade. The one health li
 The component formats and decides nothing; `apps/web/src/report.js` folds the
 figures out of `weeklyRollup` / `returnRate` / `lessonReadiness`.
 
-### Sound and juice (Nov 2026)
 
-**New: `juice.jsx`** — `playRegister`, `CountUp`, `Confetti`, `useReducedMotion`.
+## Teach me: reveal, not prose — and the markup leak (Nov 2026)
 
-Three placements, and no more: the register rings once when the books close, the
-money counts up on a finished lesson and a closed day, and a calm burst lands on a
-finished lesson and on a License earned. §8.1 reserves juice for earning and
-building moments — never idle, never nagging — so there is deliberately none on a
-correct answer (that is just the work) and none on a miss.
+The owner's play-test found two things on the warm-up help panel. Literal
+`<b>18</b>` on screen: 106 engine teach strings carry v1-era `<b>` markup that
+the legacy app rendered via innerHTML and React printed as text — `rich()` in
+`question.jsx` now renders the marked spans as emphasis and drops any other
+stray tag. And the panel itself dumped every teach line at once, a numbered
+wall of prose at the exact moment an overloaded kid asked for help.
+`TeachReveal` replaces the `<ol>`: lines arrive one tap at a time, the same
+move as the walk layout, with the answer-carrying last line emphasised in
+green. Keyed by question so a new question starts the reveal over.
 
-`prefers-reduced-motion` disables all of it, sound included, read from the device
-so a kid who set it there never has to find a setting in here. The Grown-ups toggle
-mutes sound on its own, which is what its copy already promised.
+## The second example is the default, not an option (Nov 2026)
 
-The register is synthesised with WebAudio: no audio asset in the repo, no request
-to fail, and any error swallowed — a sound effect must never take a screen down.
+Owner verdict on the "Show me another one" button: an opt-in affordance asks
+for exactly the executive function an ADHD kid is short on — recognising she
+needs more and requesting it — so the kid who needed the second example most
+was the least likely to tap it. Decided: the system decides, not the kid.
 
+- The second worked example now sits IN the teach sequence by default, spliced
+  in by the seam (year.js) before the Try it. No button; `TeachSteps` is static
+  again.
+- The plan-B representation fires automatically on the one struggle signal we
+  trust — the re-teach after a missed prove-it shows it (`Another way to see
+  it`) instead of re-showing the second example the kid has now already seen.
+  Skills without a plan B re-show the second example; the original panel stays
+  the last fallback.
+- `teach_more` is no longer emitted (nothing is opt-in to measure).

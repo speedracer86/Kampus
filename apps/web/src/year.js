@@ -6,8 +6,16 @@
    panel here comes from packages/curriculum verbatim. */
 import {
   lessonsFor, unitById, unitSpan, yearShape, snagFor, teachFor, teachStepsFor, quizSkills, YEAR,
-  moreStepsFor, SECOND_EXAMPLES,
+  SECOND_EXAMPLES, PLAN_B, speakFor,
 } from '@kampus/curriculum';
+
+/** Karla's speak script for one step, where the bank has authored it: `speak` is
+    what the voice row reads today (speechSynthesis until the generated clips
+    land — docs/VOICE_PASS.md), `speakLines` carries the per-line visual cues
+    the say-it-show-it playback will drive. */
+const speakProps = (entry) => (entry?.lines?.length
+  ? { speak: entry.lines.map(l => l.say).join(' '), speakLines: entry.lines }
+  : {});
 import { problemsForSkill, dueQueue, dayNumber, hasGenerator, snagChoices, unitTopic } from '@kampus/engine';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
@@ -91,23 +99,37 @@ function teachMoves(skill) {
   const t = teachFor(skill);
   if (!t) return null;
   const declared = (t.steps || []).filter(s => s.interactive);
+  const sp = speakFor(skill);
   const steps = (teachStepsFor(skill) || []).map((s, i) => ({
     id: `t${i}`,
     title: s.verb ? s.verb[0].toUpperCase() + s.verb.slice(1) : `Step ${i + 1}`,
     ...s,
+    ...speakProps(sp?.steps?.[i]),
   }));
   // Hands-on steps the bank declared, appended so neither source is lost.
   declared.forEach((s, i) => steps.push({ id: `i${i}`, title: s.do, prompt: s.do, body: s.ex,
     takeaway: s.ex, interactive: s.interactive, config: s.config }));
-  // The depth pass: a second worked example (plus a plan-B representation for the
-  // wall skills), offered behind "Show me another one" — never forced on a kid who
-  // got it the first time.
-  const more = (moreStepsFor(skill) || []).map((s, i) => ({
+  // The depth pass, in the sequence by DEFAULT: the second worked example splices
+  // in before the final Try it. It used to sit behind a "Show me another one"
+  // button; owner verdict, Nov 2026 — an opt-in extra step asks for exactly the
+  // executive function an ADHD kid is short on, so the kid who needed it most
+  // never tapped it. Teaching twice is the product, not an option. The plan-B
+  // representation stays out of the default flow and arrives on the one struggle
+  // signal we trust: the re-teach after a missed prove-it (below).
+  const second = (SECOND_EXAMPLES[skill] || []).map((s, i) => ({
     id: `m${i}`,
     title: s.verb ? s.verb[0].toUpperCase() + s.verb.slice(1) : `Another ${i + 1}`,
     ...s,
+    ...speakProps(sp?.more?.[i]),
   }));
-  return steps.length ? { steps, more } : null;
+  if (second.length && steps.length) {
+    // Before the Try it wherever it sits (declared interactives can trail it);
+    // appended if a sequence somehow has none.
+    const ti = steps.findIndex(s => s.tryIt);
+    if (ti >= 0) steps.splice(ti, 0, ...second);
+    else steps.push(...second);
+  }
+  return steps.length ? { steps } : null;
 }
 
 /** ReteachView rows from a TeachStep — the SECOND example, so the re-teach after a
@@ -190,11 +212,15 @@ export function buildDayLesson(state) {
     questions: draw(skill || mixPool[0], tier, 3, ctx),
     fresh: draw(skill || mixPool[0], tier, 2, ctx) });
 
-  // The re-teach after a missed prove-it shows the SECOND worked example — fresh
-  // numbers, same strategy — rather than replaying the panel that didn't land
-  // (owner directive: teach more than once). The old panel stays as the fallback
-  // for any skill without a second example.
-  const second = (SECOND_EXAMPLES[skill] || [])[0];
+  // The re-teach after a missed prove-it. The second example now runs in the main
+  // teach flow, so replaying it here would repeat what she just saw — the wall
+  // skills switch to their plan-B REPRESENTATION instead (the bar when symbols
+  // failed, money when the bar did), picked automatically on this struggle signal
+  // rather than behind a button (owner: no opt-in steps for an ADHD kid). Skills
+  // without a plan B re-show the second example — fresh numbers still beat a
+  // replay of the original panel, which stays as the last fallback.
+  const planB = (PLAN_B[skill] || [])[0];
+  const second = planB || (SECOND_EXAMPLES[skill] || [])[0];
   const reteachSource = teachFor(skill);
   return {
     title: day.title,
@@ -203,7 +229,7 @@ export function buildDayLesson(state) {
     day,
     moves: moves.filter(m => (m.questions?.length || m.teach)),
     reteach: second ? {
-      kicker: 'Same idea, new numbers',
+      kicker: planB ? 'Another way to see it' : 'Same idea, new numbers',
       title: second.prompt,
       lede: second.hint || unit?.focus || '',
       rows: reteachRowsFrom(second),

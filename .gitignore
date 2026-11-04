@@ -7,3 +7,9 @@ illos/
 apps/web/public/
 CLAUDE.local.md
 design-incoming/
+
+# Secrets. The ElevenLabs key for the voice pass lives in .env (docs/VOICE_PASS.md).
+# Never commit it: a key in git history is leaked even after it is deleted.
+.env
+.env.*
+!.env.example

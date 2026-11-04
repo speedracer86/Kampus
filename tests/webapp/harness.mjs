@@ -261,7 +261,7 @@ export async function answerMoment(page, { right = false } = {}) {
    answer out of the DOM would pass against a screen showing the wrong one. */
 
 /** The chrome around a step; everything else inside the sheet belongs to the layout. */
-export const CHROME = ['Back', 'Next', 'Start the mission →', 'Show me another one', 'Write it down',
+export const CHROME = ['Back', 'Next', 'Start the mission →', 'Write it down',
   'Read it to me', 'Again', 'Slower', 'Quiet', 'Unmute', 'Exit', 'Written ✓'];
 
 /** The layout's own controls, in document order, scoped to the step sheet. */
