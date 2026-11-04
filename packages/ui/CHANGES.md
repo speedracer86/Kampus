@@ -557,3 +557,19 @@ approves it behind the PIN, the weekly cap binds at APPROVAL (an over-cap row re
 reversible, "Approve all" stops cleanly at the cap, and the receipt counts only
 what was okayed.
 
+### The weekly pilot report (Nov 2026)
+
+**New: `report.jsx`** — the artifact a pilot family receives, rendered in Grown-ups
+under "This week". Parent-facing, one column, big figures, readable on a phone and
+croppable to the card for sharing.
+
+The ADHD laws decided most of the design, because a weekly summary to a parent is
+the likeliest place for a streak or a deficit to creep in. Show-up days are a count
+with **no denominator** — "3 out of 7" on a Wednesday is four days missed, stated
+as arithmetic. A quiet week says where she is and that nothing was lost. Nothing on
+the page scores the kid: no percentage, no accuracy, no grade. The one health line
+("we're restocking a lesson") is worded so it can only read as a fault of ours.
+
+The component formats and decides nothing; `apps/web/src/report.js` folds the
+figures out of `weeklyRollup` / `returnRate` / `lessonReadiness`.
+

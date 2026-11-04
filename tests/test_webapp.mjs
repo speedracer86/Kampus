@@ -17,7 +17,7 @@
    Usage: npm run test:webapp     (PW_CHROME points at an existing Chromium) */
 import { start, stop, createCheck, pageErrors } from './webapp/harness.mjs';
 
-const SPECS = ['core', 'business', 'onboarding', 'teach', 'money'];
+const SPECS = ['core', 'business', 'onboarding', 'teach', 'money', 'report'];
 
 /** Run only the specs named on the command line, or all of them. */
 const only = process.argv.slice(2).filter(a => !a.startsWith('-'));

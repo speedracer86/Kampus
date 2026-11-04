@@ -26,8 +26,9 @@ import { PinGate } from '@kampus/ui/pin-gate';
 import { ParentSetup, StudentFirstRun, Doorway } from '@kampus/ui/onboarding';
 import { PlacementIntro, PlacementRunner, PlacementResult } from '@kampus/ui/placement';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
+import { pilotReport } from './report.js';
 import { unitById, lessonsFor, YEAR } from '@kampus/curriculum';
-import { load, save, append, DEFAULT_STUDENT_ID,
+import { load, save, append, events as storedEvents, DEFAULT_STUDENT_ID,
   loadFamily, saveFamily, createStudent, updateStudent } from './store.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
@@ -284,7 +285,12 @@ export function App() {
     [state.grade, state.lessonPointer, state.tiers[tierKey(state.grade, topic)], roundNonce]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onLessonEvent = (type, payload) => {
-    append(studentId, { type: `lesson_${type}`, payload });
+    // Prefix only when the event does not already name the lesson: the runner emits
+    // both `answer` (which wants the prefix, to tell it from a quiz answer) and
+    // `lesson_complete` (which does not). Prefixing blindly recorded
+    // `lesson_lesson_complete`, which is not in the metrics vocabulary, so the
+    // pilot report counted zero lessons for a kid who had finished every one.
+    append(studentId, { type: type.startsWith('lesson_') ? type : `lesson_${type}`, payload });
     if (type === 'answer' && payload.right) update(s => { s.kredits += payload.gain; s.week.earned += payload.gain; return s; });
     if (type === 'lesson_complete') update(s => {
       s.lessonDoneDay = new Date().toISOString().slice(0, 10);
@@ -478,6 +484,9 @@ export function App() {
             s.dayServable = servable;
             s.dayCounters = { served: 0, missed: 0, left: servable };
             s.dayMomentAt = -1;
+            // Measured from day one (PLAY_SYSTEM §8.8): the rollup asks whether the
+            // stand is a daily habit, and could not answer without this.
+            append(studentId, { type: 'stand_open', day: bizToday(), payload: { queue: queue.length } });
             return s;
           });
           if (type === 'serve_next' || type === 'serve_rest') update(s => {
@@ -534,6 +543,7 @@ export function App() {
             const biz = { ...ensureBiz(s), gates: gatesFor(s) };
             const { biz: after, result } = openDay(biz, s.dayQueue || [], bizToday());
             s.biz = closeDay(after, result, bizToday());
+            append(studentId, { type: 'day_closed', day: bizToday(), payload: { profit: result.profit, served: result.served } });
             s.kredits = Math.round(((s.kredits || 0) + (result.revenue || 0)) * 100) / 100;
             s.dayQueue = [];
             s.dayCounters = { served: result.served, missed: result.missed, left: 0 };
@@ -563,7 +573,11 @@ export function App() {
     const cap = state.settings?.cap ?? DEFAULT_CAP_CENTS;
     const setS = (k, v) => update(s => { s.settings = { ...(s.settings || {}), [k]: v }; return s; });
     return <Shell {...shellProps('parents')}><GrownUps
+      blobDir={BLOB_DIR}
       data={{
+        // The weekly artifact a pilot family receives. Folded in report.js out of
+        // weeklyRollup / returnRate / lessonReadiness — this screen formats only.
+        report: pilotReport(state, storedEvents(studentId), { week: weekKey() }),
         kid: { name: state.name || 'Your kid', grade: state.grade, day: Object.keys(state.days || {}).length, daysPlayed: Object.keys(state.days || {}).length },
         // Waiting first, then recently decided — §0 keeps closed rows visible with an Undo.
         pending: [
@@ -583,7 +597,12 @@ export function App() {
         ],
       }}
       onEvent={(type, payload) => {
-        if (type === 'approve_earning') update(s => { s.ledger = approveEarning(s.ledger, payload.id, { week: weekKey(), cap }).rows; return s; });
+        if (type === 'approve_earning') update(s => {
+          const before = s.ledger;
+          s.ledger = approveEarning(s.ledger, payload.id, { week: weekKey(), cap }).rows;
+          if (s.ledger !== before) append(studentId, { type: 'approve', payload: { cents: payload.cents, reason: payload.reason } });
+          return s;
+        });
         if (type === 'hold_earning') update(s => { s.ledger = deferEarning(s.ledger, payload.id); return s; });
         if (type === 'undo_earning') update(s => { s.ledger = undoEarning(s.ledger, payload.id); return s; });
         if (type === 'approve_all') update(s => { s.ledger = approveAllEarned(s.ledger, { week: weekKey(), cap }).rows; return s; });

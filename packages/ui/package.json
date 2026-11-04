@@ -22,7 +22,8 @@
     "./pin-pad": "./src/pin-pad.jsx",
     "./onboarding": "./src/onboarding.jsx",
     "./teach-layouts": "./src/teach-layouts.jsx",
-    "./placement": "./src/placement.jsx"
+    "./placement": "./src/placement.jsx",
+    "./report": "./src/report.jsx"
   },
   "peerDependencies": {
     "react": ">=18"

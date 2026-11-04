@@ -12,8 +12,8 @@ npm install                   # root only — installs all workspaces
 npm test                      # unit tests: 428 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 149 checks
-node tests/test_webapp.mjs teach    # one spec only (core|business|onboarding|teach|money)
+npm run test:webapp           # build apps/web, serve dist/, drive it: 170 checks
+node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report)
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build
@@ -30,7 +30,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 428 passing unit tests, build exits 0, 149/149 webapp checks. CI
+All must be clean: 428 passing unit tests, build exits 0, 170/170 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -107,6 +107,8 @@ Two sets of invariants are enforced by tests rather than intentions, in
 | `packages/engine/src/` | All pure: generators, adaptive tiers, economy, assessment, earnings, review, business, seasons, market, field assignments, metrics |
 | `packages/curriculum/src/` | The authored bank — 45 units, 128-day sequences, Snags, teach panels. Owner-reviewed: verify, never re-author |
 | `apps/web/src/year.js` | The seam between the bank (what is taught) and the engine (the questions) |
+| `apps/web/src/report.js` | The seam for the weekly pilot report: normalises the event log, folds it through weeklyRollup / returnRate / lessonReadiness |
+| `packages/ui/src/report.jsx` | The report a pilot family receives — parent-facing, phone-first |
 | `packages/ui/src/tokens.js` | Every design token; the only legal source of color |
 | `packages/ui/src/` | Component library, at §0/§0a/§0b values |
 | `packages/ui/src/teach-layouts.jsx` | The four §0b teach-step layouts, the takeaway band, the voice row |
@@ -174,6 +176,13 @@ untouched lines.**
 - **Topic codes are not display names.** Internally: `frac`, `ratio`, `int`, `alg`.
 - **Two different test runners.** Vitest for the packages, a plain Node + Playwright script
   for `test:e2e`. `npm test` does not run the e2e suite.
+- **The event log and the metrics vocabulary are not the same names.** `append()`
+  stamps `created_at`, not `day`, and the lesson runner prefixes its events, so
+  `lesson_complete` was stored as `lesson_lesson_complete` and rolled up as zero.
+  The prefix is fixed at source and `report.js` still accepts the old names, because
+  saved logs carry them. **Add an event to `EVENTS` and you must also emit it** —
+  several sat in the vocabulary for weeks with no emitter, which is a metric that
+  reads zero however hard a kid works.
 - **The webapp specs run concurrently** against one host and one browser. They are
   independent because a Playwright page carries its own storage — so a spec must not
   assume anything another spec did, and must not reach for a fixed port or a shared

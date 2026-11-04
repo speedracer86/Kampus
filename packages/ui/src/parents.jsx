@@ -10,6 +10,7 @@
 import { color, radius, font, numeral, dollars } from './tokens.js';
 import { Button, Kicker, Chip, Toggle } from './primitives.jsx';
 import { useWidth } from './util.jsx';
+import { PilotReport } from './report.jsx';
 import { VerdictPill } from './assessment.jsx';
 
 const gBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -68,7 +69,7 @@ function EarnedRow({ row, overLimit, onApprove, onHold, onUndo, phone }) {
  * data: {kid{name, grade, day, daysPlayed}, pending[], asks[], approvedThisWeek, cap,
  *        progress[], stats[], settings{cap, lessonLength, allowBlitz, sprints, vacation}}
  */
-export function GrownUps({ data, onEvent = () => {} }) {
+export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {} }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 900;
   const [tab, setTab] = React.useState('approvals');
@@ -81,6 +82,7 @@ export function GrownUps({ data, onEvent = () => {} }) {
 
   const TABS = [
     ['approvals', 'Approvals', (d.pending || []).length + (d.asks || []).length],
+    ['report', 'This week', 0],
     ['progress', 'Progress', 0],
     ['settings', 'Settings', 0],
   ];
@@ -153,6 +155,11 @@ export function GrownUps({ data, onEvent = () => {} }) {
               onClick={() => onEvent('approve_all', {})}>Approve all earned</Button>
           </div>
         </>)}
+
+        {tab === 'report' && (d.report
+          ? <PilotReport report={d.report} name={d.kid?.name || 'She'} blobDir={blobDir} />
+          : sheet(<div style={{ padding: phone ? '20px' : '26px 32px', fontSize: 15, color: color.muted }}>
+            No week to show yet.</div>))}
 
         {tab === 'progress' && <>
           <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : 'repeat(3, 1fr)', gap: 14, marginBottom: 22 }}>
