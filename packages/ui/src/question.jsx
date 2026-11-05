@@ -53,13 +53,28 @@ function HelpGrid({ ids, open, onPick, tokensLeft, teachFree, phone }) {
 }
 
 /** Legacy teach strings carry <b> markup from the v1 renderer, which set them via
-    innerHTML; React shows the tags as text. Bold the marked spans, drop any other
+    innerHTML; React shows the tags as text. Bold the marked spans, RAISE the
+    superscripts — stripping <sup> changed the math: 2<sup>6</sup> read as 26
+    (owner catch, Nov 5, on a grade-8 warm-up) — and drop any other
     angle-bracketed stray. */
-function rich(s) {
-  return String(s ?? '').split(/<b>(.*?)<\/b>/g).map((part, i) =>
-    i % 2
-      ? <strong key={i} style={{ fontWeight: 800 }}>{part}</strong>
-      : part.replace(/<[^>]+>/g, ''));
+export function rich(s) {
+  return String(s ?? '').split(/(<b>.*?<\/b>|<sup>.*?<\/sup>)/g).map((part, i) => {
+    const b = part.match(/^<b>([\s\S]*)<\/b>$/);
+    // Recurse into the bold span rather than printing its contents: <b> wraps the
+    // outer match, so a bolded exponent — <b>2<sup>6</sup></b> — would otherwise
+    // render its own tags as visible text. Nothing in the bank nests them today;
+    // the next line that bolds a power would have found out the hard way.
+    if (b) return <strong key={i} style={{ fontWeight: 800 }}>{rich(b[1])}</strong>;
+    const sup = part.match(/^<sup>([\s\S]*)<\/sup>$/);
+    if (sup) return <sup key={i} style={{ fontSize: '.62em', lineHeight: 0 }}>{sup[1]}</sup>;
+    return part.replace(/<[^>]+>/g, '');
+  });
+}
+
+/** The same string for a VOICE: markup dropped, superscripts said out loud —
+    "2<sup>6</sup>" must be read "2 to the 6", never "twenty-six". */
+export function plainSpeech(s) {
+  return String(s ?? '').replace(/<sup>([\s\S]*?)<\/sup>/g, ' to the $1 ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
 }
 
 /** Teach me, one beat at a time. A wall of numbered prose is the wrong thing to
@@ -157,7 +172,7 @@ export function Question({
     if (locked) return;
     const next = help === id ? null : id;
     onHelp(next, { needsConfirm: id === 'teach' && !teachFree });
-    if (next === 'read') speak(question.text);
+    if (next === 'read') speak(plainSpeech(question.text));
     if (next) onEvent('help_open', { id: next });
   };
   const commit = (i) => { if (feedback) return; onAnswer(i); };
@@ -200,7 +215,7 @@ export function Question({
   const prompt = <>
     {snag && <Kicker style={{ marginBottom: 10 }}>No pay, just a look</Kicker>}
     <h2 style={{ fontSize: phone ? 26 : 40, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.18,
-      margin: 0, textWrap: 'pretty' }}>{question.text}</h2>
+      margin: 0, textWrap: 'pretty' }}>{rich(question.text)}</h2>
   </>;
 
   const answers = <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 12, marginTop: phone ? 18 : 26 }}>

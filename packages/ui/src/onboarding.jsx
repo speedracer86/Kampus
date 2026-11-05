@@ -18,8 +18,13 @@ const WORLDS = Object.values(world);
 
 /** The §0a frame: kicker/title/sub on ground at left, one white sheet at right. */
 export function SetupFrame({ kicker, title, sub, steps, step, children, note, cta, ctaLabel, ctaDisabled, onCta, phone }) {
-  return <div style={{ ...oBase, background: color.ground, minHeight: '100vh', padding: phone ? '24px 16px 40px' : '40px 48px 48px' }}>
-    <div style={{ maxWidth: 1280, margin: '0 auto', display: 'grid',
+  {/* Desktop centers the composition in the viewport — owner call, Nov 5: the
+      frame hugged the top and left a sea of ground below. Phones stay
+      top-aligned: vertically centering a tall flow on a small screen pushes
+      the first field off balance and fights the keyboard. */}
+  return <div style={{ ...oBase, background: color.ground, minHeight: '100vh', padding: phone ? '24px 16px 40px' : '40px 48px 48px',
+    display: 'flex', flexDirection: 'column', justifyContent: phone ? 'flex-start' : 'center' }}>
+    <div style={{ maxWidth: 1280, width: '100%', margin: '0 auto', display: 'grid',
       gridTemplateColumns: phone ? '1fr' : '340px 1fr', gap: 48, alignItems: 'start' }}>
       <div>
         {/* Progress: a step list on desktop, segments on phone (§0a). */}

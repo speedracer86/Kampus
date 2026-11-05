@@ -363,7 +363,17 @@ create policy ledger_all on public.ledger for all to authenticated
    product. The authenticated role gets the verbs its policies allow and no
    others — on events, the missing update and delete grants are the second lock.
 --------------------------------------------------------------------------- */
-revoke all on all tables in schema public from anon, authenticated;
+/* SCOPED TO THIS PRODUCT'S TABLES, BY NAME.
+
+   This said `revoke all on all tables in schema public` until it was applied to
+   a project that turned out to already host another product. It stripped anon
+   and authenticated privileges from four tables belonging to that app, which in
+   Supabase's model is what its client runs on — a live breakage of something
+   this migration has no business touching. A migration may only revoke what it
+   granted. If `public` ever holds a table this file did not create, that table is
+   none of its business. */
+revoke all on public.families, public.members, public.students, public.events,
+  public.progress, public.business, public.ledger from anon, authenticated;
 revoke all on schema app from anon, authenticated;
 
 grant usage on schema public to authenticated;

@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { REFERENCE_STEPS } from '@kampus/curriculum';
 import { TEACH_LAYOUTS } from '@kampus/ui/teach-layouts';
 import { ReteachView } from '@kampus/ui/lesson';
+import { rich, plainSpeech } from '@kampus/ui/question';
 import { color } from '@kampus/ui/tokens';
 
 // The library reads React off the global, exactly as the app's jsxInject supplies it.
@@ -86,6 +87,34 @@ function ReteachPanels({ phone }) {
   </>;
 }
 
+/* The markup the question text actually carries.
+
+   `rich()` raises superscripts and `plainSpeech()` says them out loud, and both
+   matter for the same string: 2<sup>6</sup> rendered flat reads as 26, and spoken
+   flat reads as "twenty-six" — a wrong answer in a confident voice. The webapp
+   suite can only check this where it happens to drive a question that has one, so
+   the transform is checked here against the shapes curriculum.js really emits.
+
+   The nested case is in the list because nothing in the bank nests them YET. */
+const RICH_CASES = [
+  { raw: '7<sup>2</sup> = ?', said: '7 to the 2 = ?' },
+  { raw: '2<sup>6</sup> means multiply 2 by itself 6 times.', said: '2 to the 6 means multiply 2 by itself 6 times.' },
+  { raw: '4,500 = 4.5 × 10<sup>?</sup>', said: '4,500 = 4.5 × 10 to the ?' },
+  { raw: '<b>Halve</b> it, then add 2.', said: 'Halve it, then add 2.' },
+  { raw: '<b>2<sup>6</sup></b> is the one to beat.', said: '2 to the 6 is the one to beat.' },
+  { raw: 'Nothing <i>special</i> here.', said: 'Nothing special here.' },
+];
+
+function RichCases() {
+  // Read back by tests/test_layouts.mjs: the spoken form is a string, so it is
+  // compared as one rather than scraped off the screen.
+  window.__plain = RICH_CASES.map(c => plainSpeech(c.raw));
+  window.__plainWant = RICH_CASES.map(c => c.said);
+  return <section data-rich style={{ position: 'absolute', left: -9999, top: 0 }}>
+    {RICH_CASES.map((c, i) => <div key={i} data-rich-case={i}>{rich(c.raw)}</div>)}
+  </section>;
+}
+
 function Gallery() {
   const phone = window.innerWidth < 860;
   return <div style={{ background: color.ground, minHeight: '100vh', padding: phone ? 16 : 40,
@@ -93,6 +122,7 @@ function Gallery() {
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       {PANELS.map(p => <Panel key={p.layout} {...p} phone={phone} />)}
       <ReteachPanels phone={phone} />
+      <RichCases />
     </div>
   </div>;
 }

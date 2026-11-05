@@ -238,6 +238,38 @@ try {
     await page.close();
   }
 
+  /* rich() and plainSpeech(): the screen and the voice, on the same strings. */
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+    page.on('pageerror', e => errors.push(`rich: ${e.message.slice(0, 160)}`));
+    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(200);
+
+    const seen = await page.evaluate(() => {
+      const cases = [...document.querySelectorAll('[data-rich-case]')];
+      return {
+        n: cases.length,
+        text: cases.map(c => c.innerText),
+        sups: cases.map(c => c.querySelectorAll('sup').length),
+        bolds: cases.map(c => c.querySelectorAll('strong').length),
+        plain: window.__plain, want: window.__plainWant,
+      };
+    });
+
+    check('the markup cases rendered at all', seen.n === 6, `${seen.n} cases`);
+    check('a superscript becomes a real <sup> element, not flat digits',
+      seen.sups[0] === 1 && seen.sups[1] === 1 && seen.sups[2] === 1, JSON.stringify(seen.sups));
+    check('no tag is ever printed as text', !seen.text.join(' ').includes('<'),
+      seen.text.find(x => x.includes('<')) || 'none');
+    check('a bolded exponent keeps BOTH the bold and the superscript',
+      seen.bolds[4] === 1 && seen.sups[4] === 1, `strong ${seen.bolds[4]}, sup ${seen.sups[4]}`);
+    check('an unknown tag is dropped, not shown', seen.text[5] === 'Nothing special here.', seen.text[5]);
+    const wrong = (seen.plain || []).map((got, i) => (got === seen.want[i] ? null : `${i}: "${got}"`)).filter(Boolean);
+    check('the voice says "to the", never the flattened number', wrong.length === 0,
+      wrong.join(' | ') || seen.plain[1]);
+    await page.close();
+  }
+
   check('no uncaught errors in any layout', errors.length === 0, errors.slice(0, 2).join(' | '));
 } finally {
   await browser.close();

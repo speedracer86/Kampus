@@ -3,7 +3,7 @@
 import { color, type, radius, shadow, band, streakColors, confetti, font } from './tokens.js';
 import { Button, Kicker, ProgressBar, KreditCoin, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
-import { Question } from './question.jsx';
+import { Question, rich, plainSpeech } from './question.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
 const MULT = (s) => s >= 10 ? 3 : s >= 6 ? 2 : s >= 3 ? 1.5 : 1;
@@ -95,7 +95,9 @@ export function Thermometer({ vis, feedback, picked, onPick }) {
 /** Teach panel: one-step-at-a-time reveal with read-aloud. */
 export function TeachPanel({ steps, onClose }) {
   const [step, setStep] = React.useState(0);
-  React.useEffect(() => { if (steps[step]) speak(steps[step]); }, [step]);
+  // Through plainSpeech, like every other read-aloud: the legacy teach strings
+  // carry <b> and <sup>, and 27 of them in curriculum.js do.
+  React.useEffect(() => { if (steps[step]) speak(plainSpeech(steps[step])); }, [step]);
   return <div style={{ ...qBase, background: color.goldTint, border: `1px solid ${color.goldBorder}`, borderRadius: radius.lg, padding: '18px 20px' }}>
     {steps.slice(0, step + 1).map((s, i) => <div key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10,
       opacity: i < step ? 0.45 : 1, transform: i < step ? 'scale(.96)' : 'none', transformOrigin: 'left', transition: 'opacity .3s, transform .3s' }}>
@@ -191,18 +193,18 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full,
         padding: '7px 14px', fontWeight: 700, fontSize: 15, opacity: hudOp, transition: 'opacity .3s' }}><KreditCoin />{st.kredits}</div></div>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: isChoice ? 1180 : 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
-      <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => speak(q.text)} />
+      <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => speak(plainSpeech(q.text))} />
       {/* PLAY_SYSTEM §4: no streak flames anywhere, ever — a chain on screen is a chain
           that can break. The multiplier still pays and still shows in the payout pills,
           where it reads as an earning, not as something to protect. */}
       {st.streak >= 3 && <div style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: '.12em',
         color: color.greenDeep, margin: '10px 0 2px', opacity: hudOp, transition: 'opacity .3s' }}>
         ×{MULT(st.streak)} ON EACH ANSWER</div>}
-      {!isChoice && <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>{q.text}</h2>}
+      {!isChoice && <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>{rich(q.text)}</h2>}
       {!isChoice && q.teach && !st.teachOpen && !st.feedback && <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <Button variant="gold" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: true }))}>
           {st.tokensLeft > 0 ? `Teach me · ${st.tokensLeft} token${st.tokensLeft > 1 ? 's' : ''} left` : 'Teach me · costs half'}</Button>
-        <Button variant="outline" size="sm" onClick={() => speak(q.text)}>Read it</Button></div>}
+        <Button variant="outline" size="sm" onClick={() => speak(plainSpeech(q.text))}>Read it</Button></div>}
       {!isChoice && st.teachConfirm && <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: color.goldTint, border: `1px solid ${color.goldBorder}`, borderRadius: radius.lg, padding: '14px 18px', marginBottom: 18, width: '100%' }}>
         {st.tokensLeft > 0
           ? <span style={{ fontSize: 15, lineHeight: 1.4, flex: 1, minWidth: 220 }}>Spend a Teach Token? <strong>{st.tokensLeft} left</strong> this run — a token means full pay (~{fullGain}). Save them for the hard ones.</span>

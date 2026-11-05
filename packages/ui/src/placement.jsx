@@ -25,6 +25,7 @@ export function PlacementIntro({ name, minutes = 15, onStart, onExit, blobDir = 
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
   return <div ref={ref} style={{ ...plBase, background: color.ground, minHeight: '100vh',
+    display: 'flex', flexDirection: 'column', justifyContent: phone ? 'flex-start' : 'center',
     padding: phone ? '24px 16px 40px' : '40px 48px 48px' }}>
     <div style={{ maxWidth: 820, margin: '0 auto' }}>
       {onExit && <button onClick={onExit} style={{ ...plBase, border: 'none', cursor: 'pointer',
@@ -69,6 +70,7 @@ export function PlacementRunner({ question, progress = { asked: 0, of: 24 }, onA
   React.useEffect(() => { setHigh(h => Math.max(h, pct)); }, [pct]);
 
   return <div ref={ref} style={{ ...plBase, background: color.ground, minHeight: '100vh',
+    display: 'flex', flexDirection: 'column', justifyContent: phone ? 'flex-start' : 'center',
     padding: phone ? '18px 16px 40px' : '28px 48px 56px' }}>
     <div style={{ maxWidth: 1180, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, flexWrap: 'wrap' }}>
@@ -104,6 +106,7 @@ export function PlacementResult({ result, name, onStart, blobDir = '/blobs/' }) 
   const rows = Object.entries(result?.perTopic || {});
 
   return <div ref={ref} style={{ ...plBase, background: color.ground, minHeight: '100vh',
+    display: 'flex', flexDirection: 'column', justifyContent: phone ? 'flex-start' : 'center',
     padding: phone ? '24px 16px 40px' : '40px 48px 48px' }}>
     <div style={{ maxWidth: 820, margin: '0 auto' }}>
       <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 24 : 40, textAlign: 'center' }}>

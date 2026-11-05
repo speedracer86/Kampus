@@ -15,7 +15,7 @@
    The summary line is unchanged on purpose: CI greps it, and so do I.
 
    Usage: npm run test:webapp     (PW_CHROME points at an existing Chromium) */
-import { start, stop, createCheck, pageErrors } from './webapp/harness.mjs';
+import { start, stop, createCheck, pageErrors, spoken } from './webapp/harness.mjs';
 
 const SPECS = ['core', 'business', 'onboarding', 'teach', 'money', 'report', 'juice', 'voice'];
 
@@ -60,6 +60,15 @@ try {
     tail.push(`  ${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`);
   };
   aggregate('no uncaught page errors anywhere', pageErrors.length === 0, pageErrors.slice(0, 2).join(' | '));
+
+  /* What the product read aloud, over everything every spec drove.
+     The first assertion is that the recorder recorded: a collector that never
+     attached reports zero markup in exactly the same way as a product that never
+     speaks markup, and this project has shipped that mistake before. */
+  aggregate(`the voice was exercised at all (${spoken.length} utterances)`, spoken.length > 0);
+  const markup = spoken.filter(s => /<[^>]+>/.test(s));
+  aggregate('nothing the product reads aloud carries markup',
+    markup.length === 0, markup.slice(0, 2).map(s => s.slice(0, 70)).join(' | '));
   console.log(`\n── all specs ─────────────────`);
   console.log(tail.join('\n'));
 } finally {

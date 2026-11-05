@@ -68,6 +68,20 @@ let server = null;
 let browser = null;
 export const pageErrors = [];
 
+/* Everything the product ever reads aloud, across every spec.
+
+   The voice eats the same strings the screen does, and those strings carry
+   markup: the legacy teach lines are full of <b>, and the exponent questions
+   carry <sup>. Rendered, a stray tag is visible and someone notices. SPOKEN, it
+   is "two sup six sup" out of a laptop nobody is listening to in CI — or worse,
+   "twenty-six" for 2<sup>6</sup>, which is the wrong answer read aloud in a
+   confident voice. The owner fixed question.jsx's read-aloud and quiz.jsx's
+   three sites were still raw, which is how this collector came to exist.
+
+   It is checked once, in the runner, over whatever every spec happened to drive.
+   Nothing has to remember to assert it. */
+export const spoken = [];
+
 /** Serve dist/ exactly as a static host would. */
 const makeServer = () => createServer(async (req, res) => {
   const url = decodeURIComponent((req.url || '/').split('?')[0]);
@@ -353,6 +367,22 @@ export async function open(state = {}, hash = '') {
     if (/ERR_FAILED|ERR_QUIC|ERR_NETWORK|ERR_CONNECTION/.test(t)) return;   // sealOffsite aborts these
     pageErrors.push(t.slice(0, 200));
   });
+  /* Record every utterance; speak nothing. CI has no audio, and a real
+     speechSynthesis queue outlives the page it was started from.
+
+     The utterances are handed straight to Node through an exposed function
+     rather than parked on `window`: a spec closes its pages when it is done, and
+     anything still sitting in that page's context dies with it — so the record
+     would be empty exactly when it mattered. */
+  await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
+  await page.addInitScript(() => {
+    const sink = {
+      speak: (u) => { try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ } },
+      cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
+      speaking: false, pending: false, paused: false,
+    };
+    try { Object.defineProperty(window, 'speechSynthesis', { get: () => sink, configurable: true }); } catch { /* fine */ }
+  });
   await sealOffsite(page);
   // Seed ONLY when storage is empty. addInitScript runs on every navigation, so an
   // unconditional seed silently reset the app on page.reload() — which is the exact
@@ -375,6 +405,22 @@ export async function openBlank(hash = '') {
     if (m.type() !== 'error') return;
     if (/favicon|status of 40\d|ERR_FAILED|ERR_QUIC|ERR_NETWORK|ERR_CONNECTION/.test(t)) return;   // sealOffsite aborts these
     pageErrors.push(t.slice(0, 200));
+  });
+  /* Record every utterance; speak nothing. CI has no audio, and a real
+     speechSynthesis queue outlives the page it was started from.
+
+     The utterances are handed straight to Node through an exposed function
+     rather than parked on `window`: a spec closes its pages when it is done, and
+     anything still sitting in that page's context dies with it — so the record
+     would be empty exactly when it mattered. */
+  await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
+  await page.addInitScript(() => {
+    const sink = {
+      speak: (u) => { try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ } },
+      cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
+      speaking: false, pending: false, paused: false,
+    };
+    try { Object.defineProperty(window, 'speechSynthesis', { get: () => sink, configurable: true }); } catch { /* fine */ }
   });
   await sealOffsite(page);
   await page.goto(`http://localhost:${PORT}/${hash}`, { waitUntil: 'networkidle' });

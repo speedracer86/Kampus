@@ -134,6 +134,7 @@ export default async function run(check) {
     let t = await text(page);
     check('Teach me opens', /TEACH ME/i.test(t), t.slice(0, 80).replace(/\n/g, ' '));
     check('no raw <b> markup anywhere on the lesson screen', !t.includes('<b>') && !t.includes('</b>'));
+    check('no raw <sup> markup either — 2<sup>6</sup> once read as 26', !t.includes('<sup>') && !t.includes('</sup>'));
     const counter = t.match(/Tap for the next line · (\d+) of (\d+)/);
     if (counter) {
       await clickText(page, 'Tap for the next line');

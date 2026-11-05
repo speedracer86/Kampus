@@ -639,3 +639,22 @@ what landed here is everything that does not depend on them.
   no cue, clip or audio state touches it. The button is live from first paint,
   during playback, and after Quiet.
 
+
+## The setup frames center in the viewport (Nov 2026)
+
+Owner catch on beta: the onboarding and placement frames pinned to the top of
+the window and left a sea of ground below — fine at laptop heights, unbalanced
+on anything tall. All four full-height frames (SetupFrame and the three
+placement screens) now center their composition vertically on desktop. Phones
+stay top-aligned: centering a tall flow on a small screen pushes the first
+field off balance and fights the keyboard.
+
+## 2⁶ was reading as 26 (Nov 2026)
+
+Owner catch on a grade-8 warm-up: the engine writes exponents as v1-era
+`<sup>` markup, and the React side either stripped it (`rich()` — so
+2<sup>6</sup> displayed as 26, which changes the MATH) or rendered the raw
+tags (the question h2, the quiz paper). `rich()` now raises `<sup>` spans
+properly and is applied to question text in both the lesson and the paper;
+`plainSpeech()` feeds the voice, saying "2 to the 6" — never "twenty-six".
+Spec guards both tags from leaking as text.
