@@ -8,6 +8,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    # Law 4 of the Supabase work order: "a policy bug here is the one class of
+    # bug that cannot ship even once." So the RLS policies are asserted against a
+    # real Postgres, with the real policy SQL, not read back from the migration.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,6 +44,14 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: E2E against the built bundle
         run: node tests/test_webapp.mjs
+
+      # Row-level security, two families, every table. Locally this test borrows
+      # the default server or initdbs a throwaway cluster; here it uses the
+      # service container above.
+      - name: Row-level security
+        run: node tests/test_rls.mjs
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
 
       # The four §0b teach layouts, desktop and phone, including the clause that
       # matters: a wrong pick shows the hint and never locks the step.

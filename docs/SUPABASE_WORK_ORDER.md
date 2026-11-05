@@ -76,3 +76,50 @@ flag off AND on.
 Payments, parent dashboards beyond what exists, realtime subscriptions,
 email beyond the magic link, admin tooling. The pilot needs sync and auth,
 nothing else.
+
+---
+
+## Build log (Claude Code)
+
+### Step 1 — migration SQL + RLS tests · done, Nov 5
+
+`supabase/migrations/0001_init.sql` (seven tables, RLS on and FORCED on every
+one), `supabase/test/auth-shim.sql` (test-only: the auth schema and `auth.uid()`
+Supabase provides), `tests/test_rls.mjs` — **42 checks, two families, every
+table**, run in CI against a `postgres:16` service container and locally against
+the default server or a throwaway cluster the test initdbs itself. `npm run
+test:rls`.
+
+Three decisions the tests forced, each one a thing the schema needed that the
+order did not name:
+
+- **`events.client_id`, unique per student.** Law 2 says a queued write flushes
+  on reconnect, and a flush can run twice. Without a client-generated id the
+  retry double-counts: the pilot report over-reports and the ledger over-pays,
+  both silently. The client inserts `on conflict do nothing`.
+- **`public.create_family()` instead of an insert policy.** A new parent has no
+  membership, so they cannot satisfy a membership-based insert on `families` —
+  and the family is what would grant it. An open `with check (true)` plus an
+  AFTER INSERT trigger looks like the answer and is not: `insert … returning id`
+  evaluates the SELECT policy before end-of-statement triggers fire, so the
+  tests refused it, and the open policy would have let anyone create unclaimed
+  families. A SECURITY DEFINER function makes the family and the membership as
+  one unit, so `families` needs no insert policy at all.
+- **`students.state jsonb`.** `progress`, `business` and `ledger` carve out the
+  domains with queries of their own; everything else the engine keeps (kredits,
+  tickets, owned, week, days, review, passed, avatar, the paper in progress)
+  rides in one last-writer-wins blob, which is what lets `save(studentId, state)`
+  round-trip the exact state object so no component changes. Later migrations can
+  carve further out of it without the client noticing. **Flagging this one: it is
+  a departure from the column list in DEPLOYMENT.md, which has no home for those
+  scalars.**
+
+Also worth knowing before step 3: `app.family_ids()` is SECURITY DEFINER because
+the obvious membership policy recurses on `members` itself, and all three definer
+functions pin an empty `search_path` — a definer with a mutable path is an
+escalation route. A test asserts both, and that no fourth definer function
+appears unnoticed.
+
+Not started: auth (step 2), the store.js swap (step 3), save adoption (4),
+multi-device proof (5), the `VITE_SYNC` flag (6). Waiting on `SUPABASE_URL` and
+`SUPABASE_ANON_KEY` in `.env` for anything that talks to a live project.
