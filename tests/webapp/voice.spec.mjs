@@ -12,36 +12,53 @@
    family re-tests on. Part of the suite; run via `npm run test:webapp`. */
 import { open, text, driveToTeach, nextButton } from './harness.mjs';
 
-/** Stub Audio so CI stays silent but every play() is observable. */
-const captureAudio = (page) => page.addInitScript(() => {
+/** Stub Audio so CI stays silent but every play() is observable.
+
+    It MODELS A CLIP rather than just firing 'ended': a duration, and a
+    currentTime that advances with wall time scaled by playbackRate. Without
+    that, progress() reports t=0 and d=NaN, the word sweep never starts, and
+    every assertion about it would pass against a product that does not sweep —
+    while `Slower` would be untestable, since the whole point is that the sweep
+    rides the clip's clock rather than a timer of its own. */
+const CLIP_SECONDS = 0.6;
+const captureAudio = (page) => page.addInitScript((DUR) => {
   window.__played = [];
   window.__playing = 0;
   const Real = window.Audio;
   window.Audio = function (src) {
     const el = new Real();
     el.src = src;
-    let live = false;
+    let live = false, cur = 0, raf = 0, t0 = 0;
+    try {
+      Object.defineProperty(el, 'duration', { get: () => DUR });
+      Object.defineProperty(el, 'currentTime', { get: () => cur, set: (v) => { cur = Number(v) || 0; } });
+      Object.defineProperty(el, 'readyState', { get: () => 4 });
+      Object.defineProperty(el, 'paused', { get: () => !live });
+      Object.defineProperty(el, 'ended', { get: () => cur >= DUR });
+    } catch { /* fine */ }
+    const stopTicking = () => { if (raf) cancelAnimationFrame(raf); raf = 0; };
     el.play = () => {
       window.__played.push(String(src).replace(location.origin, ''));
-      window.__playing++; live = true;
-      // End the "clip" promptly so the sequence advances without CI waiting on real
-      // durations — and model a real element, where pause() ends playback and fires
-      // no 'ended'. Without that the stub reports concurrency the product does not
-      // have, and hides the concurrency it does.
-      setTimeout(() => {
+      window.__playing++; live = true; cur = 0; t0 = performance.now();
+      const tick = () => {
         if (!live) return;
-        live = false; window.__playing--;
-        el.dispatchEvent(new Event('ended'));
-      }, 60);
+        cur = Math.min(DUR, ((performance.now() - t0) / 1000) * (el.playbackRate || 1));
+        if (cur >= DUR) {
+          live = false; window.__playing--; stopTicking();
+          // A real element fires 'ended' only when it runs out, never on pause.
+          el.dispatchEvent(new Event('ended'));
+          return;
+        }
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
       return Promise.resolve();
     };
-    el.pause = () => { if (live) { live = false; window.__playing--; } };
-    // Never actually fetch or decode in CI.
-    try { Object.defineProperty(el, 'readyState', { get: () => 4 }); } catch { /* fine */ }
+    el.pause = () => { if (live) { live = false; window.__playing--; stopTicking(); } };
     return el;
   };
   window.Audio.prototype = Real.prototype;
-});
+}, CLIP_SECONDS);
 
 const played = (page) => page.evaluate(() => window.__played || []);
 
@@ -189,6 +206,93 @@ export default async function run(check) {
       check('and Karla talking does not solve the check', state.nextDisabled === true,
         JSON.stringify(state));
     }
+    await page.close();
+  }
+
+  /* ---- the script is the hero while she speaks, and the sweep rides the clip ---- */
+  {
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52 }, '#lesson');
+    await captureAudio(page);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+    await driveToTeach(page);
+
+    /** Sizes and states of the script block, as the browser computes them. */
+    const script = () => page.evaluate(() => {
+      const rows = [...document.querySelectorAll('[data-say-line]')];
+      const px = (el) => Math.round(parseFloat(getComputedStyle(el).fontSize));
+      const cur = rows.find(r => r.dataset.sayState === 'current');
+      const h2 = document.querySelector('h2');
+      return {
+        rows: rows.length,
+        states: rows.map(r => r.dataset.sayState),
+        sizes: rows.map(px),
+        currentSize: cur ? px(cur) : null,
+        promptSize: h2 ? px(h2) : null,
+        words: cur ? [...cur.querySelectorAll('[data-say-word]')].map(w => w.dataset.wordState) : [],
+        nowAt: cur ? [...cur.querySelectorAll('[data-say-word]')].findIndex(w => w.dataset.wordState === 'now') : -1,
+      };
+    });
+
+    // Sample while the first line plays.
+    const frames = [];
+    for (let i = 0; i < 14; i++) { frames.push(await script()); await page.waitForTimeout(45); }
+    const speakingFrames = frames.filter(f => f.states.includes('current'));
+    check('a line is the current one while she speaks', speakingFrames.length > 0,
+      `${speakingFrames.length} of ${frames.length} frames`);
+
+    const f = speakingFrames[0] || frames[0];
+    check('the line being said is at the prompt\'s own scale, not caption size',
+      f.currentSize >= (f.promptSize - 2), `line ${f.currentSize}px vs prompt ${f.promptSize}px`);
+    check('and the other lines are smaller than it',
+      f.sizes.every((px, i) => (f.states[i] === 'current' ? true : px < f.currentSize)),
+      JSON.stringify(f.sizes));
+    check('lines already said settle, lines to come wait',
+      speakingFrames.some(x => x.states.includes('said')) || frames.at(-1).states.includes('said'),
+      frames.map(x => x.states.join('/')).at(-1));
+
+    // The sweep: the held word must MOVE through the line, not sit on word one.
+    const swept = [...new Set(speakingFrames.map(x => x.nowAt).filter(n => n >= 0))];
+    check('the highlight sweeps word by word through the line', swept.length > 1,
+      `held words seen: ${swept.join(', ') || 'none'}`);
+    check('it moves forward, never backwards within a line',
+      (() => {
+        let last = -1, ok = true;
+        for (const x of speakingFrames) {
+          if (x.nowAt < 0) continue;
+          if (x.nowAt < last && x.states.indexOf('current') === speakingFrames[0].states.indexOf('current')) ok = false;
+          last = Math.max(last, x.nowAt);
+        }
+        return ok;
+      })());
+
+    /* Slower slows BOTH, because the sweep reads the clip's clock rather than a
+       timer of its own: at 0.8 the same wall-clock window covers less of the
+       line. Measured as a fraction of the line, so it does not depend on which
+       line happens to be playing. */
+    const sweepReach = async () => {
+      await page.evaluate(() => [...document.querySelectorAll('button')]
+        .find(b => b.innerText.trim() === 'Again')?.click());
+      await page.waitForTimeout(200);
+      return page.evaluate(() => {
+        const cur = [...document.querySelectorAll('[data-say-line]')].find(r => r.dataset.sayState === 'current');
+        if (!cur) return 0;
+        const all = [...cur.querySelectorAll('[data-say-word]')];
+        const now = all.findIndex(w => w.dataset.wordState === 'now');
+        return all.length ? (now + 1) / all.length : 0;
+      });
+    };
+    const atFull = await sweepReach();
+    await page.evaluate(() => [...document.querySelectorAll('button')]
+      .find(b => b.innerText.trim() === 'Slower')?.click());
+    await page.waitForTimeout(120);
+    const atSlow = await sweepReach();
+    check('Slower slows the sweep with the voice, not just the voice',
+      atSlow < atFull, `${(atFull * 100).toFixed(0)}% of the line at 1.0, ${(atSlow * 100).toFixed(0)}% at 0.8`);
+
+    /* And the law that outranks the redesign. */
+    check('the hero script still does not gate Next',
+      (await nextButton(page))?.disabled === true, JSON.stringify(await nextButton(page)));
     await page.close();
   }
 

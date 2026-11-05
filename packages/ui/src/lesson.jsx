@@ -16,7 +16,7 @@ import { Question } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
 import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
 import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
-import { SayItShowIt, clipsFor } from './say-it-show-it.jsx';
+import { SayItShowIt, clipsFor, clipMetaFor } from './say-it-show-it.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -169,6 +169,10 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
     ? `New idea · step ${at + 1} of ${steps.length}${step.verb ? ` · ${step.verb}` : ''}`
     : null;
   const promptSize = phone ? 23 : (String(step?.prompt || '').length > 56 ? 32 : 34);
+  /* The size the prompt actually renders at — band a gets 40 on desktop. ONE
+     variable, because the spoken line is supposed to match it: two expressions
+     drifted apart the moment the hero script arrived (34 against the h2's 40). */
+  const headlineSize = Layout ? (mode === 'a' && !phone ? 40 : promptSize) : (phone ? 24 : 36);
 
   /* Say-it-show-it takes over the voice row wherever the bank has a script AND the
      manifest has clips for this step. Everywhere else the old VoiceRow stands, so
@@ -182,10 +186,14 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   const clips = step?.voiceRef && voice?.manifest
     ? clipsFor(voice.manifest, voice.skill, step.voiceRef.kind, step.voiceRef.index, voice.base)
     : null;
+  // The same entries, unmapped: per-word timings will ride on them.
+  const clipMeta = step?.voiceRef && voice?.manifest
+    ? clipMetaFor(voice.manifest, voice.skill, step.voiceRef.kind, step.voiceRef.index)
+    : null;
   const body = <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 20 : 32 }}>
     {sayLines?.length
-      ? <SayItShowIt lines={sayLines} clips={clips} muted={muted} phone={phone}
-          mode={mode} worldColor={worldColor || color.ink} blobDir={blobDir}
+      ? <SayItShowIt lines={sayLines} clips={clips} meta={clipMeta} muted={muted} phone={phone}
+          mode={mode} worldColor={worldColor || color.ink} blobDir={blobDir} promptSize={headlineSize}
           speak={speak} fallbackText={step?.speak || step?.prompt}
           onCue={(name, i) => {
             setCue(c => ({ name, nonce: c.nonce + 1 }));
@@ -197,7 +205,7 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
     {/* `prompt` and `takeaway` highlight what they name — the only two cues that
         point at screen furniture rather than at the math. Safe on a Try it: they
         draw the eye and change nothing. */}
-    <h2 style={{ fontSize: Layout ? (mode === 'a' && !phone ? 40 : promptSize) : (phone ? 24 : 36),
+    <h2 style={{ fontSize: headlineSize,
       fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.2, margin: '0 0 22px',
       background: cue.name === 'prompt' ? (color.goldTint || '#FBF3E4') : 'transparent',
       borderRadius: radius.sm, transition: 'background .3s',
@@ -275,6 +283,9 @@ export function ReteachView({ teach, onContinue, label = 'Try one →', phone,
   const clips = teach?.voiceRef && voice?.manifest
     ? clipsFor(voice.manifest, voice.skill, teach.voiceRef.kind, teach.voiceRef.index, voice.base)
     : null;
+  const clipMeta = teach?.voiceRef && voice?.manifest
+    ? clipMetaFor(voice.manifest, voice.skill, teach.voiceRef.kind, teach.voiceRef.index)
+    : null;
   // `row.3` means the third row, 1-based, as the bank's cue vocabulary has it.
   const litRow = /^row\.\d+$/.test(cue.name || '') ? Number(cue.name.slice(4)) - 1 : -1;
   const litTitle = cue.name === 'prompt';
@@ -287,7 +298,7 @@ export function ReteachView({ teach, onContinue, label = 'Try one →', phone,
         background: litTitle ? held : 'transparent', borderRadius: radius.sm, transition: 'background .3s',
         boxShadow: litTitle ? `0 0 0 8px ${held}` : 'none' }}>{teach.title}</h2>
     {teach.lede && <p style={{ fontSize: 18, lineHeight: 1.5, color: color.muted, margin: '0 0 24px' }}>{teach.lede}</p>}
-    {!!lines?.length && <SayItShowIt lines={lines} clips={clips} muted={muted} phone={phone}
+    {!!lines?.length && <SayItShowIt lines={lines} clips={clips} meta={clipMeta} muted={muted} phone={phone}
       speak={speak} fallbackText={teach.speak || teach.title}
       onCue={(name, i) => {
         setCue(c => ({ name, nonce: c.nonce + 1 }));

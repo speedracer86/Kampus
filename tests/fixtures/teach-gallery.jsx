@@ -10,6 +10,7 @@ import { REFERENCE_STEPS } from '@kampus/curriculum';
 import { TEACH_LAYOUTS } from '@kampus/ui/teach-layouts';
 import { ReteachView } from '@kampus/ui/lesson';
 import { rich, plainSpeech } from '@kampus/ui/question';
+import { sweepPlan, wordAt } from '@kampus/ui/say-it-show-it';
 import { color } from '@kampus/ui/tokens';
 
 // The library reads React off the global, exactly as the app's jsxInject supplies it.
@@ -109,10 +110,48 @@ function RichCases() {
   // Read back by tests/test_layouts.mjs: the spoken form is a string, so it is
   // compared as one rather than scraped off the screen.
   window.__plain = RICH_CASES.map(c => plainSpeech(c.raw));
+  window.__sweep = sweepProbe();
   window.__plainWant = RICH_CASES.map(c => c.said);
   return <section data-rich style={{ position: 'absolute', left: -9999, top: 0 }}>
     {RICH_CASES.map((c, i) => <div key={i} data-rich-case={i}>{rich(c.raw)}</div>)}
   </section>;
+}
+
+/* The word sweep's two timing sources, checked as data rather than as pixels.
+
+   The webapp spec proves the sweep MOVES on screen; this proves it would move in
+   the right places, and that an exact timing set is preferred when one exists —
+   which is how the renewal run's timestamps will arrive. */
+function sweepProbe() {
+  const say = 'Here is a pan of brownies, cut into three equal pieces.';
+  const prop = sweepPlan(say, null);
+  const words = say.split(/\s+/);
+  const exactMeta = { words: words.map((w, i) => ({ word: w, start: i * 0.25 })) };
+  const exact = sweepPlan(say, exactMeta);
+  // Timings for a DIFFERENT line length must be refused, not stretched over this one.
+  const mismatched = sweepPlan(say, { words: [{ word: 'Here', start: 0 }] });
+  return {
+    nWords: prop.words.length,
+    propExact: prop.exact,
+    startsRise: prop.starts.every((v, i) => i === 0 ? v === 0 : v > prop.starts[i - 1]),
+    // "brownies," (9) must get a wider slice than "a" (1).
+    longerWordGetsLongerSlice: (() => {
+      const i = prop.words.indexOf('a'), j = prop.words.indexOf('brownies,');
+      return (prop.starts[j + 1] - prop.starts[j]) > (prop.starts[i + 1] - prop.starts[i]);
+    })(),
+    exactUsed: exact.exact && exact.starts[2] === 0.5,
+    mismatchRefused: mismatched.exact === false,
+    // No duration yet: sweep nothing rather than guess.
+    noDuration: wordAt(prop, 0.4, NaN),
+    firstWord: wordAt(prop, 0, 10),
+    lastWord: wordAt(prop, 10, 10),
+    monotonic: (() => {
+      let last = -1;
+      for (let t = 0; t <= 10; t += 0.2) { const k = wordAt(prop, t, 10); if (k < last) return false; last = k; }
+      return true;
+    })(),
+    exactIgnoresDuration: wordAt(exact, 0.6, NaN),
+  };
 }
 
 function Gallery() {

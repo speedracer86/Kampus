@@ -658,3 +658,34 @@ tags (the question h2, the quiz paper). `rich()` now raises `<sup>` spans
 properly and is applied to question text in both the lesson and the paper;
 `plainSpeech()` feeds the voice, saying "2 to the 6" — never "twenty-six".
 Spec guards both tags from leaking as text.
+
+### The script is the hero while she speaks (Nov 2026)
+
+The say-it-show-it display had drifted from the approved demo: the spoken script
+sat above the math as small grey rows, which reads as a caption — something to
+skip. For a kid with auditory processing delays who rushes reading, the line
+being said has to be the biggest thing on screen while it is being said.
+
+- The current line renders at the prompt's own scale (one `headlineSize` now
+  feeds both the `h2` and the script, because two expressions for "the prompt's
+  size" drifted apart the moment the hero line arrived — 34px against the h2's
+  40). Lines already said settle to reading size above it; lines still to come
+  are held faint so the block does not jump as each one arrives. When she stops,
+  the whole script settles and the step gets the screen back.
+- Within the current line the highlight sweeps word by word, each word's slice
+  of the clip proportional to its length (letters + 1, so a one-letter word is
+  not given a zero-width slice).
+- **The sweep is driven by the clip's own clock**, not by a timer. `audio-bus`
+  exposes `progress()`, and the component reads `currentTime` each frame. That
+  is what makes `Slower` slow the sweep and the voice together: playbackRate
+  changes how fast currentTime advances, so there is nothing to keep in
+  agreement. A timer would have had to be told, and would have drifted.
+- Two timing sources, one shape. `sweepPlan()` returns proportional fractions
+  today and will return exact per-word times the moment the manifest carries
+  them — timings whose word count does not match the line are refused rather
+  than stretched over it.
+- Reduced motion holds the whole line instead of sweeping. A word-by-word crawl
+  is precisely the movement that setting is asking us not to make.
+
+Laws unchanged and asserted: nothing in the path touches `solved` or Next, and
+the spec checks Next is still gated by the step with the hero script running.

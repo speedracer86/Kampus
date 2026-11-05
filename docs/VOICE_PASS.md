@@ -162,6 +162,35 @@ Still not voiced and not in scope: nothing else. After tranche 3 wires in,
 re-read this file and the gating gotcha against the code once more before calling
 the voice pass complete.
 
+## The renewal generation run — ask for timestamps
+
+When credits renew and the deferred clips are generated (grade 8, subFrac,
+unitFracDiv, and the grade-6/7 `reteach` kind), request **character timestamps**
+on the new clips and store per-word times in the manifest entry:
+
+```
+{ file, sha, dur, words: [{ word, start, end }] }
+```
+
+Playback already accepts them. `sweepPlan()` in say-it-show-it.jsx prefers
+`meta.words` when its word count matches the line and falls back to the
+proportional estimate otherwise, so the sweep becomes exact for the clips that
+have timings and keeps working for the ones that do not — no change anywhere
+else, and no need to regenerate what is already correct.
+
+Two things to get right when writing it:
+
+- ElevenLabs returns alignment as CHARACTERS, not words. Fold them: a word's
+  start is the first character's start, its end the last character's end.
+- Mismatched timings are refused by design (a bank edit that changed the words
+  but kept the old timings would sweep the wrong words confidently), so after a
+  bank patch the affected lines must be regenerated, not just re-timed.
+
+This was deliberately NOT written ahead of the run. The last piece of
+unexercised ElevenLabs code in this repo sent `output_format` in the body, where
+it is silently ignored, and cost a tranche twice over. Write it against a real
+response, with `--dry` first.
+
 ## Coming from the owner's session (not yours to write)
 
 - Tranche 3 of `speak.js`: the remaining 37 skills plus the re-teach scripts, same

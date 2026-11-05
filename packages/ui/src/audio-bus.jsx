@@ -29,6 +29,22 @@ export function isSpeaking() {
   return Date.now() < speakingUntil;
 }
 
+/**
+ * How far into the current clip we are, and how long it runs.
+ *
+ * This exists so the word sweep can be driven by the AUDIO rather than by a
+ * timer. A timer has to be told about `Slower`, and would drift from the voice
+ * over a long line; `currentTime` already advances at the playback rate, so
+ * slowing the voice slows the sweep by construction instead of by agreement.
+ *
+ * `d` is NaN until the browser has the metadata, so callers must handle not
+ * knowing the duration yet.
+ */
+export function progress() {
+  if (!current) return null;
+  return { t: current.currentTime, d: current.duration, rate: current.playbackRate };
+}
+
 /** Subscribe to speaking changes; returns an unsubscribe. */
 export function onSpeakingChange(fn) {
   listeners.add(fn);

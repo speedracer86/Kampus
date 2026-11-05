@@ -267,6 +267,19 @@ try {
     const wrong = (seen.plain || []).map((got, i) => (got === seen.want[i] ? null : `${i}: "${got}"`)).filter(Boolean);
     check('the voice says "to the", never the flattened number', wrong.length === 0,
       wrong.join(' | ') || seen.plain[1]);
+
+    /* The sweep's timing sources. */
+    const sw = await page.evaluate(() => window.__sweep);
+    check('a line splits into its words', sw.nWords === 11, `${sw.nWords} words`);
+    check('word starts rise through the line', sw.startsRise);
+    check('a longer word gets a longer slice of the clip', sw.longerWordGetsLongerSlice);
+    check('exact timings are used when the manifest has them', sw.exactUsed, JSON.stringify(sw.exactUsed));
+    check('timings that do not match the words are refused, not stretched', sw.mismatchRefused);
+    check('without a duration nothing is swept rather than guessed', sw.noDuration === -1, String(sw.noDuration));
+    check('exact timings need no duration', sw.exactIgnoresDuration === 2, String(sw.exactIgnoresDuration));
+    check('the first word is held at t=0 and the last at the end',
+      sw.firstWord === 0 && sw.lastWord === sw.nWords - 1, `${sw.firstWord} … ${sw.lastWord}`);
+    check('the held word never goes backwards', sw.monotonic);
     await page.close();
   }
 
