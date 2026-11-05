@@ -689,3 +689,31 @@ being said has to be the biggest thing on screen while it is being said.
 
 Laws unchanged and asserted: nothing in the path touches `solved` or Next, and
 the spec checks Next is still gated by the step with the hero script running.
+
+### The markup sweep: fractions were broken on screen (Nov 2026)
+
+Ordered after the `<sup>` catch — grep every string the engine emits for v1
+markup vocabulary and either migrate it through `rich()` or report it clean. It
+was not clean. Three classes, and one of them was live and wrong in front of
+kids:
+
+- **Stacked fractions, 17 skills.** `<span class="fr">…` had no handler, and the
+  app's own seam flattened every tag to a space before the string ever reached
+  `rich()`. A grade-4 equivalent-fractions question was being shown as
+  **"3 5 = ? 15"** where the question is "3/5 = ?/15". Nothing errored; the
+  number was simply wrong on screen, in the lesson the owner's family re-tests on.
+- **`&nbsp;`**, 4 skills — five literal characters wherever the flattener did not
+  reach it.
+- **`<br>`**, 4 skills — dropped entirely, joining two sentences: "…for $12.What's
+  one cup?"
+
+`rich()` now understands the whole vocabulary (bold, superscript, stacked
+fraction, line break, entities) and `plainSpeech()` speaks all of it — a fraction
+is "1 over 3", never "13". Answer buttons go through `rich()` too; they carry the
+same markup and were rendering their own tags.
+
+The lesson that generalises: **stripping a tag does not leave a gap, it joins
+what was either side of it.** 2<sup>6</sup> became 26, and 1/3 became 13. A guard
+that only looks for raw markup on screen can never catch this, because flattening
+removes the markup — it just takes the maths with it. So the new check looks for
+the fraction bar itself, and restoring the flattener fails it with "4 6 = ? 18".

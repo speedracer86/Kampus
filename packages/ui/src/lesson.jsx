@@ -193,7 +193,7 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   const body = <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 20 : 32 }}>
     {sayLines?.length
       ? <SayItShowIt lines={sayLines} clips={clips} meta={clipMeta} muted={muted} phone={phone}
-          mode={mode} worldColor={worldColor || color.ink} blobDir={blobDir} promptSize={headlineSize}
+          mode={mode} worldColor={worldColor || color.ink} blobDir={blobDir}
           speak={speak} fallbackText={step?.speak || step?.prompt}
           onCue={(name, i) => {
             setCue(c => ({ name, nonce: c.nonce + 1 }));

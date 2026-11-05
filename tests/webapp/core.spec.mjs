@@ -5,6 +5,44 @@
 import { buildDayLesson, clickText, ledger, open, text } from './harness.mjs';
 
 export default async function run(check) {
+  /* ---------- fractions arrive as fractions ----------
+
+     The Nov 5 markup sweep found the app flattening the engine's display strings
+     before they reached the screen: every tag replaced by a space, so
+     "3/5 = ?/15" was shown to a grade-4 kid as "3 5 = ? 15", in 17 skills. The
+     guards below for raw markup could never have caught it — flattening REMOVES
+     the markup, it just takes the maths with it. This one looks for the fraction
+     bar itself. */
+  {
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52 }, '#lesson');
+    await page.waitForTimeout(600);
+    for (let i = 0; i < 30; i++) {
+      const t = await text(page);
+      if (/Warm-up/.test(t) && /\?/.test(t)) break;
+      const moved = await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')]
+          .find(x => /^(Next|Start the mission|Skip to the move|Show me the move)/.test(x.innerText.trim()) && !x.disabled);
+        if (b) { b.click(); return true; }
+        const seg = [...document.querySelectorAll('button')].filter(x => !x.innerText.trim());
+        if (seg.length) { seg[Math.min(1, seg.length - 1)].click(); return true; }
+        const walk = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Tap for the next line');
+        if (walk) { walk.click(); return true; }
+        return false;
+      });
+      if (!moved) break;
+      await page.waitForTimeout(140);
+    }
+    const q = await page.evaluate(() => {
+      const h = document.querySelector('h2');
+      return h ? h.innerText.replace(/\u00A0/g, ' ') : '';
+    });
+    check('an equivalent-fractions question shows fraction bars, not loose digits',
+      /\d\s*\/\s*\d|\?\s*\/\s*\d/.test(q), JSON.stringify(q));
+    check('and no two numbers are left touching where a bar should be',
+      !/^\s*\d+ \d+ =/.test(q), JSON.stringify(q));
+    await page.close();
+  }
+
   /* ---------- 1. the home screen loads at all ---------- */
   {
     const page = await open();
@@ -135,6 +173,11 @@ export default async function run(check) {
     check('Teach me opens', /TEACH ME/i.test(t), t.slice(0, 80).replace(/\n/g, ' '));
     check('no raw <b> markup anywhere on the lesson screen', !t.includes('<b>') && !t.includes('</b>'));
     check('no raw <sup> markup either — 2<sup>6</sup> once read as 26', !t.includes('<sup>') && !t.includes('</sup>'));
+    /* The rest of the v1 vocabulary, after the Nov 5 sweep. The fraction spans
+       were the bad one: stripped rather than understood, they turned "1/3 = ?/15"
+       into "1 3 = ? 15" on a grade-4 screen, in 17 skills. */
+    check('no raw fraction markup, and no entity text', !t.includes('<span') && !t.includes('&nbsp;'),
+      (t.match(/<span[^\n]{0,40}|&nbsp;/) || [''])[0]);
     const counter = t.match(/Tap for the next line · (\d+) of (\d+)/);
     if (counter) {
       await clickText(page, 'Tap for the next line');

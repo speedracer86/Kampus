@@ -79,8 +79,19 @@ export function bizCtx(state) {
   };
 }
 
+/* The engine's display strings reach the screen INTACT.
+
+   This used to flatten them here — every tag replaced by a space — which is why
+   a stacked fraction arrived as "4 5" and the owner's rich(question.text) had
+   nothing left to render. Tags are the engine's vocabulary for what it cannot
+   say in plain characters: a fraction bar, an exponent, a line break. Dropping
+   them does not lose formatting, it loses MATH: "4/5 = ?/10" was reaching a
+   grade-4 screen as "4 5 = ? 10", in 17 skills.
+
+   rich() renders them and plainSpeech() speaks them (packages/ui/src/question.jsx);
+   anything needing a bare string asks plainSpeech() for one. */
 const asQuestion = (p) => ({
-  text: String(p.q).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim(),
+  text: String(p.q),
   answers: p.choices, correct: p.correctIdx,
   teachSteps: p.steps, hint: p.steps?.[0], show: p.steps?.join(' '),
   skill: p.skillKey, source: p.source,

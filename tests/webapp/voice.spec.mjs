@@ -20,7 +20,12 @@ import { open, text, driveToTeach, nextButton } from './harness.mjs';
     every assertion about it would pass against a product that does not sweep —
     while `Slower` would be untestable, since the whole point is that the sweep
     rides the clip's clock rather than a timer of its own. */
-const CLIP_SECONDS = 0.6;
+/* Long enough to be representative: a real line of ~15 words runs 2-4 seconds,
+   so a word is held for 150-250ms. At 0.6s the whole line flew past in under
+   two frames of the highlight's own fade, which told us nothing about whether a
+   kid would ever see it. */
+const CLIP_SECONDS = 1.6;
+const CLIP_MS = CLIP_SECONDS * 1000;
 const captureAudio = (page) => page.addInitScript((DUR) => {
   window.__played = [];
   window.__playing = 0;
@@ -94,7 +99,7 @@ export default async function run(check) {
     check('the three controls are the three that already existed',
       /Again/.test(t) && /Slower/.test(t) && /Quiet/.test(t));
 
-    await page.waitForTimeout(900);
+    await page.waitForTimeout(CLIP_MS * 1.6);     // long enough for two lines
     const clips = await played(page);
     check('arriving at the step plays its lines, in order', clips.length >= 2,
       clips.slice(0, 3).join(' → '));
@@ -152,7 +157,7 @@ export default async function run(check) {
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForTimeout(500);
     await driveToTeach(page);
-    await page.waitForTimeout(1200);            // let the step's lines run
+    await page.waitForTimeout(CLIP_MS * 2.2);   // through the shade cue on line 2
 
     // eqFrac step 1 is a bar: its script shades the target as Karla says it.
     const bar = await page.evaluate(() => {
@@ -194,7 +199,7 @@ export default async function run(check) {
     const onTryIt = /try it/i.test(await kicker());
     check('reached the Try it step', onTryIt, await kicker());
     if (onTryIt) {
-      await page.waitForTimeout(1400);          // its lines play too
+      await page.waitForTimeout(CLIP_MS * 1.5);  // its lines play too
       const state = await page.evaluate(() => {
         const el = [...document.querySelectorAll('div')].find(d => /^\d+\/\d+$/.test(d.textContent.trim()));
         const next = [...document.querySelectorAll('button')].find(x => /^(Next|Start the mission)/.test(x.innerText.trim()));
@@ -217,20 +222,27 @@ export default async function run(check) {
     await page.waitForTimeout(500);
     await driveToTeach(page);
 
-    /** Sizes and states of the script block, as the browser computes them. */
+    /** The script block, as the browser computes it. */
     const script = () => page.evaluate(() => {
       const rows = [...document.querySelectorAll('[data-say-line]')];
       const px = (el) => Math.round(parseFloat(getComputedStyle(el).fontSize));
       const cur = rows.find(r => r.dataset.sayState === 'current');
-      const h2 = document.querySelector('h2');
+      const words = [...document.querySelectorAll('[data-say-word]')];
+      const colourOf = (st) => {
+        const w = words.find(x => x.dataset.wordState === st);
+        return w ? getComputedStyle(w).color : null;
+      };
       return {
         rows: rows.length,
         states: rows.map(r => r.dataset.sayState),
-        sizes: rows.map(px),
-        currentSize: cur ? px(cur) : null,
-        promptSize: h2 ? px(h2) : null,
-        words: cur ? [...cur.querySelectorAll('[data-say-word]')].map(w => w.dataset.wordState) : [],
+        sizes: words.map(px),
+        scriptSize: rows[0] ? px(rows[0]) : null,
+        promptSize: document.querySelector('h2') ? px(document.querySelector('h2')) : null,
+        held: words.filter(w => w.dataset.wordState === 'now')
+          .map(w => getComputedStyle(w).backgroundColor),
+        inkSaid: colourOf('said'), paleAhead: colourOf('ahead'),
         nowAt: cur ? [...cur.querySelectorAll('[data-say-word]')].findIndex(w => w.dataset.wordState === 'now') : -1,
+        wordCount: words.length,
       };
     });
 
@@ -242,14 +254,36 @@ export default async function run(check) {
       `${speakingFrames.length} of ${frames.length} frames`);
 
     const f = speakingFrames[0] || frames[0];
-    check('the line being said is at the prompt\'s own scale, not caption size',
-      f.currentSize >= (f.promptSize - 2), `line ${f.currentSize}px vs prompt ${f.promptSize}px`);
-    check('and the other lines are smaller than it',
-      f.sizes.every((px, i) => (f.states[i] === 'current' ? true : px < f.currentSize)),
-      JSON.stringify(f.sizes));
-    check('lines already said settle, lines to come wait',
-      speakingFrames.some(x => x.states.includes('said')) || frames.at(-1).states.includes('said'),
-      frames.map(x => x.states.join('/')).at(-1));
+    /* The demo's model: ONE paragraph, ONE size, state carried by colour alone.
+       The first build of this stacked the lines and resized the current one,
+       which moves the text under a kid who is trying to read it. */
+    check('the whole script is on screen, not revealed line by line',
+      f.rows === frames[0].rows && f.rows > 1, `${f.rows} lines throughout`);
+    check('the script is one size from end to end',
+      new Set(f.sizes).size === 1, `${new Set(f.sizes).size} distinct sizes`);
+    check('and that size is the demo\'s hero scale, not caption size',
+      f.scriptSize === 26, `${f.scriptSize}px (prompt is ${f.promptSize}px)`);
+    check('exactly one word is held at a time', speakingFrames.every(x => x.held.length <= 1),
+      JSON.stringify(speakingFrames.map(x => x.held.length)));
+    /* Over the frames, not in one: the highlight fades in over .25s, so a single
+       sample catches it mid-transition at 5% alpha. Hue must be the demo's gold,
+       and it must actually reach visible — an invisible highlight would otherwise
+       satisfy a hue-only check. */
+    const golds = speakingFrames.flatMap(x => x.held)
+      .map(c => (c || '').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/))
+      .filter(Boolean)
+      .map(m => ({ rgb: `${m[1]},${m[2]},${m[3]}`, a: m[4] === undefined ? 1 : Number(m[4]) }))
+      // A word that has just become current can be sampled at zero alpha, which
+      // the browser reports as rgba(0,0,0,0) — not a wrong colour, just not
+      // painted yet.
+      .filter(g => g.a > 0);
+    check('the held word is the demo\'s gold', golds.length > 0 && golds.every(g => g.rgb === '255,233,168'),
+      golds[0] ? golds[0].rgb : 'nothing held');
+    check('and it reaches full strength, not a ghost of itself',
+      Math.max(0, ...golds.map(g => g.a)) > 0.5,
+      `peak alpha ${Math.max(0, ...golds.map(g => g.a)).toFixed(2)}`);
+    check('words already said are ink and words to come are pale',
+      f.inkSaid !== f.paleAhead && !!f.paleAhead, `said ${f.inkSaid} vs ahead ${f.paleAhead}`);
 
     // The sweep: the held word must MOVE through the line, not sit on word one.
     const swept = [...new Set(speakingFrames.map(x => x.nowAt).filter(n => n >= 0))];
@@ -273,13 +307,18 @@ export default async function run(check) {
     const sweepReach = async () => {
       await page.evaluate(() => [...document.querySelectorAll('button')]
         .find(b => b.innerText.trim() === 'Again')?.click());
-      await page.waitForTimeout(200);
+      // Far enough in that one playback rate is several WORDS ahead of the
+      // other. At 200ms of a 1.6s clip both rates were still on word one, and
+      // the check compared two identical numbers and called it agreement.
+      // Three quarters of the way through at full speed, so the two rates are
+      // several WORDS apart. Words are not equal lengths, so comparing
+      // percentages rounded to whole numbers hid a real difference behind
+      // "50% vs 50%"; the word index is what the eye actually sees.
+      await page.waitForTimeout(CLIP_MS * 0.75);
       return page.evaluate(() => {
         const cur = [...document.querySelectorAll('[data-say-line]')].find(r => r.dataset.sayState === 'current');
-        if (!cur) return 0;
-        const all = [...cur.querySelectorAll('[data-say-word]')];
-        const now = all.findIndex(w => w.dataset.wordState === 'now');
-        return all.length ? (now + 1) / all.length : 0;
+        if (!cur) return -1;
+        return [...cur.querySelectorAll('[data-say-word]')].findIndex(w => w.dataset.wordState === 'now');
       });
     };
     const atFull = await sweepReach();
@@ -288,7 +327,7 @@ export default async function run(check) {
     await page.waitForTimeout(120);
     const atSlow = await sweepReach();
     check('Slower slows the sweep with the voice, not just the voice',
-      atSlow < atFull, `${(atFull * 100).toFixed(0)}% of the line at 1.0, ${(atSlow * 100).toFixed(0)}% at 0.8`);
+      atSlow >= 0 && atFull > atSlow, `word ${atFull} at 1.0, word ${atSlow} at 0.8`);
 
     /* And the law that outranks the redesign. */
     check('the hero script still does not gate Next',

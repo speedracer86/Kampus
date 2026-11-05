@@ -37,6 +37,11 @@ export const color = {
   border: '#E5E2DA', borderFaint: '#F1EEE6', trackOff: '#D8D4C9', fillHover: '#EEEBE3',
   onInkMuted: 'rgba(255,255,255,.72)', onInkTrack: 'rgba(255,255,255,.22)',
   goldMid: '#D9B96A', goldAlt: '#D9A93F', goldTint: '#FBF3E4', goldBorder: '#E8D9B8',
+  // The held word under Karla's voice, and the text she has not reached yet.
+  // Both taken from the owner's say-it-show-it demo (design-incoming/
+  // say-it-show-it-demo.html, Nov 4) rather than approximated from the existing
+  // ramp: goldTint is too pale to read as a moving highlight at speaking speed.
+  goldHold: '#FFE9A8', inkAhead: '#B9BBC1',
   orange: '#EE8A55', orangeDeep: '#7C4A1D', peach: '#F4BE93',
   glass: 'rgba(245,247,249,.8)', hairline: 'rgba(35,37,43,.08)',
   sidebar: '#EEF1F4',

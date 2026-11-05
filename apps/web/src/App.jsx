@@ -65,8 +65,10 @@ function buildUnitQuizFromPlan(state) {
   const world = worldForUnit(unitById(day?.unit));
   const tier = state.tiers?.[`${state.grade}_${world.id}`] || 1;
   const ctx = bizCtx(state);
+  // Markup intact, like the lesson's own questions: rich() renders it, and
+  // flattening it here is what turned "4/5" into "4 5" (see year.js asQuestion).
   const toQ = (p, group) => ({
-    text: String(p.q).replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim(),
+    text: String(p.q),
     answers: p.choices, correct: p.correctIdx, answerIndex: p.correctIdx, choices: p.choices,
     skill: p.skill || p.skillKey, teachSteps: p.steps, hint: p.steps?.[0], group,
   });

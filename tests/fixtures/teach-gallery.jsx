@@ -97,8 +97,14 @@ function ReteachPanels({ phone }) {
    the transform is checked here against the shapes curriculum.js really emits.
 
    The nested case is in the list because nothing in the bank nests them YET. */
+const FR = (n, d) => `<span class="fr"><span class="fn">${n}</span><span class="fd">${d}</span></span>`;
 const RICH_CASES = [
   { raw: '7<sup>2</sup> = ?', said: '7 to the 2 = ?' },
+  // The sweep's catch: stripped, this read "13 = ?15" on a grade-4 screen.
+  { raw: `${FR(1, 3)} &nbsp;=&nbsp; ${FR('?', 15)}`, said: '1 over 3 = ? over 15' },
+  { raw: `${FR(2, 4)} &nbsp;or&nbsp; ${FR(3, 5)}`, said: '2 over 4 or 3 over 5' },
+  { raw: 'Someone bought 3 cups for $12.<br>What\u2019s one cup?', said: 'Someone bought 3 cups for $12. What\u2019s one cup?' },
+  { raw: 'Split 20 in the ratio 2:3.<br>How many is the <b>smaller</b> share?', said: 'Split 20 in the ratio 2:3. How many is the smaller share?' },
   { raw: '2<sup>6</sup> means multiply 2 by itself 6 times.', said: '2 to the 6 means multiply 2 by itself 6 times.' },
   { raw: '4,500 = 4.5 × 10<sup>?</sup>', said: '4,500 = 4.5 × 10 to the ?' },
   { raw: '<b>Halve</b> it, then add 2.', said: 'Halve it, then add 2.' },

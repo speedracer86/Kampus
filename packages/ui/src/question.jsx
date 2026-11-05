@@ -52,29 +52,88 @@ function HelpGrid({ ids, open, onPick, tokensLeft, teachFree, phone }) {
   </div>;
 }
 
-/** Legacy teach strings carry <b> markup from the v1 renderer, which set them via
-    innerHTML; React shows the tags as text. Bold the marked spans, RAISE the
-    superscripts — stripping <sup> changed the math: 2<sup>6</sup> read as 26
-    (owner catch, Nov 5, on a grade-8 warm-up) — and drop any other
-    angle-bracketed stray. */
+/* THE V1 MARKUP VOCABULARY, IN ONE PLACE.
+
+   The engine still emits the display strings the v1 app set with innerHTML.
+   React shows markup as text, so every one of these has to be understood here
+   or it leaks — and the way it leaks is the dangerous part: stripping a tag
+   does not leave a gap, it JOINS what was either side of it. 2<sup>6</sup>
+   became 26 (owner catch, Nov 5), and a stacked fraction became worse:
+
+       <span class="fr"><span class="fn">1</span><span class="fd">3</span></span>
+
+   rendered as "13". A kid at a grade-4 equivalent-fractions lesson was being
+   shown "1 3 = ? 15" where the question is "1/3 = ?/15" — in 17 skills,
+   including the one the owner's family re-tests on. Nothing errored, nothing
+   looked broken to a test, and the number was simply wrong on screen.
+
+   So the rule is: a tag is either understood here or it is a bug. The sweep that
+   found this (owner's order, Nov 5) is pinned by tests in the layout gallery
+   against the shapes packages/engine really emits. */
+
+/** One token of v1 markup: bold, superscript, stacked fraction, or a line break. */
+const MARKUP = /(<b>[\s\S]*?<\/b>|<sup>[\s\S]*?<\/sup>|<span class="fr"><span class="fn">[\s\S]*?<\/span><span class="fd">[\s\S]*?<\/span><\/span>|<br\s*\/?>)/g;
+const FRACTION_BODY = '<span class="fr"><span class="fn">([\\s\\S]*?)<\\/span><span class="fd">([\\s\\S]*?)<\\/span><\\/span>';
+const FRACTION = new RegExp(`^${FRACTION_BODY}$`);          // one token, exactly
+const FRACTION_ALL = new RegExp(FRACTION_BODY, 'g');        // every one in a string
+
+/* The entities v1 wrote by hand. `&nbsp;` is the one that matters — the engine
+   uses it to keep "2/4 = ?/8" from breaking across lines — and React renders it
+   as the five literal characters unless it is decoded. It decodes to a real
+   non-breaking space, which is what it was asking for. */
+const ENTITIES = [[/&nbsp;/g, '\u00A0'], [/&amp;/g, '&'], [/&lt;/g, '<'], [/&gt;/g, '>'],
+  [/&quot;/g, '"'], [/&#0*39;|&apos;/g, "'"]];
+const decode = (s) => ENTITIES.reduce((acc, [re, to]) => acc.replace(re, to), s);
+
+/** Strip any tag we do not understand, then decode entities. */
+const plainPart = (s) => decode(String(s).replace(/<[^>]+>/g, ''));
+
+/**
+ * Legacy display strings, as React elements: bold spans bolded, superscripts
+ * RAISED, stacked fractions written as n/d, <br> as a real break, entities
+ * decoded, and anything else dropped.
+ */
 export function rich(s) {
-  return String(s ?? '').split(/(<b>.*?<\/b>|<sup>.*?<\/sup>)/g).map((part, i) => {
+  return String(s ?? '').split(MARKUP).map((part, i) => {
     const b = part.match(/^<b>([\s\S]*)<\/b>$/);
     // Recurse into the bold span rather than printing its contents: <b> wraps the
     // outer match, so a bolded exponent — <b>2<sup>6</sup></b> — would otherwise
-    // render its own tags as visible text. Nothing in the bank nests them today;
-    // the next line that bolds a power would have found out the hard way.
+    // render its own tags as visible text.
     if (b) return <strong key={i} style={{ fontWeight: 800 }}>{rich(b[1])}</strong>;
     const sup = part.match(/^<sup>([\s\S]*)<\/sup>$/);
-    if (sup) return <sup key={i} style={{ fontSize: '.62em', lineHeight: 0 }}>{sup[1]}</sup>;
-    return part.replace(/<[^>]+>/g, '');
+    if (sup) return <sup key={i} style={{ fontSize: '.62em', lineHeight: 0 }}>{plainPart(sup[1])}</sup>;
+    const fr = part.match(FRACTION);
+    // Written with a slash rather than stacked: it is unambiguous at every size
+    // this appears in — a 40px heading, a 26px answer button, a 15px teach line —
+    // and the engine's own adapter (quiz-adapter.plainText) already made the same
+    // choice. A stacked treatment is a design decision, not a bug fix.
+    if (fr) return <span key={i} style={{ whiteSpace: 'nowrap' }}>{plainPart(fr[1])}/{plainPart(fr[2])}</span>;
+    if (/^<br\s*\/?>$/.test(part)) return <br key={i} />;
+    return plainPart(part);
   });
 }
 
-/** The same string for a VOICE: markup dropped, superscripts said out loud —
-    "2<sup>6</sup>" must be read "2 to the 6", never "twenty-six". */
+/** The same string for a VOICE: markup spoken, never read out or run together.
+    "2<sup>6</sup>" must be "2 to the 6", never "twenty-six"; a fraction must be
+    "1 over 3", never "13". */
 export function plainSpeech(s) {
-  return String(s ?? '').replace(/<sup>([\s\S]*?)<\/sup>/g, ' to the $1 ').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  return String(s ?? '')
+    .replace(FRACTION_ALL, ' $1 over $2 ')
+    .replace(/<sup>([\s\S]*?)<\/sup>/g, ' to the $1 ')
+    // A <br> ends a sentence for the voice — unless the sentence already ended,
+    // which is the common case ("…for $12.<br>What's one cup?") and produced a
+    // doubled stop the first time this was written.
+    .replace(/\s*<br\s*\/?>\s*/gi, (m, off, str) => (/[.!?\u2026]$/.test(str.slice(0, off).trimEnd()) ? ' ' : '. '))
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, 'and')
+    .replace(/&lt;/g, 'less than').replace(/&gt;/g, 'greater than')
+    .replace(/&quot;/g, '').replace(/&#0*39;|&apos;/g, "'")
+    .replace(/\s+/g, ' ')
+    // Tidy a space before real punctuation, but NOT before "?" — in these strings
+    // a lone ? is the blank to fill ("? over 15"), not the end of a sentence.
+    .replace(/\s+([.,!])/g, '$1')
+    .trim();
 }
 
 /** Teach me, one beat at a time. A wall of numbered prose is the wrong thing to
@@ -222,7 +281,9 @@ export function Question({
     {(question.answers || []).map((a, i) => <button key={i} onClick={() => pick(i)} style={answerStyle(i)}>
       <span style={{ ...qBase, flex: 'none', width: 30, height: 30, borderRadius: radius.full, background: color.fill,
         display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, color: color.mutedDeep }}>{i + 1}</span>
-      <span style={{ ...numeral(phone ? 26 : 34), color: color.ink }}>{a}</span>
+      {/* Through rich() like the question: a fraction answer is the same v1
+          markup, and raw it either prints its tags or runs its digits together. */}
+      <span style={{ ...numeral(phone ? 26 : 34), color: color.ink }}>{rich(a)}</span>
     </button>)}
   </div>;
 

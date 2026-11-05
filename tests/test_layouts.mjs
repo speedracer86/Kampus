@@ -251,19 +251,33 @@ try {
         n: cases.length,
         text: cases.map(c => c.innerText),
         sups: cases.map(c => c.querySelectorAll('sup').length),
+        brs: cases.map(c => c.querySelectorAll('br').length),
         bolds: cases.map(c => c.querySelectorAll('strong').length),
         plain: window.__plain, want: window.__plainWant,
       };
     });
 
-    check('the markup cases rendered at all', seen.n === 6, `${seen.n} cases`);
+    check('the markup cases rendered at all', seen.n === 10, `${seen.n} cases`);
     check('a superscript becomes a real <sup> element, not flat digits',
-      seen.sups[0] === 1 && seen.sups[1] === 1 && seen.sups[2] === 1, JSON.stringify(seen.sups));
+      seen.sups[0] === 1 && seen.sups.filter(Boolean).length >= 3, JSON.stringify(seen.sups));
     check('no tag is ever printed as text', !seen.text.join(' ').includes('<'),
       seen.text.find(x => x.includes('<')) || 'none');
+    const bolded = seen.text.findIndex(t => /is the one to beat/.test(t));
     check('a bolded exponent keeps BOTH the bold and the superscript',
-      seen.bolds[4] === 1 && seen.sups[4] === 1, `strong ${seen.bolds[4]}, sup ${seen.sups[4]}`);
-    check('an unknown tag is dropped, not shown', seen.text[5] === 'Nothing special here.', seen.text[5]);
+      seen.bolds[bolded] === 1 && seen.sups[bolded] === 1, `strong ${seen.bolds[bolded]}, sup ${seen.sups[bolded]}`);
+    check('an unknown tag is dropped, not shown', seen.text.at(-1) === 'Nothing special here.', seen.text.at(-1));
+    /* The sweep's findings (owner's order, Nov 5). Each of these was leaking in
+       the live product: a stacked fraction rendered as "13", &nbsp; as five
+       literal characters, and <br> as nothing at all — joining two sentences. */
+    const flat = (t) => String(t).replace(/\u00A0/g, ' ');
+    check('a stacked fraction reads as a fraction, not two joined digits',
+      flat(seen.text[1]).startsWith('1/3') && flat(seen.text[1]).includes('?/15'), seen.text[1]);
+    check('&nbsp; is a space, not five characters on screen',
+      !seen.text.join(' ').includes('&nbsp;') && !seen.text.join(' ').includes('&'),
+      seen.text.find(x => x.includes('&')) || 'none');
+    check('<br> breaks the line instead of joining the sentences',
+      seen.brs[3] === 1 && !flat(seen.text[3]).includes('$12.What'), `${seen.brs[3]} <br>, "${flat(seen.text[3]).slice(10, 40)}"`);
+    check('bold still survives alongside a break', seen.bolds.at(-2) === 1, String(seen.bolds.at(-2)));
     const wrong = (seen.plain || []).map((got, i) => (got === seen.want[i] ? null : `${i}: "${got}"`)).filter(Boolean);
     check('the voice says "to the", never the flattened number', wrong.length === 0,
       wrong.join(' | ') || seen.plain[1]);

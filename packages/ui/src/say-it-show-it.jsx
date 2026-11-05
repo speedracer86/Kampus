@@ -88,9 +88,13 @@ export function wordAt(plan, t, d) {
  * @param {(cue:string, index:number) => void} p.onCue fires as each line starts
  */
 export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, autoplay = true,
-  fallbackText, onCue, phone, mode = 'b', worldColor, blobDir = '/blobs/', promptSize }) {
+  fallbackText, onCue, phone, mode = 'b', worldColor, blobDir = '/blobs/' }) {
   const [at, setAt] = React.useState(-1);
   const [word, setWord] = React.useState(-1);
+  // How much of the script she has already said. Kept apart from `at` because
+  // when the sequence ends `at` goes back to -1, and the demo leaves everything
+  // she has read in ink rather than resetting it to unread grey.
+  const [through, setThrough] = React.useState(0);
   const [quiet, setQuiet] = React.useState(false);
   const [rate, setRate] = React.useState(1);
   const speaking = useSpeaking();
@@ -104,18 +108,20 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
     if (quiet || muted) return;
     const mine = ++token.current;
     stopped.current = false;
+    setThrough(0);
     if (hasClips) {
       await playLines(clips, {
         rate: playbackRate,
         onLine: (i) => {
           if (token.current !== mine) return;
           setAt(i);
+          setThrough(i);
           setWord(-1);
           onCue?.(lines[i]?.cue, i);          // one visual act, as the line starts
         },
         shouldStop: () => stopped.current || token.current !== mine,
       });
-      if (token.current === mine) setAt(-1);
+      if (token.current === mine) { setAt(-1); setThrough(lines.length); }
       return;
     }
     // No clips for this step: speechSynthesis, exactly as before the voice pass.
@@ -138,10 +144,10 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
      Under reduced motion there is no sweep at all — the whole line is held
      instead. A word-by-word crawl is exactly the kind of movement that setting
      is asking us not to make. */
-  const plan = React.useMemo(
-    () => (at >= 0 ? sweepPlan(lines[at]?.say, meta?.[at]) : null),
-    [at, lines, meta],
-  );
+  // Every line's words, not just the one being said: the whole script is on
+  // screen, so every line needs its spans. The sweep only consults the current one.
+  const plans = React.useMemo(() => lines.map((l, i) => sweepPlan(l?.say, meta?.[i])), [lines, meta]);
+  const plan = at >= 0 ? plans[at] : null;
   React.useEffect(() => {
     if (!speaking || at < 0 || !plan || reduced) return undefined;
     let raf = 0;
@@ -153,13 +159,6 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [speaking, at, plan, reduced]);
-
-  /* The prompt's own scale, so the spoken line reads as the main text rather than
-     as a caption sitting above it. TeachSteps passes the size it is using for
-     its own h2; the fallbacks match it for anywhere that does not. */
-  const hero = promptSize || (phone ? 23 : 32);
-  const settled = phone ? 15 : 17;
-  const sweep = plan || { words: [], starts: [], exact: false };
 
   const control = (label, onClick, variant = 'outline') =>
     <Button key={label} variant={variant} size="sm" onClick={onClick}>{label}</Button>;
@@ -190,54 +189,54 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
 
   return <div style={{ ...sBase, marginBottom: 18 }}>
     {companion}
-    {/* THE SCRIPT IS THE HERO WHILE SHE SPEAKS (owner, Nov 5).
+    {/* THE SCRIPT IS THE HERO WHILE SHE SPEAKS.
 
-        It used to be a stack of small grey rows above the math, which read as a
-        caption — something to skip. The kid this is built for has auditory
-        processing delays and rushes reading, so the line being said has to be
-        the biggest thing on the screen while it is being said: current line at
-        the prompt's own scale, lines already said settling smaller above it,
-        lines still to come held faint so the block does not jump as each one
-        arrives.
+        Built against the owner's demo (design-incoming/say-it-show-it-demo.html,
+        Nov 4) after a first version diverged from it. The demo is one flowing
+        paragraph at ONE size, and the only thing that changes is COLOUR: the
+        words she has said are ink, the word she is on is held in gold, the words
+        still to come are pale grey. The whole beat is on screen from the start.
 
-        Once she stops, the whole script settles to reading size — the step she
-        is working on gets the screen back. */}
-    {!!lines.length && <div style={{ marginBottom: 16 }}>
+        That last part is the accommodation, not a style choice. A kid with
+        auditory processing delays who rushes reading can see where the sentence
+        is going and where it has been; a stack that revealed lines one at a time,
+        or resized them as they became current, would move the text under her
+        while she was trying to read it. Colour carries the state and nothing
+        reflows — which is also the only way "nothing else moves while she
+        speaks" can be true of the script itself. */}
+    {!!lines.length && <p data-say-script style={{
+      fontSize: phone ? 20 : 26, fontWeight: 600, letterSpacing: '-.02em',
+      lineHeight: 1.35, margin: '0 0 26px', color: color.inkAhead, textWrap: 'pretty',
+    }}>
       {lines.map((l, i) => {
         const current = i === at;
-        const said = at >= 0 && i < at;
-        const ahead = at >= 0 && i > at;
-        return <div key={i} data-say-line={i} data-current={current ? 'yes' : 'no'}
-          data-say-state={current ? 'current' : said ? 'said' : ahead ? 'ahead' : 'rest'}
-          style={{
-            fontSize: current ? hero : settled,
-            fontWeight: current ? 600 : 400,
-            letterSpacing: current ? '-.02em' : 'normal',
-            lineHeight: current ? 1.22 : 1.5,
-            color: current ? color.ink : color.muted,
-            opacity: ahead ? 0.45 : 1,
-            margin: current ? '10px 0' : '2px 0',
-            padding: current ? 0 : '1px 0',
-            textWrap: 'pretty',
-            // Only the size and the fade move. The sweep below is the one thing
-            // animating while she talks.
-            transition: 'font-size .25s ease, opacity .25s ease, color .25s ease',
-          }}>
-          {current
-            ? sweep.words.map((w, k) => <span key={k} data-say-word={k}
-              data-word-state={reduced ? 'held' : k === word ? 'now' : k < word ? 'said' : 'ahead'}
-              style={{
-                // The held word, or the whole line when motion is reduced.
-                background: (reduced || k === word) ? (color.goldTint || '#FBF3E4') : 'transparent',
-                color: (reduced || k <= word) ? color.ink : color.muted,
-                borderRadius: radius.sm,
-                padding: '0 .06em',
-                transition: 'background .12s linear, color .12s linear',
-              }}>{w}{k < sweep.words.length - 1 ? ' ' : ''}</span>)
-            : l.say}
-        </div>;
+        const done = at >= 0 ? i < at : i < through;
+        const plan = plans[i];
+        return <span key={i} data-say-line={i} data-current={current ? 'yes' : 'no'}
+          data-say-state={current ? 'current' : done ? 'said' : 'ahead'}>
+          {plan.words.map((w, k) => {
+            // Within the line she is on, the sweep decides; everywhere else the
+            // line's own state does. Reduced motion holds the whole line at once
+            // rather than crawling a highlight across it.
+            const state = current
+              ? (reduced ? 'now' : k === word ? 'now' : k < word ? 'said' : 'ahead')
+              : done ? 'said' : 'ahead';
+            return <span key={k} data-say-word={k} data-word-state={state} style={{
+              background: state === 'now' ? color.goldHold : 'transparent',
+              color: state === 'ahead' ? color.inkAhead : color.ink,
+              borderRadius: radius.sm, padding: '1px 4px', margin: '0 -1px',
+              /* The demo fades over .25s because it highlights a PHRASE, held for
+                 the better part of a second. A word is held for 150-250ms, so the
+                 same fade never arrives — the spec caught the highlight peaking
+                 at 45% opacity and moving on, a permanent ghost of itself. The
+                 hold snaps; the ink/pale settle keeps the demo's easing. */
+              transition: 'background .1s linear, color .25s ease',
+            }}>{w}{k < plan.words.length - 1 ? ' ' : ''}</span>;
+          })}
+          {i < lines.length - 1 ? ' ' : ''}
+        </span>;
       })}
-    </div>}
+    </p>}
 
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
       {control('Again', () => run())}
