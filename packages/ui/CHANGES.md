@@ -619,3 +619,23 @@ marks the landing without setting `picked`.
 
 On a `tryIt` step the state-changing cues are dropped: the check stays hers.
 
+
+### The re-teach panel gets the plumbing for a voice (Nov 2026)
+
+`ReteachView` is the last teaching surface with no voice, and the one the kid
+reaches at the lowest moment in the lesson — she has just missed the prove-it.
+Owner's decision: voice it. The scripts arrive with the tranche-3 bank patch, so
+what landed here is everything that does not depend on them.
+
+- `ReteachView` takes `voice`, `muted` and `onEvent`, and renders `SayItShowIt`
+  when `teach.speakLines` exists. With no script it renders exactly as before —
+  no voice row, no highlight.
+- `row.N` highlights that row; `prompt` highlights the title. A cue here
+  **highlights, it does not reveal.** The rows are a reference she is reading
+  after a miss; hiding four of them to reveal them one at a time takes
+  information away at the worst possible moment — the opposite of what the panel
+  is for.
+- Nothing on this panel can be solved, so the gating law is about `onContinue`:
+  no cue, clip or audio state touches it. The button is live from first paint,
+  during playback, and after Quiet.
+

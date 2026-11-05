@@ -5,30 +5,39 @@
    short, which is the auditory-processing requirement anyway.
 
    Regeneration is content-addressed: each line's `say` text is hashed into the
-   manifest, so a bank patch pays only for the lines it actually edited. The other
-   seventy-five skills land as changes to speak.js alone and nothing here needs
-   touching when they do.
+   manifest, so a bank patch pays only for the lines it actually edited. Bank
+   tranches land as changes to speak.js alone and nothing here needs touching when
+   they do — including a tranche that adds a NEW KIND of script (the re-teach
+   scripts coming in tranche 3): the kinds are read off the bank, not listed.
 
    Usage:
-     node scripts/generate-voice.mjs --dry     counts and cost, ZERO api calls
-     node scripts/generate-voice.mjs           generate what changed
-     node scripts/generate-voice.mjs --force   regenerate everything
+     node scripts/generate-voice.mjs --dry              counts and cost, ZERO api calls
+     node scripts/generate-voice.mjs                    generate what changed
+     node scripts/generate-voice.mjs --force            regenerate everything
+     node scripts/generate-voice.mjs --grades 3,4,5     only those grades
+     node scripts/generate-voice.mjs --only eqFrac      only those skills
+     node scripts/generate-voice.mjs --budget 9700      stop before spending more
+                                                        than that many credits
+
+   `--budget` exists because credits run out mid-bank. It takes whole skills in
+   priority order (youngest grade first) while the budget holds and reports what it
+   deferred; it never cuts inside a skill, because a half-voiced skill plays clips
+   on one step and the robot voice on the next, inside one lesson.
 
    Secrets: ELEVENLABS_API_KEY and ELEVENLABS_VOICE_ID come from .env at the repo
    root, which is gitignored. Neither is ever printed — not in logs, not in
    errors, not in the manifest. */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SPEAK } from '@kampus/curriculum';
+import { plan, stale, select, buildManifest, flags } from './voice-plan.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = path.join(ROOT, 'packages/ui/voice');
 const MANIFEST = path.join(OUT, 'manifest.json');
 
-const DRY = process.argv.includes('--dry');
-const FORCE = process.argv.includes('--force');
+const { dry: DRY, force: FORCE, grades, only, budget } = flags(process.argv.slice(2));
 /* Mono-ish 64 kbps is plenty for a voice and halves what a kid on a phone
    downloads (docs/VOICE_PASS.md §1). Verified in the written files, not assumed:
    see the bitrate check in scripts/check-voice.mjs. */
@@ -46,51 +55,8 @@ function env() {
   return out;
 }
 
-const sha = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16);
-
-/** Every line in the bank, flattened with the path it will be written to. */
-function plan() {
-  const rows = [];
-  for (const [skill, entry] of Object.entries(SPEAK)) {
-    for (const [kind, prefix] of [['steps', 't'], ['more', 'm']]) {
-      (entry[kind] || []).forEach((step, si) => {
-        (step.lines || []).forEach((line, li) => {
-          rows.push({
-            skill, kind, stepIndex: si, lineIndex: li,
-            say: line.say, cue: line.cue,
-            file: `${skill}/${prefix}${si}-${li}.mp3`,
-            sha: sha(line.say),
-          });
-        });
-      });
-    }
-  }
-  return rows;
-}
-
+const onDisk = (file) => existsSync(path.join(OUT, file));
 const loadManifest = () => (existsSync(MANIFEST) ? JSON.parse(readFileSync(MANIFEST, 'utf8')) : {});
-
-/** Rebuild the manifest from the plan, preserving nothing stale. */
-function buildManifest(rows) {
-  const m = {};
-  for (const r of rows) {
-    m[r.skill] = m[r.skill] || { steps: [], more: [] };
-    const arr = m[r.skill][r.kind];
-    arr[r.stepIndex] = arr[r.stepIndex] || [];
-    arr[r.stepIndex][r.lineIndex] = { file: r.file, sha: r.sha };
-  }
-  return m;
-}
-
-/** Lines whose text changed since the last run (or all, with --force). */
-function stale(rows, manifest) {
-  if (FORCE) return rows;
-  return rows.filter(r => {
-    const got = manifest[r.skill]?.[r.kind]?.[r.stepIndex]?.[r.lineIndex];
-    if (!got || got.sha !== r.sha) return true;
-    return !existsSync(path.join(OUT, r.file));     // manifest says done, file is gone
-  });
-}
 
 async function speak(row, { key, voice, model }) {
   // output_format is a QUERY parameter, not a body field. Sent in the body it is
@@ -119,30 +85,49 @@ async function speak(row, { key, voice, model }) {
 }
 
 /* ---- run ------------------------------------------------------------------- */
-const rows = plan();
+const rows = plan(SPEAK);                 // the whole bank, in priority order
 const manifest = loadManifest();
-const todo = stale(rows, manifest);
-const chars = rows.reduce((n, r) => n + r.say.length, 0);
-const todoChars = todo.reduce((n, r) => n + r.say.length, 0);
+const changed = stale(rows, manifest, { force: FORCE, exists: onDisk });
+const { take: todo, deferred } = select(changed, { grades, only, budget });
 
-const bySkill = {};
+const chars = (set) => set.reduce((n, r) => n + r.say.length, 0);
+const skillsIn = (set) => [...new Set(set.map(r => r.skill))];
+
+/* By grade, because that is the order credits are spent in. */
+const byGrade = new Map();
 for (const r of rows) {
-  bySkill[r.skill] = bySkill[r.skill] || { lines: 0, chars: 0, steps: new Set() };
-  bySkill[r.skill].lines++;
-  bySkill[r.skill].chars += r.say.length;
-  bySkill[r.skill].steps.add(`${r.kind}${r.stepIndex}`);
+  const g = byGrade.get(r.grade) || { skills: new Set(), lines: 0, chars: 0, todo: 0, todoChars: 0 };
+  g.skills.add(r.skill); g.lines++; g.chars += r.say.length;
+  byGrade.set(r.grade, g);
+}
+for (const r of todo) {
+  const g = byGrade.get(r.grade);
+  g.todo++; g.todoChars += r.say.length;
 }
 
-console.log(`\nSpeak bank: ${Object.keys(SPEAK).length} skills authored\n`);
-for (const [skill, s] of Object.entries(bySkill)) {
-  console.log(`  ${skill.padEnd(10)} ${String(s.steps.size).padStart(2)} steps · ${String(s.lines).padStart(3)} lines · ${String(s.chars).padStart(5)} chars`);
+console.log(`\nSpeak bank: ${Object.keys(SPEAK).length} skills authored, ${rows.length} lines\n`);
+console.log('  grade  skills  lines   chars   to generate');
+for (const g of [...byGrade.keys()].sort((a, b) => a - b)) {
+  const s = byGrade.get(g);
+  console.log(`  ${String(g === 99 ? '—' : g).padStart(5)}  ${String(s.skills.size).padStart(6)}  `
+    + `${String(s.lines).padStart(5)}  ${String(s.chars).padStart(6)}   ${s.todo ? `${s.todo} lines · ${s.todoChars} chars` : '—'}`);
 }
-const longest = rows.reduce((a, b) => (a.say.length > b.say.length ? a : b));
-console.log(`\n  total        ${rows.length} lines · ${chars} chars`);
+
+const kinds = [...new Set(rows.map(r => r.kind))];
+const longest = rows.reduce((a, b) => (a.say.length > b.say.length ? a : b), { say: '', file: '—' });
+console.log(`\n  script kinds in the bank: ${kinds.join(', ')}`);
 console.log(`  longest line ${longest.say.length} chars (${longest.file})`);
-console.log(`  to generate  ${todo.length} lines · ${todoChars} chars${FORCE ? ' (--force)' : ''}`);
+if (grades.length || only.length || budget) {
+  console.log(`  filters: ${[grades.length ? `grades ${grades.join(',')}` : null,
+    only.length ? `only ${only.join(',')}` : null, budget ? `budget ${budget}` : null].filter(Boolean).join(' · ')}`);
+}
+console.log(`  to generate  ${todo.length} lines · ${chars(todo)} chars · ${skillsIn(todo).length} skills${FORCE ? ' (--force)' : ''}`);
+if (deferred.length) {
+  console.log(`  deferred     ${deferred.length} lines · ${chars(deferred)} chars · ${skillsIn(deferred).length} skills`
+    + ` (${skillsIn(deferred).slice(0, 6).join(', ')}${skillsIn(deferred).length > 6 ? ', …' : ''})`);
+}
 // ElevenLabs bills one credit per character on the flash/turbo tiers.
-console.log(`  est. credits ${todoChars} (~${(todoChars / 30000 * 100).toFixed(1)}% of a 30,000 promo)\n`);
+console.log(`  est. credits ${chars(todo)}\n`);
 
 if (DRY) {
   console.log('--dry: no API calls made, nothing written.\n');
@@ -169,5 +154,10 @@ for (const [i, row] of todo.entries()) {
   console.log('ok');
 }
 mkdirSync(OUT, { recursive: true });
-writeFileSync(MANIFEST, `${JSON.stringify(buildManifest(rows), null, 2)}\n`);
-console.log(`\nWrote ${todo.length} clips (${(bytes / 1024).toFixed(0)} KB) and manifest.json\n`);
+// The full plan, filtered to clips that are actually on disk: a budgeted or
+// grade-filtered run leaves the skills it skipped unvoiced rather than listed.
+writeFileSync(MANIFEST, `${JSON.stringify(buildManifest(rows, { exists: onDisk }), null, 2)}\n`);
+const unvoiced = Object.keys(SPEAK).filter(s => !skillsIn(rows.filter(r => onDisk(r.file))).includes(s));
+console.log(`\nWrote ${todo.length} clips (${(bytes / 1024).toFixed(0)} KB) and manifest.json`);
+if (unvoiced.length) console.log(`Still unvoiced (falls back to speechSynthesis): ${unvoiced.length} skills — ${unvoiced.join(', ')}`);
+console.log('');

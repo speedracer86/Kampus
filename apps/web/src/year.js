@@ -230,6 +230,14 @@ export function buildDayLesson(state) {
   const planB = (PLAN_B[skill] || [])[0];
   const second = planB || (SECOND_EXAMPLES[skill] || [])[0];
   const reteachSource = teachFor(skill);
+  /* Karla's voice on the re-teach panel. It is ONE panel, so its script is one
+     step, and the bank may author it either as a single step or as a list of one.
+     The generator reads the kinds off the bank rather than listing them
+     (scripts/voice-plan.mjs), so this is the only place a different key name in
+     the tranche-3 patch would need changing. Until that patch lands this is
+     undefined and the panel renders exactly as it does today. */
+  const rt = speakFor(skill)?.reteach;
+  const reteachVoice = speakProps(Array.isArray(rt) ? rt[0] : rt, 'reteach', 0);
   return {
     title: day.title,
     // The manifest is keyed by skill, so playback needs it on the lesson.
@@ -243,11 +251,13 @@ export function buildDayLesson(state) {
       title: second.prompt,
       lede: second.hint || unit?.focus || '',
       rows: reteachRowsFrom(second),
+      ...reteachVoice,
     } : reteachSource ? {
       kicker: 'Go over it',
       title: reteachSource.bigIdea,
       lede: unit?.focus || '',
       rows: (reteachSource.steps || []).map(s => ({ lead: '', how: s.do, value: s.ex })),
+      ...reteachVoice,
     } : null,
   };
 }

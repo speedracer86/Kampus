@@ -249,15 +249,54 @@ export function SnagReveal({ sn, shown, onReveal, phone }) {
   </div>;
 }
 
-/** The New idea / re-teach view: title, lede, three ruled step rows, last value green. */
-export function ReteachView({ teach, onContinue, label = 'Try one →', phone }) {
+/** The New idea / re-teach view: title, lede, three ruled step rows, last value green.
+
+    This is the lowest moment in the lesson — she has just missed the prove-it — so
+    it is the one teaching surface that most needs Karla's voice, and the last to get
+    it (owner's call, Nov 2026). The plumbing is here; the scripts arrive with the
+    tranche-3 bank patch. Until they do, `teach.speakLines` is undefined and this
+    renders exactly as it did before — no voice row, no highlight, nothing new.
+
+    Two differences from TeachSteps, both deliberate:
+
+      - a `row.N` cue HIGHLIGHTS its row, it does not reveal it. The rows are a
+        reference she is reading after a miss; hiding four of them to reveal them
+        one at a time takes information away at the worst possible moment.
+      - nothing here can be solved, so there is no `onSolve` for a cue to reach.
+        `onContinue` is the only control and no cue, clip or audio state touches it:
+        the button is enabled from first paint whether or not Karla is talking.
+        AUDIO NEVER GATES (docs/VOICE_PASS.md §2), in both directions — it may not
+        block her, and it may not advance her either. */
+export function ReteachView({ teach, onContinue, label = 'Try one →', phone,
+  voice, muted = false, onEvent }) {
+  const [cue, setCue] = React.useState({ name: null, nonce: 0 });
+  const lines = teach?.speakLines;
+  const clips = teach?.voiceRef && voice?.manifest
+    ? clipsFor(voice.manifest, voice.skill, teach.voiceRef.kind, teach.voiceRef.index, voice.base)
+    : null;
+  // `row.3` means the third row, 1-based, as the bank's cue vocabulary has it.
+  const litRow = /^row\.\d+$/.test(cue.name || '') ? Number(cue.name.slice(4)) - 1 : -1;
+  const litTitle = cue.name === 'prompt';
+  const held = color.goldTint || '#FBF3E4';
+
   return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 36 }}>
     <Kicker style={{ marginBottom: 10 }}>{teach.kicker || 'New idea'}</Kicker>
-    <h2 style={{ fontSize: phone ? 28 : 40, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 10px' }}>{teach.title}</h2>
+    <h2 data-reteach-title data-lit={litTitle ? 'yes' : 'no'}
+      style={{ fontSize: phone ? 28 : 40, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 10px',
+        background: litTitle ? held : 'transparent', borderRadius: radius.sm, transition: 'background .3s',
+        boxShadow: litTitle ? `0 0 0 8px ${held}` : 'none' }}>{teach.title}</h2>
     {teach.lede && <p style={{ fontSize: 18, lineHeight: 1.5, color: color.muted, margin: '0 0 24px' }}>{teach.lede}</p>}
+    {!!lines?.length && <SayItShowIt lines={lines} clips={clips} muted={muted} phone={phone}
+      speak={speak} fallbackText={teach.speak || teach.title}
+      onCue={(name, i) => {
+        setCue(c => ({ name, nonce: c.nonce + 1 }));
+        onEvent?.('speak_line', { cue: name, index: i, where: 'reteach' });
+      }} />}
     <div style={{ borderTop: `1px solid ${color.rule}` }}>
-      {(teach.rows || []).map((r, i, all) => <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 18,
-        justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${color.rule}` }}>
+      {(teach.rows || []).map((r, i, all) => <div key={i} data-reteach-row={i + 1}
+        data-lit={i === litRow ? 'yes' : 'no'} style={{ display: 'flex', alignItems: 'baseline', gap: 18,
+          justifyContent: 'space-between', padding: '16px 0', borderBottom: `1px solid ${color.rule}`,
+          background: i === litRow ? held : 'transparent', transition: 'background .3s' }}>
         <span style={{ ...numeral(40), flex: 'none', minWidth: 90 }}>{r.lead}</span>
         <span style={{ fontSize: 17, fontWeight: 600, flex: 1 }}>{r.how}</span>
         <span style={{ ...numeral(40), color: i === all.length - 1 ? color.greenDeep : color.ink }}>{r.value}</span>
@@ -495,6 +534,8 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
     onDone={() => { onEvent('move_complete', { move: move.id }); setProgress(p => ({ ...p, [move.id]: { done: 1 } })); finishMove(); }} />);
 
   if (phase === 'reteach') return frame(<ReteachView teach={lesson.reteach} phone={phone} label="2 fresh ones →"
+    muted={muted} onEvent={onEvent}
+    voice={{ manifest: voiceManifest, base: voiceBase, skill: lesson.skill }}
     onContinue={() => { setFresh(true); setQi(0); resetUi(); setPhase('run'); }} />);
 
   if (!q) return frame(<div style={{ fontSize: 17, color: color.muted }}>Nothing to practise here.</div>);

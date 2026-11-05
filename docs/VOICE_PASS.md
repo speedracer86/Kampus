@@ -113,14 +113,58 @@ step:
 
 ## Cost
 
-Tranche 1 ≈ 45 lines ≈ 3.5k characters — pennies. The full 79-skill bank fits
-comfortably inside the 30,000-credit $1 promo the owner's account is showing
-(ends Nov 8) — take that before it lapses.
+Tranche 1 ≈ 45 lines ≈ 3.5k characters — pennies. Tranches 1-2 came to roughly
+20,300 credits of the 30,000-credit promo: tranche 1 cost double because
+`output_format` was sent in the body, where ElevenLabs ignores it, and 128 kbps
+came back. Tranche 2 was clean. About 9,700 remain against an estimated ~12,000
+for the last 37 skills plus the re-teach scripts — see the decisions below.
+
+## Decisions — owner, 5 Nov 2026
+
+**Credits: spend nothing to chase the promo.** The Nov 8 deadline is for new
+signups. When tranche 3 lands, generate in priority order — **grades 3-5 first**,
+inside the ~9,700 remaining, because the band-a auto-read kids need the voice
+most; grade 8 waits for the plan's renewal in ~3 weeks. Nothing kid-facing is
+blocked by the split: grades 6-7 are fully voiced and no grade-8 pilot kid exists.
+
+Landed for it: `scripts/voice-plan.mjs` plus `--grades`, `--only` and `--budget`
+on the generator. A budget takes **whole skills** in priority order while it
+holds and reports what it deferred; it never cuts inside a skill, because half a
+skill's clips plays real voice on one step and the robot voice on the next, inside
+one lesson. The manifest is rebuilt from the whole bank but lists only clips that
+exist on disk, so a partial run neither wipes the skills it skipped nor promises a
+clip the budget deferred.
+
+**ReteachView: voice it.** The kid on that panel has just missed the prove-it —
+lowest moment in the lesson, most overloaded kid, and the last teaching surface
+still silent. Same line clips, same row cues, same both-direction gating law. The
+re-teach scripts arrive **inside the tranche-3 bank patch**, so it is one patch,
+one generation run, one commit.
+
+Landed ahead of it (everything that does not depend on the scripts):
+
+- `ReteachView` takes `voice` / `muted` / `onEvent`, renders `SayItShowIt` when the
+  bank has a script, and handles `row.N` and `prompt`. A row cue **highlights**,
+  it does not reveal — the rows are a reference she is reading after a miss, and
+  hiding four of them to reveal them one at a time takes information away at the
+  worst moment.
+- The seam: `year.js` attaches the script to `lesson.reteach` from
+  `speakFor(skill).reteach`, accepting either one step or a list of one. The
+  generator reads its kinds off the bank, so if tranche 3 names that key something
+  else, that one line is the only change needed anywhere.
+- Nothing on the panel can be solved, so the gating law here is about `onContinue`:
+  no cue, clip or audio state touches it. `tests/test_layouts.mjs` mounts the panel
+  silent and scripted and counts the continues — zero without a tap.
+- `tests/fixtures/teach-gallery.jsx` carries both panels; `?voice=1` arms the
+  scripted one with fake clip paths.
+
+Still not voiced and not in scope: nothing else. After tranche 3 wires in,
+re-read this file and the gating gotcha against the code once more before calling
+the voice pass complete.
 
 ## Coming from the owner's session (not yours to write)
 
-- Tranches 2+ of `speak.js` (grades 6+7 next, then 3–5 and 8) — speak-script
-  authoring is bank content and stays owner-authored like all of
-  `packages/curriculum`.
-- A decision on voicing the re-teach / plan-B panels (ReteachView is rows, not
-  TeachSteps — likely tranche 3).
+- Tranche 3 of `speak.js`: the remaining 37 skills plus the re-teach scripts, same
+  language laws, same tryIt rule. It lands in the working tree like tranche 2 did
+  — `speak.js` and `speak.test.js`, manifest tests red until the generation run
+  turns them green. Roughly 12,000 characters expected; `--dry` gives the number.

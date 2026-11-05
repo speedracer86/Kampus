@@ -112,7 +112,8 @@ Two sets of invariants are enforced by tests rather than intentions, in
 | `packages/ui/src/juice.jsx` | Sound and juice: the register, count-ups, confetti — all off under reduced motion |
 | `packages/ui/src/audio-bus.jsx` | The one owner of sound. Refuses parallel play; `isSpeaking()` is what everything else checks |
 | `packages/ui/src/say-it-show-it.jsx` | Karla's lines, highlighted and cued as she speaks |
-| `scripts/generate-voice.mjs` | Clip generation, `--dry` first. Content-addressed: a bank patch pays only for edited lines |
+| `scripts/generate-voice.mjs` | Clip generation, `--dry` first. Content-addressed: a bank patch pays only for edited lines. `--grades`, `--only`, `--budget` when credits are short |
+| `scripts/voice-plan.mjs` | What to generate and in what order — the half of the generator that spends money, so it is pure and unit-tested |
 | `packages/ui/src/tokens.js` | Every design token; the only legal source of color |
 | `packages/ui/src/` | Component library, at §0/§0a/§0b values |
 | `packages/ui/src/teach-layouts.jsx` | The four §0b teach-step layouts, the takeaway band, the voice row |
@@ -160,7 +161,18 @@ untouched lines.**
   step the state-changing cues are dropped entirely — the bank enforces the same
   rule in speak.test.js, so both layers hold it. And
   while Karla speaks nothing else sounds or moves — `playRegister` and `Confetti`
-  both check `isSpeaking()` first. Both laws are asserted in `tests/webapp/voice.spec.mjs`.
+  both check `isSpeaking()` first. Both laws are asserted in `tests/webapp/voice.spec.mjs`,
+  and on the re-teach panel — where there is nothing to solve, so the law is about
+  the one button off it — in `tests/test_layouts.mjs`.
+- **Script kinds are read off the bank, never listed in code.** `kindsOf` in
+  scripts/voice-plan.mjs discovers them, so a tranche that adds a kind (the
+  re-teach scripts) generates, manifests and plays with no code change. A listed
+  set would have generated those lines as nothing, with every test green.
+- **A partly voiced SKILL is the one bad state.** Clips can be generated a tranche
+  or a grade at a time — an unvoiced skill just falls back to speechSynthesis, which
+  is what shipped before. But half a skill's clips means real voice on one step and
+  the robot voice on the next, inside one lesson, so `--budget` cuts between skills
+  and the manifest guard requires a listed skill to be complete to the line.
 - **A step's clips resolve by `voiceRef`, never by screen position.** The second
   examples are spliced INTO the sequence, so step 4 on screen is `more0` in the bank.
 - **`.env` is gitignored and holds the ElevenLabs key** (docs/VOICE_PASS.md). Never

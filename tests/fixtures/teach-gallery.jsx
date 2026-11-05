@@ -8,6 +8,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { REFERENCE_STEPS } from '@kampus/curriculum';
 import { TEACH_LAYOUTS } from '@kampus/ui/teach-layouts';
+import { ReteachView } from '@kampus/ui/lesson';
 import { color } from '@kampus/ui/tokens';
 
 // The library reads React off the global, exactly as the app's jsxInject supplies it.
@@ -33,12 +34,65 @@ function Panel({ layout, skill, step, phone }) {
   </section>;
 }
 
+/* The re-teach panel, twice.
+
+   It is the one teaching surface with no scripts yet (they arrive in the tranche-3
+   bank patch), so the plumbing is checked here rather than through a lesson: the
+   silent panel proves the no-script path still renders exactly as it ships today,
+   and the voiced one proves a cue highlights its row without touching the only
+   control on the panel. Clips are fake paths; tests/test_layouts.mjs stubs Audio.
+
+   `?voice=1` arms the voiced panel. Without it there are no clips at all, so the
+   two viewport passes never ask the page for an mp3 that does not exist. */
+const RETEACH = {
+  kicker: 'Another way to see it',
+  title: 'Two-thirds of the pan, in twelfths',
+  lede: 'Same brownies, thinner slices.',
+  rows: [
+    { lead: '', how: 'three pieces became twelve', value: '×4' },
+    { lead: '', how: 'so two pieces became', value: '8' },
+    { lead: '', how: 'which is', value: '8/12' },
+  ],
+};
+const RETEACH_LINES = [
+  { say: 'Look at the bottom row first.', cue: 'prompt' },
+  { say: 'Three pieces became twelve. That is times four.', cue: 'row.1' },
+  { say: 'So the two shaded pieces became eight.', cue: 'row.2' },
+];
+const FAKE_CLIPS = ['/voice/fake/r0-0.mp3', '/voice/fake/r0-1.mp3', '/voice/fake/r0-2.mp3'];
+
+function ReteachPanels({ phone }) {
+  const armed = new URLSearchParams(location.search).get('voice') === '1';
+  const voiced = {
+    ...RETEACH,
+    speak: RETEACH_LINES.map(l => l.say).join(' '),
+    speakLines: RETEACH_LINES,
+    voiceRef: { kind: 'reteach', index: 0 },
+  };
+  // A manifest shaped exactly as the generator writes one, pointing at the fakes.
+  const manifest = { eqFrac: { reteach: [FAKE_CLIPS.map(f => ({ file: f.replace('/voice/', ''), sha: '0' }))] } };
+  // Counted, not assumed: the one way off this panel must fire only on a tap.
+  // If a clip, a cue or an autoplay ever advanced the kid, this is where it shows.
+  window.__continued = window.__continued || 0;
+  const onContinue = () => { window.__continued++; };
+  return <>
+    <section data-reteach="silent">
+      <ReteachView teach={RETEACH} phone={phone} label="2 fresh ones →" onContinue={onContinue} />
+    </section>
+    {armed && <section data-reteach="voiced">
+      <ReteachView teach={voiced} phone={phone} label="2 fresh ones →" onContinue={onContinue}
+        voice={{ manifest, base: '/voice/', skill: 'eqFrac' }} />
+    </section>}
+  </>;
+}
+
 function Gallery() {
   const phone = window.innerWidth < 860;
   return <div style={{ background: color.ground, minHeight: '100vh', padding: phone ? 16 : 40,
     fontFamily: 'Inter Tight, system-ui, sans-serif' }}>
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       {PANELS.map(p => <Panel key={p.layout} {...p} phone={phone} />)}
+      <ReteachPanels phone={phone} />
     </div>
   </div>;
 }

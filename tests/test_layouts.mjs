@@ -115,6 +115,129 @@ try {
     await page.close();
   }
 
+  /* The re-teach panel: the plumbing for Karla's voice, before the scripts exist.
+
+     Two things are worth a test here and nowhere else. The silent panel is what
+     ships today and must be untouched by the plumbing. The voiced one proves the
+     cue contract on a surface where nothing CAN be solved: a cue highlights the
+     row it names, every row stays on screen, and the one control off the panel
+     fires on a tap and on nothing else. That last clause is the gating law in the
+     direction that nearly shipped broken once already — audio may not block her,
+     and it may not advance her either. */
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+    page.on('pageerror', e => errors.push(`reteach: ${e.message.slice(0, 160)}`));
+    // Stub Audio: CI is silent, but every play() must still be observable and each
+    // "clip" has to end promptly so the sequence advances without real durations.
+    await page.addInitScript(() => {
+      window.__played = [];
+      const Real = window.Audio;
+      window.Audio = function (src) {
+        const el = new Real();
+        let live = false;
+        el.play = () => {
+          window.__played.push(String(src).replace(location.origin, ''));
+          live = true;
+          // 200ms, not 20: short enough to keep the suite fast, long enough that a
+          // 40ms poll sees each line's cue rather than only the one left standing
+          // at the end. The first version of this check sampled after the sequence
+          // had finished and would have passed with only the LAST cue firing.
+          setTimeout(() => { if (live) { live = false; el.dispatchEvent(new Event('ended')); } }, 200);
+          return Promise.resolve();
+        };
+        el.pause = () => { live = false; };
+        return el;
+      };
+      window.Audio.prototype = Real.prototype;
+    });
+    await page.goto(`http://localhost:${PORT}/?voice=1`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(200);
+
+    const read = (sel) => page.evaluate((s) => {
+      const el = document.querySelector(s);
+      if (!el) return null;
+      const go = [...el.querySelectorAll('button')].find(b => /fresh ones/.test(b.innerText));
+      return {
+        text: el.innerText,
+        rows: el.querySelectorAll('[data-reteach-row]').length,
+        lit: [...el.querySelectorAll('[data-reteach-row]')].filter(r => r.dataset.lit === 'yes')
+          .map(r => Number(r.dataset.reteachRow)),
+        goDisabled: go ? go.disabled : null,
+        litTitle: el.querySelector('[data-reteach-title]')?.dataset.lit,
+        continued: window.__continued,
+      };
+    }, sel);
+
+    const silent = await read('section[data-reteach="silent"]');
+    check('an unscripted re-teach panel still renders its rows', silent?.rows === 3, JSON.stringify(silent?.rows));
+    check('and offers no voice controls at all',
+      !/Again|Slower|Quiet/.test(silent?.text || ''), (silent?.text || '').split('\n').slice(-2).join(' / '));
+    check('nothing is highlighted when there is no script', silent?.lit.length === 0, JSON.stringify(silent?.lit));
+
+    const voiced = await read('section[data-reteach="voiced"]');
+    check('a scripted re-teach panel shows the spoken lines as text',
+      /Look at the bottom row first/.test(voiced?.text || ''));
+    check('and offers the same three controls as the teach steps',
+      /Again/.test(voiced?.text || '') && /Slower/.test(voiced?.text || '') && /Quiet/.test(voiced?.text || ''));
+    check('the way off the panel is live before a single clip plays', voiced?.goDisabled === false,
+      voiced?.goDisabled === false ? 'enabled' : 'DISABLED');
+
+    // Replay from the top and watch it, rather than reading the state it settles
+    // in: the script is prompt → row.1 → row.2, and the order is the contract.
+    await page.evaluate(() => [...document.querySelectorAll('section[data-reteach="voiced"] button')]
+      .find(b => b.innerText.trim() === 'Again')?.click());
+    const during = [];
+    for (let i = 0; i < 20; i++) {
+      during.push(await read('section[data-reteach="voiced"]'));
+      await page.waitForTimeout(40);
+    }
+    // Each distinct highlight, in the order it first appeared: 'title' for the
+    // prompt cue, then the row numbers.
+    const seq = [];
+    for (const d of during) {
+      const mark = d?.litTitle === 'yes' ? 'title' : (d?.lit?.[0] ?? null);
+      if (mark !== null && mark !== seq[seq.length - 1]) seq.push(mark);
+    }
+    check('the cues highlight what they name, in the order Karla says them',
+      JSON.stringify(seq) === JSON.stringify(['title', 1, 2]), `saw ${JSON.stringify(seq)}`);
+    check('one highlight at a time, never two',
+      during.every(d => (d?.lit.length || 0) + (d?.litTitle === 'yes' ? 1 : 0) <= 1),
+      JSON.stringify(during.map(d => [d?.litTitle, d?.lit])));
+    check('every row stays on screen while she listens — a cue highlights, it does not reveal',
+      during.every(d => d?.rows === 3), JSON.stringify(during.map(d => d?.rows)));
+    check('the clips that played are this panel\'s clips',
+      (await page.evaluate(() => window.__played)).every(c => c.includes('/voice/fake/')),
+      (await page.evaluate(() => window.__played)).slice(0, 2).join(', '));
+
+    const after = await read('section[data-reteach="voiced"]');
+    check('audio never gates: the way off the panel was never disabled',
+      during.every(d => d?.goDisabled === false) && after?.goDisabled === false,
+      JSON.stringify(during.map(d => d?.goDisabled)));
+    check('audio never advances her either: nothing moved on without a tap',
+      after?.continued === 0, `onContinue fired ${after?.continued} times`);
+
+    // Quiet, the control a kid who cannot bear the voice will reach for.
+    await page.evaluate(() => [...document.querySelectorAll('section[data-reteach="voiced"] button')]
+      .find(b => b.innerText.trim() === 'Quiet')?.click());
+    await page.waitForTimeout(60);
+    await page.evaluate(() => { window.__played.length = 0; });
+    await page.waitForTimeout(300);
+    const quiet = await read('section[data-reteach="voiced"]');
+    check('Quiet stops the voice and nothing plays after it',
+      (await page.evaluate(() => window.__played)).length === 0,
+      (await page.evaluate(() => window.__played)).join(', '));
+    check('Quiet does not take the way off the panel with it',
+      quiet?.goDisabled === false && quiet?.rows === 3, JSON.stringify(quiet));
+
+    // And the tap itself still works, which is the whole point of the panel.
+    await page.evaluate(() => [...document.querySelectorAll('section[data-reteach="voiced"] button')]
+      .find(b => /fresh ones/.test(b.innerText))?.click());
+    await page.waitForTimeout(60);
+    check('a tap on it moves her on', (await page.evaluate(() => window.__continued)) === 1,
+      String(await page.evaluate(() => window.__continued)));
+    await page.close();
+  }
+
   check('no uncaught errors in any layout', errors.length === 0, errors.slice(0, 2).join(' | '));
 } finally {
   await browser.close();
