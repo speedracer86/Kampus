@@ -111,9 +111,15 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   const [notes, setNotes] = React.useState([]);
   const [fresh, setFresh] = React.useState(null);     // the note highlighted for one beat
   const [quiet, setQuiet] = React.useState(false);
+  // The cue from the line Karla is on. A nonce rather than a plain string so the
+  // same cue twice running (Again, or two lines that both pulse) fires twice.
+  const [cue, setCue] = React.useState({ name: null, nonce: 0 });
   const step = steps[at];
   const canNext = solved[at];
   const setSolvedAt = (i, v) => setSolved(s => (s[i] === v ? s : s.map((x, j) => (j === i ? v : x))));
+  // Clear the cue when the step changes: a cue left over from the previous step
+  // would fire into a layout it was never written for.
+  React.useEffect(() => { setCue(c => ({ name: null, nonce: c.nonce })); }, [at]);
 
   const Interactive = step?.interactive ? INTERACTIVES[step.interactive] : null;
   const Layout = step?.layout ? TEACH_LAYOUTS[step.layout] : null;
@@ -180,24 +186,33 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
     {sayLines?.length
       ? <SayItShowIt lines={sayLines} clips={clips} muted={muted} phone={phone}
           speak={speak} fallbackText={step?.speak || step?.prompt}
-          onCue={(cue, i) => onEvent('speak_line', { cue, index: i, step: at })} />
+          onCue={(name, i) => {
+            setCue(c => ({ name, nonce: c.nonce + 1 }));
+            onEvent('speak_line', { cue: name, index: i, step: at });
+          }} />
       : mode !== 'c' && <VoiceRow mode={mode} text={step?.speak || step?.prompt} worldColor={worldColor || color.ink}
         quiet={quiet} onQuiet={setQuiet} speak={speak} blobDir={blobDir} phone={phone} />}
     {kicker && <Kicker style={{ marginBottom: 10 }}>{kicker}</Kicker>}
+    {/* `prompt` and `takeaway` highlight what they name — the only two cues that
+        point at screen furniture rather than at the math. Safe on a Try it: they
+        draw the eye and change nothing. */}
     <h2 style={{ fontSize: Layout ? (mode === 'a' && !phone ? 40 : promptSize) : (phone ? 24 : 36),
-      fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.2, margin: '0 0 22px' }}>{step?.prompt}</h2>
+      fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.2, margin: '0 0 22px',
+      background: cue.name === 'prompt' ? (color.goldTint || '#FBF3E4') : 'transparent',
+      borderRadius: radius.sm, transition: 'background .3s',
+      boxShadow: cue.name === 'prompt' ? '0 0 0 8px ' + (color.goldTint || '#FBF3E4') : 'none' }}>{step?.prompt}</h2>
     {/* Keyed by step identity, not left to React's reconciler: two walks in a row
         are the same component type, and an un-keyed layout keeps the previous
         step's reveal state — the next walk arrives pre-revealed and self-solved,
         or pre-revealed and UNSOLVABLE, since its reveal effect never re-fires.
         The key makes every step start un-revealed and earn its own solve. */}
-    {Layout && <Layout key={step.id ?? at} step={step} solved={solved[at]} phone={phone}
+    {Layout && <Layout key={step.id ?? at} step={step} solved={solved[at]} phone={phone} cue={cue}
       onSolve={(ok) => { setSolvedAt(at, ok); if (ok) onEvent('teach_solved', { index: at, layout: step.layout }); }} />}
     {Interactive && <Interactive key={step.id ?? at} {...(step.config || {})} onSolve={(ok) => setSolvedAt(at, ok)} />}
     {!Interactive && !Layout && step?.body && <div style={{ fontSize: 18, lineHeight: 1.55 }}>{step.body}</div>}
     {/* The takeaway band only opens once the step is actually solved. */}
     {canNext && step?.takeaway && <TakeawayBand note={step.takeaway} written={notes.includes(step.takeaway)}
-      onWrite={writeNote} phone={phone} />}
+      lit={cue.name === 'takeaway'} onWrite={writeNote} phone={phone} />}
     <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between', marginTop: 28, paddingTop: 20, borderTop: `1px solid ${color.rule}` }}>
       <Button variant="outline" size="sm" disabled={at === 0} onClick={() => setAt(a => Math.max(0, a - 1))}>Back</Button>
       <Button variant="ink" size="sm" disabled={!canNext} onClick={() => {

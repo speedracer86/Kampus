@@ -9,10 +9,10 @@ npm workspaces monorepo. `npm install` once at the root installs everything.
 
 ```bash
 npm install                   # root only — installs all workspaces
-npm test                      # unit tests: 442 vitest tests (engine + curriculum)
+npm test                      # unit tests: 445 vitest tests (engine + curriculum)
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
-npm run test:webapp           # build apps/web, serve dist/, drive it: 204 checks
+npm run test:webapp           # build apps/web, serve dist/, drive it: 208 checks
 node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report|juice|voice)
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
@@ -30,7 +30,7 @@ npm test && npm run build
 PW_CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" npm run test:webapp
 ```
 
-All must be clean: 442 passing unit tests, build exits 0, 204/204 webapp checks. CI
+All must be clean: 445 passing unit tests, build exits 0, 208/208 webapp checks. CI
 (`.github/workflows/ci.yml`) runs all of it plus `test:layouts` on every push to `main`
 and every PR, so a red run here is a red run there.
 
@@ -152,8 +152,13 @@ untouched lines.**
 
 ## Gotchas
 
-- **Audio never gates.** Nothing in the playback path touches `solved`, `canNext`
-  or Next; a kid can hit Quiet and tap through exactly as before clips existed. And
+- **Audio never gates — in BOTH directions.** Nothing in the playback path touches
+  `solved`, `canNext` or Next, so a kid can hit Quiet and tap through as before. It
+  must not GRANT progress either: a cue drives a demonstration state held apart
+  from her answer (`demo` in the bar, `demoLand` on the line), because driving the
+  real state fired `onSolve` and enabled Next while she sat listening. On a `tryIt`
+  step the state-changing cues are dropped entirely — the bank enforces the same
+  rule in speak.test.js, so both layers hold it. And
   while Karla speaks nothing else sounds or moves — `playRegister` and `Confetti`
   both check `isSpeaking()` first. Both laws are asserted in `tests/webapp/voice.spec.mjs`.
 - **A step's clips resolve by `voiceRef`, never by screen position.** The second

@@ -128,6 +128,70 @@ export default async function run(check) {
     await page.close();
   }
 
+  /* ---- the cues actually move the math, and stop at the Try it ---- */
+  {
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52 }, '#lesson');
+    await captureAudio(page);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+    await driveToTeach(page);
+    await page.waitForTimeout(1200);            // let the step's lines run
+
+    // eqFrac step 1 is a bar: its script shades the target as Karla says it.
+    const bar = await page.evaluate(() => {
+      const el = [...document.querySelectorAll('div')].find(d => /^\d+\/\d+$/.test(d.textContent.trim()));
+      return el ? el.textContent.trim() : null;
+    });
+    check('a bar cue shades the bar as Karla says it', bar && bar !== '0/3', `readout ${bar}`);
+
+    // Walk to the Try it and confirm cues there change nothing.
+    // The KICKER, not the spine: both say "New idea", and matching the spine meant
+    // this loop never knew which step it was on.
+    const kicker = async () => ((await text(page)).match(/STEP \d+ OF \d+[^\n]*/i)?.[0] || '');
+    let guard = 0;
+    while (guard++ < 40) {
+      if (/try it/i.test(await kicker())) break;
+      const moved = await page.evaluate((attempt) => {
+        const next = [...document.querySelectorAll('button')].find(x => /^(Next|Start the mission)/.test(x.innerText.trim()));
+        if (next && !next.disabled) { next.click(); return 'next'; }
+        const walk = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Tap for the next line');
+        if (walk) { walk.click(); return 'walk'; }
+        // A bar. Karla's demo leaves the readout showing target/parts, so the
+        // segment to tap is readable off the screen — and one click per round,
+        // because React has not re-rendered inside this synchronous loop.
+        // A bar. Karla's demo often leaves the readout at target/parts, but not
+        // every step's script shades — so fall back to sweeping the segments, one
+        // per round, rather than trusting a readout that may still be 0.
+        const read = [...document.querySelectorAll('div')]
+          .map(d => d.textContent.trim()).find(t => /^\d+\/\d+$/.test(t));
+        const segs = [...document.querySelectorAll('button')].filter(x => !x.innerText.trim());
+        if (!segs.length) return false;
+        const demoTarget = read ? Number(read.split('/')[0]) : 0;
+        const pick = demoTarget > 0 ? demoTarget - 1 : attempt % segs.length;
+        segs[Math.max(0, Math.min(segs.length - 1, pick))].click();
+        return 'bar';
+      }, guard);
+      if (!moved) break;
+      await page.waitForTimeout(240);
+    }
+    const onTryIt = /try it/i.test(await kicker());
+    check('reached the Try it step', onTryIt, await kicker());
+    if (onTryIt) {
+      await page.waitForTimeout(1400);          // its lines play too
+      const state = await page.evaluate(() => {
+        const el = [...document.querySelectorAll('div')].find(d => /^\d+\/\d+$/.test(d.textContent.trim()));
+        const next = [...document.querySelectorAll('button')].find(x => /^(Next|Start the mission)/.test(x.innerText.trim()));
+        return { readout: el ? el.textContent.trim() : null, nextDisabled: next ? next.disabled : null };
+      });
+      // Option 2: on a Try it the cues orient but never answer it for her.
+      check('a Try it cue does not fill in the answer', state.readout === null || /^0\//.test(state.readout),
+        `readout ${state.readout}`);
+      check('and Karla talking does not solve the check', state.nextDisabled === true,
+        JSON.stringify(state));
+    }
+    await page.close();
+  }
+
   /* ---- LAW 2: nothing else sounds while Karla speaks ----
 
      What is demonstrable end to end is that the bus never lets two clips overlap.

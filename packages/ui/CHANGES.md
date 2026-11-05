@@ -602,3 +602,20 @@ was the least likely to tap it. Decided: the system decides, not the kid.
   Skills without a plan B re-show the second example; the original panel stays
   the last fallback.
 - `teach_more` is no longer emitted (nothing is opt-in to measure).
+
+### Cues drive the math (Nov 2026)
+
+`useCue` in teach-layouts dispatches a `{name, nonce}` pair — the nonce so the same
+cue twice running fires twice. `row.N` reveals that walk row, `bar.*` and `line.*`
+drive the existing bar and line transitions, `card.N` spotlights without picking,
+`prompt`/`takeaway` highlight what they name. Cues are triggers into transitions
+that already existed; none of them is a new renderer.
+
+Karla's demonstration is held apart from the kid's answer. The first version drove
+the real state and fired `onSolve`, which enabled Next while she sat listening —
+audio granting progress, which breaks the law as surely as audio blocking it. The
+bar now tints a `demo` that her first tap clears, and the line draws the hop and
+marks the landing without setting `picked`.
+
+On a `tryIt` step the state-changing cues are dropped: the check stays hers.
+

@@ -18,12 +18,42 @@ const tBase = { fontFamily: font.family, boxSizing: 'border-box' };
 /** The voice mode is the grade band, not a setting: a = read to her, c = on request. */
 export const voiceMode = (grade) => (grade <= 4 ? 'a' : grade <= 6 ? 'b' : 'c');
 
+/**
+ * Run a cue when it arrives.
+ *
+ * A cue is `{ name, nonce }` — the nonce rises on every spoken line so the same
+ * cue twice in a row (Again, or two lines that both pulse the bar) fires twice.
+ * Cues are TRIGGERS into the transitions each layout already has; none of them is
+ * a new renderer, and none of them calls onSolve.
+ *
+ * On a `tryIt` step every layout ignores the state-changing cues and keeps only
+ * the orienting ones. The bank enforces the same rule from its side
+ * (speak.test.js), so the two layers hold the line together rather than relying on
+ * either alone.
+ */
+function useCue(cue, run) {
+  const last = React.useRef(0);
+  React.useEffect(() => {
+    if (!cue?.name || cue.nonce === last.current) return;
+    last.current = cue.nonce;
+    run(cue.name);
+  }, [cue?.nonce, cue?.name]); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
 /* ---------------------------------------------------------------- walk ----- */
 /** Worked walk: ruled rows revealed one tap at a time, result row in green. */
-export function WalkLayout({ step, solved, onSolve, phone }) {
+export function WalkLayout({ step, solved, onSolve, cue, phone }) {
   const rows = step.walk?.rows || [];
   const [shown, setShown] = React.useState(1);
   React.useEffect(() => { if (shown >= rows.length && !solved) onSolve(true); }, [shown]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // `row.N` reveals that row as Karla reaches it. Never on a Try it: there the
+  // check is hers, and a cue that walks her through it is Karla sitting the test.
+  useCue(cue, (name) => {
+    if (step.tryIt) return;
+    const m = /^row\.(\d+)$/.exec(name);
+    if (m) setShown(n => Math.max(n, Math.min(rows.length, Number(m[1]))));
+  });
 
   return <div style={tBase}>
     {rows.map((r, i) => {
@@ -50,14 +80,23 @@ export function WalkLayout({ step, solved, onSolve, phone }) {
 
 /* ------------------------------------------------------------- faceoff ----- */
 /** Face-off: two cards split by an "or" disc. Picking reveals the per-one line. */
-export function FaceoffLayout({ step, onSolve, phone }) {
+export function FaceoffLayout({ step, onSolve, cue, phone }) {
   const { cards = [], answer = 0, why } = step.faceoff || {};
   const [picked, setPicked] = React.useState(null);
+  // `card.N` spotlights a card while Karla talks about it. Spotlighting is not
+  // picking — it never sets `picked`, so it cannot solve the step on either kind.
+  const [lit, setLit] = React.useState(null);
+  useCue(cue, (name) => {
+    const m = /^card\.(\d+)$/.exec(name);
+    if (m) setLit(Number(m[1]) - 1);
+    if (name === 'pick') setLit(null);
+  });
   const right = picked === answer;
 
   const card = (c, i) => {
     const isPick = picked === i;
     const win = isPick && i === answer, lose = isPick && i !== answer;
+    const spotlit = lit === i && picked === null;
     return <button key={i} onClick={() => { if (picked === null) { setPicked(i); onSolve(i === answer); } }}
       style={{ ...tBase, flex: 1, minWidth: phone ? '100%' : 230, border: 'none', textAlign: 'left',
         cursor: picked === null ? 'pointer' : 'default', borderRadius: radius.xl,
@@ -65,7 +104,10 @@ export function FaceoffLayout({ step, onSolve, phone }) {
         padding: phone ? 20 : 26,
         ...(phone ? {} : { [i === 0 ? 'paddingRight' : 'paddingLeft']: 58 }),
         background: win ? color.greenTint : lose ? color.redTint : color.fill,
-        boxShadow: win ? `inset 0 0 0 2px ${color.green}` : lose ? `inset 0 0 0 2px ${color.red}` : 'none' }}>
+        transition: 'box-shadow .25s, background .25s',
+        boxShadow: win ? `inset 0 0 0 2px ${color.green}`
+          : lose ? `inset 0 0 0 2px ${color.red}`
+          : spotlit ? `inset 0 0 0 3px ${color.ink}` : 'none' }}>
       <Kicker style={{ marginBottom: 8 }}>{c.label}</Kicker>
       <div style={{ fontSize: 22, fontWeight: 600 }}>{c.count}</div>
       <div style={{ ...numeral(phone ? 48 : 72), marginTop: 4 }}>{c.price}</div>
@@ -91,18 +133,34 @@ export function FaceoffLayout({ step, onSolve, phone }) {
 
 /* ---------------------------------------------------------------- line ----- */
 /** Number line: tap where you land. Right shows the move as a green span. */
-export function LineLayout({ step, onSolve, phone }) {
+export function LineLayout({ step, onSolve, cue, phone }) {
   const { min = -6, max = 6, start = 0, delta = 0, answer = 0, unit = '' } = step.line || {};
   const [picked, setPicked] = React.useState(null);
+  // line.draw/start orient; hop animates the journey; land marks where it ends.
+  // `land` is the answer, so on a Try it it is ignored along with the hop.
+  const [shownHop, setShownHop] = React.useState(false);
+  const [demoLand, setDemoLand] = React.useState(false);
+  const [markStart, setMarkStart] = React.useState(false);
+  useCue(cue, (name) => {
+    if (name === 'line.draw' || name === 'line.start') return setMarkStart(true);
+    if (step.tryIt) return;
+    // Demonstration only, for the same reason as the bar: showing where it lands
+    // is not her landing it, so `picked` and onSolve stay untouched.
+    if (name === 'line.hop') setShownHop(true);
+    if (name === 'line.land') { setShownHop(true); setDemoLand(true); }
+  });
   const ticks = Array.from({ length: max - min + 1 }, (_, i) => min + i);
   const pct = (v) => ((v - min) / (max - min)) * 100;
   const right = picked === answer;
   const vertical = phone;
 
   const tick = (v) => {
-    const isPick = picked === v, isStart = v === start;
-    const fill = isPick ? (right ? color.green : color.red) : isStart ? world.integers.color : '#fff';
-    const big = isPick || isStart;
+    const isPick = picked === v, isStart = v === start || (markStart && v === start);
+    const isDemo = demoLand && picked === null && v === answer;
+    const fill = isPick ? (right ? color.green : color.red)
+      : isDemo ? color.greenTint
+      : isStart ? world.integers.color : '#fff';
+    const big = isPick || isStart || isDemo;
     return <button key={v} onClick={() => { if (picked === null) { setPicked(v); onSolve(v === answer); } }}
       style={{ ...tBase, position: 'absolute', border: 'none', cursor: picked === null ? 'pointer' : 'default',
         ...(vertical ? { top: `${pct(v)}%`, left: '50%' } : { left: `${pct(v)}%`, top: '50%' }),
@@ -117,7 +175,7 @@ export function LineLayout({ step, onSolve, phone }) {
         ...(vertical ? { left: '50%', top: 0, bottom: 0, width: 2, transform: 'translateX(-50%)' }
           : { top: '50%', left: 0, right: 0, height: 2, transform: 'translateY(-50%)' }) }} />
       {/* The move she made, drawn on the line, not described in words. */}
-      {right && <span style={{ position: 'absolute', background: color.green, borderRadius: radius.full,
+      {(right || shownHop) && <span style={{ position: 'absolute', background: color.green, borderRadius: radius.full,
         ...(vertical
           ? { left: '50%', transform: 'translateX(-50%)', width: 6, top: `${Math.min(pct(start), pct(answer))}%`, height: `${Math.abs(pct(answer) - pct(start))}%` }
           : { top: '50%', transform: 'translateY(-50%)', height: 6, left: `${Math.min(pct(start), pct(answer))}%`, width: `${Math.abs(pct(answer) - pct(start))}%` })
@@ -140,9 +198,23 @@ export function LineLayout({ step, onSolve, phone }) {
 
 /* ----------------------------------------------------------------- bar ----- */
 /** Bar: tap segments until the shaded part matches the target fraction. */
-export function BarLayout({ step, onSolve, phone }) {
+export function BarLayout({ step, onSolve, cue, phone }) {
   const { parts = 4, target = 1, context } = step.bar || {};
   const [shaded, setShaded] = React.useState(0);
+  // `bar.pieces` draws the parts (they are already drawn — this pulses them into
+  // notice), `bar.shade` fills the target, `bar.pulse` draws the eye. Shading IS
+  // the answer, so on a Try it it is ignored and only the pulse survives.
+  const [pulse, setPulse] = React.useState(0);
+  // Karla's shading is a DEMONSTRATION, held apart from hers. Driving `shaded`
+  // directly fired onSolve and enabled Next while the kid sat listening — audio
+  // GRANTING progress, which breaks "gating is hers" exactly as surely as audio
+  // blocking it would. She still has to shade it herself.
+  const [demo, setDemo] = React.useState(0);
+  useCue(cue, (name) => {
+    if (name === 'bar.pieces' || name === 'bar.pulse') return setPulse(n => n + 1);
+    if (step.tryIt) return;
+    if (name === 'bar.shade') setDemo(target);
+  });
   const exact = shaded === target;
   React.useEffect(() => { onSolve(exact); }, [shaded]); // eslint-disable-line react-hooks/exhaustive-deps
   const over = shaded > target;
@@ -152,15 +224,19 @@ export function BarLayout({ step, onSolve, phone }) {
     <div style={{ display: 'flex', gap: 5 }}>
       {Array.from({ length: parts }, (_, i) => {
         const on = i < shaded;
-        return <button key={i} onClick={() => setShaded(i + 1 === shaded ? i : i + 1)}
+        const shownByKarla = !shaded && i < demo;
+        return <button key={i} onClick={() => { setDemo(0); setShaded(i + 1 === shaded ? i : i + 1); }}
           style={{ ...tBase, flex: 1, height: phone ? 80 : 120, border: 'none', cursor: 'pointer',
-            background: on ? (exact ? color.green : over ? color.red : color.ink) : color.track,
+            transition: 'background .25s, transform .25s',
+            transform: pulse && !on ? 'scaleY(1.06)' : 'none',
+            background: on ? (exact ? color.green : over ? color.red : color.ink)
+              : shownByKarla ? color.greenTint : color.track,
             borderTopLeftRadius: i === 0 ? 18 : 0, borderBottomLeftRadius: i === 0 ? 18 : 0,
             borderTopRightRadius: i === parts - 1 ? 18 : 0, borderBottomRightRadius: i === parts - 1 ? 18 : 0 }} />;
       })}
     </div>
     <div style={{ ...numeral(phone ? 44 : 64), marginTop: 16, color: exact ? color.greenDeep : over ? color.loss : color.ink }}>
-      {shaded}/{parts}</div>
+      {shaded || demo}/{parts}</div>
     {over && <p style={{ fontSize: 17, color: color.loss }}>Too many. Here is the step: {step.hint}</p>}
   </div>;
 }
@@ -169,8 +245,9 @@ export const TEACH_LAYOUTS = { walk: WalkLayout, faceoff: FaceoffLayout, line: L
 
 /* ------------------------------------------------------------ takeaway ----- */
 /** The band that opens above the footer once a step is solved. */
-export function TakeawayBand({ note, written, onWrite, phone }) {
+export function TakeawayBand({ note, written, lit = false, onWrite, phone }) {
   return <div style={{ ...tBase, background: color.greenTint, borderRadius: radius.dayCell,
+    boxShadow: lit ? `0 0 0 3px ${color.green}` : 'none', transition: 'box-shadow .3s',
     padding: phone ? '14px 16px' : '18px 24px', marginTop: 24,
     display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
     <div style={{ flex: 1, minWidth: 200 }}>

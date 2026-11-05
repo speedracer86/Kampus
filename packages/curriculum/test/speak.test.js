@@ -59,6 +59,41 @@ describe('the speak-script bank', () => {
     }
   });
 
+
+  it('tranche 2 covers every grade 6 and grade 7 skill', () => {
+    const g67 = new Set([...YEAR[6], ...YEAR[7]].flatMap(u => u.skills));
+    for (const skill of g67) expect(SPEAK[skill], `${skill} authored`).toBeDefined();
+  });
+
+  it('speaks in words a 2nd grader knows — the owner\u2019s language law', () => {
+    // Jargon that must never be SAID (screen text may teach a term; the voice
+    // explains in plain words). "fact" is the owner\u2019s own catch: teacher-speak.
+    const banned = /\b(fact|facts|denominators?|numerators?|equivalent|calculate[sd]?|determine[sd]?|substitut\w+|coefficients?|computes?[d]?|evaluate[sd]?|simplif\w+|corresponding|quantit\w+|reciprocals?|integers?|variables?)\b/i;
+    for (const [skill, sp] of Object.entries(SPEAK)) {
+      for (const entry of [...sp.steps, ...(sp.more || [])]) {
+        for (const l of entry.lines) {
+          const hit = l.say.match(banned);
+          expect(hit, `${skill}: "${l.say.slice(0, 50)}" says "${hit?.[0]}"`).toBeNull();
+        }
+      }
+    }
+  });
+
+  it('a Try it keeps the check hers: only prompt/pick/takeaway cues, nothing that solves', () => {
+    // Orienting cues are fine (they set the scene); revealing ones (row.N,
+    // bar.shade, line.hop/land, card.N) would do the check for her.
+    const safe = new Set(['prompt', 'pick', 'takeaway', 'line.start', 'line.draw', 'bar.pieces']);
+    for (const [skill, sp] of Object.entries(SPEAK)) {
+      const base = teachStepsFor(skill) || [];
+      sp.steps.forEach((entry, i) => {
+        if (!base[i]?.tryIt) return;
+        for (const l of entry.lines) {
+          expect(safe.has(l.cue), `${skill} try-it cue "${l.cue}" would do the check for her`).toBe(true);
+        }
+      });
+    }
+  });
+
   it('scripts are written to be spoken: no markup, no bare symbol soup', () => {
     for (const [skill, sp] of Object.entries(SPEAK)) {
       for (const entry of [...sp.steps, ...(sp.more || [])]) {

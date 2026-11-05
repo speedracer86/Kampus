@@ -272,5 +272,1671 @@
         }
       ]
     ]
+  },
+  "simplifyRatio": {
+    "steps": [
+      [
+        {
+          "file": "simplifyRatio/t0-0.mp3",
+          "sha": "8c69811d8e46118a"
+        },
+        {
+          "file": "simplifyRatio/t0-1.mp3",
+          "sha": "4932d1e7d7f5585a"
+        },
+        {
+          "file": "simplifyRatio/t0-2.mp3",
+          "sha": "205dc6b86b45b56d"
+        }
+      ],
+      [
+        {
+          "file": "simplifyRatio/t1-0.mp3",
+          "sha": "8b52ddbaedbad2d0"
+        },
+        {
+          "file": "simplifyRatio/t1-1.mp3",
+          "sha": "814001b7c0b219a5"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "simplifyRatio/m0-0.mp3",
+          "sha": "d4d9834e4d5bf83a"
+        },
+        {
+          "file": "simplifyRatio/m0-1.mp3",
+          "sha": "d8404f42de737758"
+        }
+      ]
+    ]
+  },
+  "ratioShare": {
+    "steps": [
+      [
+        {
+          "file": "ratioShare/t0-0.mp3",
+          "sha": "6fcaf3016f486db9"
+        },
+        {
+          "file": "ratioShare/t0-1.mp3",
+          "sha": "f58b17773ad82de9"
+        },
+        {
+          "file": "ratioShare/t0-2.mp3",
+          "sha": "a3c6db0e12cb9670"
+        }
+      ],
+      [
+        {
+          "file": "ratioShare/t1-0.mp3",
+          "sha": "dc937ce8d7216918"
+        },
+        {
+          "file": "ratioShare/t1-1.mp3",
+          "sha": "da1511d259cd081b"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "ratioShare/m0-0.mp3",
+          "sha": "d1893a8f3f3a72b2"
+        },
+        {
+          "file": "ratioShare/m0-1.mp3",
+          "sha": "a5c3256e35548a60"
+        },
+        {
+          "file": "ratioShare/m0-2.mp3",
+          "sha": "5afc5300208a54d5"
+        }
+      ]
+    ]
+  },
+  "easyPct": {
+    "steps": [
+      [
+        {
+          "file": "easyPct/t0-0.mp3",
+          "sha": "cd9e91add9c44830"
+        },
+        {
+          "file": "easyPct/t0-1.mp3",
+          "sha": "69b152d9d27671f3"
+        }
+      ],
+      [
+        {
+          "file": "easyPct/t1-0.mp3",
+          "sha": "10e09cf9953b3b7d"
+        },
+        {
+          "file": "easyPct/t1-1.mp3",
+          "sha": "bd74ab4bd32610d7"
+        },
+        {
+          "file": "easyPct/t1-2.mp3",
+          "sha": "eb315b2fdd7e3248"
+        }
+      ],
+      [
+        {
+          "file": "easyPct/t2-0.mp3",
+          "sha": "f025961ae20dc81b"
+        },
+        {
+          "file": "easyPct/t2-1.mp3",
+          "sha": "f4e574705e4b5251"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "easyPct/m0-0.mp3",
+          "sha": "1c184dfe461039dc"
+        },
+        {
+          "file": "easyPct/m0-1.mp3",
+          "sha": "4a0ddb74c95e9668"
+        },
+        {
+          "file": "easyPct/m0-2.mp3",
+          "sha": "8a89f3c10663e0d0"
+        },
+        {
+          "file": "easyPct/m0-3.mp3",
+          "sha": "9d3f1d4bfdbe7df7"
+        }
+      ]
+    ]
+  },
+  "pctOf": {
+    "steps": [
+      [
+        {
+          "file": "pctOf/t0-0.mp3",
+          "sha": "825efeae22f55df0"
+        },
+        {
+          "file": "pctOf/t0-1.mp3",
+          "sha": "171a43c3c157a40b"
+        }
+      ],
+      [
+        {
+          "file": "pctOf/t1-0.mp3",
+          "sha": "f483fbb774ec456c"
+        },
+        {
+          "file": "pctOf/t1-1.mp3",
+          "sha": "845867dd62a7a68d"
+        },
+        {
+          "file": "pctOf/t1-2.mp3",
+          "sha": "dd759eb83b0109c1"
+        },
+        {
+          "file": "pctOf/t1-3.mp3",
+          "sha": "8fbf105ab08ce8fa"
+        }
+      ],
+      [
+        {
+          "file": "pctOf/t2-0.mp3",
+          "sha": "c5201e99b96757da"
+        },
+        {
+          "file": "pctOf/t2-1.mp3",
+          "sha": "3351fff2c59dcddf"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "pctOf/m0-0.mp3",
+          "sha": "85f750ce38b1c503"
+        },
+        {
+          "file": "pctOf/m0-1.mp3",
+          "sha": "1833443e6d6a84f8"
+        },
+        {
+          "file": "pctOf/m0-2.mp3",
+          "sha": "2894ab5a5df93366"
+        }
+      ]
+    ]
+  },
+  "findWhole": {
+    "steps": [
+      [
+        {
+          "file": "findWhole/t0-0.mp3",
+          "sha": "0f935e29ede0a73d"
+        },
+        {
+          "file": "findWhole/t0-1.mp3",
+          "sha": "421033620adf1d3f"
+        },
+        {
+          "file": "findWhole/t0-2.mp3",
+          "sha": "aff8256ee7a69e10"
+        }
+      ],
+      [
+        {
+          "file": "findWhole/t1-0.mp3",
+          "sha": "5df3680c1162018e"
+        },
+        {
+          "file": "findWhole/t1-1.mp3",
+          "sha": "16c968661a9734ec"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "findWhole/m0-0.mp3",
+          "sha": "674ce06baf84527d"
+        },
+        {
+          "file": "findWhole/m0-1.mp3",
+          "sha": "5827cdb29e3a9120"
+        },
+        {
+          "file": "findWhole/m0-2.mp3",
+          "sha": "b6a79282f056b685"
+        }
+      ]
+    ]
+  },
+  "frac2pct": {
+    "steps": [
+      [
+        {
+          "file": "frac2pct/t0-0.mp3",
+          "sha": "efa28b8802730a7d"
+        },
+        {
+          "file": "frac2pct/t0-1.mp3",
+          "sha": "07a0c09c2b172eb3"
+        }
+      ],
+      [
+        {
+          "file": "frac2pct/t1-0.mp3",
+          "sha": "aa041bda053d756c"
+        },
+        {
+          "file": "frac2pct/t1-1.mp3",
+          "sha": "d369044217f79b31"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "frac2pct/m0-0.mp3",
+          "sha": "191c4dd3b39cf091"
+        },
+        {
+          "file": "frac2pct/m0-1.mp3",
+          "sha": "d73cf53cedb4f46e"
+        }
+      ]
+    ]
+  },
+  "divFrac": {
+    "steps": [
+      [
+        {
+          "file": "divFrac/t0-0.mp3",
+          "sha": "62adc38f48abe1dd"
+        },
+        {
+          "file": "divFrac/t0-1.mp3",
+          "sha": "bad880dc83a4d818"
+        },
+        {
+          "file": "divFrac/t0-2.mp3",
+          "sha": "99863698508a290c"
+        }
+      ],
+      [
+        {
+          "file": "divFrac/t1-0.mp3",
+          "sha": "564491b3be9f6a61"
+        },
+        {
+          "file": "divFrac/t1-1.mp3",
+          "sha": "90504ea7e7886fb0"
+        },
+        {
+          "file": "divFrac/t1-2.mp3",
+          "sha": "fab9cf1be125a86f"
+        }
+      ],
+      [
+        {
+          "file": "divFrac/t2-0.mp3",
+          "sha": "212dbf8518105c71"
+        },
+        {
+          "file": "divFrac/t2-1.mp3",
+          "sha": "045956e300b701ce"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "divFrac/m0-0.mp3",
+          "sha": "405c84ff63729de0"
+        },
+        {
+          "file": "divFrac/m0-1.mp3",
+          "sha": "8ad0cd72f1ad2b89"
+        }
+      ]
+    ]
+  },
+  "cmpInt": {
+    "steps": [
+      [
+        {
+          "file": "cmpInt/t0-0.mp3",
+          "sha": "ab69a2fcae89bcb0"
+        },
+        {
+          "file": "cmpInt/t0-1.mp3",
+          "sha": "944b3e32dfc77166"
+        },
+        {
+          "file": "cmpInt/t0-2.mp3",
+          "sha": "d57137a4e30d4e0a"
+        }
+      ],
+      [
+        {
+          "file": "cmpInt/t1-0.mp3",
+          "sha": "176843602f05ed34"
+        },
+        {
+          "file": "cmpInt/t1-1.mp3",
+          "sha": "b7d82adc577a4044"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "cmpInt/m0-0.mp3",
+          "sha": "2af9519782556258"
+        },
+        {
+          "file": "cmpInt/m0-1.mp3",
+          "sha": "7229ac3ed8b8694c"
+        }
+      ]
+    ]
+  },
+  "absVal": {
+    "steps": [
+      [
+        {
+          "file": "absVal/t0-0.mp3",
+          "sha": "cf02f3b73b112081"
+        },
+        {
+          "file": "absVal/t0-1.mp3",
+          "sha": "f25ea86df5d96178"
+        },
+        {
+          "file": "absVal/t0-2.mp3",
+          "sha": "39469a3b07e12041"
+        }
+      ],
+      [
+        {
+          "file": "absVal/t1-0.mp3",
+          "sha": "fdf66080f9c2a3e2"
+        },
+        {
+          "file": "absVal/t1-1.mp3",
+          "sha": "c55392cd5e15aa85"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "absVal/m0-0.mp3",
+          "sha": "a298a71525193d1d"
+        },
+        {
+          "file": "absVal/m0-1.mp3",
+          "sha": "1667a1fc96cba3ac"
+        }
+      ]
+    ]
+  },
+  "subToNeg": {
+    "steps": [
+      [
+        {
+          "file": "subToNeg/t0-0.mp3",
+          "sha": "eb738d23f00bd413"
+        },
+        {
+          "file": "subToNeg/t0-1.mp3",
+          "sha": "fe0cdc40c33a31f5"
+        },
+        {
+          "file": "subToNeg/t0-2.mp3",
+          "sha": "072612f65e96d1f6"
+        }
+      ],
+      [
+        {
+          "file": "subToNeg/t1-0.mp3",
+          "sha": "c2ba4878fad2f446"
+        },
+        {
+          "file": "subToNeg/t1-1.mp3",
+          "sha": "25bcebda3486b2d0"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "subToNeg/m0-0.mp3",
+          "sha": "d046c01f11ba4e16"
+        },
+        {
+          "file": "subToNeg/m0-1.mp3",
+          "sha": "652237c2aab0b103"
+        }
+      ]
+    ]
+  },
+  "evalTwoVar": {
+    "steps": [
+      [
+        {
+          "file": "evalTwoVar/t0-0.mp3",
+          "sha": "0d64b2fe09419997"
+        },
+        {
+          "file": "evalTwoVar/t0-1.mp3",
+          "sha": "c04694a3e7d84abb"
+        },
+        {
+          "file": "evalTwoVar/t0-2.mp3",
+          "sha": "d62ae6b4793701ed"
+        }
+      ],
+      [
+        {
+          "file": "evalTwoVar/t1-0.mp3",
+          "sha": "57f02255f684bae1"
+        },
+        {
+          "file": "evalTwoVar/t1-1.mp3",
+          "sha": "12af1c431de7fe9c"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "evalTwoVar/m0-0.mp3",
+          "sha": "3668eb7277d56226"
+        },
+        {
+          "file": "evalTwoVar/m0-1.mp3",
+          "sha": "fd43e7cdc52f11be"
+        }
+      ]
+    ]
+  },
+  "oneStepAdd": {
+    "steps": [
+      [
+        {
+          "file": "oneStepAdd/t0-0.mp3",
+          "sha": "f955b37afea872b5"
+        },
+        {
+          "file": "oneStepAdd/t0-1.mp3",
+          "sha": "005c9efd7eac3d6d"
+        },
+        {
+          "file": "oneStepAdd/t0-2.mp3",
+          "sha": "79aced43d9eab501"
+        }
+      ],
+      [
+        {
+          "file": "oneStepAdd/t1-0.mp3",
+          "sha": "7f23824a157de151"
+        },
+        {
+          "file": "oneStepAdd/t1-1.mp3",
+          "sha": "9c575925ae786a32"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "oneStepAdd/m0-0.mp3",
+          "sha": "91319d1bff377157"
+        },
+        {
+          "file": "oneStepAdd/m0-1.mp3",
+          "sha": "a54b00ed9039694f"
+        },
+        {
+          "file": "oneStepAdd/m0-2.mp3",
+          "sha": "ad102e6baf8ed32d"
+        }
+      ]
+    ]
+  },
+  "oneStepMul": {
+    "steps": [
+      [
+        {
+          "file": "oneStepMul/t0-0.mp3",
+          "sha": "981082c5ad883cb1"
+        },
+        {
+          "file": "oneStepMul/t0-1.mp3",
+          "sha": "3d338faf0a6df8c5"
+        },
+        {
+          "file": "oneStepMul/t0-2.mp3",
+          "sha": "610773ce9ece47cd"
+        }
+      ],
+      [
+        {
+          "file": "oneStepMul/t1-0.mp3",
+          "sha": "3a8c91c9375e2898"
+        },
+        {
+          "file": "oneStepMul/t1-1.mp3",
+          "sha": "058f6ecbd0fbdc99"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "oneStepMul/m0-0.mp3",
+          "sha": "217f451a7031307c"
+        },
+        {
+          "file": "oneStepMul/m0-1.mp3",
+          "sha": "323dc9bd0cd87aca"
+        },
+        {
+          "file": "oneStepMul/m0-2.mp3",
+          "sha": "4bcf4b72efa76de0"
+        }
+      ]
+    ]
+  },
+  "depVar": {
+    "steps": [
+      [
+        {
+          "file": "depVar/t0-0.mp3",
+          "sha": "23830573512fc23e"
+        },
+        {
+          "file": "depVar/t0-1.mp3",
+          "sha": "c91bf07ab58a7773"
+        },
+        {
+          "file": "depVar/t0-2.mp3",
+          "sha": "ce726b56ede98c8c"
+        }
+      ],
+      [
+        {
+          "file": "depVar/t1-0.mp3",
+          "sha": "4522b648df36e629"
+        },
+        {
+          "file": "depVar/t1-1.mp3",
+          "sha": "72ff35ab1bec0003"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "depVar/m0-0.mp3",
+          "sha": "fe7ed30f793bcbde"
+        },
+        {
+          "file": "depVar/m0-1.mp3",
+          "sha": "663166a693021f7b"
+        }
+      ]
+    ]
+  },
+  "meanMedian": {
+    "steps": [
+      [
+        {
+          "file": "meanMedian/t0-0.mp3",
+          "sha": "9b0f4ddc4cc4bc23"
+        },
+        {
+          "file": "meanMedian/t0-1.mp3",
+          "sha": "63f6f162c171c743"
+        },
+        {
+          "file": "meanMedian/t0-2.mp3",
+          "sha": "497be3a41288540e"
+        },
+        {
+          "file": "meanMedian/t0-3.mp3",
+          "sha": "25285329bdb6019d"
+        }
+      ],
+      [
+        {
+          "file": "meanMedian/t1-0.mp3",
+          "sha": "706049bc331e65ad"
+        },
+        {
+          "file": "meanMedian/t1-1.mp3",
+          "sha": "4b8e2c900f5d3190"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "meanMedian/m0-0.mp3",
+          "sha": "4fb50b3ac5f4881b"
+        },
+        {
+          "file": "meanMedian/m0-1.mp3",
+          "sha": "7cf215f45c434a3e"
+        }
+      ]
+    ]
+  },
+  "propSolve": {
+    "steps": [
+      [
+        {
+          "file": "propSolve/t0-0.mp3",
+          "sha": "a4bb20141e85df74"
+        },
+        {
+          "file": "propSolve/t0-1.mp3",
+          "sha": "0c6f072fe2daf3d1"
+        },
+        {
+          "file": "propSolve/t0-2.mp3",
+          "sha": "0477996713a0e19f"
+        }
+      ],
+      [
+        {
+          "file": "propSolve/t1-0.mp3",
+          "sha": "29825e0ea55e5033"
+        },
+        {
+          "file": "propSolve/t1-1.mp3",
+          "sha": "0d15aa0ebf60469c"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "propSolve/m0-0.mp3",
+          "sha": "40c99fe5a172aa2e"
+        },
+        {
+          "file": "propSolve/m0-1.mp3",
+          "sha": "fbf297274eb1821e"
+        },
+        {
+          "file": "propSolve/m0-2.mp3",
+          "sha": "43139f5def13aee2"
+        }
+      ]
+    ]
+  },
+  "subNeg": {
+    "steps": [
+      [
+        {
+          "file": "subNeg/t0-0.mp3",
+          "sha": "c9dc8bca5f0af152"
+        },
+        {
+          "file": "subNeg/t0-1.mp3",
+          "sha": "90c25e3e23c1797c"
+        },
+        {
+          "file": "subNeg/t0-2.mp3",
+          "sha": "cd07e0776b4aed71"
+        }
+      ],
+      [
+        {
+          "file": "subNeg/t1-0.mp3",
+          "sha": "2e16f74b08c9ffbc"
+        },
+        {
+          "file": "subNeg/t1-1.mp3",
+          "sha": "42cfb4e914ae3acd"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "subNeg/m0-0.mp3",
+          "sha": "8acb12d78a72945f"
+        },
+        {
+          "file": "subNeg/m0-1.mp3",
+          "sha": "8de820f6776b2bd3"
+        },
+        {
+          "file": "subNeg/m0-2.mp3",
+          "sha": "3800ac62001e362a"
+        }
+      ]
+    ]
+  },
+  "mulInt": {
+    "steps": [
+      [
+        {
+          "file": "mulInt/t0-0.mp3",
+          "sha": "2a0c32a03f69f5cc"
+        },
+        {
+          "file": "mulInt/t0-1.mp3",
+          "sha": "e51b434680325833"
+        },
+        {
+          "file": "mulInt/t0-2.mp3",
+          "sha": "0c402a2da38b6a4c"
+        },
+        {
+          "file": "mulInt/t0-3.mp3",
+          "sha": "2aa1a9fa80f420b9"
+        }
+      ],
+      [
+        {
+          "file": "mulInt/t1-0.mp3",
+          "sha": "34fb1fa479643459"
+        },
+        {
+          "file": "mulInt/t1-1.mp3",
+          "sha": "14718f89c0238f82"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "mulInt/m0-0.mp3",
+          "sha": "6ebe06ec300d123a"
+        },
+        {
+          "file": "mulInt/m0-1.mp3",
+          "sha": "4a7bad2c4280f379"
+        }
+      ]
+    ]
+  },
+  "divInt": {
+    "steps": [
+      [
+        {
+          "file": "divInt/t0-0.mp3",
+          "sha": "ad7a080ebd0e5979"
+        },
+        {
+          "file": "divInt/t0-1.mp3",
+          "sha": "f4915316217630a4"
+        },
+        {
+          "file": "divInt/t0-2.mp3",
+          "sha": "b6f7993cb5801c55"
+        },
+        {
+          "file": "divInt/t0-3.mp3",
+          "sha": "14a80d7bce1f46da"
+        }
+      ],
+      [
+        {
+          "file": "divInt/t1-0.mp3",
+          "sha": "04085b4e402f8392"
+        },
+        {
+          "file": "divInt/t1-1.mp3",
+          "sha": "5909b912646ddc9c"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "divInt/m0-0.mp3",
+          "sha": "5485bde3050d1cb5"
+        }
+      ]
+    ]
+  },
+  "mixedInt": {
+    "steps": [
+      [
+        {
+          "file": "mixedInt/t0-0.mp3",
+          "sha": "28eada0d8b066b69"
+        },
+        {
+          "file": "mixedInt/t0-1.mp3",
+          "sha": "6850b70e3b48122b"
+        },
+        {
+          "file": "mixedInt/t0-2.mp3",
+          "sha": "4999b5f7444c2ac5"
+        },
+        {
+          "file": "mixedInt/t0-3.mp3",
+          "sha": "0dd94dc88d53a4c7"
+        },
+        {
+          "file": "mixedInt/t0-4.mp3",
+          "sha": "b7c9e221a700d002"
+        }
+      ],
+      [
+        {
+          "file": "mixedInt/t1-0.mp3",
+          "sha": "e5f5e61b72ce2505"
+        },
+        {
+          "file": "mixedInt/t1-1.mp3",
+          "sha": "ecc167a24dfb138b"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "mixedInt/m0-0.mp3",
+          "sha": "2164e94aa8a2af54"
+        },
+        {
+          "file": "mixedInt/m0-1.mp3",
+          "sha": "05daf1570ab08673"
+        },
+        {
+          "file": "mixedInt/m0-2.mp3",
+          "sha": "07317b4298304c4c"
+        },
+        {
+          "file": "mixedInt/m0-3.mp3",
+          "sha": "a3dcaed157a73998"
+        }
+      ]
+    ]
+  },
+  "doubleSub": {
+    "steps": [
+      [
+        {
+          "file": "doubleSub/t0-0.mp3",
+          "sha": "6b7af851f58951a1"
+        },
+        {
+          "file": "doubleSub/t0-1.mp3",
+          "sha": "e4184d955df3faa1"
+        },
+        {
+          "file": "doubleSub/t0-2.mp3",
+          "sha": "d3619d31e611a443"
+        }
+      ],
+      [
+        {
+          "file": "doubleSub/t1-0.mp3",
+          "sha": "a6206a0b07a35cb1"
+        },
+        {
+          "file": "doubleSub/t1-1.mp3",
+          "sha": "301922ad1c07082d"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "doubleSub/m0-0.mp3",
+          "sha": "df6a8d93984a1331"
+        },
+        {
+          "file": "doubleSub/m0-1.mp3",
+          "sha": "8a13e6c0968c329c"
+        }
+      ]
+    ]
+  },
+  "addLarger": {
+    "steps": [
+      [
+        {
+          "file": "addLarger/t0-0.mp3",
+          "sha": "d749fb4ccf2ee863"
+        },
+        {
+          "file": "addLarger/t0-1.mp3",
+          "sha": "7abb046305a35db4"
+        },
+        {
+          "file": "addLarger/t0-2.mp3",
+          "sha": "9d3bf117b575bd2e"
+        }
+      ],
+      [
+        {
+          "file": "addLarger/t1-0.mp3",
+          "sha": "4833c38f9ae0f9e4"
+        },
+        {
+          "file": "addLarger/t1-1.mp3",
+          "sha": "fffe29f4b3a95da6"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "addLarger/m0-0.mp3",
+          "sha": "a183618f0ae6413d"
+        }
+      ]
+    ]
+  },
+  "distrib": {
+    "steps": [
+      [
+        {
+          "file": "distrib/t0-0.mp3",
+          "sha": "0255ff4f975f1b51"
+        },
+        {
+          "file": "distrib/t0-1.mp3",
+          "sha": "45ffd4713ed8ef37"
+        },
+        {
+          "file": "distrib/t0-2.mp3",
+          "sha": "b0c617dcf3fc62e7"
+        },
+        {
+          "file": "distrib/t0-3.mp3",
+          "sha": "e36034d615aa6673"
+        }
+      ],
+      [
+        {
+          "file": "distrib/t1-0.mp3",
+          "sha": "bc6d61398a678325"
+        },
+        {
+          "file": "distrib/t1-1.mp3",
+          "sha": "cb9e74367dcb4bdd"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "distrib/m0-0.mp3",
+          "sha": "202176de68edf7b2"
+        },
+        {
+          "file": "distrib/m0-1.mp3",
+          "sha": "0d0e0f9409fc70c4"
+        },
+        {
+          "file": "distrib/m0-2.mp3",
+          "sha": "e247dbaabd295127"
+        }
+      ]
+    ]
+  },
+  "combineLike": {
+    "steps": [
+      [
+        {
+          "file": "combineLike/t0-0.mp3",
+          "sha": "8ee457bff1f667bf"
+        },
+        {
+          "file": "combineLike/t0-1.mp3",
+          "sha": "5a0c9a0ea4059970"
+        },
+        {
+          "file": "combineLike/t0-2.mp3",
+          "sha": "e7ba431331272e19"
+        },
+        {
+          "file": "combineLike/t0-3.mp3",
+          "sha": "e475a9f7e404ddb2"
+        }
+      ],
+      [
+        {
+          "file": "combineLike/t1-0.mp3",
+          "sha": "8a1e65048640ee50"
+        },
+        {
+          "file": "combineLike/t1-1.mp3",
+          "sha": "d268d8c7ac55a3f5"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "combineLike/m0-0.mp3",
+          "sha": "fbb96372be9a8c8d"
+        },
+        {
+          "file": "combineLike/m0-1.mp3",
+          "sha": "74dcffa44a345c66"
+        },
+        {
+          "file": "combineLike/m0-2.mp3",
+          "sha": "19b7110005fdc0e8"
+        }
+      ]
+    ]
+  },
+  "twoStepNeg": {
+    "steps": [
+      [
+        {
+          "file": "twoStepNeg/t0-0.mp3",
+          "sha": "8503e7a0c086bafe"
+        },
+        {
+          "file": "twoStepNeg/t0-1.mp3",
+          "sha": "4c68bfb4b6e0fbda"
+        },
+        {
+          "file": "twoStepNeg/t0-2.mp3",
+          "sha": "73b809692fe3eb5e"
+        }
+      ],
+      [
+        {
+          "file": "twoStepNeg/t1-0.mp3",
+          "sha": "646fd38e3693c0fc"
+        },
+        {
+          "file": "twoStepNeg/t1-1.mp3",
+          "sha": "a8e02f1c232b172c"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "twoStepNeg/m0-0.mp3",
+          "sha": "42cedc8a454b9708"
+        },
+        {
+          "file": "twoStepNeg/m0-1.mp3",
+          "sha": "d569a978281a5f14"
+        }
+      ]
+    ]
+  },
+  "tipCalc": {
+    "steps": [
+      [
+        {
+          "file": "tipCalc/t0-0.mp3",
+          "sha": "51bc4ea178c72559"
+        },
+        {
+          "file": "tipCalc/t0-1.mp3",
+          "sha": "7fd9c64739da8411"
+        },
+        {
+          "file": "tipCalc/t0-2.mp3",
+          "sha": "a9d1aa07bd3d267c"
+        },
+        {
+          "file": "tipCalc/t0-3.mp3",
+          "sha": "3fb0278a8c765be7"
+        }
+      ],
+      [
+        {
+          "file": "tipCalc/t1-0.mp3",
+          "sha": "a816bdd2d502fe89"
+        },
+        {
+          "file": "tipCalc/t1-1.mp3",
+          "sha": "dfd2cb50bd1529b4"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "tipCalc/m0-0.mp3",
+          "sha": "56226221bdc53e6c"
+        },
+        {
+          "file": "tipCalc/m0-1.mp3",
+          "sha": "71590ed933b6f458"
+        },
+        {
+          "file": "tipCalc/m0-2.mp3",
+          "sha": "2533a5cf856b4b8a"
+        },
+        {
+          "file": "tipCalc/m0-3.mp3",
+          "sha": "3383438cda53f31a"
+        },
+        {
+          "file": "tipCalc/m0-4.mp3",
+          "sha": "eda8ca2583c57211"
+        }
+      ]
+    ]
+  },
+  "discountTax": {
+    "steps": [
+      [
+        {
+          "file": "discountTax/t0-0.mp3",
+          "sha": "16d80f2510b07135"
+        },
+        {
+          "file": "discountTax/t0-1.mp3",
+          "sha": "f592d3992345e917"
+        },
+        {
+          "file": "discountTax/t0-2.mp3",
+          "sha": "1f00a1248396273f"
+        },
+        {
+          "file": "discountTax/t0-3.mp3",
+          "sha": "89630f12fc5c7426"
+        }
+      ],
+      [
+        {
+          "file": "discountTax/t1-0.mp3",
+          "sha": "78c3b7fd5fe63fcb"
+        },
+        {
+          "file": "discountTax/t1-1.mp3",
+          "sha": "2e8a51d8e653965f"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "discountTax/m0-0.mp3",
+          "sha": "b0e46a8c6164a093"
+        },
+        {
+          "file": "discountTax/m0-1.mp3",
+          "sha": "119475c86704d46a"
+        },
+        {
+          "file": "discountTax/m0-2.mp3",
+          "sha": "663e98db7edf1de3"
+        },
+        {
+          "file": "discountTax/m0-3.mp3",
+          "sha": "51a80a491c788187"
+        }
+      ]
+    ]
+  },
+  "simpleInterest": {
+    "steps": [
+      [
+        {
+          "file": "simpleInterest/t0-0.mp3",
+          "sha": "85440512d7b8b092"
+        },
+        {
+          "file": "simpleInterest/t0-1.mp3",
+          "sha": "9cfd6d724f631fe9"
+        },
+        {
+          "file": "simpleInterest/t0-2.mp3",
+          "sha": "fbf4644098b289ce"
+        },
+        {
+          "file": "simpleInterest/t0-3.mp3",
+          "sha": "66a0f6137f5379a4"
+        }
+      ],
+      [
+        {
+          "file": "simpleInterest/t1-0.mp3",
+          "sha": "44e005449db42901"
+        },
+        {
+          "file": "simpleInterest/t1-1.mp3",
+          "sha": "638b8fb3b0c464fb"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "simpleInterest/m0-0.mp3",
+          "sha": "39fead856db179a3"
+        },
+        {
+          "file": "simpleInterest/m0-1.mp3",
+          "sha": "7b060c2cb6e6b898"
+        },
+        {
+          "file": "simpleInterest/m0-2.mp3",
+          "sha": "55236b673834ac6b"
+        }
+      ]
+    ]
+  },
+  "pctChange": {
+    "steps": [
+      [
+        {
+          "file": "pctChange/t0-0.mp3",
+          "sha": "fcc352045a4c0cea"
+        },
+        {
+          "file": "pctChange/t0-1.mp3",
+          "sha": "23c361ee407077b7"
+        },
+        {
+          "file": "pctChange/t0-2.mp3",
+          "sha": "2ed3e58d5aa59fa2"
+        },
+        {
+          "file": "pctChange/t0-3.mp3",
+          "sha": "ff06625a8af13315"
+        }
+      ],
+      [
+        {
+          "file": "pctChange/t1-0.mp3",
+          "sha": "b6567493170a8f5e"
+        },
+        {
+          "file": "pctChange/t1-1.mp3",
+          "sha": "70a6f2cd126c0e85"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "pctChange/m0-0.mp3",
+          "sha": "ec8f20bc2fe26215"
+        },
+        {
+          "file": "pctChange/m0-1.mp3",
+          "sha": "e51bc4eec13b3064"
+        },
+        {
+          "file": "pctChange/m0-2.mp3",
+          "sha": "0b4fac44aa5eac01"
+        }
+      ]
+    ]
+  },
+  "probSimple": {
+    "steps": [
+      [
+        {
+          "file": "probSimple/t0-0.mp3",
+          "sha": "a4bd5c5f7e6cb5f7"
+        },
+        {
+          "file": "probSimple/t0-1.mp3",
+          "sha": "48e1fe4df80665c6"
+        }
+      ],
+      [
+        {
+          "file": "probSimple/t1-0.mp3",
+          "sha": "d0e6443537365d7d"
+        },
+        {
+          "file": "probSimple/t1-1.mp3",
+          "sha": "1b160c4d9cb1f179"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "probSimple/m0-0.mp3",
+          "sha": "da7a76901d25d5da"
+        },
+        {
+          "file": "probSimple/m0-1.mp3",
+          "sha": "180fbf47ff0882bd"
+        }
+      ]
+    ]
+  },
+  "scaleRecipe": {
+    "steps": [
+      [
+        {
+          "file": "scaleRecipe/t0-0.mp3",
+          "sha": "50b8fd11ddfad7e1"
+        },
+        {
+          "file": "scaleRecipe/t0-1.mp3",
+          "sha": "1491e688898e8a01"
+        },
+        {
+          "file": "scaleRecipe/t0-2.mp3",
+          "sha": "3eb4719ed103fa11"
+        },
+        {
+          "file": "scaleRecipe/t0-3.mp3",
+          "sha": "47219417d34d6115"
+        }
+      ],
+      [
+        {
+          "file": "scaleRecipe/t1-0.mp3",
+          "sha": "dbf39c08ea9ebb2e"
+        },
+        {
+          "file": "scaleRecipe/t1-1.mp3",
+          "sha": "db6ff55cab794ee9"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "scaleRecipe/m0-0.mp3",
+          "sha": "5665a0373f10fb8b"
+        },
+        {
+          "file": "scaleRecipe/m0-1.mp3",
+          "sha": "410455984d9af983"
+        }
+      ]
+    ]
+  },
+  "decMul": {
+    "steps": [
+      [
+        {
+          "file": "decMul/t0-0.mp3",
+          "sha": "5f35964033d9871f"
+        },
+        {
+          "file": "decMul/t0-1.mp3",
+          "sha": "b933ebbc73040842"
+        },
+        {
+          "file": "decMul/t0-2.mp3",
+          "sha": "6f8c810fb2976955"
+        },
+        {
+          "file": "decMul/t0-3.mp3",
+          "sha": "e444866fcae3f422"
+        }
+      ],
+      [
+        {
+          "file": "decMul/t1-0.mp3",
+          "sha": "31d27a05a5bc6154"
+        },
+        {
+          "file": "decMul/t1-1.mp3",
+          "sha": "17d394f583bfd40b"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "decMul/m0-0.mp3",
+          "sha": "ef35cdc113f82f31"
+        },
+        {
+          "file": "decMul/m0-1.mp3",
+          "sha": "b99ab3c9eb4b75c1"
+        }
+      ]
+    ]
+  },
+  "decDiv": {
+    "steps": [
+      [
+        {
+          "file": "decDiv/t0-0.mp3",
+          "sha": "4f5828af163d695b"
+        },
+        {
+          "file": "decDiv/t0-1.mp3",
+          "sha": "a7a9342445ce96d6"
+        },
+        {
+          "file": "decDiv/t0-2.mp3",
+          "sha": "82419f2427705d98"
+        }
+      ],
+      [
+        {
+          "file": "decDiv/t1-0.mp3",
+          "sha": "4b530cd1d11e8f5f"
+        },
+        {
+          "file": "decDiv/t1-1.mp3",
+          "sha": "aa37a96b76a5f0b1"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "decDiv/m0-0.mp3",
+          "sha": "6b70a89389b07390"
+        },
+        {
+          "file": "decDiv/m0-1.mp3",
+          "sha": "744f463f44d266ea"
+        }
+      ]
+    ]
+  },
+  "frac2dec": {
+    "steps": [
+      [
+        {
+          "file": "frac2dec/t0-0.mp3",
+          "sha": "cdef1c1094e47903"
+        },
+        {
+          "file": "frac2dec/t0-1.mp3",
+          "sha": "37a00778f85e0c4b"
+        }
+      ],
+      [
+        {
+          "file": "frac2dec/t1-0.mp3",
+          "sha": "a007f1fb1dc47df1"
+        },
+        {
+          "file": "frac2dec/t1-1.mp3",
+          "sha": "17ac57a86f95f5c0"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "frac2dec/m0-0.mp3",
+          "sha": "7ee9a0752f399e48"
+        },
+        {
+          "file": "frac2dec/m0-1.mp3",
+          "sha": "00e2a7d2c5617cc2"
+        }
+      ]
+    ]
+  },
+  "dec2frac": {
+    "steps": [
+      [
+        {
+          "file": "dec2frac/t0-0.mp3",
+          "sha": "bb5c5375720aeaae"
+        },
+        {
+          "file": "dec2frac/t0-1.mp3",
+          "sha": "2cb808112f0a5594"
+        },
+        {
+          "file": "dec2frac/t0-2.mp3",
+          "sha": "bbdfd27a940a3aae"
+        }
+      ],
+      [
+        {
+          "file": "dec2frac/t1-0.mp3",
+          "sha": "38a941e172f00d2a"
+        },
+        {
+          "file": "dec2frac/t1-1.mp3",
+          "sha": "e8fcabe20b68f5c0"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "dec2frac/m0-0.mp3",
+          "sha": "a47b48f645a8dce9"
+        },
+        {
+          "file": "dec2frac/m0-1.mp3",
+          "sha": "fa3e950888273981"
+        }
+      ]
+    ]
+  },
+  "evalX": {
+    "steps": [
+      [
+        {
+          "file": "evalX/t0-0.mp3",
+          "sha": "9c57c10d98063f9f"
+        },
+        {
+          "file": "evalX/t0-1.mp3",
+          "sha": "e4ef97e59de330da"
+        },
+        {
+          "file": "evalX/t0-2.mp3",
+          "sha": "3efedde86bbeb266"
+        }
+      ],
+      [
+        {
+          "file": "evalX/t1-0.mp3",
+          "sha": "a8eef5820c586c67"
+        },
+        {
+          "file": "evalX/t1-1.mp3",
+          "sha": "9419e4e26f72f7d6"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "evalX/m0-0.mp3",
+          "sha": "c6fe5390c20ac132"
+        },
+        {
+          "file": "evalX/m0-1.mp3",
+          "sha": "01221065e2adbc5e"
+        }
+      ]
+    ]
+  },
+  "areaModel": {
+    "steps": [
+      [
+        {
+          "file": "areaModel/t0-0.mp3",
+          "sha": "634c6c2480e18d00"
+        },
+        {
+          "file": "areaModel/t0-1.mp3",
+          "sha": "bf8033e7eafbcf35"
+        }
+      ],
+      [
+        {
+          "file": "areaModel/t1-0.mp3",
+          "sha": "d15a0086c4f937cb"
+        },
+        {
+          "file": "areaModel/t1-1.mp3",
+          "sha": "328bf452f220065c"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "areaModel/m0-0.mp3",
+          "sha": "c03adbb0ced256b7"
+        },
+        {
+          "file": "areaModel/m0-1.mp3",
+          "sha": "997039f926aa72a2"
+        }
+      ]
+    ]
+  },
+  "volumeBox": {
+    "steps": [
+      [
+        {
+          "file": "volumeBox/t0-0.mp3",
+          "sha": "7d1b5511b58c8a20"
+        },
+        {
+          "file": "volumeBox/t0-1.mp3",
+          "sha": "794fcba41aa01786"
+        },
+        {
+          "file": "volumeBox/t0-2.mp3",
+          "sha": "de6b61da0da1869a"
+        }
+      ],
+      [
+        {
+          "file": "volumeBox/t1-0.mp3",
+          "sha": "4a8db3cdbe388b21"
+        },
+        {
+          "file": "volumeBox/t1-1.mp3",
+          "sha": "a75c76eab6649b48"
+        }
+      ]
+    ],
+    "more": [
+      [
+        {
+          "file": "volumeBox/m0-0.mp3",
+          "sha": "741a8725e2923d27"
+        },
+        {
+          "file": "volumeBox/m0-1.mp3",
+          "sha": "19375999e850b514"
+        }
+      ]
+    ]
   }
 }
