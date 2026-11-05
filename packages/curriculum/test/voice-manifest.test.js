@@ -5,15 +5,23 @@
    Nothing errors — it just goes subtly wrong, which is this project's recurring
    failure shape. So the shapes are compared, both directions.
 
-   PARTIAL COVERAGE IS LEGAL, AT SKILL GRANULARITY ONLY. Credits run out mid-bank
-   (owner's call, Nov 2026: grades 3-5 first, grade 8 after the renewal), and a
-   skill with no clips simply falls back to speechSynthesis — today's behaviour.
-   A skill with SOME of its clips is the state that must never ship: real voice on
-   one step, robot voice on the next, inside one lesson. So:
+   PARTIAL COVERAGE IS LEGAL PER SKILL AND KIND, NEVER INSIDE ONE. Credits run out
+   mid-bank (owner's call, Nov 2026: grades 3-5 first, the rest on the renewal),
+   and an unvoiced skill simply falls back to speechSynthesis — today's behaviour.
+   A kind is a whole surface with its own fallback: `steps`+`more` are the teach
+   sequence, `reteach` is the panel after a missed prove-it. Half of ONE of those
+   is the state that must never ship — real voice on one step and the robot voice
+   on the next, inside one sequence. So:
 
-     - a skill in the manifest must be complete, to the line, hash for hash;
-     - a skill absent from the manifest is reported, not failed;
-     - a skill in the manifest that is NOT in the bank is an orphan, and fails.
+     - a kind in the manifest must be complete, to the line, hash for hash;
+     - a kind absent from the manifest is reported, not failed — and the report
+       below is where a deferred tranche becomes visible rather than forgotten;
+     - a skill or kind in the manifest that is NOT in the bank is an orphan, and fails.
+
+   The granularity cost real money to learn: generating grades 3-5 left eight
+   grade-6/7 skills teaching in Karla's voice and re-teaching in the robot's,
+   because the grade-ordered split cut across the `reteach` kind rather than along
+   it. Legal, visible, and first in the queue when credits renew — not silent.
 
    The kinds are read off each bank entry rather than listed, so a tranche that
    adds a new kind of script (the re-teach scripts) is covered by this guard the
@@ -40,8 +48,9 @@ describe.skipIf(!has)('the clip manifest matches the speak bank', () => {
   it('has one clip per line, with the step shapes aligned', () => {
     for (const skill of voiced) {
       for (const kind of kindsOf(SPEAK[skill])) {
+        if (!manifest[skill][kind]) continue;        // a deferred kind, reported below
         const bank = stepsOf(SPEAK[skill], kind).map(s => s.lines.length);
-        const clips = (manifest[skill]?.[kind] || []).map(s => s.length);
+        const clips = manifest[skill][kind].map(s => s.length);
         expect(clips, `${skill}.${kind}`).toEqual(bank);
       }
     }
@@ -57,6 +66,7 @@ describe.skipIf(!has)('the clip manifest matches the speak bank', () => {
   it('hashes the line it was generated from, so an edited line regenerates', () => {
     for (const skill of voiced) {
       for (const kind of kindsOf(SPEAK[skill])) {
+        if (!manifest[skill][kind]) continue;
         stepsOf(SPEAK[skill], kind).forEach((step, si) => {
           step.lines.forEach((line, li) => {
             const got = manifest[skill][kind][si][li];
@@ -81,10 +91,33 @@ describe.skipIf(!has)('the clip manifest matches the speak bank', () => {
   });
 
   it('reports what is still unvoiced rather than failing it', () => {
-    // A deliberate state, not a defect: those skills fall back to speechSynthesis.
+    // A deliberate state, not a defect: these fall back to speechSynthesis. The
+    // log is the point — it is how a deferred tranche stays visible.
     const unvoiced = Object.keys(SPEAK).filter(s => !manifest[s]);
     if (unvoiced.length) console.log(`    ${unvoiced.length} authored skills have no clips yet: ${unvoiced.join(', ')}`);
+    const gaps = [];
+    for (const skill of voiced) {
+      for (const kind of kindsOf(SPEAK[skill])) if (!manifest[skill][kind]) gaps.push(`${skill}.${kind}`);
+    }
+    if (gaps.length) console.log(`    ${gaps.length} voiced skills are missing a whole kind: ${gaps.join(', ')}`);
     expect(voiced.length + unvoiced.length).toBe(Object.keys(SPEAK).length);
+  });
+
+  it('never carries HALF of a kind', () => {
+    // The line that matters. A kind is all or nothing: anything else plays Karla
+    // on one step of a sequence and the robot on the next.
+    for (const skill of voiced) {
+      for (const kind of kindsOf(SPEAK[skill])) {
+        const clips = manifest[skill][kind];
+        if (!clips) continue;
+        const want = stepsOf(SPEAK[skill], kind);
+        expect(clips.length, `${skill}.${kind} has ${clips.length} of ${want.length} steps`).toBe(want.length);
+        clips.forEach((step, si) => {
+          expect(step.filter(Boolean).length, `${skill}.${kind}[${si}] is a partial step`)
+            .toBe(want[si].lines.length);
+        });
+      }
+    }
   });
 });
 

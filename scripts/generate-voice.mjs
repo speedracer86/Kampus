@@ -147,16 +147,30 @@ if (!voice) {
 }
 if (!todo.length) { console.log('Everything is current. Nothing to do.\n'); process.exit(0); }
 
+/* The manifest, written from the full plan but filtered to clips actually on
+   disk: a budgeted or grade-filtered run leaves the skills it skipped unvoiced
+   rather than listed.
+
+   Written AFTER EVERY CLIP, not once at the end. A run that dies partway — a 402
+   on the last credits, a dropped connection — used to leave the clips on disk and
+   the manifest untouched, and the retry read the OLD manifest, found no entry for
+   those lines and PAID FOR THEM AGAIN. The existence filter means every
+   intermediate write is a valid manifest, so there is no reason not to. */
+const saveManifest = () => {
+  mkdirSync(OUT, { recursive: true });
+  writeFileSync(MANIFEST, `${JSON.stringify(buildManifest(rows, { exists: onDisk }), null, 2)}\n`);
+};
+
 let bytes = 0;
+let spent = 0;
 for (const [i, row] of todo.entries()) {
   process.stdout.write(`  [${i + 1}/${todo.length}] ${row.file} … `);
   bytes += await speak(row, { key, voice, model });
-  console.log('ok');
+  spent += row.say.length;
+  saveManifest();
+  console.log(`ok · ${spent} credits`);
 }
-mkdirSync(OUT, { recursive: true });
-// The full plan, filtered to clips that are actually on disk: a budgeted or
-// grade-filtered run leaves the skills it skipped unvoiced rather than listed.
-writeFileSync(MANIFEST, `${JSON.stringify(buildManifest(rows, { exists: onDisk }), null, 2)}\n`);
+saveManifest();
 const unvoiced = Object.keys(SPEAK).filter(s => !skillsIn(rows.filter(r => onDisk(r.file))).includes(s));
 console.log(`\nWrote ${todo.length} clips (${(bytes / 1024).toFixed(0)} KB) and manifest.json`);
 if (unvoiced.length) console.log(`Still unvoiced (falls back to speechSynthesis): ${unvoiced.length} skills — ${unvoiced.join(', ')}`);

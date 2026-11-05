@@ -141,7 +141,14 @@ function teachMoves(skill) {
 }
 
 /** ReteachView rows from a TeachStep — the SECOND example, so the re-teach after a
-    missed prove-it shows fresh work, never the panel she just didn't get. */
+    missed prove-it shows fresh work, never the panel she just didn't get.
+
+    THE ROW COUNTS HERE ARE A CONTRACT. The bank's re-teach scripts cue `row.N`
+    against what this returns, and speak.test.js ("re-teach scripts line up with
+    the panel they narrate") mirrors these counts to reject a cue that points past
+    the end. Change a branch below and that test has to change with it, or a line
+    narrates a row that is not on screen — silently, because an out-of-range
+    highlight simply highlights nothing. */
 function reteachRowsFrom(step) {
   if (step.walk) return step.walk.rows.map(r => ({ lead: '', how: r.how, value: r.value }));
   if (step.line) {

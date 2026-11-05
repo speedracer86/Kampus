@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { SPEAK } from '../src/speak.js';
 import { teachStepsFor } from '../src/teach-steps.js';
-import { SECOND_EXAMPLES } from '../src/teach-depth.js';
+import { SECOND_EXAMPLES, PLAN_B } from '../src/teach-depth.js';
 import { YEAR, GRADES } from '../src/units.js';
 
 /* The speak-script bank: Karla's voice lines with say-it-show-it cues.
@@ -63,6 +63,37 @@ describe('the speak-script bank', () => {
   it('tranche 2 covers every grade 6 and grade 7 skill', () => {
     const g67 = new Set([...YEAR[6], ...YEAR[7]].flatMap(u => u.skills));
     for (const skill of g67) expect(SPEAK[skill], `${skill} authored`).toBeDefined();
+  });
+
+
+  it('tranche 3 completes the bank: every unit skill in every grade speaks', () => {
+    for (const skill of USED) expect(SPEAK[skill], `${skill} authored`).toBeDefined();
+  });
+
+  it('re-teach scripts line up with the panel they narrate', () => {
+    // year.js builds the panel from PLAN_B[0] (wall skills) or SECOND_EXAMPLES[0],
+    // and reteachRowsFrom turns that step into rows: walk = its rows, line = 3,
+    // bar = 2, faceoff = 1. A row.N cue past that range narrates a row that
+    // does not exist.
+    const rowsOf = (step) => step.walk ? step.walk.rows.length : step.line ? 3 : step.bar ? 2 : 1;
+    for (const [skill, sp] of Object.entries(SPEAK)) {
+      if (!sp.reteach) continue;
+      const source = (PLAN_B[skill] || [])[0] || (SECOND_EXAMPLES[skill] || [])[0];
+      expect(source, `${skill} has a panel to narrate`).toBeDefined();
+      const max = rowsOf(source);
+      for (const l of sp.reteach.lines) {
+        expect(l.say?.length, `${skill} reteach say`).toBeGreaterThan(8);
+        const m = l.cue.match(/^row\.(\d+)$/);
+        expect(m || l.cue === 'prompt', `${skill} reteach cue ${l.cue} is prompt or row.N`).toBeTruthy();
+        if (m) expect(Number(m[1]), `${skill} reteach ${l.cue} within ${max} rows`).toBeLessThanOrEqual(max);
+      }
+    }
+    // The wall skills and the reference four carry one — the kids most likely
+    // to land on the panel get the voice first.
+    for (const skill of ['divFrac', 'addUnlikeDen', 'subNeg', 'twoStep', 'pctOf', 'findWhole',
+      'fracOfSet', 'decDiv', 'multiStep', 'probSimple', 'eqFrac', 'unitRate', 'addInt', 'multFact']) {
+      expect(SPEAK[skill]?.reteach, `${skill} reteach authored`).toBeDefined();
+    }
   });
 
   it('speaks in words a 2nd grader knows — the owner\u2019s language law', () => {

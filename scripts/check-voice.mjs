@@ -39,7 +39,12 @@ if (!existsSync(MANIFEST)) {
 const manifest = JSON.parse(readFileSync(MANIFEST, 'utf8'));
 const listed = [];
 for (const [skill, entry] of Object.entries(manifest)) {
-  for (const kind of ['steps', 'more']) {
+  // Every kind the manifest carries, not a list of the kinds that existed when
+  // this was written. Listed, it called tranche 3's whole `reteach` kind eleven
+  // orphan clips: the manifest was right and the checker was blind to it. The
+  // generator and the manifest guard read their kinds off the data for the same
+  // reason (scripts/voice-plan.mjs).
+  for (const kind of Object.keys(entry)) {
     (entry[kind] || []).forEach(step => (step || []).forEach(line => listed.push({ skill, ...line })));
   }
 }
