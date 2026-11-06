@@ -13,6 +13,7 @@
   "dependencies": {
     "@kampus/engine": "*",
     "@kampus/ui": "*",
+    "@supabase/supabase-js": "^2.119.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },

@@ -123,3 +123,65 @@ appears unnoticed.
 Not started: auth (step 2), the store.js swap (step 3), save adoption (4),
 multi-device proof (5), the `VITE_SYNC` flag (6). Waiting on `SUPABASE_URL` and
 `SUPABASE_ANON_KEY` in `.env` for anything that talks to a live project.
+
+### Steps 2-6 — done, Nov 6
+
+Against the real project (`zjnjwkysjanscmxmiyos`). `npm run test:sync` is the
+multi-device proof; it is opt-in (no `.env`, no run) because it needs the live
+project, and it is skipped loudly rather than passing quietly. Everything else
+runs in CI as before, with the flag off AND on: **236/236 both ways.**
+
+- **Auth** is a real magic link (`supabase.js`). Two component touches, both
+  additive and both inert with the flag off: `ParentSetup` hands out the email
+  it already collects (there was nowhere for it to go — the handler cannot send
+  a link to an address it never sees), and `GrownUps` shows the account with a
+  sign-out, which the order asked to live there. Neither screen's design moved;
+  with no `onSendLink` / `onSignOut` prop they render exactly as before.
+- **store.js** keeps its SYNCHRONOUS API on purpose. App.jsx calls `load()`
+  inside a `useState` initialiser, so making it async would push an `await` into
+  every screen — the opposite of what the order asks. Reads come from the cache,
+  writes go local-first and queue, and a pull lands in the cache and bumps the
+  app to re-read.
+- **The ledger is unioned by row id, not replayed from events.** The order says
+  replay, and the instinct is right — but `earn` events carry cents and a
+  reason, not the row id an `approve` later refers to, so a replay would mint
+  new ids and orphan every approval. A union by id loses no row and no approval,
+  which is what replaying was for.
+- **The flag really is a flag.** With `VITE_SYNC` off the Supabase URL is not
+  even in the bundle — the constant folds and the client is dead code.
+
+Three bugs the work turned up, all in code written for it:
+
+1. **Three copies of one student, 46ms apart.** `flush()` checked its "already
+   running" guard *before* an `await` and set it *after*, so three cycles
+   (startup, the auth event, a reconnect) all passed the check and all pushed.
+   The guard is claimed before the first await now, and `cycle()` has one of its
+   own.
+2. **One bad fact could block every later one.** The event push is a batch, so a
+   row the server will never accept failed every flush and took the whole queue
+   with it — forever, silently. A batch that keeps failing is now dropped after
+   five tries with a console warning. Losing one fact is bad; losing every fact
+   after it is how a kid's week disappears.
+3. **Erasure was impossible.** 0001's append-only trigger refused the cascade
+   from deleting a family, so a parent asking for their child's data to be
+   removed could not be served without dropping the trigger in production.
+   `supabase/migrations/0002_lawful_erasure.sql` fixes it — an ordinary delete
+   is still refused, a session that has declared `app.erasing` may cascade, and
+   editing a fact is still refused outright. **It is written and tested locally
+   but NOT applied to the project** (see below).
+
+### Still needed from the owner
+
+- **Apply `0002_lawful_erasure.sql`.** I was blocked from applying it: it
+  loosens a guard, so it needs your hand. Until then no family, and no student
+  who has ever done anything, can be deleted from the project — including the
+  test rows this work left behind.
+- **Custom SMTP, before the pilot.** The project is on Supabase's default
+  mailer, which rate-limited a handful of sign-ups in a row during this work
+  (`429 email rate limit exceeded`). Magic links ARE the way in, so with the
+  default mailer a family that mistypes an address twice is locked out for an
+  hour. This is a go-live blocker, not a nicety.
+- **Two test accounts exist** — `e2e-a@mykampus.ai` and `e2e-b@mykampus.ai`,
+  created by hand because the mailer could not be used. Remove with
+  `delete from auth.users where email like 'e2e-%@mykampus.ai';` when you want
+  them gone; `npm run test:sync` needs them (or set `E2E_EMAIL`/`E2E_PASSWORD`).

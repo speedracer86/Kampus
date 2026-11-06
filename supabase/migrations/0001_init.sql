@@ -204,6 +204,9 @@ $$;
    adds in the dashboard, bypasses policies entirely. So the table itself
    refuses: the trigger fires for every caller, owner included.
 --------------------------------------------------------------------------- */
+/* SUPERSEDED BY 0002: this version refuses every delete, including the cascade
+   from deleting a family, which made lawful erasure impossible. Left as written
+   because it is what the project applied; 0002 replaces the function. */
 create or replace function app.events_are_append_only()
 returns trigger
 language plpgsql

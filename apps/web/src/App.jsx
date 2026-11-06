@@ -1,7 +1,7 @@
 /* Phase-0 vertical slice: Home → pick a world → QuizRound fed by @kampus/engine → back home.
    Proves the engine ↔ component-library contract end to end. The remaining screens
    (shop, rewards, stand, grown-ups, onboarding, grade tests) arrive in Phase 3. */
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   buildUnitQuiz, gradeUnitQuiz, buildGradeTest, gradeGradeTest, testIntroCopy,
   award, ask, cancelAsk, availableCents, receiptModel, howYouEarn, DEFAULT_CAP_CENTS, weekKey,
@@ -29,7 +29,8 @@ import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCt
 import { pilotReport } from './report.js';
 import { unitById, lessonsFor, YEAR } from '@kampus/curriculum';
 import { load, save, append, events as storedEvents, DEFAULT_STUDENT_ID,
-  loadFamily, saveFamily, createStudent, updateStudent } from './store.js';
+  loadFamily, saveFamily, createStudent, updateStudent, startSync } from './store.js';
+import { SYNC_ON, sendMagicLink, signOut, onAuth, currentUser } from './supabase.js';
 import { WORLDS, TOPIC_ORDER } from './worlds.js';
 
 const ROUND_LENGTH = 12;
@@ -232,6 +233,19 @@ export function App() {
      a student's own state lives under her id. A device that has never been set up
      has an empty roster, which is what puts onboarding in front of everything. */
   const [family, setFamily] = useState(loadFamily);
+  /* SYNC (work order step 3/6). Reads still come from the local cache — the
+     store's API is synchronous on purpose — so a pull just bumps this counter
+     and the app re-reads what it always reads. Off, startSync() returns a
+     no-op and none of this runs. */
+  const [, setPulled] = useState(0);
+  const [account, setAccount] = useState(null);
+  useEffect(() => {
+    if (!SYNC_ON) return undefined;
+    currentUser().then(setAccount);
+    const offAuth = onAuth(setAccount);
+    const stop = startSync({ onChange: () => { setFamily(loadFamily()); setPulled(n => n + 1); } });
+    return () => { offAuth(); stop(); };
+  }, []);
   const [studentId, setStudentId] = useState(() => loadFamily().students[0]?.id || DEFAULT_STUDENT_ID);
   const [state, setState] = useState(() => load(studentId));
   // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
@@ -384,9 +398,11 @@ export function App() {
   /* ---- onboarding (§0a) sits in front of everything, before any nav exists ---- */
   if (gate === 'setup') {
     return <ParentSetup blobDir={BLOB_DIR}
+      // Absent with sync off, and the screen keeps its local-setup copy.
+      onSendLink={SYNC_ON ? sendMagicLink : undefined}
       onPickProfile={() => setGate('doorway')}
-      onDone={({ name, pin, grade, settings }) => {
-        const id = createStudent({ name, pin, grade, settings, parentEmail: null });
+      onDone={({ name, pin, grade, settings, email }) => {
+        const id = createStudent({ name, pin, grade, settings, parentEmail: email || null });
         setFamily(loadFamily());
         setStudentId(id);
         setState(load(id));
@@ -602,6 +618,8 @@ export function App() {
     const cap = state.settings?.cap ?? DEFAULT_CAP_CENTS;
     const setS = (k, v) => update(s => { s.settings = { ...(s.settings || {}), [k]: v }; return s; });
     return <Shell {...shellProps('parents')}><GrownUps
+      account={account ? { email: account.email } : null}
+      onSignOut={SYNC_ON ? (() => { signOut().then(() => setAccount(null)); }) : undefined}
       blobDir={BLOB_DIR}
       data={{
         // The weekly artifact a pilot family receives. Folded in report.js out of

@@ -79,7 +79,15 @@ const STEPS = ['Welcome', 'Your email', 'Her name', 'Her PIN', 'Where to start',
  * Parent setup. Writes {settings, student profile} out through onDone — this component
  * never touches storage itself.
  */
-export function ParentSetup({ onDone, onPickProfile, blobDir = '/blobs/' }) {
+/**
+ * @param {object} p
+ * @param {(email: string) => Promise<{ok: boolean, why?: string}>} [p.onSendLink]
+ *   Sends the sign-in link. ABSENT is the supported state: with sync off there
+ *   is no link to send, and the screen keeps the local-setup copy it has always
+ *   had. The design of the screen is unchanged either way — the email it
+ *   already collects simply has somewhere to go now.
+ */
+export function ParentSetup({ onDone, onPickProfile, onSendLink, blobDir = '/blobs/' }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
   const [step, setStep] = React.useState(0);
@@ -88,6 +96,7 @@ export function ParentSetup({ onDone, onPickProfile, blobDir = '/blobs/' }) {
   const [pin, setPin] = React.useState('');
   const [grade, setGrade] = React.useState(null);        // number | 'placement'
   const [settings, setSettings] = React.useState({ cap: 500, lessonLength: 17, allowBlitz: false, sprints: true, vacation: false });
+  const [sent, setSent] = React.useState(null);     // null | {ok, why}
 
   const frame = (props) => <div ref={ref}><SetupFrame steps={STEPS} step={step} phone={phone} {...props} /></div>;
   const set = (k, v) => setSettings(s => ({ ...s, [k]: v }));
@@ -114,7 +123,14 @@ export function ParentSetup({ onDone, onPickProfile, blobDir = '/blobs/' }) {
   if (step === 1) return frame({
     kicker: 'Step one', title: 'What’s your email?',
     sub: 'Yours, not hers. It is how you get back in and how we send the weekly note.',
-    ctaLabel: 'Send me the link →', ctaDisabled: !email.includes('@'), onCta: () => setStep(1.5),
+    ctaLabel: 'Send me the link →',
+    ctaDisabled: !email.includes('@'),
+    onCta: () => {
+      setStep(1.5);
+      // Never block the setup on a network call: the link is a convenience, and
+      // a parent with no signal must still be able to finish setting her up.
+      if (onSendLink) Promise.resolve(onSendLink(email)).then(setSent).catch(() => setSent({ ok: false }));
+    },
     note: 'We never email your child.',
     children: <BigInput value={email} onChange={setEmail} placeholder="you@example.com" phone={phone} />,
   });
@@ -123,8 +139,13 @@ export function ParentSetup({ onDone, onPickProfile, blobDir = '/blobs/' }) {
     kicker: 'Step one', title: 'Check your email.',
     sub: `We sent a link to ${email}.`,
     ctaLabel: 'Continue →', onCta: () => setStep(2),
-    // Honest about the mock rather than pretending a mail went out.
-    note: 'Not wired up yet — this is a local setup, so just continue.',
+    // Honest either way: about the mock when there is no link to send, and
+    // about the failure when one was attempted and did not go.
+    note: !onSendLink
+      ? 'Not wired up yet — this is a local setup, so just continue.'
+      : sent === null ? 'Sending… you can carry on without waiting.'
+        : sent.ok ? 'Sent. You can open it later — carry on for now.'
+          : 'That link did not send. Carry on — you can sign in later from Grown-ups.',
     children: <div style={{ textAlign: 'center', padding: '20px 0' }}>
       <Blob name="Emailing" size={120} dir={blobDir} />
       <p style={{ fontSize: 18, color: color.muted, marginTop: 18 }}>Open it on this device and you’ll land right back here.</p>
@@ -213,7 +234,9 @@ export function ParentSetup({ onDone, onPickProfile, blobDir = '/blobs/' }) {
     kicker: 'All set', title: 'Hand it over.',
     sub: `${name}’s turn. She picks a world, then starts.`,
     ctaLabel: `Give it to ${name} →`,
-    onCta: () => onDone?.({ name: name.trim(), pin, grade, settings }),
+    // The email travels with the rest: it is the parent's account, and the
+    // app has no other way to learn it.
+    onCta: () => onDone?.({ name: name.trim(), pin, grade, settings, email: email.trim() }),
     note: 'You can change any of this in Grown-ups.',
     children: <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>

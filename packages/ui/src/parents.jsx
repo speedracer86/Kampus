@@ -69,7 +69,13 @@ function EarnedRow({ row, overLimit, onApprove, onHold, onUndo, phone }) {
  * data: {kid{name, grade, day, daysPlayed}, pending[], asks[], approvedThisWeek, cap,
  *        progress[], stats[], settings{cap, lessonLength, allowBlitz, sprints, vacation}}
  */
-export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {} }) {
+/**
+ * @param {object} p
+ * @param {{email: string}|null} [p.account] the signed-in parent, when syncing.
+ * @param {() => void} [p.onSignOut] absent with sync off, and then nothing about
+ *   this screen changes — there is no account to sign out of.
+ */
+export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {}, account, onSignOut }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 900;
   const [tab, setTab] = React.useState('approvals');
@@ -181,6 +187,14 @@ export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {} }) {
         </>}
 
         {tab === 'settings' && sheet(<div style={{ padding: phone ? '8px 20px 20px' : '10px 32px 26px' }}>
+          {/* The account, where a grown-up would look for it. The kid's PIN is a
+              different boundary and is not touched by signing out. */}
+          {onSignOut && <SettingRow label="Your account"
+            sub={account?.email ? `Signed in as ${account.email}. Her progress syncs to your devices.`
+              : 'Not signed in. Her progress stays on this device only.'}>
+            <Button variant="outline" size="sm" onClick={onSignOut}>
+              {account?.email ? 'Sign out' : 'Sign in'}</Button>
+          </SettingRow>}
           <SettingRow label="Weekly limit" sub="The most real money that can be approved in a week.">
             <PillGroup value={cap} onChange={v => onEvent('set_cap', v)}
               options={[{ value: 300, label: '$3' }, { value: 500, label: '$5' }, { value: 800, label: '$8' }]} />

@@ -20,7 +20,7 @@
      otherwise: the local default socket, and failing that a throwaway cluster
      this script initdbs, starts, and removes. */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -105,7 +105,12 @@ const ids = {
 
 try {
   execFileSync('psql', [...adminConn, '-q', '-c', `create database ${DB}`], { stdio: 'pipe' });
-  for (const f of ['supabase/test/auth-shim.sql', 'supabase/migrations/0001_init.sql']) {
+  // Every migration, in order — not just the first. A schema is the sum of its
+  // migrations, and a suite that only applies 0001 tests a database nobody runs.
+  const migrations = readdirSync(path.join(ROOT, 'supabase/migrations'))
+    .filter(f => f.endsWith('.sql')).sort()
+    .map(f => `supabase/migrations/${f}`);
+  for (const f of ['supabase/test/auth-shim.sql', ...migrations]) {
     // Report psql's own message rather than node's buffer dump: a migration that
     // does not apply should say which line, not print 200 bytes as integers.
     // Warnings only: a fresh database reports every `drop … if exists` as a
@@ -117,7 +122,7 @@ try {
       throw new Error(`could not apply ${f}`);
     }
   }
-  check('the migration applies cleanly to an empty database', true, '0001_init.sql');
+  check('every migration applies cleanly to an empty database', true, migrations.map(m => m.split('/').pop()).join(' + '));
 
   /* ---- seed two families, as the superuser (RLS bypassed by design) ---- */
   sql(`
@@ -255,6 +260,24 @@ try {
   refused('the anon role cannot read students at all',
     'select count(*) from public.students', { role: 'anon' }, /permission denied/);
   refused('nor events', 'select count(*) from public.events', { role: 'anon' }, /permission denied/);
+
+  /* Erasure stays possible (0002). A parent can ask for their child's data to
+     be removed; the first version of the trigger refused the cascade and made
+     that impossible without dropping the trigger in production. An ordinary
+     delete is still refused — only a session that has SAID it is erasing may. */
+  refused('an ordinary delete is still refused, even for the owner',
+    `delete from public.events where student_id = '${ids.sA}'`, {}, /append-only/);
+  sql(`set local app.erasing = 'on'; delete from public.events where student_id = '${ids.sB}'`);
+  check('a session that declares it is erasing may remove a subject\'s facts',
+    sql(`select count(*) from public.events where student_id = '${ids.sB}'`)[0] === '0');
+  refused('but editing a fact is refused even while erasing',
+    `set local app.erasing = 'on'; update public.events set type = 'edited' where student_id = '${ids.sA}'`,
+    {}, /append-only/);
+  check('deleting a family cascades now, instead of failing on its events',
+    (() => {
+      sql(`set local app.erasing = 'on'; delete from public.families where id = '${ids.fB}'`);
+      return sql(`select count(*) from public.families where id = '${ids.fB}'`)[0] === '0';
+    })());
 
   /* ---- the guard against the NEXT table ---- */
   const unguarded = sql(`select c.relname from pg_class c join pg_namespace n on n.oid = c.relnamespace

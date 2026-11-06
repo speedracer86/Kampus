@@ -19,7 +19,16 @@ export default async function run(check) {
     await page.fill('input', 'parent@example.com');
     await clickText(page, 'Send me the link');
     await page.waitForTimeout(150);
-    check('the magic link step says plainly that it is not wired up', (await text(page)).includes('Not wired up yet'));
+    /* The subject here is HONESTY, not a particular sentence. With sync off
+       there is no link to send and the screen says so; with sync on a link is
+       really sent and the screen says what happened to it. What the step must
+       never do is claim an email went out when none did — and either way a
+       parent with no signal can still carry on and finish setting her up. */
+    const linkStep = await text(page);
+    check('the magic link step is honest about what just happened',
+      /Not wired up yet|Sending\u2026|^(?:.|\n)*Sent\./.test(linkStep) || /did not send/.test(linkStep),
+      (linkStep.match(/Not wired up yet[^\n]*|Sending[^\n]*|Sent\.[^\n]*|did not send[^\n]*/) || ['none'])[0]);
+    check('and lets her carry on regardless', /Continue/.test(linkStep));
 
     await clickText(page, 'Continue');
     await page.waitForTimeout(150);
