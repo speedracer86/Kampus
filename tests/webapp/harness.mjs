@@ -377,7 +377,26 @@ export async function open(state = {}, hash = '') {
   await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
   await page.addInitScript(() => {
     const sink = {
-      speak: (u) => { try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ } },
+      speak: (u) => {
+        try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
+        // Model the voice finishing, and report word boundaries as it goes: the
+        // product sweeps the question on these, and a stub that never fired them
+        // left every caller believing it was still talking.
+        const text = String(u?.text ?? '');
+        let at = 0;
+        const step = () => {
+          const next = text.indexOf(' ', at + 1);
+          if (next < 0 || !u?.onboundary) {
+            try { u?.onboundary?.({ charIndex: text.length, name: 'word' }); } catch { /* fine */ }
+            try { u?.onend?.({}); } catch { /* fine */ }
+            return;
+          }
+          at = next;
+          try { u.onboundary({ charIndex: at, name: 'word' }); } catch { /* fine */ }
+          setTimeout(step, 12);
+        };
+        setTimeout(step, 12);
+      },
       cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,
     };
@@ -416,7 +435,26 @@ export async function openBlank(hash = '') {
   await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
   await page.addInitScript(() => {
     const sink = {
-      speak: (u) => { try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ } },
+      speak: (u) => {
+        try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
+        // Model the voice finishing, and report word boundaries as it goes: the
+        // product sweeps the question on these, and a stub that never fired them
+        // left every caller believing it was still talking.
+        const text = String(u?.text ?? '');
+        let at = 0;
+        const step = () => {
+          const next = text.indexOf(' ', at + 1);
+          if (next < 0 || !u?.onboundary) {
+            try { u?.onboundary?.({ charIndex: text.length, name: 'word' }); } catch { /* fine */ }
+            try { u?.onend?.({}); } catch { /* fine */ }
+            return;
+          }
+          at = next;
+          try { u.onboundary({ charIndex: at, name: 'word' }); } catch { /* fine */ }
+          setTimeout(step, 12);
+        };
+        setTimeout(step, 12);
+      },
       cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,
     };

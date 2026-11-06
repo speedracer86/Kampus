@@ -1708,3 +1708,27 @@ export const SPEAK = {
 
 /** Speak entry for one skill, or null while its tranche is unauthored. */
 export const speakFor = (skill) => SPEAK[skill] || null;
+
+/* Karla hosts every move (owner, Nov 2026).
+
+   One spoken line when a move opens, so the kid is never dropped into a screen
+   of questions with no one introducing them. These are the owner's words,
+   supplied with the work order — not authored here, like everything else in
+   this file.
+
+   A separate export rather than a kind inside each skill: the lines are the
+   same whatever is being taught, and hanging five copies off all 79 skills
+   would be seventy-nine times the clips for one sentence. The generator
+   composes them into the bank as `move_<id>` entries carrying a `moveIntros`
+   kind (scripts/voice-plan.mjs), so they generate, manifest and play through
+   exactly the same pipeline. */
+export const MOVE_INTROS = {
+  warmup: { lines: [{ say: 'Quick ones first — wake your brain up. Four of these.', cue: 'prompt' }] },
+  guided: { lines: [{ say: 'Now the new move, with me right beside you.', cue: 'prompt' }] },
+  mixed: { lines: [{ say: 'Mix it up — a little of everything you own.', cue: 'prompt' }] },
+  prove: { lines: [{ say: 'Last stretch. No help on these — show me what’s yours.', cue: 'prompt' }] },
+  snag: { lines: [{ say: 'Wait — look at this first. Just a look, no stakes.', cue: 'prompt' }] },
+};
+
+/** The host line for a move, where one is authored. */
+export const moveIntroFor = (moveId) => MOVE_INTROS[moveId] || null;

@@ -3040,5 +3040,55 @@
         }
       ]
     ]
+  },
+  "move_warmup": {
+    "moveIntros": [
+      [
+        {
+          "file": "move_warmup/i0-0.mp3",
+          "sha": "724bf05199443cb3"
+        }
+      ]
+    ]
+  },
+  "move_guided": {
+    "moveIntros": [
+      [
+        {
+          "file": "move_guided/i0-0.mp3",
+          "sha": "8a3fc7dc1a96abe7"
+        }
+      ]
+    ]
+  },
+  "move_mixed": {
+    "moveIntros": [
+      [
+        {
+          "file": "move_mixed/i0-0.mp3",
+          "sha": "3f447f358640895a"
+        }
+      ]
+    ]
+  },
+  "move_prove": {
+    "moveIntros": [
+      [
+        {
+          "file": "move_prove/i0-0.mp3",
+          "sha": "d3fb606a8447801f"
+        }
+      ]
+    ]
+  },
+  "move_snag": {
+    "moveIntros": [
+      [
+        {
+          "file": "move_snag/i0-0.mp3",
+          "sha": "a7400a76faf6fe0a"
+        }
+      ]
+    ]
   }
 }

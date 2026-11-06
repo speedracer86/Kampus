@@ -8,6 +8,8 @@
 import { color, type, radius, font, numeral } from './tokens.js';
 import { Kicker, Button } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
+import { useSpokenLine } from './say-it-show-it.jsx';
+import { Blob } from './primitives.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -81,6 +83,14 @@ const FRACTION_ALL = new RegExp(FRACTION_BODY, 'g');        // every one in a st
    uses it to keep "2/4 = ?/8" from breaking across lines — and React renders it
    as the five literal characters unless it is decoded. It decodes to a real
    non-breaking space, which is what it was asking for. */
+/* An inline SVG is a PICTURE, and its text nodes are axis labels. Stripping it
+   tag by tag leaves them behind as prose: the number-line step rendered as
+   "You land on -2. 0-9-2". Whole elements go, contents and all — the engine's
+   own adapter (quiz-adapter.plainText) drops them the same way and for the same
+   reason. Rendering them properly is a separate job (the adapter calls it a
+   Phase 3 tradeoff); printing their labels as sentences is just wrong. */
+const SVG = /<svg[\s\S]*?<\/svg>/gi;
+
 const ENTITIES = [[/&nbsp;/g, '\u00A0'], [/&amp;/g, '&'], [/&lt;/g, '<'], [/&gt;/g, '>'],
   [/&quot;/g, '"'], [/&#0*39;|&apos;/g, "'"]];
 const decode = (s) => ENTITIES.reduce((acc, [re, to]) => acc.replace(re, to), s);
@@ -93,23 +103,73 @@ const plainPart = (s) => decode(String(s).replace(/<[^>]+>/g, ''));
  * RAISED, stacked fractions written as n/d, <br> as a real break, entities
  * decoded, and anything else dropped.
  */
-export function rich(s) {
-  return String(s ?? '').split(MARKUP).map((part, i) => {
+/**
+ * The words rich() will render, in the order it renders them.
+ *
+ * A markup token counts as ONE word: "<b>2</b>" is a word, and so is a stacked
+ * fraction, however many characters it takes to write. The sweep is built from
+ * this list so the highlight lands on what a reader sees as a word.
+ */
+export function richWords(s) {
+  const out = [];
+  String(s ?? '').replace(SVG, '').split(MARKUP).forEach((part) => {
+    if (!part) return;
+    // A split token is the whole tag, so "starts with < and ends with >" is
+    // enough — and it avoids calling .test() on MARKUP, which carries /g and
+    // would advance its own lastIndex between calls.
+    if (/^<[\s\S]*>$/.test(part)) { out.push(bare(part) || part); return; }
+    plainPart(part).split(/\s+/).filter(Boolean).forEach(w => out.push(w));
+  });
+  return out;
+}
+
+/* The three sweep states, in the demo's palette. Shared with say-it-show-it so
+   a word held in the question looks like a word held in the script. */
+const swept = (state) => ({
+  background: state === 'now' ? color.goldHold : 'transparent',
+  color: state === 'ahead' ? color.inkAhead : color.ink,
+  borderRadius: radius.sm, padding: '1px 4px', margin: '0 -1px',
+  transition: 'background .1s linear, color .25s ease',
+});
+
+/**
+ * @param {string} s
+ * @param {{word:number, reduced?:boolean}} [sweep] when present, every word is
+ *   wrapped and the one being spoken is held. Absent (the default), the output
+ *   is exactly what it has always been.
+ */
+export function rich(s, sweep) {
+  let n = -1;                              // word counter across all the parts
+  const mark = (node, key) => {
+    // The key belongs on the element either way. Returning the node bare when
+    // there is no sweep dropped the key that used to be written inline, and
+    // React warned about it from the first render in the gallery.
+    if (!sweep) return React.cloneElement(node, { key });
+    n += 1;
+    const state = sweep.reduced ? 'now' : n === sweep.word ? 'now' : n < sweep.word ? 'said' : 'ahead';
+    return <span key={key} data-say-word={n} data-word-state={state} style={swept(state)}>{node}</span>;
+  };
+  return String(s ?? '').replace(SVG, '').split(MARKUP).map((part, i) => {
     const b = part.match(/^<b>([\s\S]*)<\/b>$/);
     // Recurse into the bold span rather than printing its contents: <b> wraps the
     // outer match, so a bolded exponent — <b>2<sup>6</sup></b> — would otherwise
     // render its own tags as visible text.
-    if (b) return <strong key={i} style={{ fontWeight: 800 }}>{rich(b[1])}</strong>;
+    if (b) return mark(<strong style={{ fontWeight: 800 }}>{rich(b[1])}</strong>, i);
     const sup = part.match(/^<sup>([\s\S]*)<\/sup>$/);
-    if (sup) return <sup key={i} style={{ fontSize: '.62em', lineHeight: 0 }}>{plainPart(sup[1])}</sup>;
+    if (sup) return mark(<sup style={{ fontSize: '.62em', lineHeight: 0 }}>{plainPart(sup[1])}</sup>, i);
     const fr = part.match(FRACTION);
     // Written with a slash rather than stacked: it is unambiguous at every size
     // this appears in — a 40px heading, a 26px answer button, a 15px teach line —
     // and the engine's own adapter (quiz-adapter.plainText) already made the same
     // choice. A stacked treatment is a design decision, not a bug fix.
-    if (fr) return <span key={i} style={{ whiteSpace: 'nowrap' }}>{plainPart(fr[1])}/{plainPart(fr[2])}</span>;
+    if (fr) return mark(<span style={{ whiteSpace: 'nowrap' }}>{plainPart(fr[1])}/{plainPart(fr[2])}</span>, i);
     if (/^<br\s*\/?>$/.test(part)) return <br key={i} />;
-    return plainPart(part);
+    const plain = plainPart(part);
+    if (!sweep) return plain;
+    // Each word its own span, so the sweep can hold one at a time.
+    return plain.split(/(\s+)/).map((w, k) => (w.trim()
+      ? mark(w, `${i}-${k}`)
+      : <span key={`${i}-${k}`}>{w}</span>));
   });
 }
 
@@ -118,6 +178,7 @@ export function rich(s) {
     "1 over 3", never "13". */
 export function plainSpeech(s) {
   return String(s ?? '')
+    .replace(SVG, ' ')
     .replace(FRACTION_ALL, ' $1 over $2 ')
     .replace(/<sup>([\s\S]*?)<\/sup>/g, ' to the $1 ')
     // A <br> ends a sentence for the voice — unless the sentence already ended,
@@ -136,22 +197,89 @@ export function plainSpeech(s) {
     .trim();
 }
 
-/** Teach me, one beat at a time. A wall of numbered prose is the wrong thing to
-    hand an overloaded kid (owner verdict, Nov 2026): each line arrives on its own
-    tap — the same move as the walk layout — so reading happens at her pace, and
-    the line that lands the answer arrives last instead of being skimmed past. */
+/* Teach me, as a MINI-WALK (owner, Nov 2026).
+
+   It used to be prose lines on a rule. The teach layouts already proved the
+   shape that works for an overloaded kid — a value in numeral type, the move
+   beside it, one row per tap — so the help box now uses the same one instead of
+   a second, weaker presentation of the same idea.
+
+   The engine writes these as sentences, not as rows, so the row is derived: the
+   RESULT of the step goes in the numeral column and the move stays in the text.
+   Two shapes carry a result, and both come from the engine's own emphasis:
+
+     "One costs <b>$7</b>."              -> $7   | One costs
+     "$21 ÷ 3 = 7."                      -> 7    | $21 ÷ 3
+
+   A line with neither — "Peel it like an onion — undo the + first" — is a step
+   with nothing to show, and stays full-width prose. Lifting something that is
+   not a result would be worse than lifting nothing: "75% is three quarters"
+   must not put "three quarters" in the numeral column as if it were a figure. */
+
+/** The plain text of a string, markup and pictures gone. */
+const bare = (s) => String(s ?? '').replace(SVG, '').replace(/<[^>]+>/g, '').trim();
+
+/** A number-ish result: 7, $7, -2, 3.5, 60%, 2/5. Not a phrase. A dot counts
+    only between digits, so a sentence's full stop never lands in the column. */
+const NUM = '[-\u2212+]?[$\u00a3\u20ac]?\\d(?:[\\d,/]|\\.(?=\\d))*\\s*%?';
+const RESULTISH = new RegExp(`^${NUM}$`);
+const TRAILING_RESULT = new RegExp(`^(.*?)=\\s*(${NUM})\\s*\\.?$`);
+
+/** What is left of a sentence once its result has been lifted out of it. */
+const tidy = (s) => {
+  let t = String(s).replace(/\s{2,}/g, ' ').trim();
+  // Repeatedly, because lifting "<b>3</b>." leaves "… 5 = ." — one pass removes
+  // the stop and stops, leaving a dangling "=" at the end of the row.
+  for (let i = 0; i < 4; i += 1) {
+    const next = t.replace(/[\s.,:;=\u2192\u2014-]+$/, '').trim();
+    if (next === t) break;
+    t = next;
+  }
+  return t;
+};
+
+/** Split one teach sentence into { value, how }, or { how } when it has no result. */
+export function teachRow(line) {
+  const text = String(line ?? '');
+  const bolds = [...text.matchAll(/<b>([\s\S]*?)<\/b>/g)];
+  const last = bolds[bolds.length - 1];
+  if (last && RESULTISH.test(bare(last[1]))) {
+    // Only when the result ENDS the sentence. "Top: 1 \u00d7 2 = <b>2</b>. Same amount,
+    // just cut into smaller pieces:" carries on afterwards, and lifting the 2 out
+    // of the middle leaves "1 \u00d7 2 =. Same amount\u2026" \u2014 a hole where the answer was.
+    const after = bare(text.slice(last.index + last[0].length));
+    if (/^[\s.]*$/.test(after)) {
+      const how = text.slice(0, last.index) + text.slice(last.index + last[0].length);
+      return { value: bare(last[1]), how: tidy(how) };
+    }
+  }
+  const trailing = bare(text).match(TRAILING_RESULT);
+  if (trailing && trailing[1].trim()) return { value: trailing[2].trim(), how: tidy(trailing[1]) };
+  return { how: text };
+}
+
+/** Teach me, one beat at a time: each row arrives on its own tap, as the walk does. */
 function TeachReveal({ steps = [], phone }) {
   const [shown, setShown] = React.useState(1);
+  const rows = steps.map(teachRow);
   return <div>
-    {steps.slice(0, shown).map((s, i) => <div key={i} style={{ fontSize: phone ? 16 : 17, lineHeight: 1.5,
-      padding: '10px 0', borderBottom: i < steps.length - 1 ? `1px solid ${color.rule}` : 'none',
-      color: i === steps.length - 1 ? color.greenDeep : color.ink,
-      fontWeight: i === steps.length - 1 ? 600 : 400 }}>{rich(s)}</div>)}
-    {shown < steps.length && <button onClick={() => setShown(n => n + 1)} style={{ ...qBase, display: 'block',
+    {rows.slice(0, shown).map((r, i) => {
+      const isResult = i === rows.length - 1;
+      const tone = isResult ? color.greenDeep : color.ink;
+      return <div key={i} data-teach-row={i} style={{ display: 'flex', alignItems: 'baseline',
+        gap: phone ? 12 : 18, padding: '12px 0',
+        borderBottom: i < rows.length - 1 ? `1px solid ${color.rule}` : 'none' }}>
+        {r.value !== undefined && <span data-teach-value
+          style={{ ...numeral(phone ? 24 : 30), flex: 'none', color: tone }}>{rich(r.value)}</span>}
+        <span style={{ fontSize: phone ? 15.5 : 16.5, lineHeight: 1.45, fontWeight: r.value ? 600 : 500,
+          color: isResult ? tone : color.muted }}>{rich(r.how)}</span>
+      </div>;
+    })}
+    {shown < rows.length && <button onClick={() => setShown(n => n + 1)} style={{ ...qBase, display: 'block',
       width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', height: 48,
       borderRadius: radius.lg, background: color.track, color: color.muted,
       fontSize: 14, fontWeight: 600, padding: '0 16px', marginTop: 10 }}>
-      Tap for the next line · {shown} of {steps.length}</button>}
+      Tap for the next line · {shown} of {rows.length}</button>}
   </div>;
 }
 
@@ -216,13 +344,41 @@ export function Question({
   question, context = 'mission', teachFree = false, tokensLeft = 3,
   feedback = null, picked = null, payout = null, help = null, teachConfirm = false, selected = null, snag = false,
   onAnswer = () => {}, onHelp = () => {}, onTeachConfirm = () => {}, onNext,
-  onEvent = () => {}, style,
+  onEvent = () => {}, style, worldColor, mode = 'c', voice, blobDir = '/blobs/', muted = false,
 }) {
   const ref = React.useRef(null);
   const w = useWidth(ref);
   const phone = w < 760;
   const [sel, setSel] = React.useState(null);
+  const [pressed, setPressed] = React.useState(null);
   React.useEffect(() => { setSel(null); }, [question]);
+  // The world's colour carries through from the lesson; anywhere without one
+  // (a quiz, a stray render) falls back to ink and looks exactly as before.
+  const accent = worldColor || color.ink;
+
+  /* THE QUESTION SPEAKS, in the same voice and with the same sweep as the
+     teaching (owner, Nov 2026). Band policy is unchanged: a auto-reads, b has
+     the companion to tap, c keeps the "Read it to me" pill it already had.
+
+     Fallback chain: the voice cache's clip, then the browser voice through
+     plainSpeech(), then silence. The cache Worker is not deployed yet, so today
+     every one of these is the browser voice — which still sweeps, because the
+     utterance reports the character it has reached.
+
+     NOTHING HERE GATES. No part of this reaches onAnswer, feedback, sel or the
+     Check button, in either direction: audio cannot block her and cannot answer
+     for her. */
+  const words = React.useMemo(() => richWords(question.text), [question.text]);
+  const saying = React.useMemo(() => plainSpeech(question.text), [question.text]);
+  const clipSrc = voice?.cacheUrl && saying.length <= 200
+    ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
+    : null;
+  const line = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted });
+  // Band a is read to without asking; b and c ask first (§0a).
+  React.useEffect(() => {
+    if (mode === 'a' && !muted) line.play();
+    return () => line.stop();
+  }, [question.text, mode, muted]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // A Snag is "no pay, just a look": no help stack, because having the move is the point.
   const helpIds = snag ? [] : (HELP_BY_CONTEXT[context] || HELP_BY_CONTEXT.mission);
@@ -231,7 +387,9 @@ export function Question({
     if (locked) return;
     const next = help === id ? null : id;
     onHelp(next, { needsConfirm: id === 'teach' && !teachFree });
-    if (next === 'read') speak(plainSpeech(question.text));
+    // The read-aloud pill now goes through the same path as the rest, so band c
+    // gets the sweep too rather than a different, quieter product.
+    if (next === 'read') line.play();
     if (next) onEvent('help_open', { id: next });
   };
   const commit = (i) => { if (feedback) return; onAnswer(i); };
@@ -242,13 +400,26 @@ export function Question({
     const wrong = feedback === 'wrong' && i === picked;
     // `selected` lets a quiz show the kid's pick without revealing right or wrong (§0).
     const chosen = !feedback && (sel === i || selected === i);
+    const down = pressed === i && !feedback;
     return {
       ...qBase, display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', cursor: feedback ? 'default' : 'pointer',
-      background: right ? color.greenTint : wrong ? color.redTint : color.surface,
-      border: `1.5px solid ${right ? color.green : wrong ? color.red : chosen ? color.ink : color.rule}`,
+      background: right ? color.greenTint : wrong ? color.redTint : chosen ? color.fill : color.surface,
+      border: `1.5px solid ${right ? color.green : wrong ? color.red : chosen ? accent : color.rule}`,
       borderRadius: radius.lg, padding: phone ? '16px 16px' : '20px 22px', width: '100%',
+      /* A tap should feel like it landed. The press is a scale, not a colour
+         flash: colour on this card already means right, wrong or chosen, and a
+         fourth meaning would make the three that matter harder to read. */
+      transform: down ? 'scale(.985)' : 'scale(1)',
+      boxShadow: chosen && !feedback ? `0 0 0 3px ${color.fill}` : 'none',
+      transition: 'transform .09s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease',
     };
   };
+  const press = (i) => ({
+    onPointerDown: () => !feedback && setPressed(i),
+    onPointerUp: () => setPressed(null),
+    onPointerLeave: () => setPressed(null),
+    onPointerCancel: () => setPressed(null),
+  });
 
   const givens = question.givens || [];
   const knowCol = <>
@@ -271,16 +442,36 @@ export function Question({
       teachFree={teachFree} onTeachConfirm={onTeachConfirm} phone={phone} />
   </>;
 
+  /* Bands a and b get the companion's face, lit by the real speaking state —
+     the same disc the teach screens use, so she is the same person here. */
+  const companion = mode !== 'c' && <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+    <button onClick={() => line.play()} aria-label="Read it to me" style={{ ...qBase, border: 'none', padding: 0,
+      cursor: 'pointer', width: 44, height: 44, flex: 'none', borderRadius: radius.full, background: accent,
+      display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+      <Blob name="Singing" size={34} dir={blobDir} /></button>
+    <span style={{ fontSize: 14, fontWeight: 600, color: color.muted }}>
+      {line.speaking ? 'Reading it to you\u2026' : 'Tap me to hear it.'}</span>
+  </div>;
+
   const prompt = <>
     {snag && <Kicker style={{ marginBottom: 10 }}>No pay, just a look</Kicker>}
+    {companion}
     <h2 style={{ fontSize: phone ? 26 : 40, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.18,
-      margin: 0, textWrap: 'pretty' }}>{rich(question.text)}</h2>
+      margin: 0, textWrap: 'pretty' }}>
+      {/* Only once the sweep has actually started. A voice that reports no
+          boundaries at all (Safari does this) would otherwise leave every word
+          in the "not reached yet" grey for the whole sentence — the question
+          would go pale and stay there. No sweep is the normal rendering. */}
+      {rich(question.text, line.speaking && line.word >= 0 ? { word: line.word } : undefined)}</h2>
   </>;
 
   const answers = <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 12, marginTop: phone ? 18 : 26 }}>
-    {(question.answers || []).map((a, i) => <button key={i} onClick={() => pick(i)} style={answerStyle(i)}>
-      <span style={{ ...qBase, flex: 'none', width: 30, height: 30, borderRadius: radius.full, background: color.fill,
-        display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700, color: color.mutedDeep }}>{i + 1}</span>
+    {(question.answers || []).map((a, i) => <button key={i} onClick={() => pick(i)} {...press(i)} style={answerStyle(i)}>
+      <span style={{ ...qBase, flex: 'none', width: 30, height: 30, borderRadius: radius.full,
+        background: (!feedback && (sel === i || selected === i)) ? accent : color.fill,
+        color: (!feedback && (sel === i || selected === i)) ? '#fff' : color.mutedDeep,
+        display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700,
+        transition: 'background .18s ease, color .18s ease' }}>{i + 1}</span>
       {/* Through rich() like the question: a fraction answer is the same v1
           markup, and raw it either prints its tags or runs its digits together. */}
       <span style={{ ...numeral(phone ? 26 : 34), color: color.ink }}>{rich(a)}</span>
@@ -310,7 +501,8 @@ export function Question({
           {givens.slice(0, 3).map((g, i) => <div key={i}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: color.muted }}>{g.k}</div>
             <div style={{ ...numeral(26), marginTop: 2 }}>{g.v}</div></div>)}</div>}
-        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 20 }}>
+        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 20,
+          borderTop: `3px solid ${accent}` }}>
           {prompt}{scaffold}{answers}{helpCol}{!snag && wrongBar}
           {!snag && feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
           {checkBar}
@@ -318,7 +510,11 @@ export function Question({
       </>
       : <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
         <div>{knowCol}{helpCol}</div>
-        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 32 }}>
+        {/* The world the lesson is in, as a hairline on the sheet it is taught
+            in — the same colour the companion wears, so the question screen
+            belongs to the same place the teaching did. */}
+        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 32,
+          borderTop: `3px solid ${accent}` }}>
           {prompt}{scaffold}{answers}{!snag && wrongBar}
           {!snag && feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
             <PayoutLine payout={payout} /></div>}

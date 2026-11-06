@@ -6,13 +6,23 @@
    panel here comes from packages/curriculum verbatim. */
 import {
   lessonsFor, unitById, unitSpan, yearShape, snagFor, teachFor, teachStepsFor, quizSkills, YEAR,
-  SECOND_EXAMPLES, PLAN_B, speakFor,
+  SECOND_EXAMPLES, PLAN_B, speakFor, moveIntroFor,
 } from '@kampus/curriculum';
 
 /** Karla's speak script for one step, where the bank has authored it: `speak` is
     what the voice row reads today (speechSynthesis until the generated clips
     land — docs/VOICE_PASS.md), `speakLines` carries the per-line visual cues
     the say-it-show-it playback will drive. */
+/** Karla's host line for a move, with where its clip lives in the manifest.
+    The component library may not import the bank, so the line travels on the
+    move the same way a teach step's script travels on the step. */
+const introFor = (moveId) => {
+  const e = moveIntroFor(moveId);
+  return e?.lines?.length
+    ? { say: e.lines[0].say, voiceSkill: `move_${moveId}`, kind: 'moveIntros', index: 0 }
+    : null;
+};
+
 const speakProps = (entry, kind, index) => (entry?.lines?.length
   ? {
     speak: entry.lines.map(l => l.say).join(' '),
@@ -207,8 +217,21 @@ export function buildDayLesson(state) {
   const unitSkills = (unit?.skills || []).filter(hasGenerator);
   const moves = [];
 
-  moves.push({ id: 'warmup', meta: (state.review || []).length ? 'from your review queue' : 'warm up',
-    questions: warmUpQuestions(state, unit, tier, ctx) });
+  /* The FIRST lesson a kid ever opens starts with the new idea, not a warm-up
+     (owner, Nov 2026). A warm-up draws from the review queue, or failing that
+     from the unit's earlier skills — and on day one of a kid's life in the app
+     there is neither. She would meet Kampus through questions on material she
+     has never been taught, which is the opposite of the first impression the
+     product is for.
+
+     First-ever, not first-of-grade: a kid moving up a grade has a history and a
+     queue, and her warm-up is real. */
+  const everPlayed = Object.keys(state.days || {}).length > 0 || Object.keys(state.passed || {}).length > 0;
+  const firstEver = !everPlayed && (state.lessonPointer || 0) === 0;
+  if (!firstEver) {
+    moves.push({ id: 'warmup', meta: (state.review || []).length ? 'from your review queue' : 'warm up',
+      questions: warmUpQuestions(state, unit, tier, ctx) });
+  }
 
   if (day.type === 'new') {
     const teach = teachMoves(skill);
@@ -256,6 +279,10 @@ export function buildDayLesson(state) {
      undefined and the panel renders exactly as it does today. */
   const rt = speakFor(skill)?.reteach;
   const reteachVoice = speakProps(Array.isArray(rt) ? rt[0] : rt, 'reteach', 0);
+  for (const m of moves) m.intro = introFor(m.id);
+  const snagMove = moves.find(m => m.snag);
+  if (snagMove) snagMove.snagIntro = introFor('snag');
+
   return {
     title: day.title,
     // The manifest is keyed by skill, so playback needs it on the lesson.

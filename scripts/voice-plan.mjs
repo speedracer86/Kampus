@@ -22,14 +22,16 @@
         is the worst state available: the step with clips plays and the next one
         falls back to the robot voice, inside one lesson. A whole unvoiced skill
         is just today's behaviour. */
-import { SPEAK, SKILLS, YEAR, GRADES } from '@kampus/curriculum';
+import { SPEAK, MOVE_INTROS, SKILLS, YEAR, GRADES } from '@kampus/curriculum';
 import { createHash } from 'node:crypto';
 
 export const sha = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16);
 
-/* The two kinds that shipped keep their letters — renaming them would re-generate
-   355 clips that are already correct. Anything new takes its own initial. */
-const KNOWN_PREFIX = { steps: 't', more: 'm' };
+/* The kinds that have shipped keep their letters — renaming one regenerates
+   correct clips at full price. `moveIntros` is listed because its initial
+   collides with `more`, which the prefix guard caught the first time the two
+   were in the bank together. */
+const KNOWN_PREFIX = { steps: 't', more: 'm', moveIntros: 'i' };
 export const prefixFor = (kind) => KNOWN_PREFIX[kind] || kind.slice(0, 1);
 
 /** The kinds this bank entry actually carries, in a stable order. */
@@ -50,8 +52,27 @@ export const stepsOf = (entry, kind) => {
   return Array.isArray(v) ? v : v ? [v] : [];
 };
 
+/**
+ * The bank the generator actually works from: the skills, plus Karla's move
+ * intros as their own entries.
+ *
+ * The intros are the same five sentences for every skill, so they live in one
+ * place and are composed in here as `move_<id>` with a `moveIntros` kind —
+ * discovered like any other kind, generated and manifested like any other clip,
+ * with nothing in the pipeline needing to know what they are.
+ */
+export function fullBank(speak = SPEAK, intros = MOVE_INTROS) {
+  const moves = Object.fromEntries(
+    Object.entries(intros || {}).map(([id, step]) => [`move_${id}`, { moveIntros: [step] }]),
+  );
+  return { ...speak, ...moves };
+}
+
 /** The youngest grade whose year teaches this skill — its generation priority. */
 export function gradeOf(skill) {
+  // Karla's host lines are not a grade's material — every kid hears them on
+  // every lesson, so they generate before anyone's skills do.
+  if (String(skill).startsWith('move_')) return 0;
   for (const g of GRADES) {
     if (YEAR[g].some(u => (u.skills || []).includes(skill))) return g;
   }

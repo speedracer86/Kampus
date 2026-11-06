@@ -1,0 +1,30 @@
+name = "kampus-voice-cache"
+main = "index.js"
+compatibility_date = "2026-10-01"
+
+# Deployment is the owner's step, in the same Cloudflare session as
+# workers/preview:
+#
+#   cd workers/voice-cache
+#   npx wrangler r2 bucket create kampus-voice
+#   npx wrangler kv namespace create VOICE_KV
+#   npx wrangler secret put ELEVENLABS_API_KEY
+#   npx wrangler secret put ELEVENLABS_VOICE_ID
+#   npx wrangler deploy
+#
+# Then point the app at it with VITE_VOICE_CACHE (see README.md). Until it is
+# deployed the app sends no VITE_VOICE_CACHE, the question screens use the
+# browser voice, and nothing is broken — shipping without this Worker is a
+# supported state.
+
+[[r2_buckets]]
+binding = "VOICE_BUCKET"
+bucket_name = "kampus-voice"
+
+# Daily character spend, so the bill can be read without reading logs.
+# [[kv_namespaces]]
+# binding = "VOICE_KV"
+# id = "<paste the id wrangler prints>"
+
+[observability]
+enabled = true

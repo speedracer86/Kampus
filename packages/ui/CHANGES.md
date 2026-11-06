@@ -717,3 +717,40 @@ what was either side of it.** 2<sup>6</sup> became 26, and 1/3 became 13. A guar
 that only looks for raw markup on screen can never catch this, because flattening
 removes the markup — it just takes the maths with it. So the new check looks for
 the fraction bar itself, and restoring the flattener fails it with "4 6 = ? 18".
+
+### The question screens join the product (Nov 2026)
+
+The teach phase got the redesign and the voice; the warm-up, guided, mixed and
+prove screens were still the old app — and they are the first thing every kid
+sees. Owner's call: the same treatment, not a lesser one.
+
+- **The question speaks, and sweeps.** `useSpokenLine` in say-it-show-it owns one
+  spoken line with the sweep following whatever timing it can get: exact per-word
+  times from the manifest or the voice cache, the clip's own clock otherwise, and
+  — when there is no clip at all — the browser voice's `boundary` events, which
+  report the character the voice has reached. Not a timer: a real position in the
+  sentence. The bottom of the chain is silence, not breakage.
+- **`rich()` can sweep.** It had to: the question carries fractions, exponents
+  and bold, so sweeping plain words would have undone the markup fix. A markup
+  token counts as one word, `richWords()` returns the list in render order, and
+  without a sweep the output is exactly what it was.
+- **Karla hosts every move.** One spoken line when a move opens, from the bank's
+  new `moveIntros` kind. The kinds are discovered, so the pipeline needed nothing
+  — except a prefix: `more` and `moveIntros` both wanted "m", and the collision
+  guard caught it rather than letting one overwrite the other's clips.
+- **The card got the world's colour**, a hairline on the sheet and on the chosen
+  answer, and answers press under a tap. The press is a scale, not a colour: this
+  card already uses colour for right, wrong and chosen, and a fourth meaning
+  would make the three that matter harder to read.
+- **Teach me is a mini-walk** — the result in numeral type, the move beside it,
+  one row per tap. The rows are derived from the engine's own sentences, and a
+  step with no result stays prose rather than having a phrase forced into the
+  numeral column.
+
+Two things the work found rather than added. The manifest arrives after the
+first render, so the host spoke in the browser voice on every cold load and was
+cut off by the clip a moment later — it waits for the manifest to SETTLE now
+(null means not yet, an object means answered). And a voice that reports no word
+boundaries at all would have left the whole question in unreached grey for the
+length of the sentence; no sweep is the normal rendering until one actually
+starts.

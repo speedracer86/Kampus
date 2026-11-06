@@ -135,7 +135,8 @@ export default async function run(check) {
      the way a kid would solve it. Each failure names the skill, so a bank patch that
      breaks a step points at itself rather than at the suite. */
   for (const grade of [3, 6, 8]) {
-    const seed = { grade, name: 'Talia', lessonPointer: 0, tiers: {}, recent: {}, review: [], passed: {} };
+    // Not her first ever lesson: that one opens straight on the New idea.
+    const seed = { grade, name: 'Talia', lessonPointer: 0, tiers: {}, recent: {}, review: [], passed: {}, days: { '2026-01-02': 1 } };
     const day = currentDay(seed).day;
     const skill = day?.skill || `grade ${grade} day 1`;
     const lesson = buildDayLesson(seed);

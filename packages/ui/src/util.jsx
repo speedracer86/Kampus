@@ -17,12 +17,30 @@ export function useWidth(ref) {
   return w;
 }
 
-/** Read text aloud (browser SpeechSynthesis). Silent where unsupported. */
-export function speak(text) {
+/**
+ * Read text aloud (browser SpeechSynthesis). Silent where unsupported.
+ *
+ * `opts` may be a rate (the old second argument, still used by VoiceRow) or
+ * `{ rate, onBoundary, onEnd }`. `onBoundary` receives the character index the
+ * voice has reached, which is what lets the word sweep follow the browser voice
+ * as closely as it follows a recorded clip — real boundaries, not a timer.
+ * Returns the utterance, or null where speech is unsupported.
+ */
+export function speak(text, opts) {
+  const { rate = 0.95, onBoundary, onEnd } = (typeof opts === 'number' ? { rate: opts } : (opts || {}));
   try {
     const u = new SpeechSynthesisUtterance(String(text).replace(/−/g, ' negative '));
     const vs = speechSynthesis.getVoices();
     u.voice = vs.find(v => /Natural/.test(v.name)) || vs.find(v => /Google US/.test(v.name)) || vs.find(v => /Samantha/.test(v.name)) || null;
-    u.rate = 0.95; speechSynthesis.cancel(); speechSynthesis.speak(u);
-  } catch (e) { /* no speech support */ }
+    u.rate = rate;
+    if (onBoundary) u.onboundary = (e) => { try { onBoundary(e.charIndex ?? 0, e); } catch { /* never break playback */ } };
+    if (onEnd) { u.onend = () => onEnd('ended'); u.onerror = () => onEnd('failed'); }
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+    return u;
+  } catch (e) { onEnd?.('failed'); return null; }
+}
+
+/** Stop the browser voice, wherever it was started from. */
+export function hushSpeech() {
+  try { speechSynthesis.cancel(); } catch { /* nothing to stop */ }
 }

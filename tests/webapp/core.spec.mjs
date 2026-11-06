@@ -54,7 +54,11 @@ export default async function run(check) {
 
   /* ---------- 2. THE HEADLINE BUG: a lesson must contain real questions ---------- */
   {
-    const page = await open({}, '#lesson');
+    // `days` is seeded because a kid's FIRST EVER lesson opens on the New idea
+    // with no warm-up (owner, Nov 2026). This check is the canary for generator
+    // resolution in the ordinary case, not a check of that rule — the rule has
+    // its own check below.
+    const page = await open({ days: { '2026-01-02': 1 } }, '#lesson');
     await page.waitForTimeout(600);
     const t = await text(page);
     const hasSpine = /Warm-up[\s\S]*New idea[\s\S]*Guided[\s\S]*Mixed[\s\S]*Prove it/.test(t);
@@ -70,6 +74,25 @@ export default async function run(check) {
     check('lesson serves real questions from the built bundle', answers >= 4, `${answers} answer buttons`);
     check('lesson is not the "restocking" empty state', !/restock/i.test(t));
     await page.close();
+  }
+
+  /* ---------- the first lesson of a kid's life opens on the new idea ----------
+
+     A warm-up draws from the review queue, or from the unit's earlier skills.
+     On day one a kid has neither, so she would meet Kampus through questions on
+     material nobody has taught her. Owner's call, Nov 2026: the magic first. */
+  {
+    const page = await open({ grade: 6, name: 'Talia' }, '#lesson');   // nothing played, ever
+    await page.waitForTimeout(600);
+    const t = await text(page);
+    check('a kid\'s first ever lesson opens on the New idea, not a warm-up',
+      !/Warm-up/.test(t) && /New idea/.test(t), t.split('\n').slice(0, 4).join(' / '));
+    await page.close();
+
+    const second = await open({ grade: 6, name: 'Talia', days: { '2026-01-02': 1 } }, '#lesson');
+    await second.waitForTimeout(600);
+    check('and the warm-up is back the next day', /Warm-up/.test(await text(second)));
+    await second.close();
   }
 
   /* ---------- 4. the week view renders ---------- */
@@ -160,7 +183,7 @@ export default async function run(check) {
      exact moment an overloaded kid asked for help. Now the lines tap in one at a
      time and the markup renders as emphasis. */
   {
-    const page = await open({ grade: 3 }, '#lesson');
+    const page = await open({ grade: 3, days: { '2026-01-02': 1 } }, '#lesson');
     await page.waitForTimeout(600);
     await clickText(page, 'Teach me');
     await page.waitForTimeout(200);

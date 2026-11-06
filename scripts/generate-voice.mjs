@@ -31,7 +31,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SPEAK } from '@kampus/curriculum';
-import { plan, stale, select, buildManifest, flags } from './voice-plan.mjs';
+import { plan, stale, select, buildManifest, flags, fullBank } from './voice-plan.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const OUT = path.join(ROOT, 'packages/ui/voice');
@@ -85,7 +85,8 @@ async function speak(row, { key, voice, model }) {
 }
 
 /* ---- run ------------------------------------------------------------------- */
-const rows = plan(SPEAK);                 // the whole bank, in priority order
+const BANK = fullBank();                  // skills + Karla's move intros
+const rows = plan(BANK);                  // the whole bank, in priority order
 const manifest = loadManifest();
 const changed = stale(rows, manifest, { force: FORCE, exists: onDisk });
 const { take: todo, deferred } = select(changed, { grades, only, budget });
@@ -105,7 +106,7 @@ for (const r of todo) {
   g.todo++; g.todoChars += r.say.length;
 }
 
-console.log(`\nSpeak bank: ${Object.keys(SPEAK).length} skills authored, ${rows.length} lines\n`);
+console.log(`\nSpeak bank: ${Object.keys(SPEAK).length} skills + ${Object.keys(BANK).length - Object.keys(SPEAK).length} move intros, ${rows.length} lines\n`);
 console.log('  grade  skills  lines   chars   to generate');
 for (const g of [...byGrade.keys()].sort((a, b) => a - b)) {
   const s = byGrade.get(g);
@@ -171,7 +172,7 @@ for (const [i, row] of todo.entries()) {
   console.log(`ok · ${spent} credits`);
 }
 saveManifest();
-const unvoiced = Object.keys(SPEAK).filter(s => !skillsIn(rows.filter(r => onDisk(r.file))).includes(s));
+const unvoiced = Object.keys(BANK).filter(s => !skillsIn(rows.filter(r => onDisk(r.file))).includes(s));
 console.log(`\nWrote ${todo.length} clips (${(bytes / 1024).toFixed(0)} KB) and manifest.json`);
 if (unvoiced.length) console.log(`Still unvoiced (falls back to speechSynthesis): ${unvoiced.length} skills — ${unvoiced.join(', ')}`);
 console.log('');

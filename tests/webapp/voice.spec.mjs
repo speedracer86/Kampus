@@ -103,8 +103,12 @@ export default async function run(check) {
     const clips = await played(page);
     check('arriving at the step plays its lines, in order', clips.length >= 2,
       clips.slice(0, 3).join(' → '));
+    /* Karla hosts the move before the step speaks, so its clip legitimately
+       plays first. What must never happen is ANOTHER STEP's clip. */
+    const stepClips = clips.filter(c => !c.includes('/voice/move_'));
     check('and they are this step\'s clips, not another step\'s',
-      clips.every(c => c.includes('/voice/eqFrac/')), clips.slice(0, 2).join(', '));
+      stepClips.length > 0 && stepClips.every(c => c.includes('/voice/eqFrac/')),
+      stepClips.slice(0, 2).join(', ') || 'no step clips played');
 
     /* LAW 1: audio never gates. */
     const before = await nextButton(page);
@@ -332,6 +336,67 @@ export default async function run(check) {
     /* And the law that outranks the redesign. */
     check('the hero script still does not gate Next',
       (await nextButton(page))?.disabled === true, JSON.stringify(await nextButton(page)));
+    await page.close();
+  }
+
+  /* ---- the question screens joined the product (owner, Nov 2026) ---- */
+  {
+    // A returning grade-4 kid: band a, so she is read to without asking, and
+    // the warm-up exists (a first-ever lesson opens on the New idea instead).
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52, days: { '2026-01-02': 1 } }, '#lesson');
+    await captureAudio(page);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(900);
+
+    const t = await text(page);
+    check('Karla hosts the move with her own line', /Quick ones first/.test(t),
+      (t.match(/Quick ones[^\n]*/) || ['missing'])[0]);
+    check('and the host line is spoken from the bank\'s own clip',
+      (await played(page)).some(c => c.includes('/voice/move_warmup/')),
+      (await played(page)).slice(0, 2).join(', ') || 'nothing played');
+
+    /** The question, its words, and everything that could gate. */
+    const look = () => page.evaluate(() => {
+      const h2 = document.querySelector('h2');
+      const words = h2 ? [...h2.querySelectorAll('[data-say-word]')] : [];
+      const answers = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+      return {
+        words: words.length,
+        now: words.findIndex(w => w.dataset.wordState === 'now'),
+        answers: answers.length,
+        anyDisabled: answers.some(b => b.disabled),
+        heading: h2 ? h2.innerText.slice(0, 40) : null,
+      };
+    });
+
+    /* Replay it rather than racing it: the browser voice finishes a short
+       question in well under a second, so sampling after the page settles
+       watches a sentence that has already been read. */
+    await page.evaluate(() => [...document.querySelectorAll('button')]
+      .find(b => b.getAttribute('aria-label') === 'Read it to me')?.click());
+    const frames = [];
+    for (let i = 0; i < 14; i++) { frames.push(await look()); await page.waitForTimeout(25); }
+    const swept = frames.filter(f => f.words > 0);
+    check('the question sweeps word by word, like the teaching does',
+      swept.length > 0, `${swept.length} of ${frames.length} frames carried word spans`);
+    const held = [...new Set(swept.map(f => f.now).filter(n => n >= 0))];
+    check('and the held word moves through it', held.length > 1, `words held: ${held.join(', ') || 'none'}`);
+
+    /* THE LAW, on the screen a kid spends most of her time on. */
+    check('every answer stays tappable while Karla reads the question',
+      frames.every(f => f.answers >= 2 && !f.anyDisabled),
+      JSON.stringify(frames.map(f => [f.answers, f.anyDisabled])));
+    check('and Karla never picks one for her',
+      await page.evaluate(() => !document.querySelector('[data-picked], [aria-pressed="true"]')));
+
+    // The kid answers mid-sentence: audio must not be in the way.
+    await page.evaluate(() => {
+      const a = [...document.querySelectorAll('button')].find(b => /^\d\n/.test(b.innerText.trim()));
+      a?.click();
+    });
+    await page.waitForTimeout(250);
+    check('answering while she is still talking works',
+      /\+\$|Not yet|Next/.test(await text(page)), (await text(page)).slice(0, 60).replace(/\n/g, ' '));
     await page.close();
   }
 

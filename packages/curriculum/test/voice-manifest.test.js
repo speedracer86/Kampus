@@ -30,26 +30,32 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { SPEAK } from '../src/speak.js';
-import { kindsOf, stepsOf } from '../../../scripts/voice-plan.mjs';
+import { MOVE_INTROS } from '../src/speak.js';
+import { kindsOf, stepsOf, fullBank } from '../../../scripts/voice-plan.mjs';
+
+/* What the generator actually works from: the skills plus Karla's move intros,
+   composed as `move_<id>` entries. The guard has to compare against the same
+   bank the clips were made from, or every intro reads as an orphan. */
+const BANK = fullBank(SPEAK, MOVE_INTROS);
 
 const MANIFEST = new URL('../../ui/voice/manifest.json', import.meta.url).pathname;
 const VOICE = new URL('../../ui/voice/', import.meta.url).pathname;
 const has = existsSync(MANIFEST);
 const manifest = has ? JSON.parse(readFileSync(MANIFEST, 'utf8')) : {};
 const sha = (t) => createHash('sha256').update(t).digest('hex').slice(0, 16);
-const voiced = Object.keys(SPEAK).filter(s => manifest[s]);
+const voiced = Object.keys(BANK).filter(s => manifest[s]);
 
 describe.skipIf(!has)('the clip manifest matches the speak bank', () => {
   it('has no skill the bank does not author', () => {
-    const orphans = Object.keys(manifest).filter(s => !SPEAK[s]);
+    const orphans = Object.keys(manifest).filter(s => !BANK[s]);
     expect(orphans).toEqual([]);
   });
 
   it('has one clip per line, with the step shapes aligned', () => {
     for (const skill of voiced) {
-      for (const kind of kindsOf(SPEAK[skill])) {
+      for (const kind of kindsOf(BANK[skill])) {
         if (!manifest[skill][kind]) continue;        // a deferred kind, reported below
-        const bank = stepsOf(SPEAK[skill], kind).map(s => s.lines.length);
+        const bank = stepsOf(BANK[skill], kind).map(s => s.lines.length);
         const clips = manifest[skill][kind].map(s => s.length);
         expect(clips, `${skill}.${kind}`).toEqual(bank);
       }
@@ -58,16 +64,16 @@ describe.skipIf(!has)('the clip manifest matches the speak bank', () => {
 
   it('carries no kind the bank no longer authors', () => {
     for (const skill of voiced) {
-      const authored = kindsOf(SPEAK[skill]);
+      const authored = kindsOf(BANK[skill]);
       expect(Object.keys(manifest[skill]).filter(k => !authored.includes(k)), skill).toEqual([]);
     }
   });
 
   it('hashes the line it was generated from, so an edited line regenerates', () => {
     for (const skill of voiced) {
-      for (const kind of kindsOf(SPEAK[skill])) {
+      for (const kind of kindsOf(BANK[skill])) {
         if (!manifest[skill][kind]) continue;
-        stepsOf(SPEAK[skill], kind).forEach((step, si) => {
+        stepsOf(BANK[skill], kind).forEach((step, si) => {
           step.lines.forEach((line, li) => {
             const got = manifest[skill][kind][si][li];
             expect(got?.sha, `${skill}.${kind}[${si}][${li}]`).toBe(sha(line.say));
@@ -93,24 +99,24 @@ describe.skipIf(!has)('the clip manifest matches the speak bank', () => {
   it('reports what is still unvoiced rather than failing it', () => {
     // A deliberate state, not a defect: these fall back to speechSynthesis. The
     // log is the point — it is how a deferred tranche stays visible.
-    const unvoiced = Object.keys(SPEAK).filter(s => !manifest[s]);
+    const unvoiced = Object.keys(BANK).filter(s => !manifest[s]);
     if (unvoiced.length) console.log(`    ${unvoiced.length} authored skills have no clips yet: ${unvoiced.join(', ')}`);
     const gaps = [];
     for (const skill of voiced) {
-      for (const kind of kindsOf(SPEAK[skill])) if (!manifest[skill][kind]) gaps.push(`${skill}.${kind}`);
+      for (const kind of kindsOf(BANK[skill])) if (!manifest[skill][kind]) gaps.push(`${skill}.${kind}`);
     }
     if (gaps.length) console.log(`    ${gaps.length} voiced skills are missing a whole kind: ${gaps.join(', ')}`);
-    expect(voiced.length + unvoiced.length).toBe(Object.keys(SPEAK).length);
+    expect(voiced.length + unvoiced.length).toBe(Object.keys(BANK).length);
   });
 
   it('never carries HALF of a kind', () => {
     // The line that matters. A kind is all or nothing: anything else plays Karla
     // on one step of a sequence and the robot on the next.
     for (const skill of voiced) {
-      for (const kind of kindsOf(SPEAK[skill])) {
+      for (const kind of kindsOf(BANK[skill])) {
         const clips = manifest[skill][kind];
         if (!clips) continue;
-        const want = stepsOf(SPEAK[skill], kind);
+        const want = stepsOf(BANK[skill], kind);
         expect(clips.length, `${skill}.${kind} has ${clips.length} of ${want.length} steps`).toBe(want.length);
         clips.forEach((step, si) => {
           expect(step.filter(Boolean).length, `${skill}.${kind}[${si}] is a partial step`)
@@ -123,7 +129,7 @@ describe.skipIf(!has)('the clip manifest matches the speak bank', () => {
 
 describe('the bank is sane whether or not clips exist', () => {
   it('keeps every spoken line inside the auditory-processing limit', () => {
-    for (const [skill, entry] of Object.entries(SPEAK)) {
+    for (const [skill, entry] of Object.entries(BANK)) {
       for (const kind of kindsOf(entry)) {
         stepsOf(entry, kind).forEach((step, si) => {
           step.lines.forEach((line, li) => {

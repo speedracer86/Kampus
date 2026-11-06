@@ -10,13 +10,13 @@
    needs leaves through onEvent (answer, teach_used, move_complete, reteach,
    lesson_complete). No timer appears anywhere — the lesson is untimed by rule. */
 import { color, type, radius, font, numeral, dollars } from './tokens.js';
-import { Button, Kicker } from './primitives.jsx';
+import { Button, Kicker, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
 import { Question } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
 import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
 import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
-import { SayItShowIt, clipsFor, clipMetaFor } from './say-it-show-it.jsx';
+import { SayItShowIt, clipsFor, clipMetaFor, useSpokenLine, SweptLine } from './say-it-show-it.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -258,6 +258,51 @@ export function SnagReveal({ sn, shown, onReveal, phone }) {
   </div>;
 }
 
+/* Karla hosts every move (owner, Nov 2026).
+
+   A kid used to arrive at four questions with nobody introducing them. One
+   spoken line when a move opens says what this stretch is for — "Quick ones
+   first", "Last stretch. No help on these" — so the shape of the lesson is
+   audible, not just inferred from a label.
+
+   Band policy is the one that already governs the voice: a is read to without
+   asking, b has the companion to tap, c reads the line. And like everything
+   else in the voice path, it cannot gate — it renders above the move and
+   touches nothing the move depends on. */
+function MoveHost({ intro, voice, mode = 'c', muted = false, worldColor, blobDir = '/blobs/', phone }) {
+  const src = intro && voice?.manifest
+    ? (clipsFor(voice.manifest, intro.voiceSkill, intro.kind, intro.index, voice.base) || [])[0]
+    : null;
+  const meta = intro && voice?.manifest
+    ? (clipMetaFor(voice.manifest, intro.voiceSkill, intro.kind, intro.index) || [])[0]
+    : null;
+  const line = useSpokenLine({ src, text: intro?.say, meta, muted });
+  const { play, stop } = line;
+  // The manifest arrives a moment after the first render, so auto-play waits for
+  // it to SETTLE (null means not yet, an object means answered). Speaking before
+  // then used the browser voice every time on a cold load, and then got cut off
+  // by the clip when it turned up.
+  const settled = !!voice?.manifest;
+  React.useEffect(() => {
+    if (intro && settled && mode === 'a' && !muted) play();
+    return stop;
+  }, [intro?.say, settled, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
+  if (!intro) return null;
+
+  return <div data-move-host style={{ ...lBase, display: 'flex', alignItems: 'center', gap: 12,
+    marginBottom: phone ? 14 : 18, flexWrap: 'wrap' }}>
+    {mode !== 'c' && <button onClick={() => play()} aria-label="Hear it again" style={{ ...lBase, border: 'none',
+      padding: 0, cursor: 'pointer', width: 44, height: 44, flex: 'none', borderRadius: radius.full,
+      background: worldColor || color.ink, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+      <Blob name="Singing" size={34} dir={blobDir} /></button>}
+    <div style={{ fontSize: phone ? 15 : 16.5, fontWeight: 600, lineHeight: 1.4, flex: 1, minWidth: 220 }}>
+      {line.speaking && line.word >= 0
+        ? <SweptLine plan={line.plan} word={line.word} />
+        : <span style={{ color: line.speaking ? color.ink : color.muted }}>{intro.say}</span>}
+    </div>
+  </div>;
+}
+
 /** The New idea / re-teach view: title, lede, three ruled step rows, last value green.
 
     This is the lowest moment in the lesson — she has just missed the prove-it — so
@@ -367,7 +412,7 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, p
 const phaseFor = (m) => (m?.snag ? 'snag' : (m?.teach && !m.questions) ? 'teach' : 'run');
 
 export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rewardCents = 50,
-  blobDir = '/blobs/', voiceManifest = null, voiceBase = '/voice/', muted = false,
+  blobDir = '/blobs/', voiceManifest = null, voiceBase = '/voice/', voiceCacheUrl = null, muted = false,
   pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
@@ -509,6 +554,9 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
     onAgain={() => { setAt(0); setQi(0); setEarned(0); setStreak(0); setTokensLeft(tokensPerRun); resetUi(); setPhase('run'); }}
     onDone={onDone || onExit} phone={phone} />);
 
+  const host = (intro) => <MoveHost intro={intro} voice={{ manifest: voiceManifest, base: voiceBase }}
+    mode={voiceMode(grade)} muted={muted} worldColor={lesson.world?.color} blobDir={blobDir} phone={phone} />;
+
   if (phase === 'snag') {
     const sn = move.snag;
     /* A Snag is authored as a scene, not a quiz, so it only gets buttons when the
@@ -518,6 +566,7 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
        she wins it by shape and learns nothing. */
     const pickable = (sn.answers?.length || 0) > 1;
     return frame(<div>
+      {host(move.snagIntro)}
       <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32, marginBottom: 18 }}>
         <Kicker style={{ marginBottom: 10 }}>The snag</Kicker>
         <p style={{ fontSize: phone ? 18 : 22, lineHeight: 1.45, margin: 0 }}>{sn.scene}</p>
@@ -552,7 +601,11 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
 
   if (!q) return frame(<div style={{ fontSize: 17, color: color.muted }}>Nothing to practise here.</div>);
 
-  return frame(<Question question={q} context="lesson" teachFree={teachFree} tokensLeft={tokensLeft}
+  return frame(<>
+    {host(move.intro)}
+    <Question question={q} context="lesson" teachFree={teachFree} tokensLeft={tokensLeft}
+    worldColor={lesson.world?.color} mode={voiceMode(grade)} blobDir={blobDir} muted={muted}
+    voice={{ cacheUrl: voiceCacheUrl }}
     feedback={ui.feedback} picked={ui.picked} payout={ui.payout} help={ui.help} teachConfirm={ui.teachConfirm}
     onAnswer={answer}
     onHelp={(next, { needsConfirm } = {}) => setUi(u => ({ ...u, help: next, teachConfirm: next === 'teach' && !!needsConfirm && !teachFree }))}
@@ -562,5 +615,6 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
       if (!teachFree && tokensLeft > 0) setTokensLeft(t => t - 1);
       setUi(u => ({ ...u, teachConfirm: false, teachUsed: true, tokenUsed: teachFree || tokensLeft > 0 }));
     }}
-    onNext={onWrongNext} onEvent={onEvent} />);
+    onNext={onWrongNext} onEvent={onEvent} />
+  </>);
 }

@@ -18,8 +18,9 @@
 */
 import { color, radius, font } from './tokens.js';
 import { Button, Blob } from './primitives.jsx';
-import { playLines, stop as stopAudio, useSpeaking, progress } from './audio-bus.jsx';
+import { playLines, play as playOne, stop as stopAudio, useSpeaking, progress } from './audio-bus.jsx';
 import { useReducedMotion } from './juice.jsx';
+import { speak as ttsSpeak, hushSpeech } from './util.jsx';
 
 const sBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -53,7 +54,11 @@ export function clipMetaFor(manifest, skill, kind, stepIndex) {
  * otherwise sweep the wrong words confidently.
  */
 export function sweepPlan(say, meta) {
-  const words = String(say ?? '').split(/\s+/).filter(Boolean);
+  // An ARRAY means the caller has already split the line the way it will be
+  // RENDERED — the question screen does, because a fraction or an exponent is
+  // one word on screen however many characters it is made of, and a sweep that
+  // counted them differently would highlight the wrong thing.
+  const words = Array.isArray(say) ? say.filter(w => String(w).trim()) : String(say ?? '').split(/\s+/).filter(Boolean);
   if (!words.length) return { words, starts: [], exact: false };
   const given = meta?.words;
   if (Array.isArray(given) && given.length === words.length
@@ -65,6 +70,14 @@ export function sweepPlan(say, meta) {
   let acc = 0;
   const starts = weights.map((w) => { const at = acc / total; acc += w; return at; });
   return { words, starts, exact: false };
+}
+
+/** Which word a fraction `f` (0..1) through the line falls on. */
+export function wordAtFraction(plan, f) {
+  if (!plan?.words.length || !(f >= 0)) return -1;
+  let i = -1;
+  for (let k = 0; k < plan.starts.length; k += 1) if (f >= plan.starts[k]) i = k;
+  return i;
 }
 
 /** Which word is being said at time `t` of a clip lasting `d`. */
@@ -251,4 +264,100 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
       {speaking && <span style={{ fontSize: 13, color: color.muted }}>Karla’s reading…</span>}
     </div>
   </div>;
+}
+
+/**
+ * One line, spoken, with the word sweep following whatever timing it can get.
+ *
+ * THREE TIMING SOURCES, BEST FIRST:
+ *   1. a recorded clip with per-word times in the manifest — exact;
+ *   2. a recorded clip without them — the clip's own clock, split across the
+ *      words in proportion to their length;
+ *   3. the browser voice — its `boundary` events, which report the character
+ *      the voice has reached. Not a timer: a real position in the sentence,
+ *      which is as close as a synthesised voice can get.
+ * And when none of them is available, nothing sweeps and nothing is said. That
+ * is the bottom of the fallback chain, and it is silent rather than broken.
+ *
+ * NOTHING HERE TOUCHES PROGRESS. No caller passes it anything it could use to
+ * answer, advance or gate; it returns a word index and a speaking flag.
+ */
+export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1 } = {}) {
+  const [word, setWord] = React.useState(-1);
+  const [busy, setBusy] = React.useState(false);
+  const token = React.useRef(0);
+  const plan = React.useMemo(() => sweepPlan(text, meta), [text, meta]);
+
+  const stop = React.useCallback(() => {
+    token.current += 1;
+    stopAudio(); hushSpeech();
+    setBusy(false); setWord(-1);
+  }, []);
+
+  const play = React.useCallback((playRate = rate) => {
+    if (muted) return;
+    const mine = ++token.current;
+    stopAudio(); hushSpeech();
+    setWord(-1); setBusy(true);
+    const done = () => { if (token.current === mine) { setBusy(false); setWord(-1); } };
+
+    if (src) {
+      let raf = 0;
+      const tick = () => {
+        if (token.current !== mine) return;
+        const p = progress();
+        if (p) setWord(wordAt(plan, p.t, p.d));
+        raf = requestAnimationFrame(tick);
+      };
+      raf = requestAnimationFrame(tick);
+      playOne(src, { rate: playRate }).then((how) => {
+        cancelAnimationFrame(raf);
+        if (how === 'failed') {
+          // The clip did not arrive — offline, or the cache has not been
+          // deployed yet. Drop to the browser voice rather than going quiet.
+          if (token.current === mine) speakIt(mine, playRate);
+          return;
+        }
+        done();
+      });
+      return;
+    }
+    speakIt(mine, playRate);
+
+    function speakIt(mine2, r) {
+      const say = speech || text;
+      const spoken = String(say);
+      const u = ttsSpeak(spoken, {
+        rate: 0.95 * r,
+        onBoundary: (charIndex) => {
+          if (token.current !== mine2) return;
+          setWord(wordAtFraction(plan, spoken.length ? charIndex / spoken.length : 0));
+        },
+        onEnd: () => { if (token.current === mine2) done(); },
+      });
+      if (!u) done();                      // no speech support: silent, not stuck
+    }
+  }, [src, text, speech, plan, muted, rate]);
+
+  React.useEffect(() => stop, [stop]);
+  return { word, speaking: busy, play, stop, plan };
+}
+
+/**
+ * A line of words with the sweep's three states on them, in the demo's palette:
+ * said in ink, the word being said held in gold, the rest pale.
+ */
+export function SweptLine({ plan, word, reduced = false, style }) {
+  const words = plan?.words || [];
+  return <span style={style}>
+    {words.map((w, k) => {
+      const state = reduced ? 'now' : k === word ? 'now' : k < word ? 'said' : 'ahead';
+      return <span key={k} data-say-word={k} data-word-state={state} style={{
+        background: state === 'now' ? color.goldHold : 'transparent',
+        color: state === 'ahead' ? color.inkAhead : color.ink,
+        borderRadius: radius.sm, padding: '1px 4px', margin: '0 -1px',
+        transition: 'background .1s linear, color .25s ease',
+      }}>{w}{k < words.length - 1 ? ' ' : ''}</span>;
+    })}
+  </span>;
 }

@@ -35,17 +35,25 @@ import { WORLDS, TOPIC_ORDER } from './worlds.js';
 const ROUND_LENGTH = 12;
 const BLOB_DIR = '/blobs/';
 const VOICE_DIR = '/voice/';
+/* The voice cache Worker, when the owner has deployed it (workers/voice-cache).
+   Absent is the normal state and a supported one: the question screens use the
+   browser voice, which still sweeps on its own boundary events. */
+const VOICE_CACHE_URL = import.meta.env?.VITE_VOICE_CACHE || null;
 
 /* Karla's clips, loaded once. A missing manifest is the normal state for a tranche
    that has not been generated: every step without clips falls back to
    speechSynthesis, which is what shipped before the voice pass. */
 function useVoiceManifest() {
+  // null means NOT YET; an object (even an empty one) means settled. The
+  // difference matters: Karla's move host waits for the answer rather than
+  // speaking in the browser voice and being cut off a moment later by the clip
+  // it did not know existed.
   const [manifest, setManifest] = useState(null);
   useMemo(() => {
     fetch(`${VOICE_DIR}manifest.json`)
-      .then(r => (r.ok ? r.json() : null))
-      .then(setManifest)
-      .catch(() => setManifest(null));
+      .then(r => (r.ok ? r.json() : {}))
+      .then(m => setManifest(m || {}))
+      .catch(() => setManifest({}));
   }, []);
   return manifest;
 }
@@ -758,7 +766,7 @@ export function App() {
         tier={state.tiers[tierKey(state.grade, topic)] || 1}
         grade={state.grade}
         blobDir={BLOB_DIR}
-        voiceManifest={voiceManifest} voiceBase={VOICE_DIR}
+        voiceManifest={voiceManifest} voiceBase={VOICE_DIR} voiceCacheUrl={VOICE_CACHE_URL}
         muted={state.settings?.sound === false}
         pricer={(a) => { const p = payout({ ...a, bonusPct: bonusPct(state.owned) });
           return { amount: p.total, pills: p.parts.map(label => ({ label, kind: /streak/.test(label) ? 'streak' : /first/.test(label) ? 'first' : /blitz/.test(label) ? 'blitz' : /token/.test(label) ? 'token' : 'help' })) }; }}
