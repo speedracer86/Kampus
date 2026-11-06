@@ -35,7 +35,11 @@ build order for the production version.
 2. The owner has created `.env` at the repo root containing
    `ELEVENLABS_API_KEY=…` (key is scoped to text-to-speech + voices:read only).
 3. Add `ELEVENLABS_VOICE_ID=…` to `.env` once the owner reports the winning
-   voice from the family audition. **Do not generate audio until the voice id
+   voice from the family audition. **That voice is Hope.** Hope is the
+   ElevenLabs voice; Karla is the character who speaks in it. They are not two
+   characters and not a rename: a work order asking for "Hope everywhere" is
+   asking for the recorded voice to reach a screen, not for Karla to be renamed.
+   Nothing kid-facing ever says "Hope". **Do not generate audio until the voice id
    is set** — clips in the wrong voice are wasted credits.
 4. Never print the key or the raw `.env` in logs, test output, or commits.
 
