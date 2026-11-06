@@ -40,8 +40,22 @@ jobs:
       # Both are only visible in the bundle a kid actually loads, so CI runs the
       # built site in a real browser. `npm run test:webapp` rebuilds and serves
       # apps/web/dist as a plain static host — no dev server, no HMR.
-      - name: Install Chromium for the built-bundle suite
-        run: npx playwright install --with-deps chromium
+      # Split so a slow run says WHICH HALF was slow. One run took 10m9s here
+      # while every other step was normal (npm ci 1s, tests 8s, build 3s, e2e
+      # 56s) — and with the two jobs in one step there was no way to tell the
+      # browser download from the apt packages it pulls.
+      - name: Cache the Chromium download
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: playwright-${{ runner.os }}-
+
+      - name: Install Chromium (browser)
+        run: npx playwright install chromium
+
+      - name: Install Chromium (system packages)
+        run: npx playwright install-deps chromium
       - name: E2E against the built bundle
         run: node tests/test_webapp.mjs
 
@@ -57,3 +71,26 @@ jobs:
       # matters: a wrong pick shows the hint and never locks the step.
       - name: The teach-layout gallery
         run: node tests/test_layouts.mjs
+
+      # Every step's duration, on the run page, so "CI was slow" is a reading
+      # rather than a theory. GitHub has always recorded this; nobody looked,
+      # and a 14-minute job got explained by guesswork about repo size.
+      - name: Step timings
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          sleep 2
+          JQ='.jobs[] | select(.name=="test") | .steps[]
+              | select(.started_at != null and .completed_at != null)
+              | "| \((.completed_at | fromdateiso8601) - (.started_at | fromdateiso8601)) | \(.name) |"'
+          {
+            echo "### Step timings"
+            echo
+            echo "| seconds | step |"
+            echo "|--:|---|"
+            gh api "repos/$REPO/actions/runs/$RUN_ID/jobs" --jq "$JQ" || echo "| ? | timings unavailable |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          cat "$GITHUB_STEP_SUMMARY"

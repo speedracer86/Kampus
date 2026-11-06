@@ -172,11 +172,12 @@ Three bugs the work turned up, all in code written for it:
 
 ### Still needed from the owner
 
-- **Apply `0002_lawful_erasure.sql`.** I was blocked from applying it: it
-  loosens a guard, so it needs your hand. Until then no family, and no student
-  who has ever done anything, can be deleted from the project — including the
-  test rows this work left behind.
-- **Custom SMTP, before the pilot.** The project is on Supabase's default
+- ~~Apply `0002_lawful_erasure.sql`~~ — **done, Nov 6.** Verified by using it:
+  this session's test rows were erased with `set local app.erasing = 'on'`, and
+  the project is back to zero students and zero events. A parent's deletion
+  request is servable.
+- **Custom SMTP, before the pilot** (scheduled: Resend, owner's session; the
+  mailer code path needs no change — it is config only). The project is on Supabase's default
   mailer, which rate-limited a handful of sign-ups in a row during this work
   (`429 email rate limit exceeded`). Magic links ARE the way in, so with the
   default mailer a family that mistypes an address twice is locked out for an
