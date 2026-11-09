@@ -18,9 +18,9 @@
 */
 import { color, radius, font } from './tokens.js';
 import { Button, Blob } from './primitives.jsx';
-import { playLines, play as playOne, stop as stopAudio, useSpeaking, progress } from './audio-bus.jsx';
+import { playLines, play as playOne, stop as stopAudio, useSpeaking, isSpeaking, progress } from './audio-bus.jsx';
 import { useReducedMotion } from './juice.jsx';
-import { speak as ttsSpeak, hushSpeech } from './util.jsx';
+import { speak as ttsSpeak, hushSpeech, speechActive } from './util.jsx';
 
 const sBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -309,7 +309,97 @@ export const rateFor = (mode, saved) => (saved > 0 ? saved : (mode === 'c' ? 1 :
 /** What Slower drops to. One number, so every surface agrees what "slower" is. */
 export const SLOWER_RATE = 0.75;
 
+/**
+ * Run `fn` once nobody is speaking — READERS TAKE TURNS.
+ *
+ * Two readers arrive on the same screen together: the move host introduces the
+ * move while the question reads itself. Both used to call play() on mount, and
+ * whoever went second cut the first off mid-word. Nothing stranded (the engine's
+ * own flag is polled now), but a kid with auditory processing delays who loses
+ * half a sentence has lost the sentence.
+ *
+ * IT IS A WAIT, NEVER A GATE. The cap exists so that a flag stuck high costs a
+ * pause and not the read, and nothing in here touches `solved`, Next, an answer
+ * button or any other progress state — the screen is fully usable throughout,
+ * which the spec checks.
+ *
+ * @returns {() => void} cancel — callers MUST call it on cleanup, or a wait
+ *   queued by a screen the kid has left will fire against the next one.
+ */
+/* Waiters are served ONE AT A TIME, in the order they arrived.
+
+   Polling alone is not enough. Two readers mounting in the same commit both
+   schedule their first poll for the same tick, and both see a quiet product —
+   because neither has started yet. Whichever ran second then cut the first off
+   mid-word, which is the defect this exists to stop.
+
+   A queue fixes it properly: only the head is ever allowed to go, and the next
+   is not considered until the one before it has had a moment to register as
+   speaking. The order is the order the effects ran, so on a warm load the move
+   host introduces the move and the question follows — the right pedagogy — and
+   on a cold load, where the host is still waiting for the manifest, the
+   question goes first. Wrong order, zero cut-offs, and that is the better
+   trade for a kid who loses a whole sentence to half of one. */
+const waiting = [];
+let pumping = false;
+
+function pump() {
+  if (pumping) return;
+  pumping = true;
+  const step = () => {
+    while (waiting.length && waiting[0].cancelled) waiting.shift();
+    if (!waiting.length) { pumping = false; return; }
+    const head = waiting[0];
+    const quiet = !isSpeaking() && !speechActive();
+    if (quiet || Date.now() - head.started >= head.cap) {
+      waiting.shift();
+      try { head.fn(); } catch { /* a reader must not break the queue */ }
+      // A beat before the next is considered, so the voice just started has
+      // registered and the one behind it does not talk over it.
+      setTimeout(step, 60);
+      return;
+    }
+    setTimeout(step, head.every);
+  };
+  step();
+}
+
+/**
+ * Run `fn` once nobody is speaking — READERS TAKE TURNS.
+ *
+ * IT IS A WAIT, NEVER A GATE. The cap means a flag stuck high costs a pause and
+ * not the read, and nothing in here touches `solved`, Next, an answer button or
+ * any other progress state: the screen stays fully usable throughout, which the
+ * spec checks.
+ *
+ * @returns {() => void} cancel — callers MUST call it on cleanup, or a wait
+ *   queued by a screen the kid has left will fire against the next one.
+ */
+export function whenVoiceQuiet(fn, { cap = 10000, every = 150 } = {}) {
+  const entry = { fn, cancelled: false, started: Date.now(), cap, every };
+  waiting.push(entry);
+  pump();
+  return () => {
+    entry.cancelled = true;
+    const i = waiting.indexOf(entry);
+    if (i >= 0) waiting.splice(i, 1);
+  };
+}
+
+
+/* Who currently owns the voice.
+
+   `stop()` used to hush globally: `speechSynthesis.cancel()` plus the shared
+   utterance count forced to zero. So when ANY reader's effect tore down — the
+   move host's does, the moment the clip manifest settles — it silenced whatever
+   another component was in the middle of saying, and zeroed the count the queue
+   uses to decide whether anyone is speaking. The host then fired into an
+   apparently quiet product and cut the question off at 109ms. A reader may only
+   stop the voice it started. */
+let voiceOwner = null;
+
 export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1 } = {}) {
+  const mine = React.useRef({});
   const [word, setWord] = React.useState(-1);
   const [busy, setBusy] = React.useState(false);
   const token = React.useRef(0);
@@ -317,21 +407,28 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
 
   const stop = React.useCallback(() => {
     token.current += 1;
-    stopAudio(); hushSpeech();
+    // Only what this reader started. Another component's line is not ours to end.
+    if (voiceOwner === mine.current) {
+      stopAudio(); hushSpeech();
+      voiceOwner = null;
+    }
     setBusy(false); setWord(-1);
   }, []);
 
   const play = React.useCallback((playRate = rate) => {
     if (muted) return;
-    const mine = ++token.current;
+    const turn = ++token.current;
+    // An explicit play DOES take the voice — tapping Again while she is talking
+    // should restart her — and taking it makes this reader the owner.
     stopAudio(); hushSpeech();
+    voiceOwner = mine.current;
     setWord(-1); setBusy(true);
-    const done = () => { if (token.current === mine) { setBusy(false); setWord(-1); } };
+    const done = () => { if (token.current === turn) { setBusy(false); setWord(-1); } };
 
     if (src) {
       let raf = 0;
       const tick = () => {
-        if (token.current !== mine) return;
+        if (token.current !== turn) return;
         const p = progress();
         if (p) setWord(wordAt(plan, p.t, p.d));
         raf = requestAnimationFrame(tick);
@@ -342,14 +439,14 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
         if (how === 'failed') {
           // The clip did not arrive — offline, or the cache has not been
           // deployed yet. Drop to the browser voice rather than going quiet.
-          if (token.current === mine) speakIt(mine, playRate);
+          if (token.current === turn) speakIt(turn, playRate);
           return;
         }
         done();
       });
       return;
     }
-    speakIt(mine, playRate);
+    speakIt(turn, playRate);
 
     function speakIt(mine2, r) {
       const say = speech || text;

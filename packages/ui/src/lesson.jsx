@@ -16,7 +16,7 @@ import { Question, rich, richWords, plainSpeech } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
 import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
 import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
-import { SayItShowIt, clipsFor, clipMetaFor, useSpokenLine, SweptLine, rateFor } from './say-it-show-it.jsx';
+import { SayItShowIt, clipsFor, clipMetaFor, useSpokenLine, SweptLine, rateFor, whenVoiceQuiet } from './say-it-show-it.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -288,8 +288,8 @@ function MoveHost({ intro, voice, mode = 'c', muted = false, worldColor, blobDir
   // by the clip when it turned up.
   const settled = !!voice?.manifest;
   React.useEffect(() => {
-    if (intro && settled && mode === 'a' && !muted) play();
-    return stop;
+    const cancel = (intro && settled && mode === 'a' && !muted) ? whenVoiceQuiet(() => play()) : null;
+    return () => { cancel?.(); stop(); };
   }, [intro?.say, settled, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
   if (!intro) return null;
 
@@ -350,8 +350,8 @@ function SnagScreen({ sn, intro, pickable, snagTried, onAttempt, onReveal, phone
     rate: rateFor(mode, voice?.rate) });
   const { play, stop } = line;
   React.useEffect(() => {
-    if (mode === 'a' && !muted) play();
-    return stop;
+    const cancel = (mode === 'a' && !muted) ? whenVoiceQuiet(() => play()) : null;
+    return () => { cancel?.(); stop(); };
   }, [sn.q, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const live = line.speaking && line.word >= 0;

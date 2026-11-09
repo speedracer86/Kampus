@@ -8,7 +8,7 @@
 import { color, type, radius, font, numeral } from './tokens.js';
 import { Kicker, Button } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
-import { useSpokenLine, rateFor } from './say-it-show-it.jsx';
+import { useSpokenLine, rateFor, whenVoiceQuiet } from './say-it-show-it.jsx';
 import { Blob } from './primitives.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -384,8 +384,9 @@ export function Question({
      shows a face: one reader, one companion, per surface. */
   const ownsRead = !sweep;
   React.useEffect(() => {
-    if (ownsRead && mode === 'a' && !muted) line.play();
-    return () => line.stop();
+    // Waits for whoever is already reading (the move host, usually) to finish.
+    const cancel = (ownsRead && mode === 'a' && !muted) ? whenVoiceQuiet(() => line.play()) : null;
+    return () => { cancel?.(); line.stop(); };
   }, [question.text, mode, muted, ownsRead]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // A Snag is "no pay, just a look": no help stack, because having the move is the point.

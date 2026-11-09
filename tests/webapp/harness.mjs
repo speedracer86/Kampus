@@ -82,6 +82,15 @@ export const pageErrors = [];
    Nothing has to remember to assert it. */
 export const spoken = [];
 
+/* Every utterance, as a sequence of events: when it started, when it finished,
+   and — the point of this — when it was CUT OFF by another reader starting.
+
+   A cut is invisible in the product: the voice simply stops mid-word and the
+   next one begins, which is what a kid on beta heard. The stub makes it a
+   record, so a spec can assert that readers take turns rather than assert the
+   weaker thing that both of them eventually spoke. */
+export const voiceLog = [];
+
 /** Serve dist/ exactly as a static host would. */
 const makeServer = () => createServer(async (req, res) => {
   const url = decodeURIComponent((req.url || '/').split('?')[0]);
@@ -375,29 +384,44 @@ export async function open(state = {}, hash = '') {
      anything still sitting in that page's context dies with it — so the record
      would be empty exactly when it mattered. */
   await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
+  await page.exposeFunction('__kampusVoice', (kind, text) => {
+    voiceLog.push({ kind, text: String(text).slice(0, 120), at: Date.now() });
+  });
   await page.addInitScript(() => {
     /* Roughly a word every 45ms. Real speech is nearer 300ms a word; 12ms was
        quick but meant a three-word question ("71 + 44") finished inside a single
        sample, so a test could see the sweep work and still not be able to watch
        it move. Slow enough to observe, fast enough to keep the suite short. */
     const WORD_MS = 45;
+    const live = [];
+    const finish = (u, kind) => {
+      const i = live.indexOf(u);
+      if (i < 0) return;                        // already cut
+      live.splice(i, 1);
+      try { window.__kampusVoice(kind, String(u?.text ?? '')); } catch { /* fine */ }
+      try { u?.onend?.({}); } catch { /* fine */ }
+    };
     const sink = {
       speak: (u) => {
         // The rate is honoured, because the product's whole claim about pace is
         // that the SWEEP follows the voice. A stub that ignored u.rate would let
         // "Slower slows both" pass against a product that slowed neither.
         const pace = () => WORD_MS / (u?.rate || 1);
-        try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
+        const say = String(u?.text ?? u);
+        try { window.__kampusSpoke(say); } catch { /* page closing */ }
+        try { window.__kampusVoice('start', say); } catch { /* page closing */ }
+        live.push(u);
         // Model the voice finishing, and report word boundaries as it goes: the
         // product sweeps the question on these, and a stub that never fired them
         // left every caller believing it was still talking.
-        const text = String(u?.text ?? '');
+        const text = say;
         let at = 0;
         const step = () => {
+          if (!live.includes(u)) return;          // cut off by another reader
           const next = text.indexOf(' ', at + 1);
           if (next < 0 || !u?.onboundary) {
             try { u?.onboundary?.({ charIndex: text.length, name: 'word' }); } catch { /* fine */ }
-            try { u?.onend?.({}); } catch { /* fine */ }
+            finish(u, 'end');
             return;
           }
           at = next;
@@ -406,7 +430,15 @@ export async function open(state = {}, hash = '') {
         };
         setTimeout(step, pace());
       },
-      cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
+      cancel: () => {
+        // Whatever was speaking has just been cut off. Record it and end it, so
+        // the product's own active-utterance count comes back down.
+        const cut = live.splice(0, live.length);
+        cut.forEach((x) => {
+          try { window.__kampusVoice('cut', String(x?.text ?? '')); } catch { /* fine */ }
+          try { x?.onend?.({}); } catch { /* fine */ }
+        });
+      }, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,
     };
     try { Object.defineProperty(window, 'speechSynthesis', { get: () => sink, configurable: true }); } catch { /* fine */ }
@@ -442,29 +474,44 @@ export async function openBlank(hash = '') {
      anything still sitting in that page's context dies with it — so the record
      would be empty exactly when it mattered. */
   await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
+  await page.exposeFunction('__kampusVoice', (kind, text) => {
+    voiceLog.push({ kind, text: String(text).slice(0, 120), at: Date.now() });
+  });
   await page.addInitScript(() => {
     /* Roughly a word every 45ms. Real speech is nearer 300ms a word; 12ms was
        quick but meant a three-word question ("71 + 44") finished inside a single
        sample, so a test could see the sweep work and still not be able to watch
        it move. Slow enough to observe, fast enough to keep the suite short. */
     const WORD_MS = 45;
+    const live = [];
+    const finish = (u, kind) => {
+      const i = live.indexOf(u);
+      if (i < 0) return;                        // already cut
+      live.splice(i, 1);
+      try { window.__kampusVoice(kind, String(u?.text ?? '')); } catch { /* fine */ }
+      try { u?.onend?.({}); } catch { /* fine */ }
+    };
     const sink = {
       speak: (u) => {
         // The rate is honoured, because the product's whole claim about pace is
         // that the SWEEP follows the voice. A stub that ignored u.rate would let
         // "Slower slows both" pass against a product that slowed neither.
         const pace = () => WORD_MS / (u?.rate || 1);
-        try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
+        const say = String(u?.text ?? u);
+        try { window.__kampusSpoke(say); } catch { /* page closing */ }
+        try { window.__kampusVoice('start', say); } catch { /* page closing */ }
+        live.push(u);
         // Model the voice finishing, and report word boundaries as it goes: the
         // product sweeps the question on these, and a stub that never fired them
         // left every caller believing it was still talking.
-        const text = String(u?.text ?? '');
+        const text = say;
         let at = 0;
         const step = () => {
+          if (!live.includes(u)) return;          // cut off by another reader
           const next = text.indexOf(' ', at + 1);
           if (next < 0 || !u?.onboundary) {
             try { u?.onboundary?.({ charIndex: text.length, name: 'word' }); } catch { /* fine */ }
-            try { u?.onend?.({}); } catch { /* fine */ }
+            finish(u, 'end');
             return;
           }
           at = next;
@@ -473,7 +520,15 @@ export async function openBlank(hash = '') {
         };
         setTimeout(step, pace());
       },
-      cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
+      cancel: () => {
+        // Whatever was speaking has just been cut off. Record it and end it, so
+        // the product's own active-utterance count comes back down.
+        const cut = live.splice(0, live.length);
+        cut.forEach((x) => {
+          try { window.__kampusVoice('cut', String(x?.text ?? '')); } catch { /* fine */ }
+          try { x?.onend?.({}); } catch { /* fine */ }
+        });
+      }, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,
     };
     try { Object.defineProperty(window, 'speechSynthesis', { get: () => sink, configurable: true }); } catch { /* fine */ }

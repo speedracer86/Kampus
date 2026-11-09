@@ -17,6 +17,18 @@ export function useWidth(ref) {
   return w;
 }
 
+/* How many utterances this module believes are still being spoken.
+
+   `speechSynthesis.speaking` is the engine's own flag and is the truth about
+   whether sound is coming out, but it is false in the gap between queueing an
+   utterance and the voice starting — which is exactly the window two readers
+   arriving together land in. This count closes that window: it rises the moment
+   an utterance is handed over and falls when it ends, errors, or is hushed. */
+let active = 0;
+
+/** Is anything we started still speaking, or about to be? */
+export const speechActive = () => active > 0;
+
 /**
  * Read text aloud (browser SpeechSynthesis). Silent where unsupported.
  *
@@ -34,7 +46,19 @@ export function speak(text, opts) {
     u.voice = vs.find(v => /Natural/.test(v.name)) || vs.find(v => /Google US/.test(v.name)) || vs.find(v => /Samantha/.test(v.name)) || null;
     u.rate = rate;
     if (onBoundary) u.onboundary = (e) => { try { onBoundary(e.charIndex ?? 0, e); } catch { /* never break playback */ } };
-    if (onEnd) { u.onend = () => onEnd('ended'); u.onerror = () => onEnd('failed'); }
+    /* `onend`/`onerror` are wired whether or not the caller wanted them: a
+       caller that does not care about the end still has to stop being counted,
+       or the next reader waits for a voice that finished minutes ago. */
+    active += 1;
+    let settled = false;
+    const settle = (how) => {
+      if (settled) return;
+      settled = true;
+      active = Math.max(0, active - 1);
+      onEnd?.(how);
+    };
+    u.onend = () => settle('ended');
+    u.onerror = () => settle('failed');
     speechSynthesis.cancel(); speechSynthesis.speak(u);
     return u;
   } catch (e) { onEnd?.('failed'); return null; }
@@ -43,4 +67,8 @@ export function speak(text, opts) {
 /** Stop the browser voice, wherever it was started from. */
 export function hushSpeech() {
   try { speechSynthesis.cancel(); } catch { /* nothing to stop */ }
+  /* Forced to zero rather than decremented. A browser (or a stub) that drops a
+     cancelled utterance's `end` event would otherwise leave the count high
+     forever, and every later reader would wait out its cap before speaking. */
+  active = 0;
 }

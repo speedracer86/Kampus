@@ -10,7 +10,7 @@
 
    Grade 4 day 52 is eqFrac, tranche 1, The Kitchen — the exact lesson the owner's
    family re-tests on. Part of the suite; run via `npm run test:webapp`. */
-import { open, text, driveToTeach, nextButton, clickText } from './harness.mjs';
+import { open, text, driveToTeach, nextButton, clickText, voiceLog } from './harness.mjs';
 
 /** Stub Audio so CI stays silent but every play() is observable.
 
@@ -579,6 +579,79 @@ export default async function run(check) {
       check('and nothing is left greyed when she stops', last.n === 0 || last.pale === 0,
         JSON.stringify(last));
     }
+    await page.close();
+  }
+
+  /* ---- readers take turns (owner's play-test, Nov 2026) ----
+
+     On a band-a move two readers arrive together: Karla introduces the move and
+     the question reads itself. Both fired on mount, so whoever went second cut
+     the first off mid-word — nothing stranded, but a kid with auditory
+     processing delays who loses half a sentence has lost the sentence.
+
+     The stub records a CUT when one utterance interrupts another, so this
+     asserts the strong thing (nobody was interrupted) rather than the weak one
+     (both of them eventually spoke). */
+  {
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52,
+      days: { '2026-01-02': 1 } }, '#lesson');
+    // Clips are stubbed too: the host reads from the bank's recording, and
+    // without this the only visible reader would be the browser voice.
+    await captureAudio(page);
+    /* The marker is written at DOCUMENT START, not after `networkidle`. The
+       question begins reading about 50ms into the load, long before a page is
+       idle, so a baseline taken afterwards misses the very utterance this block
+       is about — which is how an earlier version of this check concluded the
+       question never spoke at all. */
+    await page.addInitScript(() => { try { window.__kampusVoice('mark', 'load'); } catch { /* fine */ } });
+    const before = voiceLog.length;
+    await page.reload({ waitUntil: 'networkidle' });
+    const marked = voiceLog.findIndex((e, i) => i >= before && e.kind === 'mark');
+    const from = marked >= 0 ? marked + 1 : voiceLog.length;
+    await page.waitForTimeout(600);
+
+    /* THE LAW FIRST: a wait is not a gate. While one reader is waiting its
+       turn, every answer is live and nothing is disabled. */
+    const duringWait = [];
+    for (let i = 0; i < 10; i++) {
+      duringWait.push(await page.evaluate(() => {
+        const answers = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+        return { answers: answers.length, disabled: answers.filter(b => b.disabled).length };
+      }));
+      await page.waitForTimeout(120);
+    }
+    check('answers stay live while a reader waits its turn',
+      // answers > 0 matters: with none on screen this would pass against a
+      // page that never rendered a question at all.
+      duringWait.every(f => f.answers >= 2 && f.disabled === 0),
+      JSON.stringify(duringWait.find(f => f.disabled || f.answers < 2) || 'all live'));
+
+    await page.waitForTimeout(6000);            // let both readers have their turn
+    const log = voiceLog.slice(from);
+    const cuts = log.filter(e => e.kind === 'cut');
+    check('nobody is cut off mid-sentence', cuts.length === 0,
+      cuts.map(c => `"${c.text.slice(0, 40)}"`).join(' | ') || 'no cuts');
+
+    const starts = log.filter(e => e.kind === 'start');
+    const ends = log.filter(e => e.kind === 'end');
+    /* The host reads from the bank's RECORDING and the question from the
+       browser voice, so "both spoke" is one of each — not two utterances. */
+    const clips = await page.evaluate(() => window.__played || []);
+    check('both the host line and the question were spoken',
+      clips.some(c => c.includes('/voice/move_')) && starts.length >= 1,
+      `clip: ${clips.find(c => c.includes('/voice/move_')) || 'none'} | tts: ${starts.map(e => `"${e.text.slice(0, 24)}"`).join(' | ') || 'none'}`);
+    check('and each finished before the next began',
+      ends.length >= starts.length - 1, `${starts.length} started, ${ends.length} finished`);
+
+    // Interleaving, stated as the records themselves: no start between a
+    // start and its matching end.
+    let open_ = 0, overlapped = false;
+    for (const e of log) {
+      if (e.kind === 'start') { if (open_ > 0) overlapped = true; open_ += 1; }
+      if (e.kind === 'end' || e.kind === 'cut') open_ = Math.max(0, open_ - 1);
+    }
+    check('two readers never speak at the same time', !overlapped,
+      log.map(e => e.kind[0]).join(''));
     await page.close();
   }
 

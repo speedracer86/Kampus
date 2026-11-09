@@ -4,7 +4,7 @@ import { color, type, radius, shadow, band, streakColors, confetti, font } from 
 import { Button, Kicker, ProgressBar, KreditCoin, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
 import { Question, rich, plainSpeech, richWords } from './question.jsx';
-import { useSpokenLine, rateFor } from './say-it-show-it.jsx';
+import { useSpokenLine, rateFor, whenVoiceQuiet } from './say-it-show-it.jsx';
 import { voiceMode } from './teach-layouts.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -167,8 +167,9 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
   const said = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted,
     rate: rateFor(mode, voice?.rate) });
   React.useEffect(() => {
-    if (mascotReads && mode === 'a' && !muted && q?.text) said.play();
-    return said.stop;
+    const cancel = (mascotReads && mode === 'a' && !muted && q?.text)
+      ? whenVoiceQuiet(() => said.play()) : null;
+    return () => { cancel?.(); said.stop(); };
   }, [q?.text, mode, muted, mascotReads]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const advance = (s) => {

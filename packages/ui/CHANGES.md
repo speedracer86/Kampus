@@ -810,3 +810,31 @@ that kid on every surface (`settings.voiceRate`). The sweep rides the clip's
 clock, so it stays in step at any rate — and the CI stub now honours `u.rate`,
 because a stub that ignored it would let "Slower slows both" pass against a
 product that slowed neither.
+
+### Readers take turns (Nov 2026)
+
+On a band-a move two readers arrive together: Karla introduces the move and the
+question reads itself. Both fired on mount, so whoever went second cut the first
+off mid-word. Nothing stranded — the engine's own flag is polled — but a kid
+with auditory processing delays who loses half a sentence has lost the sentence.
+
+- `util.jsx` counts active utterances. `speechSynthesis.speaking` is the truth
+  about sound coming out, but it is false in the gap between queueing an
+  utterance and the voice starting — exactly the window two readers land in.
+  `onend`/`onerror` are wired whether or not the caller asked for them, and
+  `hushSpeech()` forces the count to zero so a dropped cancel event cannot leak
+  it upward forever.
+- `whenVoiceQuiet()` serves waiters ONE AT A TIME, in arrival order. Polling
+  alone was not enough: two readers mounting in the same commit schedule their
+  first poll for the same tick and both see a quiet product, because neither has
+  started yet. It is a wait, never a gate — the cap means a stuck flag costs a
+  pause and not the read, and the spec checks every answer stays live throughout.
+- **A reader may only stop the voice it started.** This was the real defect
+  underneath. `stop()` hushed globally, so when the move host's effect tore down
+  — which it does the moment the clip manifest settles — it silenced the
+  question mid-sentence and zeroed the shared count. The host then fired into an
+  apparently quiet product at 109ms. The voice has an owner now.
+
+Found by tracing, not by reasoning: the first four explanations were wrong, and
+the trace (`question fires at 49ms · host queues at 57ms · host fires at 109ms`)
+named the cause in one run.
