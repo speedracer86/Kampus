@@ -371,8 +371,19 @@ export function Question({
      NOTHING HERE GATES. No part of this reaches onAnswer, feedback, sel or the
      Check button, in either direction: audio cannot block her and cannot answer
      for her. */
-  const words = React.useMemo(() => richWords(question.text), [question.text]);
-  const saying = React.useMemo(() => plainSpeech(question.text), [question.text]);
+  /* THE ASK, WITH THE MATHS, AS ONE HEADING AND ONE READ.
+
+     The generators author it — Q('Which is bigger?', '1/6 or 1/2') — and it was
+     being dropped on the way to the screen, so a kid in practice was shown
+     "1/6 or 1/2" and left to guess what was being asked of her. It is one
+     heading because it is one question, and one read with one sweep across
+     both, because that is how she hears it. */
+  const ask = question.ask ? String(question.ask).trim() : '';
+  const words = React.useMemo(
+    () => [...(ask ? richWords(ask) : []), ...richWords(question.text)], [ask, question.text]);
+  const askWords = React.useMemo(() => (ask ? richWords(ask).length : 0), [ask]);
+  const saying = React.useMemo(
+    () => plainSpeech(ask ? `${ask} ${question.text}` : question.text), [ask, question.text]);
   const clipSrc = voice?.cacheUrl && saying.length <= 200
     ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
     : null;
@@ -385,7 +396,7 @@ export function Question({
   const ownsRead = !sweep;
   React.useEffect(() => {
     // Waits for whoever is already reading (the move host, usually) to finish.
-    const cancel = (ownsRead && mode === 'a' && !muted) ? whenVoiceQuiet(() => line.play()) : null;
+    const cancel = (ownsRead && mode === 'a' && !muted) ? whenVoiceQuiet(() => line.play(undefined, { auto: true })) : null;
     return () => { cancel?.(); line.stop(); };
   }, [question.text, mode, muted, ownsRead]);  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -431,6 +442,7 @@ export function Question({
   });
 
   const givens = question.givens || [];
+  const hasLeftColumn = givens.length > 0 || !!question.family || helpIds.length > 0;
   const knowCol = <>
     {givens.length > 0 && <>
       <Kicker style={{ marginBottom: 6 }}>What you know</Kicker>
@@ -473,9 +485,17 @@ export function Question({
           would go pale and stay there. No sweep is the normal rendering. */}
       {/* An external sweep is applied only once it has actually reached a word:
           at -1 every word would render in the not-yet-reached grey. */}
-      {rich(question.text, (sweep && sweep.word >= 0)
-        ? sweep
-        : (line.speaking && line.word >= 0 ? { word: line.word } : undefined))}</h2>
+      {(() => {
+        const live = (sweep && sweep.word >= 0)
+          ? sweep
+          : (line.speaking && line.word >= 0 ? { word: line.word } : undefined);
+        // The ask and the maths are ONE heading and one sweep; the offset
+        // carries the held word across from the instruction into the sum.
+        return <>
+          {!!ask && <>{rich(ask, live)} </>}
+          {rich(question.text, live ? { ...live, offset: (live.offset || 0) + askWords } : undefined)}
+        </>;
+      })()}</h2>
   </>;
 
   const answers = <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 12, marginTop: phone ? 18 : 26 }}>
@@ -521,8 +541,13 @@ export function Question({
           {checkBar}
         </div>
       </>
-      : <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
-        <div>{knowCol}{helpCol}</div>
+      /* The left column only exists when it holds something. A Snag has no
+         givens and no help stack — "no pay, just a look" — so the grid was
+         reserving 340px for nothing and the question sheet floated off to the
+         right of a hole. */
+      : <div style={{ display: 'grid', gridTemplateColumns: hasLeftColumn ? '340px 1fr' : '1fr',
+        gap: 48, alignItems: 'start' }}>
+        {hasLeftColumn && <div>{knowCol}{helpCol}</div>}
         {/* The world the lesson is in, as a hairline on the sheet it is taught
             in — the same colour the companion wears, so the question screen
             belongs to the same place the teaching did. */}

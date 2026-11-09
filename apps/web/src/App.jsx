@@ -83,6 +83,7 @@ function buildUnitQuizFromPlan(state) {
   // Markup intact, like the lesson's own questions: rich() renders it, and
   // flattening it here is what turned "4/5" into "4 5" (see year.js asQuestion).
   const toQ = (p, group) => ({
+    ask: p.prompt || null,
     text: String(p.q),
     answers: p.choices, correct: p.correctIdx, answerIndex: p.correctIdx, choices: p.choices,
     skill: p.skill || p.skillKey, teachSteps: p.steps, hint: p.steps?.[0], group,

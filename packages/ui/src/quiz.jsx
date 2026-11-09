@@ -11,7 +11,7 @@ const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
 const MULT = (s) => s >= 10 ? 3 : s >= 6 ? 2 : s >= 3 ? 1.5 : 1;
 // Engine question shape -> the §0 Question contract. The engine's teach script
 // doubles as the hint (first step) and the worked answer (all steps).
-const asQuestion = (q) => ({ text: q.text, answers: q.choices, correct: q.answerIndex,
+const asQuestion = (q) => ({ text: q.text, ask: q.prompt, answers: q.choices, correct: q.answerIndex,
   givens: q.givens, find: q.find, family: q.family, teachSteps: q.teach,
   hint: q.hint || (q.teach && q.teach[0]), show: q.show || (q.teach && q.teach.join(' ')),
   scaffold: q.scaffold, scaffoldLevel: q.scaffoldLevel });
@@ -155,8 +155,12 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
 
      Nothing here can gate: no part of it reaches `st`, the answer buttons or
      the payout. Audio cannot block her and cannot answer for her. */
-  const words = React.useMemo(() => richWords(q?.text), [q?.text]);
-  const saying = React.useMemo(() => plainSpeech(q?.text), [q?.text]);
+  const ask = q?.prompt ? String(q.prompt).trim() : '';
+  const words = React.useMemo(
+    () => [...(ask ? richWords(ask) : []), ...richWords(q?.text)], [ask, q?.text]);
+  const askWords = React.useMemo(() => (ask ? richWords(ask).length : 0), [ask]);
+  const saying = React.useMemo(
+    () => plainSpeech(ask ? `${ask} ${q?.text}` : q?.text), [ask, q?.text]);
   const clipSrc = voice?.cacheUrl && saying.length <= 200
     ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
     : null;
@@ -168,7 +172,7 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
     rate: rateFor(mode, voice?.rate) });
   React.useEffect(() => {
     const cancel = (mascotReads && mode === 'a' && !muted && q?.text)
-      ? whenVoiceQuiet(() => said.play()) : null;
+      ? whenVoiceQuiet(() => said.play(undefined, { auto: true })) : null;
     return () => { cancel?.(); said.stop(); };
   }, [q?.text, mode, muted, mascotReads]);   // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -202,7 +206,22 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
         fixed: s.fixed + (s.retry ? 1 : 0), teachOpen: false, teachConfirm: false };
     }
     onEvent('answer', { right: false });
-    return { ...s, feedback: 'wrong', picked: value, streak: 0, resets: s.resets + 1, missed: s.missed.concat(s.order[s.qNum]), teachOpen: false, teachConfirm: false };
+    /* A MISS OPENS THE TEACHING, FREE (PLAY_SYSTEM: no punitive mechanics).
+       The miss is the struggle signal, and it has already cost her the streak
+       and the first-try bonus; charging a token for the lesson that follows it
+       is a fine on learning. Asking for "Teach me" BEFORE answering still costs
+       — help stays a budget — but `helpUsed` is deliberately NOT set here, so
+       the retry pays in full. */
+    const hasWalk = !!(q?.teach?.length);
+    // ONE panel, not two. A choice question is rendered by Question and its walk
+    // lives in the help column; everything else uses this component's own teach
+    // strip. Opening both put the same worked steps on screen twice.
+    const choice = q?.mode === 'choice' || !q?.mode;
+    return { ...s, feedback: 'wrong', picked: value, streak: 0, resets: s.resets + 1,
+      missed: s.missed.concat(s.order[s.qNum]),
+      teachOpen: hasWalk && !choice,
+      helpOpen: hasWalk && choice ? 'teach' : s.helpOpen,
+      teachConfirm: false };
   });
 
   if (st.done) return <EndOfRound kredits={st.kredits} acc={Math.round(100 * st.correct / st.asked)} best={st.best}
@@ -249,7 +268,13 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
           a whole round on. Nothing below the prompt is read: not the teach, not
           the hint — the question only. */}
       {!isChoice && <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>
-        {rich(q.text, said.speaking && said.word >= 0 ? { word: said.word } : undefined)}</h2>}
+        {(() => {
+          const live = said.speaking && said.word >= 0 ? { word: said.word } : undefined;
+          return <>
+            {!!ask && <>{rich(ask, live)} </>}
+            {rich(q.text, live ? { ...live, offset: askWords } : undefined)}
+          </>;
+        })()}</h2>}
       {!isChoice && q.teach && !st.teachOpen && !st.feedback && <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <Button variant="gold" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: true }))}>
           {st.tokensLeft > 0 ? `Teach me · ${st.tokensLeft} token${st.tokensLeft > 1 ? 's' : ''} left` : 'Teach me · costs half'}</Button>

@@ -288,7 +288,7 @@ function MoveHost({ intro, voice, mode = 'c', muted = false, worldColor, blobDir
   // by the clip when it turned up.
   const settled = !!voice?.manifest;
   React.useEffect(() => {
-    const cancel = (intro && settled && mode === 'a' && !muted) ? whenVoiceQuiet(() => play()) : null;
+    const cancel = (intro && settled && mode === 'a' && !muted) ? whenVoiceQuiet(() => play(undefined, { auto: true })) : null;
     return () => { cancel?.(); stop(); };
   }, [intro?.say, settled, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
   if (!intro) return null;
@@ -350,7 +350,7 @@ function SnagScreen({ sn, intro, pickable, snagTried, onAttempt, onReveal, phone
     rate: rateFor(mode, voice?.rate) });
   const { play, stop } = line;
   React.useEffect(() => {
-    const cancel = (mode === 'a' && !muted) ? whenVoiceQuiet(() => play()) : null;
+    const cancel = (mode === 'a' && !muted) ? whenVoiceQuiet(() => play(undefined, { auto: true })) : null;
     return () => { cancel?.(); stop(); };
   }, [sn.q, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
 

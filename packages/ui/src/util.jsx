@@ -42,7 +42,10 @@ export function speak(text, opts) {
   const { rate = 0.95, onBoundary, onEnd } = (typeof opts === 'number' ? { rate: opts } : (opts || {}));
   try {
     const u = new SpeechSynthesisUtterance(String(text).replace(/−/g, ' negative '));
-    const vs = speechSynthesis.getVoices();
+    /* On a cold page getVoices() is still empty — the list loads lazily — so
+       this finds nothing and leaves `voice` null, which is the browser default
+       and perfectly fine. Nothing here may ASSUME the list is populated. */
+    const vs = speechSynthesis.getVoices() || [];
     u.voice = vs.find(v => /Natural/.test(v.name)) || vs.find(v => /Google US/.test(v.name)) || vs.find(v => /Samantha/.test(v.name)) || null;
     u.rate = rate;
     if (onBoundary) u.onboundary = (e) => { try { onBoundary(e.charIndex ?? 0, e); } catch { /* never break playback */ } };
@@ -58,7 +61,10 @@ export function speak(text, opts) {
       onEnd?.(how);
     };
     u.onend = () => settle('ended');
-    u.onerror = () => settle('failed');
+    /* `not-allowed` is Chrome's autoplay policy, not a broken voice: the page
+       has had no user gesture yet. It is reported separately so the caller can
+       INVITE the kid to start it rather than silently give up. */
+    u.onerror = (e) => settle(e?.error === 'not-allowed' ? 'blocked' : 'failed');
     speechSynthesis.cancel(); speechSynthesis.speak(u);
     return u;
   } catch (e) { onEnd?.('failed'); return null; }

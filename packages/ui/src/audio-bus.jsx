@@ -68,8 +68,9 @@ export function stop() {
 
 /**
  * Play one clip, exclusively.
- * @returns {Promise<'ended'|'failed'|'stopped'>} never rejects — a missing clip is
- *   a fallback case, not an error a screen should handle.
+ * @returns {Promise<'ended'|'failed'|'blocked'|'stopped'>} never rejects — a
+ *   missing clip is a fallback case, not an error a screen should handle, and
+ *   'blocked' means the browser wants a tap first.
  */
 export function play(src, { rate = 1, muted = false } = {}) {
   stop();
@@ -90,7 +91,10 @@ export function play(src, { rate = 1, muted = false } = {}) {
     settle = done;
     audio.addEventListener('ended', () => done('ended'), { once: true });
     audio.addEventListener('error', () => done('failed'), { once: true });
-    audio.play().then(notify).catch(() => done('failed'));
+    /* A rejected play() on a page with no user gesture is the same autoplay
+       policy that blocks the browser voice, and it is reported the same way so
+       the caller can invite the kid to start it. */
+    audio.play().then(notify).catch(err => done(err?.name === 'NotAllowedError' ? 'blocked' : 'failed'));
   });
 }
 

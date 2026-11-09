@@ -398,6 +398,44 @@ export function whenVoiceQuiet(fn, { cap = 10000, every = 150 } = {}) {
    stop the voice it started. */
 let voiceOwner = null;
 
+/* A BLOCKED READ IS AN INVITATION, NEVER A LIE.
+
+   On a freshly loaded page Chrome refuses both `speechSynthesis.speak()` and
+   `audio.play()` until the kid has touched something — `not-allowed`, with
+   `navigator.userActivation.hasBeenActive === false`. The read cannot happen,
+   and the honest thing is to say so: the label goes back to "Tap me to hear it"
+   and nothing claims to be reading.
+
+   But eating the failure leaves a kid who was promised a reader with silence
+   and a disc she has to find. So the block is CONVERTED: one page-level
+   listener re-fires the read on her first tap anywhere — the tap that grants
+   the activation is the tap that starts the voice. One listener, the most
+   recent pending read only, removed when it fires or when its screen goes. */
+let invitation = null;
+
+function withdrawInvitation(owner) {
+  if (!invitation) return;
+  if (owner && invitation.owner !== owner) return;
+  try { globalThis.removeEventListener?.('pointerdown', invitation.run, true); } catch { /* gone */ }
+  invitation = null;
+}
+
+function inviteFirstTap(owner, fn) {
+  withdrawInvitation();
+  const run = () => {
+    withdrawInvitation();
+    // Back through the queue, so it still takes its turn.
+    whenVoiceQuiet(fn);
+  };
+  invitation = { owner, run };
+  try { globalThis.addEventListener?.('pointerdown', run, { once: true, capture: true }); } catch { /* no DOM */ }
+}
+
+/** Has the page had the gesture the browser wants before it will make sound? */
+const activationMissing = () => {
+  try { return globalThis.navigator?.userActivation?.hasBeenActive === false; } catch { return false; }
+};
+
 export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1 } = {}) {
   const mine = React.useRef({});
   const [word, setWord] = React.useState(-1);
@@ -407,6 +445,8 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
 
   const stop = React.useCallback(() => {
     token.current += 1;
+    // A screen that is going away takes its pending invitation with it.
+    withdrawInvitation(mine.current);
     // Only what this reader started. Another component's line is not ours to end.
     if (voiceOwner === mine.current) {
       stopAudio(); hushSpeech();
@@ -415,8 +455,14 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
     setBusy(false); setWord(-1);
   }, []);
 
-  const play = React.useCallback((playRate = rate) => {
+  const play = React.useCallback((playRate = rate, { auto = false } = {}) => {
     if (muted) return;
+    // A read the kid asked for needs no invitation; she has just tapped.
+    const invite = (how) => {
+      if (!auto) return;
+      if (how !== 'blocked' && !activationMissing()) return;
+      inviteFirstTap(mine.current, () => play(playRate, { auto: true }));
+    };
     const turn = ++token.current;
     // An explicit play DOES take the voice — tapping Again while she is talking
     // should restart her — and taking it makes this reader the owner.
@@ -436,6 +482,13 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
       raf = requestAnimationFrame(tick);
       playOne(src, { rate: playRate }).then((how) => {
         cancelAnimationFrame(raf);
+        if (how === 'blocked') {
+          // The clip is refused for want of a tap; the browser voice would be
+          // refused for the same reason. Settle honestly and invite.
+          invite('blocked');
+          done();
+          return;
+        }
         if (how === 'failed') {
           // The clip did not arrive — offline, or the cache has not been
           // deployed yet. Drop to the browser voice rather than going quiet.

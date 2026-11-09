@@ -5,6 +5,70 @@
 import { answerOne, buildDayLesson, clickText, currentDay, driveToTeach, nextButton, open, solveStep, text } from './harness.mjs';
 
 export default async function run(check) {
+  /* ---------- practice teaches (owner's play-test, Nov 2026) ----------
+
+     Two things a kid in free practice was not getting. The ASK that the
+     generator authored — Q('Which is bigger?', '1/6 or 1/2') — was dropped on
+     the way to the screen, leaving her looking at two fractions with no
+     question. And a miss charged her a Teach Token to see the worked steps,
+     which is a fine on learning: the miss has already cost the streak and the
+     first-try bonus, and it is the struggle signal the teaching exists for. */
+  {
+    const page = await open({ grade: 3, name: 'Talia', lessonPointer: 0, kredits: 400,
+      days: { '2026-01-02': 1 }, lastTopic: 'frac' }, '#home');
+    await page.waitForTimeout(700);
+    const started = await page.evaluate(() => {
+      const play = [...document.querySelectorAll('button')]
+        .find(b => /^Play /.test(b.getAttribute('aria-label') || ''));
+      if (play) { play.click(); return true; }
+      return false;
+    });
+    check('free practice opens', started);
+
+    if (started) {
+      await page.waitForTimeout(800);
+      const heading = await page.evaluate(() => document.querySelector('h2')?.innerText || '');
+      check('the question says what is being ASKED, not just the maths',
+        /[A-Za-z]{3,}/.test(heading), JSON.stringify(heading.slice(0, 60)));
+
+      // Answer wrongly on purpose: pick whichever option is not the answer.
+      const missed = await page.evaluate(() => {
+        const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+        if (opts.length < 2) return false;
+        opts[0].click();
+        return true;
+      });
+      await page.waitForTimeout(500);
+      let t = await text(page);
+      if (!/Not yet|Try again/i.test(t) && missed) {
+        // That one happened to be right; take the next question and miss it.
+        await page.waitForTimeout(1500);
+        await page.evaluate(() => {
+          const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+          opts[opts.length - 1]?.click();
+        });
+        await page.waitForTimeout(600);
+        t = await text(page);
+      }
+
+      // The walk itself, not the "Not yet" bar — that appears either way and
+      // would have passed against a product that opened nothing.
+      const walk = await page.evaluate(() => ({
+        rows: document.querySelectorAll('[data-teach-row]').length,
+        more: /Tap for the next line/.test(document.body.innerText),
+      }));
+      check('a miss opens the worked steps by itself', walk.rows > 0 || walk.more,
+        JSON.stringify(walk));
+      check('and never asks her to pay for them',
+        !/Spend a Teach Token|costs half/i.test(t),
+        (t.match(/Spend a Teach Token[^\n]*|costs half[^\n]*/) || ['free'])[0]);
+      check('the retry is still hers to answer — nothing is disabled',
+        await page.evaluate(() => [...document.querySelectorAll('button')]
+          .filter(b => /^\d\n/.test(b.innerText.trim())).every(b => !b.disabled)));
+    }
+    await page.close();
+  }
+
   /* ---------- 9. teach steps: the layouts render and gate Next (§0b) ----------
      The teach panel is the one screen where "it rendered" is not enough: if Next
      is live before the step is solved, the whole teach-first design is decorative.

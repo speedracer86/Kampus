@@ -838,3 +838,32 @@ with auditory processing delays who loses half a sentence has lost the sentence.
 Found by tracing, not by reasoning: the first four explanations were wrong, and
 the trace (`question fires at 49ms · host queues at 57ms · host fires at 109ms`)
 named the cause in one run.
+
+### Play-test round two (Nov 2026)
+
+**A blocked read is an invitation, never a lie.** On a freshly loaded page Chrome
+refuses both `speechSynthesis.speak()` and `audio.play()` until the kid has
+touched something. The companion sat on "Reading it to you…" and read nothing.
+Now `not-allowed` and a rejected `audio.play()` settle the hook at once — label
+back to "Tap me to hear it", nothing swept — and the block is CONVERTED: one
+page-level `pointerdown` listener re-fires the pending read on her first tap
+anywhere, through the same turn-taking queue. She should not have to find the
+disc. One listener, most recent read only, withdrawn when it fires or when its
+screen goes.
+
+**Practice teaches.** The ask the generators author — `Q('Which is bigger?', …)`
+— was dropped between the engine and the screen, so a kid saw "1/6 or 1/2" and
+no question. It is carried now through every seam (practice, lesson, papers) and
+rendered with the maths as ONE heading, spoken as one read with one sweep across
+both. And a miss opens the worked steps free: the miss has already cost the
+streak and the first-try bonus, and charging a token for the lesson that follows
+it is a fine on learning. Asking for "Teach me" before answering still costs —
+help stays a budget.
+
+**The Snag's dead column.** Question rendered its desktop grid with an empty
+340px left column — a Snag has no givens and no help stack — so the sheet
+floated right of a hole. The column only exists when it holds something.
+
+One thing the walk-through caught that the spec did not: opening the walk on a
+miss opened it TWICE on a choice question, once in Question's help column and
+once in this component's own teach strip. One panel per surface.

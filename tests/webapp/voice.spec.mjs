@@ -655,6 +655,105 @@ export default async function run(check) {
     await page.close();
   }
 
+  /* ---- a blocked read is an invitation, never a lie ----
+
+     On a freshly loaded page Chrome refuses both `speechSynthesis.speak()` and
+     `audio.play()` until the kid has touched something. The owner found the
+     companion sitting on "Reading it to you…" with nothing happening: the
+     product promised a reader and delivered silence.
+
+     This refuses everything until a flag flips, exactly as the browser does. */
+  {
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52,
+      days: { '2026-01-02': 1 } }, '#lesson');
+    await page.addInitScript(() => {
+      window.__allowAudio = false;
+      const RealAudio = window.Audio;
+      window.Audio = function (src) {
+        const el = new RealAudio(); el.src = src;
+        let live = false;
+        el.play = () => {
+          if (!window.__allowAudio) {
+            const e = new Error('blocked'); e.name = 'NotAllowedError';
+            return Promise.reject(e);
+          }
+          live = true;
+          setTimeout(() => { if (live) { live = false; el.dispatchEvent(new Event('ended')); } }, 120);
+          return Promise.resolve();
+        };
+        el.pause = () => { live = false; };
+        try { Object.defineProperty(el, 'paused', { get: () => !live }); } catch { /* fine */ }
+        return el;
+      };
+      window.Audio.prototype = RealAudio.prototype;
+
+      const sink = {
+        speak: (u) => {
+          if (!window.__allowAudio) {
+            // Exactly what Chrome sends before a gesture.
+            setTimeout(() => { try { u.onerror?.({ error: 'not-allowed' }); } catch { /* fine */ } }, 0);
+            return;
+          }
+          try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* fine */ }
+          const text = String(u?.text ?? '');
+          let at = 0;
+          const step = () => {
+            const next = text.indexOf(' ', at + 1);
+            if (next < 0) {
+              try { u?.onboundary?.({ charIndex: text.length }); } catch { /* fine */ }
+              try { u?.onend?.({}); } catch { /* fine */ }
+              return;
+            }
+            at = next;
+            try { u.onboundary?.({ charIndex: at }); } catch { /* fine */ }
+            setTimeout(step, 30);
+          };
+          setTimeout(step, 30);
+        },
+        cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
+        speaking: false, pending: false, paused: false,
+      };
+      try { Object.defineProperty(window, 'speechSynthesis', { get: () => sink, configurable: true }); } catch { /* fine */ }
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(1200);
+
+    const look = () => page.evaluate(() => {
+      const label = [...document.querySelectorAll('span')]
+        .map(x => x.innerText).find(t => /Reading it to you|Tap me to hear it/.test(t || '')) || null;
+      const answers = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+      return { label, words: document.querySelectorAll('[data-say-word]').length,
+        answers: answers.length, disabled: answers.filter(b => b.disabled).length };
+    });
+
+    const blocked = await look();
+    check('a blocked read never claims to be reading',
+      blocked.label === 'Tap me to hear it.', JSON.stringify(blocked.label));
+    check('and nothing is swept while nothing is being said', blocked.words === 0,
+      `${blocked.words} words`);
+    check('the screen stays fully tappable while the voice is blocked',
+      blocked.answers >= 2 && blocked.disabled === 0, JSON.stringify(blocked));
+
+    /* Her first tap ANYWHERE is the one that starts the read — she should not
+       have to find the disc. */
+    await page.evaluate(() => {
+      window.__allowAudio = true;
+      document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    });
+    let sawWords = 0, sawLabel = null;
+    for (let i = 0; i < 20; i++) {
+      const f = await look();
+      sawWords = Math.max(sawWords, f.words);
+      if (f.label === 'Reading it to you…') sawLabel = f.label;
+      await page.waitForTimeout(40);
+    }
+    check('her first tap anywhere starts the read she was promised',
+      sawWords > 0, `${sawWords} words swept after the tap`);
+    check('and the label only claims to read once something really is',
+      sawLabel === 'Reading it to you\u2026' || sawWords > 0, String(sawLabel));
+    await page.close();
+  }
+
   /* ---- LAW 2: nothing else sounds while Karla speaks ----
 
      What is demonstrable end to end is that the bus never lets two clips overlap.

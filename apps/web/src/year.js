@@ -101,6 +101,9 @@ export function bizCtx(state) {
    rich() renders them and plainSpeech() speaks them (packages/ui/src/question.jsx);
    anything needing a bare string asks plainSpeech() for one. */
 const asQuestion = (p) => ({
+  // The instruction the generator authored ("Which is bigger?", "Solve for x").
+  // Without it "36 or 15" is a pair of numbers and no question at all.
+  ask: p.prompt || null,
   text: String(p.q),
   answers: p.choices, correct: p.correctIdx,
   teachSteps: p.steps, hint: p.steps?.[0], show: p.steps?.join(' '),
