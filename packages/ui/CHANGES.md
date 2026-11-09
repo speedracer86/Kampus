@@ -773,3 +773,40 @@ question with the same sweep as a lesson.
   anywhere outside the prompt.
 - Band policy, scoring and gating are untouched, and the spec checks every
   answer stays tappable while she is being read to.
+
+### Three defects from the owner's play-test (Nov 2026)
+
+All three were found by eyes on beta, which means the specs were blind to all
+three. Each now has one.
+
+**The Snag was silent** — the one question surface with no reader, and the first
+beat of a new idea, met before anything has been taught. It reads now: Karla's
+intro, the scene and the question as ONE beat in one voice. That meant folding
+the move host into the screen (it had its own face and its own clip) and
+teaching `rich()` an `offset`, so a single sweep can cross from one element into
+the next.
+
+**The mission screen was the same bug three times over.** The world's mascot
+floated above the card while Question's disc sat inside it; the question was
+stuck in the not-yet-reached grey; and the sweep never moved. One cause: two
+readers on one surface, each calling `speechSynthesis.cancel()` on the other,
+leaving a hook that believed it was still talking with the sweep parked on word
+one. A choice question is read by Question, so the mascot stands down — one
+face, in the slot the lesson uses.
+
+Two hardening changes came out of it:
+
+- **The speech engine's own flag is the truth.** `onend` does not always arrive
+  — a cancelled utterance, a voice that never starts — and when it does not, the
+  text stays greyed forever. The hook polls `speechSynthesis.speaking` and
+  releases when it says it has stopped.
+- **The pale grey belongs inside the line being read**, not across the screen.
+  A thirty-word beat left the question greyed for the ten seconds it took to
+  read everything before it.
+
+**Hope was too fast.** Fixed at playback, not by regenerating a word: bands a
+and b read at 0.9, band c at 1.0, and Slower drops to 0.75 and is REMEMBERED for
+that kid on every surface (`settings.voiceRate`). The sweep rides the clip's
+clock, so it stays in step at any rate — and the CI stub now honours `u.rate`,
+because a stub that ignored it would let "Slower slows both" pass against a
+product that slowed neither.

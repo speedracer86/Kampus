@@ -101,7 +101,7 @@ export function wordAt(plan, t, d) {
  * @param {(cue:string, index:number) => void} p.onCue fires as each line starts
  */
 export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, autoplay = true,
-  fallbackText, onCue, phone, mode = 'b', worldColor, blobDir = '/blobs/' }) {
+  fallbackText, onCue, phone, mode = 'b', worldColor, blobDir = '/blobs/', voiceRate, onRate }) {
   const [at, setAt] = React.useState(-1);
   const [word, setWord] = React.useState(-1);
   // How much of the script she has already said. Kept apart from `at` because
@@ -109,7 +109,9 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
   // she has read in ink rather than resetting it to unread grey.
   const [through, setThrough] = React.useState(0);
   const [quiet, setQuiet] = React.useState(false);
-  const [rate, setRate] = React.useState(1);
+  const [rate, setRate] = React.useState(() => rateFor(mode, voiceRate));
+  // A pace chosen elsewhere (or on a previous day) applies here too.
+  React.useEffect(() => { setRate(rateFor(mode, voiceRate)); }, [mode, voiceRate]);
   const speaking = useSpeaking();
   const reduced = useReducedMotion();
   const stopped = React.useRef(false);
@@ -253,7 +255,11 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
 
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
       {control('Again', () => run())}
-      {control('Slower', () => { setRate(0.8); run(0.8); })}
+      {control('Slower', () => {
+        setRate(SLOWER_RATE);
+        onRate?.(SLOWER_RATE);     // remembered for this kid, on every surface
+        run(SLOWER_RATE);
+      })}
       {control(quiet ? 'Unmute' : 'Quiet', () => {
         // Quiet stops playback. It does NOT stop the lesson: everything below
         // remains tappable, and Next is untouched either way.
@@ -282,6 +288,27 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
  * NOTHING HERE TOUCHES PROGRESS. No caller passes it anything it could use to
  * answer, advance or gate; it returns a word index and a speaking flag.
  */
+/* The browser voice's own baseline. Hope's recorded clips and this are both
+   scaled by the caller's rate, so a band's pace means the same thing whichever
+   voice is speaking. */
+const BASE_TTS_RATE = 0.95;
+
+/**
+ * How fast Hope reads, for a band.
+ *
+ * Owner's play-test, Nov 2026: she is too fast for the kid this is built for.
+ * Fixed at PLAYBACK, not by regenerating a word of audio — it costs nothing and
+ * can be retuned in an afternoon. Bands a and b, the kids being read to because
+ * reading is the hard part, start slower than the ones who asked for it.
+ *
+ * A saved choice (settings.voiceRate) always wins: once a kid has pressed
+ * Slower, that is her pace everywhere, on every surface, until she changes it.
+ */
+export const rateFor = (mode, saved) => (saved > 0 ? saved : (mode === 'c' ? 1 : 0.9));
+
+/** What Slower drops to. One number, so every surface agrees what "slower" is. */
+export const SLOWER_RATE = 0.75;
+
 export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1 } = {}) {
   const [word, setWord] = React.useState(-1);
   const [busy, setBusy] = React.useState(false);
@@ -328,14 +355,33 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
       const say = speech || text;
       const spoken = String(say);
       const u = ttsSpeak(spoken, {
-        rate: 0.95 * r,
+        rate: BASE_TTS_RATE * r,
         onBoundary: (charIndex) => {
           if (token.current !== mine2) return;
           setWord(wordAtFraction(plan, spoken.length ? charIndex / spoken.length : 0));
         },
         onEnd: () => { if (token.current === mine2) done(); },
       });
-      if (!u) done();                      // no speech support: silent, not stuck
+      if (!u) { done(); return; }           // no speech support: silent, not stuck
+
+      /* THE ENGINE'S OWN FLAG IS THE TRUTH, not our belief about it.
+         `onend` does not always arrive — an utterance cancelled by another
+         speaker, a voice that never starts, a tab that loses audio. When it
+         does not, the hook stays "speaking" with the sweep parked on word one,
+         and every word after it renders in the not-yet-reached grey. That is
+         what a kid saw on beta: a question greyed out, apparently mid-read,
+         forever. So the state is polled from speechSynthesis itself and
+         released the moment it says it has stopped. */
+      let settled = 0;
+      const watch = setInterval(() => {
+        if (token.current !== mine2) { clearInterval(watch); return; }
+        let live = false;
+        try { live = speechSynthesis.speaking || speechSynthesis.pending; } catch { live = false; }
+        // Two consecutive reads, because the flag is briefly false between
+        // queueing an utterance and the voice actually starting.
+        settled = live ? 0 : settled + 1;
+        if (settled >= 2) { clearInterval(watch); done(); }
+      }, 120);
     }
   }, [src, text, speech, plan, muted, rate]);
 

@@ -10,7 +10,7 @@ import { REFERENCE_STEPS } from '@kampus/curriculum';
 import { TEACH_LAYOUTS } from '@kampus/ui/teach-layouts';
 import { ReteachView } from '@kampus/ui/lesson';
 import { rich, plainSpeech } from '@kampus/ui/question';
-import { sweepPlan, wordAt } from '@kampus/ui/say-it-show-it';
+import { sweepPlan, wordAt, rateFor, SLOWER_RATE } from '@kampus/ui/say-it-show-it';
 import { color } from '@kampus/ui/tokens';
 
 // The library reads React off the global, exactly as the app's jsxInject supplies it.
@@ -117,6 +117,15 @@ function RichCases() {
   // compared as one rather than scraped off the screen.
   window.__plain = RICH_CASES.map(c => plainSpeech(c.raw));
   window.__sweep = sweepProbe();
+  /* The reading pace, by band. Owner's play-test, Nov 2026: Hope was too fast
+     for the kid this is built for. Fixed at playback, so it costs nothing and
+     can be retuned in an afternoon — the bands being READ TO start slower than
+     the band that has to ask. A saved choice always wins. */
+  window.__rates = {
+    a: rateFor('a'), b: rateFor('b'), c: rateFor('c'),
+    savedWins: rateFor('c', 0.75), slower: SLOWER_RATE,
+    ignoresRubbish: rateFor('a', 0),
+  };
   window.__plainWant = RICH_CASES.map(c => c.said);
   return <section data-rich style={{ position: 'absolute', left: -9999, top: 0 }}>
     {RICH_CASES.map((c, i) => <div key={i} data-rich-case={i}>{rich(c.raw)}</div>)}

@@ -331,7 +331,14 @@ export default async function run(check) {
     await page.waitForTimeout(120);
     const atSlow = await sweepReach();
     check('Slower slows the sweep with the voice, not just the voice',
-      atSlow >= 0 && atFull > atSlow, `word ${atFull} at 1.0, word ${atSlow} at 0.8`);
+      atSlow >= 0 && atFull > atSlow, `word ${atFull} at the band default, word ${atSlow} after Slower`);
+
+    /* The pace is HERS now, not the session's. Owner's play-test: Hope was too
+       fast for the kid this is built for, and a choice she has to make again on
+       every screen is a choice she will stop making. */
+    check('Slower is remembered for this kid',
+      await page.evaluate(() => JSON.parse(localStorage.getItem('kampus_v1_local') || '{}').settings?.voiceRate) === 0.75,
+      JSON.stringify(await page.evaluate(() => JSON.parse(localStorage.getItem('kampus_v1_local') || '{}').settings)));
 
     /* And the law that outranks the redesign. */
     check('the hero script still does not gate Next',
@@ -475,6 +482,104 @@ export default async function run(check) {
       check('placement was reachable to check', false, (await text(pl)).slice(0, 80).replace(/\n/g, ' '));
     }
     await pl.close();
+  }
+
+  /* ---- the Snag reads (owner's play-test, Nov 2026) ----
+
+     It was the one question surface still silent, and it is the FIRST beat of a
+     new idea: a brand-new kid meets it before anything has been taught. A
+     first-ever lesson opens straight on it, which is how the owner found it. */
+  {
+    const page = await open({ grade: 3, name: 'Talia', lessonPointer: 0 }, '#lesson');
+    await page.waitForTimeout(900);
+    const t = await text(page);
+    const onSnag = /The snag/i.test(t);
+    check('a first lesson opens on the Snag', onSnag, t.slice(0, 70).replace(/\n/g, ' '));
+    if (onSnag) {
+      await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+      const seen = [];
+      for (let i = 0; i < 16; i++) {
+        seen.push(await page.evaluate(() => {
+          const words = [...document.querySelectorAll('[data-say-word]')];
+          const now = words.findIndex(w => w.dataset.wordState === 'now');
+          const h2 = document.querySelector('h2');
+          const inQuestion = h2 ? [...h2.querySelectorAll('[data-say-word]')].length : 0;
+          return { total: words.length, now, inQuestion };
+        }));
+        await page.waitForTimeout(30);
+      }
+      const live = seen.filter(f => f.total > 0);
+      check('the Snag is read with the sweep', live.length > 0,
+        `${live.length} of ${seen.length} frames`);
+      const held = [...new Set(live.map(f => f.now).filter(n => n >= 0))];
+      check('and the held word moves through the scene', held.length > 1,
+        `held: ${held.slice(0, 6).join(', ') || 'none'}`);
+      check('the scene and the question are one sweep, not two readers',
+        live.every(f => f.inQuestion < f.total),
+        JSON.stringify(live[0]));
+      check('one companion on the Snag, not two',
+        await page.evaluate(() => document.querySelectorAll('[aria-label="Read it to me"]').length) === 1);
+    }
+    await page.close();
+  }
+
+  /* ---- the mission surface: one face, and nothing left greyed ----
+
+     The owner photographed this one: the world's mascot floating above the card
+     AND Question's disc inside it, the question stuck in not-yet-reached grey,
+     and no sweep. All three were one bug — two readers on one screen, each
+     cancelling the other's utterance, leaving a hook that believed it was still
+     talking with the sweep parked on word one. */
+  {
+    const page = await open({ grade: 3, name: 'Talia', lessonPointer: 0, kredits: 400,
+      days: { '2026-01-02': 1 }, lastTopic: 'frac' }, '#home');
+    await page.waitForTimeout(700);
+    const started = await page.evaluate(() => {
+      const play = [...document.querySelectorAll('button')].find(b => /^Play /.test(b.getAttribute('aria-label') || ''));
+      if (play) { play.click(); return true; }
+      return false;
+    });
+    check('a free-practice round opens', started);
+    if (started) {
+      await page.waitForTimeout(900);
+      check('one reader on the mission screen, not two',
+        await page.evaluate(() => document.querySelectorAll('[aria-label="Read it to me"]').length) === 1,
+        String(await page.evaluate(() => document.querySelectorAll('[aria-label="Read it to me"]').length)));
+
+      /* The face sits in the lesson's slot — inside the question card, above the
+         prompt — not floating over the top of the screen on its own. */
+      const placed = await page.evaluate(() => {
+        const face = document.querySelector('[aria-label="Read it to me"]');
+        const h2 = document.querySelector('h2');
+        if (!face || !h2) return null;
+        const f = face.getBoundingClientRect();
+        const q = h2.getBoundingClientRect();
+        // Directly above the question and sharing its left edge, within a line or two.
+        return { above: f.bottom <= q.top + 4, near: Math.abs(f.left - q.left) < 24,
+          gap: Math.round(q.top - f.bottom) };
+      });
+      check('the companion sits in the lesson\'s slot, not floating over the screen',
+        !!placed && placed.above && placed.near, JSON.stringify(placed));
+
+      await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+      const frames = [];
+      for (let i = 0; i < 24; i++) {
+        frames.push(await page.evaluate(() => {
+          const words = [...document.querySelectorAll('[data-say-word]')];
+          return { n: words.length, now: words.findIndex(w => w.dataset.wordState === 'now'),
+            pale: words.filter(w => w.dataset.wordState === 'ahead').length };
+        }));
+        await page.waitForTimeout(40);
+      }
+      const held = [...new Set(frames.map(f => f.now).filter(n => n >= 0))];
+      check('the mission question sweeps', held.length > 1, `held: ${held.join(', ') || 'none'}`);
+      /* THE DEFECT: it must not be left mid-read. Once the voice stops, the
+         spans go and nothing is left in the not-yet-reached grey. */
+      const last = frames[frames.length - 1];
+      check('and nothing is left greyed when she stops', last.n === 0 || last.pale === 0,
+        JSON.stringify(last));
+    }
+    await page.close();
   }
 
   /* ---- LAW 2: nothing else sounds while Karla speaks ----

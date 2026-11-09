@@ -4,7 +4,7 @@ import { color, type, radius, shadow, band, streakColors, confetti, font } from 
 import { Button, Kicker, ProgressBar, KreditCoin, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
 import { Question, rich, plainSpeech, richWords } from './question.jsx';
-import { useSpokenLine } from './say-it-show-it.jsx';
+import { useSpokenLine, rateFor } from './say-it-show-it.jsx';
 import { voiceMode } from './teach-layouts.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -136,7 +136,20 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
   const q = questions[st.order[st.qNum]];
   const fullGain = Math.round((8 + 4 * tier) * MULT(st.streak + 1) * (1 + gearBonus / 100));
 
-  /* Hope reads the question. The words are the ones rich() will RENDER, so the
+  /* ONE READER PER SURFACE.
+
+     A choice question is rendered by <Question>, which reads it and shows the
+     companion in its own slot. When this component ALSO read it, two speakers
+     shared one screen: each `speechSynthesis.cancel()`-ed the other, one hook
+     was left believing it was mid-sentence, and the question sat with word one
+     held and the rest in not-yet-reached grey — the "greyed out forever" a kid
+     hit on beta. Two companions showed at once, too: the world's mascot
+     floating above the card and Question's disc inside it.
+
+     So the mascot is decoration whenever Question is doing the reading, and
+     this reader only owns the surfaces Question does not render.
+
+     Hope reads the question. The words are the ones rich() will RENDER, so the
      sweep lands on what a reader sees as a word — a fraction is one word, not
      the three characters it is written with.
 
@@ -147,11 +160,16 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
   const clipSrc = voice?.cacheUrl && saying.length <= 200
     ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
     : null;
-  const said = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted });
+  const isChoice = q.mode === 'choice' || !q.mode;
+  // Question renders its own companion for bands a and b; the mascot stands
+  // down so there is one face, in the slot the lesson uses.
+  const mascotReads = !isChoice;
+  const said = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted,
+    rate: rateFor(mode, voice?.rate) });
   React.useEffect(() => {
-    if (mode === 'a' && !muted && q?.text) said.play();
+    if (mascotReads && mode === 'a' && !muted && q?.text) said.play();
     return said.stop;
-  }, [q?.text, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
+  }, [q?.text, mode, muted, mascotReads]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const advance = (s) => {
     const next = { feedback: null, picked: null, teachOpen: false, teachConfirm: false, helpOpen: null, helpUsed: false, tokenUsed: false, qStart: Date.now() };
@@ -192,7 +210,7 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
     onAgain={() => { onEvent('again', {}); set(fresh()); }}
     onHome={onQuit} />;
 
-  const isChoice = q.mode === 'choice' || !q.mode;
+
   const hudOp = focusMode && st.feedback !== 'correct' ? 0 : 1;
   const dim = st.teachOpen || st.teachConfirm ? 0.45 : 1;
   const modeUI = { numline: NumberLine, fraction: FractionPieces, money: MoneyCounter, thermo: Thermometer }[q.mode];
@@ -215,7 +233,10 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full,
         padding: '7px 14px', fontWeight: 700, fontSize: 15, opacity: hudOp, transition: 'opacity .3s' }}><KreditCoin />{st.kredits}</div></div>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: isChoice ? 1180 : 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
-      <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => said.play()} />
+      {/* Hidden when Question is showing the companion: one face per surface. */}
+      {(mascotReads || mode === 'c') && <Blob name={mascot} size={bz.mascot} dir={blobDir}
+        style={{ cursor: mascotReads ? 'pointer' : 'default' }}
+        onClick={mascotReads ? (() => said.play()) : undefined} />}
       {/* PLAY_SYSTEM §4: no streak flames anywhere, ever — a chain on screen is a chain
           that can break. The multiplier still pays and still shows in the payout pills,
           where it reads as an earning, not as something to protect. */}

@@ -283,6 +283,15 @@ try {
       wrong.join(' | ') || seen.plain[1]);
 
     /* The sweep's timing sources. */
+    const rates = await page.evaluate(() => window.__rates);
+    check('bands a and b are read to more slowly than the band that asks',
+      rates.a === 0.9 && rates.b === 0.9 && rates.c === 1,
+      `a ${rates.a}, b ${rates.b}, c ${rates.c}`);
+    check('Slower is one number, the same everywhere', rates.slower === 0.75, String(rates.slower));
+    check('a kid\'s saved pace beats her band\'s default', rates.savedWins === 0.75, String(rates.savedWins));
+    check('and a nonsense saved value falls back to the default', rates.ignoresRubbish === 0.9,
+      String(rates.ignoresRubbish));
+
     const sw = await page.evaluate(() => window.__sweep);
     check('a line splits into its words', sw.nWords === 11, `${sw.nWords} words`);
     check('word starts rise through the line', sw.startsRise);

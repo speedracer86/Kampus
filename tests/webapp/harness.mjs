@@ -383,6 +383,10 @@ export async function open(state = {}, hash = '') {
     const WORD_MS = 45;
     const sink = {
       speak: (u) => {
+        // The rate is honoured, because the product's whole claim about pace is
+        // that the SWEEP follows the voice. A stub that ignored u.rate would let
+        // "Slower slows both" pass against a product that slowed neither.
+        const pace = () => WORD_MS / (u?.rate || 1);
         try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
         // Model the voice finishing, and report word boundaries as it goes: the
         // product sweeps the question on these, and a stub that never fired them
@@ -398,9 +402,9 @@ export async function open(state = {}, hash = '') {
           }
           at = next;
           try { u.onboundary({ charIndex: at, name: 'word' }); } catch { /* fine */ }
-          setTimeout(step, WORD_MS);
+          setTimeout(step, pace());
         };
-        setTimeout(step, WORD_MS);
+        setTimeout(step, pace());
       },
       cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,
@@ -446,6 +450,10 @@ export async function openBlank(hash = '') {
     const WORD_MS = 45;
     const sink = {
       speak: (u) => {
+        // The rate is honoured, because the product's whole claim about pace is
+        // that the SWEEP follows the voice. A stub that ignored u.rate would let
+        // "Slower slows both" pass against a product that slowed neither.
+        const pace = () => WORD_MS / (u?.rate || 1);
         try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
         // Model the voice finishing, and report word boundaries as it goes: the
         // product sweeps the question on these, and a stub that never fired them
@@ -461,9 +469,9 @@ export async function openBlank(hash = '') {
           }
           at = next;
           try { u.onboundary({ charIndex: at, name: 'word' }); } catch { /* fine */ }
-          setTimeout(step, WORD_MS);
+          setTimeout(step, pace());
         };
-        setTimeout(step, WORD_MS);
+        setTimeout(step, pace());
       },
       cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,

@@ -8,7 +8,7 @@
 import { color, type, radius, font, numeral } from './tokens.js';
 import { Kicker, Button } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
-import { useSpokenLine } from './say-it-show-it.jsx';
+import { useSpokenLine, rateFor } from './say-it-show-it.jsx';
 import { Blob } from './primitives.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -139,7 +139,9 @@ const swept = (state) => ({
  *   is exactly what it has always been.
  */
 export function rich(s, sweep) {
-  let n = -1;                              // word counter across all the parts
+  // `offset` lets one sweep span two elements — the Snag reads its scene and
+  // then its question, and the held word has to cross from one to the other.
+  let n = (sweep?.offset ?? 0) - 1;        // word counter across all the parts
   const mark = (node, key) => {
     // The key belongs on the element either way. Returning the node bare when
     // there is no sweep dropped the key that used to be written inline, and
@@ -345,6 +347,7 @@ export function Question({
   feedback = null, picked = null, payout = null, help = null, teachConfirm = false, selected = null, snag = false,
   onAnswer = () => {}, onHelp = () => {}, onTeachConfirm = () => {}, onNext,
   onEvent = () => {}, style, worldColor, mode = 'c', voice, blobDir = '/blobs/', muted = false,
+  sweep = null,
 }) {
   const ref = React.useRef(null);
   const w = useWidth(ref);
@@ -373,12 +376,17 @@ export function Question({
   const clipSrc = voice?.cacheUrl && saying.length <= 200
     ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
     : null;
-  const line = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted });
-  // Band a is read to without asking; b and c ask first (§0a).
+  const line = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted,
+    rate: rateFor(mode, voice?.rate) });
+  /* A caller may own the read instead — the Snag does, because it reads its
+     scene and then its question as one sentence and the held word crosses from
+     one element into the other. When it does, this component neither speaks nor
+     shows a face: one reader, one companion, per surface. */
+  const ownsRead = !sweep;
   React.useEffect(() => {
-    if (mode === 'a' && !muted) line.play();
+    if (ownsRead && mode === 'a' && !muted) line.play();
     return () => line.stop();
-  }, [question.text, mode, muted]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [question.text, mode, muted, ownsRead]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // A Snag is "no pay, just a look": no help stack, because having the move is the point.
   const helpIds = snag ? [] : (HELP_BY_CONTEXT[context] || HELP_BY_CONTEXT.mission);
@@ -389,7 +397,7 @@ export function Question({
     onHelp(next, { needsConfirm: id === 'teach' && !teachFree });
     // The read-aloud pill now goes through the same path as the rest, so band c
     // gets the sweep too rather than a different, quieter product.
-    if (next === 'read') line.play();
+    if (next === 'read') (sweep ? sweep.onRead?.() : line.play());
     if (next) onEvent('help_open', { id: next });
   };
   const commit = (i) => { if (feedback) return; onAnswer(i); };
@@ -444,7 +452,7 @@ export function Question({
 
   /* Bands a and b get the companion's face, lit by the real speaking state —
      the same disc the teach screens use, so she is the same person here. */
-  const companion = mode !== 'c' && <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+  const companion = ownsRead && mode !== 'c' && <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
     <button onClick={() => line.play()} aria-label="Read it to me" style={{ ...qBase, border: 'none', padding: 0,
       cursor: 'pointer', width: 44, height: 44, flex: 'none', borderRadius: radius.full, background: accent,
       display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
@@ -462,7 +470,11 @@ export function Question({
           boundaries at all (Safari does this) would otherwise leave every word
           in the "not reached yet" grey for the whole sentence — the question
           would go pale and stay there. No sweep is the normal rendering. */}
-      {rich(question.text, line.speaking && line.word >= 0 ? { word: line.word } : undefined)}</h2>
+      {/* An external sweep is applied only once it has actually reached a word:
+          at -1 every word would render in the not-yet-reached grey. */}
+      {rich(question.text, (sweep && sweep.word >= 0)
+        ? sweep
+        : (line.speaking && line.word >= 0 ? { word: line.word } : undefined))}</h2>
   </>;
 
   const answers = <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 12, marginTop: phone ? 18 : 26 }}>

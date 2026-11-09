@@ -45,7 +45,7 @@ const VOICE_CACHE_URL = import.meta.env?.VITE_VOICE_CACHE || null;
    from (absent until the Worker deploys, and then it is the browser voice),
    and which band the kid is in. One object so the lesson, the paper, the
    mission and placement cannot drift into different contracts. */
-const VOICE = { cacheUrl: VOICE_CACHE_URL };
+
 
 /* Karla's clips, loaded once. A missing manifest is the normal state for a tranche
    that has not been generated: every step without clips falls back to
@@ -259,6 +259,15 @@ export function App() {
      surfaces referenced a `muted` that did not exist — which builds clean and
      throws ReferenceError in front of a kid. */
   const muted = state.settings?.sound === false;
+  /* How fast Hope reads for THIS kid. Unset means "use the band's default"
+     (bands a and b 0.9, c 1.0); pressing Slower anywhere saves 0.75 here and it
+     applies on every surface, this session and every one after. */
+  const voiceRate = state.settings?.voiceRate ?? null;
+  const VOICE = { cacheUrl: VOICE_CACHE_URL, rate: voiceRate };
+  const setVoiceRate = (r) => update(s => {
+    s.settings = { ...(s.settings || {}), voiceRate: r };
+    return s;
+  });
   // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
@@ -799,6 +808,7 @@ export function App() {
         grade={state.grade}
         blobDir={BLOB_DIR}
         voiceManifest={voiceManifest} voiceBase={VOICE_DIR} voiceCacheUrl={VOICE_CACHE_URL}
+        voiceRate={voiceRate} onVoiceRate={setVoiceRate}
         muted={state.settings?.sound === false}
         pricer={(a) => { const p = payout({ ...a, bonusPct: bonusPct(state.owned) });
           return { amount: p.total, pills: p.parts.map(label => ({ label, kind: /streak/.test(label) ? 'streak' : /first/.test(label) ? 'first' : /blitz/.test(label) ? 'blitz' : /token/.test(label) ? 'token' : 'help' })) }; }}

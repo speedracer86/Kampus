@@ -12,11 +12,11 @@
 import { color, type, radius, font, numeral, dollars } from './tokens.js';
 import { Button, Kicker, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
-import { Question } from './question.jsx';
+import { Question, rich, richWords, plainSpeech } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
 import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
 import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
-import { SayItShowIt, clipsFor, clipMetaFor, useSpokenLine, SweptLine } from './say-it-show-it.jsx';
+import { SayItShowIt, clipsFor, clipMetaFor, useSpokenLine, SweptLine, rateFor } from './say-it-show-it.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -95,7 +95,7 @@ export function LessonSpine({ moves, active, progress, earned, tokensLeft, onJum
     keep working. Lesson state is {stepIdx, solved[], notes[]} — notes are what
     "Write it down" appends, and they are the cheat-sheet column she keeps. */
 export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', voice, muted = false,
-  onDone, onEvent = () => {}, phone }) {
+  onDone, onEvent = () => {}, phone, voiceRate, onRate }) {
   // The second worked example is IN teach.steps, spliced in by the seam (year.js)
   // before the final Try it. It used to sit behind a "Show me another one" button;
   // owner verdict, Nov 2026: an opt-in affordance asks for exactly the executive
@@ -194,6 +194,7 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
     {sayLines?.length
       ? <SayItShowIt lines={sayLines} clips={clips} meta={clipMeta} muted={muted} phone={phone}
           mode={mode} worldColor={worldColor || color.ink} blobDir={blobDir}
+          voiceRate={voiceRate} onRate={onRate}
           speak={speak} fallbackText={step?.speak || step?.prompt}
           onCue={(name, i) => {
             setCue(c => ({ name, nonce: c.nonce + 1 }));
@@ -242,9 +243,12 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
 
 /** A Snag with no honest distractors: the question, then the answer on request.
     Nothing is scored here either way — the Snag never pays and never penalises. */
-export function SnagReveal({ sn, shown, onReveal, phone }) {
+export function SnagReveal({ sn, shown, onReveal, phone, sweep }) {
   return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32 }}>
-    <h2 style={{ fontSize: phone ? 24 : 34, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.25, margin: 0 }}>{sn.q}</h2>
+    {/* Through rich(), like every other question: this one rendered its string
+        raw, so a fraction or an exponent in a Snag would have printed its tags. */}
+    <h2 style={{ fontSize: phone ? 24 : 34, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.25, margin: 0 }}>
+      {rich(sn.q, sweep && sweep.word >= 0 ? sweep : undefined)}</h2>
     {shown
       ? <div style={{ marginTop: 22, background: color.greenTint, borderRadius: radius.dayCell, padding: phone ? '16px 18px' : '20px 24px' }}>
         <Kicker style={{ marginBottom: 6 }}>What it was</Kicker>
@@ -276,7 +280,7 @@ function MoveHost({ intro, voice, mode = 'c', muted = false, worldColor, blobDir
   const meta = intro && voice?.manifest
     ? (clipMetaFor(voice.manifest, intro.voiceSkill, intro.kind, intro.index) || [])[0]
     : null;
-  const line = useSpokenLine({ src, text: intro?.say, meta, muted });
+  const line = useSpokenLine({ src, text: intro?.say, meta, muted, rate: rateFor(mode, voice?.rate) });
   const { play, stop } = line;
   // The manifest arrives a moment after the first render, so auto-play waits for
   // it to SETTLE (null means not yet, an object means answered). Speaking before
@@ -301,6 +305,94 @@ function MoveHost({ intro, voice, mode = 'c', muted = false, worldColor, blobDir
         : <span style={{ color: line.speaking ? color.ink : color.muted }}>{intro.say}</span>}
     </div>
   </div>;
+}
+
+/* The Snag reads too (owner's play-test, Nov 2026).
+
+   It was the one question surface still silent, and it is the FIRST beat of a
+   new idea — the kid meets it before anything has been taught, which is the
+   worst possible moment to leave her decoding alone.
+
+   One reader for the whole beat: the scene, then the question, as one sentence.
+   The held word crosses from the scene paragraph into the question's own
+   heading, which is why `rich()` takes an offset and why Question accepts an
+   external sweep instead of starting a second voice of its own.
+
+   "No pay, just a look" means there is nothing here to protect: no answer to
+   give away, no gate to open. The standard law still holds — nothing read
+   aloud points at the answer, and nothing here touches what the Snag records. */
+function SnagScreen({ sn, intro, pickable, snagTried, onAttempt, onReveal, phone, tokensLeft,
+  voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor }) {
+  /* Karla's intro, the scene and the question are ONE beat, read by one voice.
+
+     They were three things a moment ago: the move host read the intro with its
+     own face and its own clip while this screen read the scene with a second
+     face — two companions on one surface and two utterances cancelling each
+     other, which is the bug this whole order is about. The intro is folded in
+     here instead, so there is one reader, one face, and the kid hears
+     "Wait — look at this first", the scene, and the question in that order.
+
+     The cost is that the Snag does not use the recorded move_snag clip; the
+     whole beat is one line, and the voice cache will serve it as one clip the
+     moment the Worker ships. */
+  const introWords = React.useMemo(() => (intro?.say ? richWords(intro.say) : []), [intro?.say]);
+  const sceneWords = React.useMemo(() => richWords(sn.scene), [sn.scene]);
+  const leadWords = introWords.length + sceneWords.length;
+  const words = React.useMemo(
+    () => [...introWords, ...sceneWords, ...richWords(sn.q)], [introWords, sceneWords, sn.q]);
+  const saying = React.useMemo(
+    () => [intro?.say, sn.scene, sn.q].filter(Boolean).map(plainSpeech).join(' ').trim(),
+    [intro?.say, sn.scene, sn.q]);
+  const clipSrc = voice?.cacheUrl && saying.length <= 200
+    ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
+    : null;
+  const line = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted,
+    rate: rateFor(mode, voice?.rate) });
+  const { play, stop } = line;
+  React.useEffect(() => {
+    if (mode === 'a' && !muted) play();
+    return stop;
+  }, [sn.q, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
+
+  const live = line.speaking && line.word >= 0;
+  /* The pale "not reached yet" grey belongs INSIDE the line being read, not
+     across the whole screen. The beat is three blocks and thirty-odd words, so
+     a single sweep spanning all of them left the question greyed for the ten
+     seconds it took to read the intro and the scene — which is the "greyed out"
+     a kid saw, just not stuck. A block that is not being read right now renders
+     normally; only the one she is on carries the sweep. */
+  const at = line.word;
+  const on = (start, end) => (live && at >= start && at < end ? { word: at, offset: start } : undefined);
+  const sweep = { word: on(leadWords, words.length) ? at : -1, offset: leadWords, onRead: () => play() };
+
+  return <>
+    {!!intro?.say && <div style={{ ...lBase, fontSize: phone ? 15 : 16.5, fontWeight: 600,
+      lineHeight: 1.4, marginBottom: 12, color: color.muted }}>
+      {rich(intro.say, on(0, introWords.length))}</div>}
+    {mode !== 'c' && <div style={{ ...lBase, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+      <button onClick={() => play()} aria-label="Read it to me" style={{ ...lBase, border: 'none', padding: 0,
+        cursor: 'pointer', width: 44, height: 44, flex: 'none', borderRadius: radius.full,
+        background: worldColor || color.ink, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+        <Blob name="Singing" size={34} dir={blobDir} /></button>
+      <span style={{ fontSize: 14, fontWeight: 600, color: color.muted }}>
+        {line.speaking ? 'Reading it to you\u2026' : 'Tap me to hear it.'}</span>
+    </div>}
+    <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32, marginBottom: 18 }}>
+      <Kicker style={{ marginBottom: 10 }}>The snag</Kicker>
+      <p style={{ fontSize: phone ? 18 : 22, lineHeight: 1.45, margin: 0 }}>
+        {rich(sn.scene, on(introWords.length, leadWords))}</p>
+    </div>
+    {pickable
+      ? <Question
+        snag
+        question={{ text: sn.q, answers: sn.answers, correct: sn.answers.indexOf(String(sn.ans)) }}
+        context="lesson" tokensLeft={tokensLeft} feedback={null}
+        sweep={sweep} worldColor={worldColor} blobDir={blobDir} muted={muted} mode={mode}
+        onAnswer={onAttempt}
+        onHelp={() => {}} />
+      : <SnagReveal sn={sn} shown={snagTried} phone={phone} sweep={sweep}
+        onReveal={onReveal} />}
+  </>;
 }
 
 /** The New idea / re-teach view: title, lede, three ruled step rows, last value green.
@@ -412,7 +504,8 @@ export function LessonDone({ earned, rewardCents = 50, moves, onAgain, onDone, p
 const phaseFor = (m) => (m?.snag ? 'snag' : (m?.teach && !m.questions) ? 'teach' : 'run');
 
 export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rewardCents = 50,
-  blobDir = '/blobs/', voiceManifest = null, voiceBase = '/voice/', voiceCacheUrl = null, muted = false,
+  blobDir = '/blobs/', voiceManifest = null, voiceBase = '/voice/', voiceCacheUrl = null,
+  voiceRate = null, onVoiceRate, muted = false,
   pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
@@ -554,7 +647,7 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
     onAgain={() => { setAt(0); setQi(0); setEarned(0); setStreak(0); setTokensLeft(tokensPerRun); resetUi(); setPhase('run'); }}
     onDone={onDone || onExit} phone={phone} />);
 
-  const host = (intro) => <MoveHost intro={intro} voice={{ manifest: voiceManifest, base: voiceBase }}
+  const host = (intro) => <MoveHost intro={intro} voice={{ manifest: voiceManifest, base: voiceBase, rate: voiceRate }}
     mode={voiceMode(grade)} muted={muted} worldColor={lesson.world?.color} blobDir={blobDir} phone={phone} />;
 
   if (phase === 'snag') {
@@ -566,19 +659,11 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
        she wins it by shape and learns nothing. */
     const pickable = (sn.answers?.length || 0) > 1;
     return frame(<div>
-      {host(move.snagIntro)}
-      <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32, marginBottom: 18 }}>
-        <Kicker style={{ marginBottom: 10 }}>The snag</Kicker>
-        <p style={{ fontSize: phone ? 18 : 22, lineHeight: 1.45, margin: 0 }}>{sn.scene}</p>
-      </div>
-      {pickable ? <Question
-        snag
-        question={{ text: sn.q, answers: sn.answers, correct: sn.answers.indexOf(String(sn.ans)) }}
-        context="lesson" tokensLeft={tokensLeft} feedback={null}
-        onAnswer={() => { onEvent('snag_attempt', { move: move.id }); setSnagTried(true); }}
-        onHelp={() => {}} />
-        : <SnagReveal sn={sn} shown={snagTried} phone={phone}
-          onReveal={() => { onEvent('snag_attempt', { move: move.id, revealed: true }); setSnagTried(true); }} />}
+      <SnagScreen sn={sn} intro={move.snagIntro} pickable={pickable} snagTried={snagTried} phone={phone} tokensLeft={tokensLeft}
+        voice={{ cacheUrl: voiceCacheUrl, rate: voiceRate }} mode={voiceMode(grade)} blobDir={blobDir} muted={muted}
+        worldColor={lesson.world?.color}
+        onAttempt={() => { onEvent('snag_attempt', { move: move.id }); setSnagTried(true); }}
+        onReveal={() => { onEvent('snag_attempt', { move: move.id, revealed: true }); setSnagTried(true); }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginTop: 20 }}>
         <span style={{ fontSize: 16, color: color.muted, flex: 1, minWidth: 220 }}>
           {snagTried ? 'You don’t have the move for this one yet. Here it is.' : 'Have a go. It costs nothing either way.'}</span>
@@ -592,6 +677,7 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
   if (phase === 'teach') return frame(<TeachSteps teach={move.teach} phone={phone} onEvent={onEvent}
     grade={grade} worldColor={lesson.world?.color} blobDir={blobDir} muted={muted}
     voice={{ manifest: voiceManifest, base: voiceBase, skill: lesson.skill }}
+    voiceRate={voiceRate} onRate={onVoiceRate}
     onDone={() => { onEvent('move_complete', { move: move.id }); setProgress(p => ({ ...p, [move.id]: { done: 1 } })); finishMove(); }} />);
 
   if (phase === 'reteach') return frame(<ReteachView teach={lesson.reteach} phone={phone} label="2 fresh ones →"
@@ -605,7 +691,7 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
     {host(move.intro)}
     <Question question={q} context="lesson" teachFree={teachFree} tokensLeft={tokensLeft}
     worldColor={lesson.world?.color} mode={voiceMode(grade)} blobDir={blobDir} muted={muted}
-    voice={{ cacheUrl: voiceCacheUrl }}
+    voice={{ cacheUrl: voiceCacheUrl, rate: voiceRate }}
     feedback={ui.feedback} picked={ui.picked} payout={ui.payout} help={ui.help} teachConfirm={ui.teachConfirm}
     onAnswer={answer}
     onHelp={(next, { needsConfirm } = {}) => setUi(u => ({ ...u, help: next, teachConfirm: next === 'teach' && !!needsConfirm && !teachFree }))}
