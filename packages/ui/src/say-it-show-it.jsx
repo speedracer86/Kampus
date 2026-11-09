@@ -485,7 +485,7 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
         if (how === 'blocked') {
           // The clip is refused for want of a tap; the browser voice would be
           // refused for the same reason. Settle honestly and invite.
-          invite('blocked');
+          invite(how);
           done();
           return;
         }
