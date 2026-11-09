@@ -16,6 +16,7 @@ import { HomeStack } from '@kampus/ui/home-stack';
 import { QuizRound } from '@kampus/ui/quiz';
 import { DailyLesson } from '@kampus/ui/lesson';
 import { AssessmentIntro, AssessmentRunner, UnitQuizResults, GradeTestResults } from '@kampus/ui/assessment';
+import { voiceMode } from '@kampus/ui/teach-layouts';
 import { RewardsScreen } from '@kampus/ui/rewards';
 import { GrownUps } from '@kampus/ui/parents';
 import { BusinessScreen } from '@kampus/ui/business';
@@ -40,6 +41,11 @@ const VOICE_DIR = '/voice/';
    Absent is the normal state and a supported one: the question screens use the
    browser voice, which still sweeps on its own boundary events. */
 const VOICE_CACHE_URL = import.meta.env?.VITE_VOICE_CACHE || null;
+/* What every question surface needs to be read aloud: where the clips come
+   from (absent until the Worker deploys, and then it is the browser voice),
+   and which band the kid is in. One object so the lesson, the paper, the
+   mission and placement cannot drift into different contracts. */
+const VOICE = { cacheUrl: VOICE_CACHE_URL };
 
 /* Karla's clips, loaded once. A missing manifest is the normal state for a tranche
    that has not been generated: every step without clips falls back to
@@ -248,6 +254,11 @@ export function App() {
   }, []);
   const [studentId, setStudentId] = useState(() => loadFamily().students[0]?.id || DEFAULT_STUDENT_ID);
   const [state, setState] = useState(() => load(studentId));
+  /* One reading of the sound setting, for every screen that can make a noise.
+     It was written inline at each call site, and the three new question
+     surfaces referenced a `muted` that did not exist — which builds clean and
+     throws ReferenceError in front of a kid. */
+  const muted = state.settings?.sound === false;
   // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
@@ -472,6 +483,7 @@ export function App() {
     }
 
     return <PlacementRunner question={placement.question}
+      voice={VOICE} mode={voiceMode(state.grade)} blobDir={BLOB_DIR} muted={muted}
       progress={placementProgress(placement.machine)}
       onExit={() => {
         // She chose to stop. Clear the flag rather than re-offering on every load.
@@ -728,6 +740,8 @@ export function App() {
       </div>;
     }
     return <AssessmentRunner kind={isQuiz ? 'quiz' : 'test'} questions={papers}
+      voice={VOICE} mode={voiceMode(state.grade)} blobDir={BLOB_DIR} muted={muted}
+      worldColor={worldForUnit(unitById(currentDay(state).day?.unit))?.color}
       initialAnswers={state.openPaper?.answers} initialAt={state.openPaper?.at || 0}
       onProgress={(answers, at) => update(s => {
         if (s.openPaper) s.openPaper = { ...s.openPaper, answers, at };
@@ -799,6 +813,7 @@ export function App() {
     const w = WORLDS[topic];
     return <div style={{ minHeight: '100vh', background: color.ground }}>
       <QuizRound
+        voice={VOICE} muted={muted}
         questions={questions}
         grade={state.grade}
         tier={state.tiers[tierKey(state.grade, topic)] || 1}

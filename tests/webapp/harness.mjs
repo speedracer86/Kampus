@@ -376,6 +376,11 @@ export async function open(state = {}, hash = '') {
      would be empty exactly when it mattered. */
   await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
   await page.addInitScript(() => {
+    /* Roughly a word every 45ms. Real speech is nearer 300ms a word; 12ms was
+       quick but meant a three-word question ("71 + 44") finished inside a single
+       sample, so a test could see the sweep work and still not be able to watch
+       it move. Slow enough to observe, fast enough to keep the suite short. */
+    const WORD_MS = 45;
     const sink = {
       speak: (u) => {
         try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
@@ -393,9 +398,9 @@ export async function open(state = {}, hash = '') {
           }
           at = next;
           try { u.onboundary({ charIndex: at, name: 'word' }); } catch { /* fine */ }
-          setTimeout(step, 12);
+          setTimeout(step, WORD_MS);
         };
-        setTimeout(step, 12);
+        setTimeout(step, WORD_MS);
       },
       cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,
@@ -434,6 +439,11 @@ export async function openBlank(hash = '') {
      would be empty exactly when it mattered. */
   await page.exposeFunction('__kampusSpoke', (text) => { spoken.push(String(text).slice(0, 300)); });
   await page.addInitScript(() => {
+    /* Roughly a word every 45ms. Real speech is nearer 300ms a word; 12ms was
+       quick but meant a three-word question ("71 + 44") finished inside a single
+       sample, so a test could see the sweep work and still not be able to watch
+       it move. Slow enough to observe, fast enough to keep the suite short. */
+    const WORD_MS = 45;
     const sink = {
       speak: (u) => {
         try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* page closing */ }
@@ -451,9 +461,9 @@ export async function openBlank(hash = '') {
           }
           at = next;
           try { u.onboundary({ charIndex: at, name: 'word' }); } catch { /* fine */ }
-          setTimeout(step, 12);
+          setTimeout(step, WORD_MS);
         };
-        setTimeout(step, 12);
+        setTimeout(step, WORD_MS);
       },
       cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
       speaking: false, pending: false, paused: false,

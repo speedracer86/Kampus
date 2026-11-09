@@ -53,8 +53,28 @@ export default async function run(check) {
     await p3.close();
   }
 
-  const week = weekKey();
-  const day = (back) => new Date(Date.now() - back * 86400000).toISOString().slice(0, 10);
+  /* A FROZEN THURSDAY.
+
+     This used to seed "three days this week" as today, yesterday and the day
+     before, and compare against a week the browser worked out from its own
+     clock. Weeks start on Monday, so on a Monday two of those three days are
+     last week's — the count fell to one, the label turned singular ("day she
+     showed up"), and the plural-only regex below read it as null. The suite
+     failed every Monday and had done since it was written; nobody ran it on one.
+
+     So the clock is pinned, in the page and in the expectation, to a date that
+     is mid-week whatever day it really is. 15 October 2026 is a Thursday. */
+  const NOW = Date.UTC(2026, 9, 15, 12, 0, 0);
+  const freezeClock = (p) => p.addInitScript((fixed) => {
+    const Real = Date;
+    class Frozen extends Real {
+      constructor(...args) { super(...(args.length ? args : [fixed])); }
+      static now() { return fixed; }
+    }
+    globalThis.Date = Frozen;
+  }, NOW);
+  const week = weekKey(NOW);
+  const day = (back) => new Date(NOW - back * 86400000).toISOString().slice(0, 10);
 
   /* Three days this week, plus older weeks that must NOT leak in. */
   const events = [
@@ -79,7 +99,9 @@ export default async function run(check) {
   const page = await open({ grade: 6, name: 'Talia', lessonPointer: 3, ledger,
     settings: { cap: 500 } }, '#parents');
   await page.waitForTimeout(400);
-  // Seed the event log the way the app stores it, then reload into it.
+  // Seed the event log the way the app stores it, then reload into it — with the
+  // clock pinned, so the browser buckets the week the same way the seed does.
+  await freezeClock(page);
   await page.evaluate((ev) => localStorage.setItem('kampus_v1_local_events', JSON.stringify(ev)), events);
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(400);
@@ -95,7 +117,8 @@ export default async function run(check) {
 
   /* The figures, against the independent count. */
   const figure = (label) => {
-    const m = t.match(new RegExp(`([\\d.$]+)\\n${label}`));
+    // "day"/"days" both: the screen pluralises and the reader should not care.
+    const m = t.match(new RegExp(`([\\d.$]+)\\n${label.replace(/^days? /, 'days? ')}`));
     return m ? m[1] : null;
   };
   check('days she showed up matches an independent count',

@@ -754,3 +754,22 @@ cut off by the clip a moment later — it waits for the manifest to SETTLE now
 boundaries at all would have left the whole question in unreached grey for the
 length of the sentence; no sweep is the normal rendering until one actually
 starts.
+
+### Hope reads everywhere (Nov 2026)
+
+The question screens already spoke; the ASSESSMENTS did not. Owner's call: a
+self-learning kid has no adult beside her to be the reader, and that is most
+true on a paper — the screen where a reading difficulty is most easily mistaken
+for a maths one. So Inspection Day, the grade test and placement now read the
+question with the same sweep as a lesson.
+
+- `AssessmentRunner`, `PlacementRunner` and `QuizRound` forward the voice
+  contract to `Question`; the mission screen, which renders its own prompt
+  rather than a `Question`, got the same `useSpokenLine` + `rich(text, {word})`
+  treatment it was missing.
+- **The question only.** On a paper there is no hint to read and no step to
+  walk: reading the question is an accommodation, reading the way to the answer
+  would be sitting the test for her. The spec asserts no swept word exists
+  anywhere outside the prompt.
+- Band policy, scoring and gating are untouched, and the spec checks every
+  answer stays tappable while she is being read to.

@@ -10,7 +10,7 @@
 
    Grade 4 day 52 is eqFrac, tranche 1, The Kitchen — the exact lesson the owner's
    family re-tests on. Part of the suite; run via `npm run test:webapp`. */
-import { open, text, driveToTeach, nextButton } from './harness.mjs';
+import { open, text, driveToTeach, nextButton, clickText } from './harness.mjs';
 
 /** Stub Audio so CI stays silent but every play() is observable.
 
@@ -398,6 +398,83 @@ export default async function run(check) {
     check('answering while she is still talking works',
       /\+\$|Not yet|Next/.test(await text(page)), (await text(page)).slice(0, 60).replace(/\n/g, ' '));
     await page.close();
+  }
+
+  /* ---- everywhere means everywhere: the paper reads too (owner, Nov 2026) ----
+
+     A self-learning kid has no adult beside her to be the reader, and that is
+     most true on an assessment — the screen where a reading difficulty gets
+     mistaken for a maths one. So Hope reads the QUESTION on Inspection Day, the
+     grade test and placement, with the same sweep as a lesson.
+
+     And only the question. On a paper there is no hint to read and no step to
+     walk: reading the question is an accommodation, reading the way to the
+     answer would be sitting the test for her. */
+  {
+    // Grade 4 is band a, so she is read to without having to ask.
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 0, kredits: 100 }, '#quiz');
+    await captureAudio(page);
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+    await clickText(page, 'Start');
+    await page.waitForTimeout(700);
+
+    const paper = () => page.evaluate(() => {
+      const h2 = document.querySelector('h2');
+      const inHeading = h2 ? [...h2.querySelectorAll('[data-say-word]')].length : 0;
+      const everywhere = [...document.querySelectorAll('[data-say-word]')].length;
+      const answers = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+      const now = h2 ? [...h2.querySelectorAll('[data-say-word]')].findIndex(w => w.dataset.wordState === 'now') : -1;
+      return { inHeading, everywhere, answers: answers.length, anyDisabled: answers.some(b => b.disabled), now };
+    });
+
+    /* Replayed rather than raced. "71 + 44" takes the browser voice well under a
+       second, so sampling after the screen settles watches a question that has
+       already been read. */
+    await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+    const frames = [];
+    for (let i = 0; i < 14; i++) { frames.push(await paper()); await page.waitForTimeout(25); }
+    const read = frames.filter(f => f.inHeading > 0);
+    check('Inspection Day reads the question aloud, with the sweep',
+      read.length > 0, `${read.length} of ${frames.length} frames carried word spans`);
+    const held = [...new Set(read.map(f => f.now).filter(n => n >= 0))];
+    check('and the held word moves through it', held.length > 1, `words held: ${held.join(', ') || 'none'}`);
+
+    /* The clause that keeps it an accommodation rather than a hint. */
+    check('nothing below the question is ever read on a paper',
+      frames.every(f => f.everywhere === f.inHeading),
+      JSON.stringify(frames.map(f => [f.inHeading, f.everywhere]).find(([a, b]) => a !== b) || 'question only'));
+
+    check('every answer stays tappable while she is read to',
+      frames.every(f => f.answers >= 2 && !f.anyDisabled),
+      JSON.stringify(frames.map(f => [f.answers, f.anyDisabled])[0]));
+
+    // Scoring is untouched: the paper still hands in and still marks.
+    const t = await text(page);
+    check('and the paper is still a paper', /of \d+|Hand it in|Question/i.test(t),
+      t.slice(0, 70).replace(/\n/g, ' '));
+    await page.close();
+
+    /* Placement is the first maths a new kid meets, sat before anyone knows
+       what she can read. It reads too. */
+    const pl = await open({ grade: 3, name: 'Talia', placementQueued: true }, '#home');
+    await pl.waitForTimeout(600);
+    await clickText(pl, 'Start');
+    await pl.waitForTimeout(600);
+    const onPlacement = /FINDING YOUR LEVEL|of 24/i.test(await text(pl));
+    if (onPlacement) {
+      await pl.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+      let sawWords = 0;
+      for (let i = 0; i < 14; i++) {
+        sawWords = Math.max(sawWords, await pl.evaluate(() =>
+          (document.querySelector('h2')?.querySelectorAll('[data-say-word]') || []).length));
+        await pl.waitForTimeout(25);
+      }
+      check('placement questions are read with the sweep too', sawWords > 0, `${sawWords} words swept`);
+    } else {
+      check('placement was reachable to check', false, (await text(pl)).slice(0, 80).replace(/\n/g, ' '));
+    }
+    await pl.close();
   }
 
   /* ---- LAW 2: nothing else sounds while Karla speaks ----

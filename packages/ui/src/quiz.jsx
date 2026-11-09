@@ -3,7 +3,9 @@
 import { color, type, radius, shadow, band, streakColors, confetti, font } from './tokens.js';
 import { Button, Kicker, ProgressBar, KreditCoin, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
-import { Question, rich, plainSpeech } from './question.jsx';
+import { Question, rich, plainSpeech, richWords } from './question.jsx';
+import { useSpokenLine } from './say-it-show-it.jsx';
+import { voiceMode } from './teach-layouts.jsx';
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
 const MULT = (s) => s >= 10 ? 3 : s >= 6 ? 2 : s >= 3 ? 1.5 : 1;
@@ -122,14 +124,34 @@ export function TeachPanel({ steps, onClose }) {
 const TOKENS_PER_RUN = 3;
 const BLITZ_WINDOW_MS = 8000;
 
-export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, worldColor = '#F0AFCE', mascot = 'Ice_cream', blobDir = 'blobs/', focusMode = true, blitz = false, onEvent = () => {}, onQuit }) {
+export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, worldColor = '#F0AFCE', mascot = 'Ice_cream', blobDir = 'blobs/', focusMode = true, blitz = false, onEvent = () => {}, onQuit, voice, muted = false }) {
   const bz = band(grade);
+  // The band comes from the grade this round is being sat at, exactly as it
+  // does in a lesson: a auto-reads, b taps the mascot, c taps "Read it".
+  const mode = voiceMode(grade);
   const fresh = () => ({ qNum: 0, order: questions.map((_, i) => i), retry: false, missed: [], correct: 0, asked: questions.length,
     streak: 0, best: 0, kredits: 0, feedback: null, picked: null, teachConfirm: false, teachOpen: false, helpOpen: null, helpUsed: false, tokenUsed: false,
     tokensLeft: TOKENS_PER_RUN, firstTries: 0, qStart: Date.now(), fixed: 0, resets: 0, gainKey: 0, gained: 0, parts: [] });
   const [st, set] = React.useState(fresh);
   const q = questions[st.order[st.qNum]];
   const fullGain = Math.round((8 + 4 * tier) * MULT(st.streak + 1) * (1 + gearBonus / 100));
+
+  /* Hope reads the question. The words are the ones rich() will RENDER, so the
+     sweep lands on what a reader sees as a word — a fraction is one word, not
+     the three characters it is written with.
+
+     Nothing here can gate: no part of it reaches `st`, the answer buttons or
+     the payout. Audio cannot block her and cannot answer for her. */
+  const words = React.useMemo(() => richWords(q?.text), [q?.text]);
+  const saying = React.useMemo(() => plainSpeech(q?.text), [q?.text]);
+  const clipSrc = voice?.cacheUrl && saying.length <= 200
+    ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
+    : null;
+  const said = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted });
+  React.useEffect(() => {
+    if (mode === 'a' && !muted && q?.text) said.play();
+    return said.stop;
+  }, [q?.text, mode, muted]);   // eslint-disable-line react-hooks/exhaustive-deps
 
   const advance = (s) => {
     const next = { feedback: null, picked: null, teachOpen: false, teachConfirm: false, helpOpen: null, helpUsed: false, tokenUsed: false, qStart: Date.now() };
@@ -193,18 +215,23 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
       <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#fff', border: 'none', boxShadow: shadow.card, borderRadius: radius.full,
         padding: '7px 14px', fontWeight: 700, fontSize: 15, opacity: hudOp, transition: 'opacity .3s' }}><KreditCoin />{st.kredits}</div></div>
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', maxWidth: isChoice ? 1180 : 660, width: '100%', margin: '0 auto', padding: '0 24px 28px' }}>
-      <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => speak(plainSpeech(q.text))} />
+      <Blob name={mascot} size={bz.mascot} dir={blobDir} style={{ cursor: 'pointer' }} onClick={() => said.play()} />
       {/* PLAY_SYSTEM §4: no streak flames anywhere, ever — a chain on screen is a chain
           that can break. The multiplier still pays and still shows in the payout pills,
           where it reads as an earning, not as something to protect. */}
       {st.streak >= 3 && <div style={{ fontSize: 12.5, fontWeight: 800, letterSpacing: '.12em',
         color: color.greenDeep, margin: '10px 0 2px', opacity: hudOp, transition: 'opacity .3s' }}>
         ×{MULT(st.streak)} ON EACH ANSWER</div>}
-      {!isChoice && <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>{rich(q.text)}</h2>}
+      {/* Hope reads the question here too, with the sweep. The mission screen was
+          the last question surface still silent, and it is the one a kid spends
+          a whole round on. Nothing below the prompt is read: not the teach, not
+          the hint — the question only. */}
+      {!isChoice && <h2 style={{ fontSize: bz.question, fontWeight: 800, letterSpacing: '-.02em', lineHeight: 1.15, textAlign: 'center', margin: '10px 0 18px', textWrap: 'pretty', opacity: dim, transition: 'opacity .3s' }}>
+        {rich(q.text, said.speaking && said.word >= 0 ? { word: said.word } : undefined)}</h2>}
       {!isChoice && q.teach && !st.teachOpen && !st.feedback && <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
         <Button variant="gold" size="sm" onClick={() => set(s => ({ ...s, teachConfirm: true }))}>
           {st.tokensLeft > 0 ? `Teach me · ${st.tokensLeft} token${st.tokensLeft > 1 ? 's' : ''} left` : 'Teach me · costs half'}</Button>
-        <Button variant="outline" size="sm" onClick={() => speak(plainSpeech(q.text))}>Read it</Button></div>}
+        <Button variant="outline" size="sm" onClick={() => said.play()}>Read it</Button></div>}
       {!isChoice && st.teachConfirm && <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: color.goldTint, border: `1px solid ${color.goldBorder}`, borderRadius: radius.lg, padding: '14px 18px', marginBottom: 18, width: '100%' }}>
         {st.tokensLeft > 0
           ? <span style={{ fontSize: 15, lineHeight: 1.4, flex: 1, minWidth: 220 }}>Spend a Teach Token? <strong>{st.tokensLeft} left</strong> this run — a token means full pay (~{fullGain}). Save them for the hard ones.</span>
@@ -219,6 +246,7 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
       <div style={{ width: '100%', opacity: dim, transition: 'opacity .3s' }}>
         {q.mode === 'choice' || !q.mode
           ? <Question question={asQuestion(q)} context="mission" tokensLeft={st.tokensLeft}
+            voice={voice} mode={mode} blobDir={blobDir} muted={muted} worldColor={worldColor}
             feedback={st.feedback} picked={st.picked} help={st.helpOpen} teachConfirm={st.teachConfirm}
             payout={st.feedback === 'correct' ? { amount: st.gained, pills: st.parts.map(([label, kind]) => ({ label, kind: PILL_KIND[kind] })) } : null}
             onAnswer={(i) => answer(i, i === q.answerIndex)}

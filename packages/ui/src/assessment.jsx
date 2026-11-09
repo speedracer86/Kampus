@@ -99,8 +99,20 @@ export function QuestionMap({ total, answers = [], at, onJump, phone }) {
  * walks away from, and losing every answer to a reload is not a tax this app gets
  * to charge her.
  */
+/**
+ * The paper: Inspection Day and the grade test.
+ *
+ * HOPE READS HERE TOO (owner, Nov 2026). A self-learning kid has no adult beside
+ * her to be the reader, and that is as true on an assessment as it is in a
+ * lesson — more so, because this is where a reading difficulty gets mistaken
+ * for a maths one. So the voice props pass straight through to Question, which
+ * reads the QUESTION and nothing else: no hint, no teach, no step. Hope reads
+ * what is being asked; she never reads the way to the answer.
+ *
+ * Scoring and gating are untouched by any of it.
+ */
 export function AssessmentRunner({ kind = 'quiz', questions = [], initialAnswers, initialAt = 0,
-  onProgress, onHandIn, onExit }) {
+  onProgress, onHandIn, onExit, voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 900;
   const [answers, setAnswers] = React.useState(() =>
@@ -140,6 +152,7 @@ export function AssessmentRunner({ kind = 'quiz', questions = [], initialAnswers
 
       {/* feedback stays null: nothing is right or wrong until it is handed in */}
       {q && <Question question={q} context={kind} selected={answers[at]} feedback={null}
+        voice={voice} mode={mode} blobDir={blobDir} muted={muted} worldColor={worldColor}
         tokensLeft={0} onAnswer={pick} onHelp={() => {}} />}
 
       {phone && <div style={{ marginTop: 20 }}>

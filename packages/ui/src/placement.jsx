@@ -60,7 +60,11 @@ export function PlacementIntro({ name, minutes = 15, onStart, onExit, blobDir = 
  * @param {{asked:number, of:number}} p.progress
  * @param {(choiceIndex:number) => void} p.onAnswer
  */
-export function PlacementRunner({ question, progress = { asked: 0, of: 24 }, onAnswer, onExit }) {
+/* Placement is the first maths a new kid ever meets here, and it is sat before
+   anyone knows what she can read. Hope reads the question, with the sweep, for
+   the same reason she reads everywhere else. */
+export function PlacementRunner({ question, progress = { asked: 0, of: 24 }, onAnswer, onExit,
+  voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
   // Never shrink: a settled topic shortens the check, and a bar that went backwards
@@ -90,7 +94,8 @@ export function PlacementRunner({ question, progress = { asked: 0, of: 24 }, onA
 
       {/* 'quiz' context: "Read it" only. No hints and no Teach me — help here would
           tell us she can do work she cannot yet do on her own. */}
-      <Question question={question} context="quiz" feedback={null} onAnswer={(i) => onAnswer(i)} />
+      <Question question={question} context="quiz" feedback={null} onAnswer={(i) => onAnswer(i)}
+        voice={voice} mode={mode} blobDir={blobDir} muted={muted} worldColor={worldColor} />
 
       <p style={{ fontSize: 15, color: color.muted, marginTop: 20 }}>
         Not sure? Pick the one you think is closest. Guessing costs you nothing here.</p>
