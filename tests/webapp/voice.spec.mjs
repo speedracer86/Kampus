@@ -664,8 +664,12 @@ export default async function run(check) {
 
      This refuses everything until a flag flips, exactly as the browser does. */
   {
-    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52,
-      days: { '2026-01-02': 1 } }, '#lesson');
+    /* The grade-3 Snag, which is where the owner hit this: ONE reader, reading
+       Karla's intro, the scene and the question as a single folded line through
+       the browser voice. One reader means "the read she was promised" is
+       unambiguous — on a screen with two, the invitation belongs to whichever
+       armed last, which is the design. */
+    const page = await open({ grade: 3, name: 'Talia', lessonPointer: 0 }, '#lesson');
     await page.addInitScript(() => {
       window.__allowAudio = false;
       const RealAudio = window.Audio;
@@ -722,7 +726,9 @@ export default async function run(check) {
       const label = [...document.querySelectorAll('span')]
         .map(x => x.innerText).find(t => /Reading it to you|Tap me to hear it/.test(t || '')) || null;
       const answers = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+      const h2 = document.querySelector('h2');
       return { label, words: document.querySelectorAll('[data-say-word]').length,
+        inQuestion: h2 ? h2.querySelectorAll('[data-say-word]').length : 0,
         answers: answers.length, disabled: answers.filter(b => b.disabled).length };
     });
 
@@ -740,17 +746,66 @@ export default async function run(check) {
       window.__allowAudio = true;
       document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     });
-    let sawWords = 0, sawLabel = null;
+    let sawWords = 0, sawLabel = null, sawInQuestion = 0;
     for (let i = 0; i < 20; i++) {
       const f = await look();
       sawWords = Math.max(sawWords, f.words);
+      sawInQuestion = Math.max(sawInQuestion, f.inQuestion);
       if (f.label === 'Reading it to you…') sawLabel = f.label;
       await page.waitForTimeout(40);
     }
+    /* The QUESTION's own read, not just any read. This passed for a while on
+       the move host's clip coming back while the question — which reads through
+       the browser voice and had no invitation armed at all — stayed silent. */
     check('her first tap anywhere starts the read she was promised',
       sawWords > 0, `${sawWords} words swept after the tap`);
     check('and the label only claims to read once something really is',
       sawLabel === 'Reading it to you\u2026' || sawWords > 0, String(sawLabel));
+    await page.close();
+  }
+
+  /* ---- the sweep survives a voice that says nothing about itself ----
+
+     Chrome's network voices fire NO boundary events. On the owner's browser a
+     question was read aloud with every word left in the not-yet-reached grey —
+     no sweep at all — and every spec passed, because the stub always fired
+     boundaries. This one never does. */
+  {
+    const page = await open({ grade: 4, name: 'Talia', lessonPointer: 52,
+      days: { '2026-01-02': 1 } }, '#lesson');
+    await page.addInitScript(() => {
+      const sink = {
+        speak: (u) => {
+          try { window.__kampusSpoke(String(u?.text ?? u)); } catch { /* fine */ }
+          // Starts, ends, and reports NOTHING in between — a network voice.
+          setTimeout(() => { try { u?.onstart?.({}); } catch { /* fine */ } }, 10);
+          setTimeout(() => { try { u?.onend?.({}); } catch { /* fine */ } }, 3000);
+        },
+        cancel: () => {}, getVoices: () => [], pause: () => {}, resume: () => {},
+        speaking: true, pending: false, paused: false,
+      };
+      try { Object.defineProperty(window, 'speechSynthesis', { get: () => sink, configurable: true }); } catch { /* fine */ }
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(700);
+    await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+
+    const held = new Set();
+    let spans = 0;
+    for (let i = 0; i < 30; i++) {
+      const f = await page.evaluate(() => {
+        const h2 = document.querySelector('h2');
+        const w = h2 ? [...h2.querySelectorAll('[data-say-word]')] : [];
+        return { n: w.length, now: w.findIndex(x => x.dataset.wordState === 'now') };
+      });
+      spans = Math.max(spans, f.n);
+      if (f.now >= 0) held.add(f.now);
+      await page.waitForTimeout(80);
+    }
+    check('a voice that reports no boundaries still sweeps', spans > 0 && held.size > 0,
+      `${spans} words, held: ${[...held].join(', ') || 'none'}`);
+    check('and the sweep MOVES, rather than sitting on the first word',
+      held.size > 1, `held ${held.size} different words`);
     await page.close();
   }
 

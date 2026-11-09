@@ -195,6 +195,39 @@ unexercised ElevenLabs code in this repo sent `output_format` in the body, where
 it is silently ignored, and cost a tranche twice over. Write it against a real
 response, with `--dry` first.
 
+## Field tracing — `?voicetrace=1`
+
+The voice path has produced four defects that exist only on a real page: a
+reader silencing another component's line, an autoplay that never arms, a sweep
+with no boundary events, and an invitation the browser voice never offered.
+Three of them cost several rounds of guessing; the one that was traced was named
+in a single run.
+
+So the trace ships. Add `?voicetrace=1` to any beta URL and the console logs
+every queue claim, autoplay attempt, failure reason, and invitation
+arm/fire/withdraw:
+
+```
+[voice] 175 queued a read, depth 1
+[voice] 175 queue head: clear clip-speaking: false tts-active: false waited: 1
+[voice] 175 play (auto) "Wait — look at this firs" clip: false
+[voice] 177 tts settle blocked active now 0
+[voice] 177 invitation armed by blocked
+```
+
+It is off by default and costs nothing when off — one regex against
+`location.search`, read once. When a kid's browser does something ours does not,
+pull the trace before changing code.
+
+### What the trace answers first
+
+- **`queue head: waiting` forever** — something is stuck speaking. The numbers
+  say which: `clip-speaking` is the audio bus, `tts-active` the utterance count.
+- **No `play (auto)` line at all** — the effect never ran, or its condition was
+  false (band, muted, or an owner that is not reading).
+- **`play (auto)` then nothing** — the voice accepted it and said nothing back;
+  look for `tts start` and whether the chosen voice is `local: false`.
+
 ## Coming from the owner's session (not yours to write)
 
 - Tranche 3 of `speak.js`: the remaining 37 skills plus the re-teach scripts, same

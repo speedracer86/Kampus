@@ -867,3 +867,32 @@ floated right of a hole. The column only exists when it holds something.
 One thing the walk-through caught that the spec did not: opening the walk on a
 miss opened it TWICE on a choice question, once in Question's help column and
 once in this component's own teach strip. One panel per surface.
+
+### The sweep on a real voice, and a trace for the field (Nov 2026)
+
+**Chrome's network voices fire no boundary events.** Only `localService` voices
+report where they are in a sentence, and the word sweep was built on exactly
+that — so on the owner's browser a question was read aloud with every word left
+in the not-yet-reached grey. Every spec passed, because the stub always fired
+boundaries. Two changes, both inside the "two timing sources, one shape"
+contract:
+
+- `speak()` prefers local voices. Not for quality: they are the only ones that
+  report boundaries, and they start without a network round trip.
+- A THIRD timing source. When a voice has started and said nothing about itself
+  for half a second, the sweep is driven from the clock through the same
+  proportional plan the clip path uses without per-word times. A boundary
+  arriving at any point takes over. The spec's stub starts and ends and never
+  reports anything in between; the sweep must still move.
+
+**The browser voice never armed the invitation.** Only the clip path did, so
+every surface reading through the browser voice — the Snag's folded line, any
+question without a cached clip — went silent on a blocked page with no way
+back. That is the owner's live finding (a): a trusted tap that brought nothing
+back. The blocked-read spec now runs on the Snag, where there is one reader and
+"the read she was promised" is unambiguous; removing the fix fails it.
+
+**`?voicetrace=1`** logs every queue claim, autoplay attempt, failure reason and
+invitation arm/fire/withdraw. Off by default, costing one regex. Four defects in
+this path have existed only on real pages, and the one that was traced was named
+in a single run.

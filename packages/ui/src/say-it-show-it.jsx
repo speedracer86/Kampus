@@ -20,7 +20,7 @@ import { color, radius, font } from './tokens.js';
 import { Button, Blob } from './primitives.jsx';
 import { playLines, play as playOne, stop as stopAudio, useSpeaking, isSpeaking, progress } from './audio-bus.jsx';
 import { useReducedMotion } from './juice.jsx';
-import { speak as ttsSpeak, hushSpeech, speechActive } from './util.jsx';
+import { speak as ttsSpeak, hushSpeech, speechActive, vtrace } from './util.jsx';
 
 const sBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -351,6 +351,9 @@ function pump() {
     if (!waiting.length) { pumping = false; return; }
     const head = waiting[0];
     const quiet = !isSpeaking() && !speechActive();
+    vtrace('queue head:', quiet ? 'clear' : 'waiting',
+      'clip-speaking:', isSpeaking(), 'tts-active:', speechActive(),
+      'waited:', Date.now() - head.started, 'behind:', waiting.length - 1);
     if (quiet || Date.now() - head.started >= head.cap) {
       waiting.shift();
       try { head.fn(); } catch { /* a reader must not break the queue */ }
@@ -377,6 +380,7 @@ function pump() {
  */
 export function whenVoiceQuiet(fn, { cap = 10000, every = 150 } = {}) {
   const entry = { fn, cancelled: false, started: Date.now(), cap, every };
+  vtrace('queued a read, depth', waiting.length + 1);
   waiting.push(entry);
   pump();
   return () => {
@@ -416,6 +420,7 @@ let invitation = null;
 function withdrawInvitation(owner) {
   if (!invitation) return;
   if (owner && invitation.owner !== owner) return;
+  vtrace('invitation withdrawn');
   try { globalThis.removeEventListener?.('pointerdown', invitation.run, true); } catch { /* gone */ }
   invitation = null;
 }
@@ -423,6 +428,7 @@ function withdrawInvitation(owner) {
 function inviteFirstTap(owner, fn) {
   withdrawInvitation();
   const run = () => {
+    vtrace('invitation FIRED by a tap');
     withdrawInvitation();
     // Back through the queue, so it still takes its turn.
     whenVoiceQuiet(fn);
@@ -458,9 +464,12 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
   const play = React.useCallback((playRate = rate, { auto = false } = {}) => {
     if (muted) return;
     // A read the kid asked for needs no invitation; she has just tapped.
+    vtrace('play', auto ? '(auto)' : '(tap)', JSON.stringify(String(speech || text).slice(0, 24)),
+      'clip:', !!src);
     const invite = (how) => {
-      if (!auto) return;
-      if (how !== 'blocked' && !activationMissing()) return;
+      if (!auto) { vtrace('no invitation: she asked for this one'); return; }
+      if (how !== 'blocked' && !activationMissing()) { vtrace('no invitation:', how, 'and the page is active'); return; }
+      vtrace('invitation armed by', how);
       inviteFirstTap(mine.current, () => play(playRate, { auto: true }));
     };
     const turn = ++token.current;
@@ -504,15 +513,59 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
     function speakIt(mine2, r) {
       const say = speech || text;
       const spoken = String(say);
+      /* THE THIRD TIMING SOURCE: elapsed time.
+
+         Chrome's network voices fire no `boundary` events whatsoever. On the
+         owner's browser that meant a question read aloud with every word left
+         in the not-yet-reached grey — the sweep simply did not exist, and every
+         spec passed because the stub always fired boundaries.
+
+         So when a voice has started but said nothing about where it is after
+         half a second, the sweep is driven from the clock through the SAME
+         proportional plan the clip path uses when it has no per-word times. It
+         is the weakest of the three sources and the last to be used; a boundary
+         arriving at any point takes over and the clock is dropped. */
+      let gotBoundary = false;
+      let clock = 0;
+      const stopClock = () => { if (clock) { clearInterval(clock); clock = 0; } };
+      const startClock = () => {
+        if (clock || gotBoundary || token.current !== mine2) return;
+        // ~13 characters a second is ordinary speech; the rate scales it.
+        const estMs = Math.max(600, (spoken.length / 13) * 1000 / Math.max(0.3, BASE_TTS_RATE * r));
+        const t0 = Date.now();
+        vtrace('sweep: no boundaries, driving from the clock', `${Math.round(estMs)}ms`);
+        clock = setInterval(() => {
+          if (gotBoundary || token.current !== mine2) { stopClock(); return; }
+          setWord(wordAtFraction(plan, Math.min(1, (Date.now() - t0) / estMs)));
+        }, 60);
+      };
+      const boundaryWatch = setTimeout(startClock, 500);
+
       const u = ttsSpeak(spoken, {
         rate: BASE_TTS_RATE * r,
         onBoundary: (charIndex) => {
           if (token.current !== mine2) return;
+          if (!gotBoundary) vtrace('sweep: boundaries are live');
+          gotBoundary = true;
+          stopClock();
           setWord(wordAtFraction(plan, spoken.length ? charIndex / spoken.length : 0));
         },
-        onEnd: () => { if (token.current === mine2) done(); },
+        onEnd: (how) => {
+          clearTimeout(boundaryWatch);
+          stopClock();
+          if (token.current !== mine2) return;
+          /* THE BROWSER VOICE ARMS THE INVITATION TOO. This said nothing at
+             all, so only the clip path ever offered the kid a tap — and the
+             surfaces that read through the browser voice (the Snag's folded
+             line, any question without a cached clip) went silent on a blocked
+             page with no way back. The reason is passed on, not a literal, so
+             a browser that reports a plain failure before any gesture still
+             gets the invitation. */
+          if (how !== 'ended') { vtrace('tts failed:', how); invite(how); }
+          done();
+        },
       });
-      if (!u) { done(); return; }           // no speech support: silent, not stuck
+      if (!u) { clearTimeout(boundaryWatch); stopClock(); done(); return; }   // no speech support: silent, not stuck
 
       /* THE ENGINE'S OWN FLAG IS THE TRUTH, not our belief about it.
          `onend` does not always arrive — an utterance cancelled by another
@@ -530,7 +583,7 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
         // Two consecutive reads, because the flag is briefly false between
         // queueing an utterance and the voice actually starting.
         settled = live ? 0 : settled + 1;
-        if (settled >= 2) { clearInterval(watch); done(); }
+        if (settled >= 2) { clearInterval(watch); clearTimeout(boundaryWatch); stopClock(); done(); }
       }, 120);
     }
   }, [src, text, speech, plan, muted, rate]);

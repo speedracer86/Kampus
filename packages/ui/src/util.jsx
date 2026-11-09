@@ -17,6 +17,26 @@ export function useWidth(ref) {
   return w;
 }
 
+/* Field tracing, armed by `?voicetrace=1`.
+
+   The voice path has now produced three defects that only exist on a real page
+   — a voice owner stopping another component's line, an autoplay that never
+   arms, a sweep with no boundary events — and each cost several rounds of
+   guessing. A trace from the live tab named the first one in a single run. This
+   is that, made permanent and shippable: off by default, costing nothing, and
+   one query parameter away when a kid's browser does something ours does not. */
+let traceOn = null;
+export function vtraceEnabled() {
+  if (traceOn === null) {
+    try { traceOn = /[?&]voicetrace=1/.test(globalThis.location?.search || ''); } catch { traceOn = false; }
+  }
+  return traceOn;
+}
+export function vtrace(...args) {
+  if (!vtraceEnabled()) return;
+  try { console.log('[voice]', Math.round(performance.now()), ...args); } catch { /* never break playback */ }
+}
+
 /* How many utterances this module believes are still being spoken.
 
    `speechSynthesis.speaking` is the engine's own flag and is the truth about
@@ -42,11 +62,25 @@ export function speak(text, opts) {
   const { rate = 0.95, onBoundary, onEnd } = (typeof opts === 'number' ? { rate: opts } : (opts || {}));
   try {
     const u = new SpeechSynthesisUtterance(String(text).replace(/−/g, ' negative '));
-    /* On a cold page getVoices() is still empty — the list loads lazily — so
+    /* LOCAL VOICES FIRST, and it is not about quality.
+
+       Chrome's network voices — which include the Natural and Google US picks
+       this list used to prefer — fire NO `boundary` events at all. Only
+       localService voices report where they are in the sentence, and the word
+       sweep is built on exactly that. Preferring the prettier remote voice
+       meant the owner's browser showed a kid a question that was read aloud
+       and never highlighted. Local voices also start faster, with no network
+       round trip before the first word.
+
+       On a cold page getVoices() is still empty — the list loads lazily — so
        this finds nothing and leaves `voice` null, which is the browser default
        and perfectly fine. Nothing here may ASSUME the list is populated. */
     const vs = speechSynthesis.getVoices() || [];
-    u.voice = vs.find(v => /Natural/.test(v.name)) || vs.find(v => /Google US/.test(v.name)) || vs.find(v => /Samantha/.test(v.name)) || null;
+    const local = vs.filter(v => v.localService);
+    const pick = (list) => list.find(v => /Samantha|Natural/.test(v.name))
+      || list.find(v => /en[-_]US/i.test(v.lang || ''))
+      || list[0];
+    u.voice = pick(local) || pick(vs.filter(v => /^en/i.test(v.lang || ''))) || null;
     u.rate = rate;
     if (onBoundary) u.onboundary = (e) => { try { onBoundary(e.charIndex ?? 0, e); } catch { /* never break playback */ } };
     /* `onend`/`onerror` are wired whether or not the caller wanted them: a
@@ -58,8 +92,11 @@ export function speak(text, opts) {
       if (settled) return;
       settled = true;
       active = Math.max(0, active - 1);
+      vtrace('tts settle', how, 'active now', active);
       onEnd?.(how);
     };
+    u.onstart = () => vtrace('tts start', JSON.stringify(String(text).slice(0, 24)),
+      'voice:', u.voice?.name || 'default', 'local:', u.voice?.localService);
     u.onend = () => settle('ended');
     /* `not-allowed` is Chrome's autoplay policy, not a broken voice: the page
        has had no user gesture yet. It is reported separately so the caller can
