@@ -96,8 +96,17 @@ export default async function run(check) {
     const t = await text(page);
     check('the spoken script is on screen, not only in the audio',
       /pan of brownies|three equal pieces/i.test(t), t.match(/[^\n]*brownies[^\n]*/)?.[0] || t.slice(0, 80).replace(/\n/g, ' '));
-    check('the three controls are the three that already existed',
-      /Again/.test(t) && /Slower/.test(t) && /Quiet/.test(t));
+    /* §0c: one bar, one reader disc, Slower and Quiet. Again is not a button
+       any more — the disc replays the line — so its absence is part of the
+       check: a stray Again would mean the old chrome came back somewhere. */
+    check('the bar is the only reader chrome: one disc, Slower, Quiet, no Again',
+      await page.evaluate(() => {
+        const b = document.querySelector('[data-voice-bar]');
+        const again = [...document.querySelectorAll('button')].some(x => x.innerText.trim() === 'Again');
+        return !!b && !!b.querySelector('[data-voice-pill="slower"]') && !!b.querySelector('[data-voice-pill="quiet"]')
+          && document.querySelectorAll('[data-voice-play]').length === 1 && !again;
+      }),
+      await page.evaluate(() => document.querySelectorAll('[data-voice-play]').length) + ' disc(s)');
 
     await page.waitForTimeout(CLIP_MS * 1.6);     // long enough for two lines
     const clips = await played(page);
@@ -117,7 +126,9 @@ export default async function run(check) {
     // Solve the step the normal way; audio state must not enter into it.
     for (let i = 0; i < 12; i++) {
       const tapped = await page.evaluate(() => {
-        const segs = [...document.querySelectorAll('button')].filter(b => !b.innerText.trim());
+        const segs = [...document.querySelectorAll('button')]
+          .filter(b => !b.closest('[data-voice-bar]'))   // the reader's disc has no text either
+          .filter(b => !b.innerText.trim());
         if (segs.length) { segs[Math.min(1, segs.length - 1)].click(); return true; }
         const walk = [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Tap for the next line');
         if (walk) { walk.click(); return true; }
@@ -139,11 +150,17 @@ export default async function run(check) {
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForTimeout(500);
     await driveToTeach(page);
-    await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Quiet')?.click());
+    await page.evaluate(() => document.querySelector('[data-voice-pill="quiet"]')?.click());
     await page.waitForTimeout(300);
     const after = await played(page);
     const t = await text(page);
-    check('Quiet offers its way back', /Unmute/.test(t));
+    /* The way back is the lit pill and the line beside the disc, not a second
+       button called Unmute: §0c gives Quiet an on state and the label tells her
+       what tapping does. */
+    check('Quiet says so, and offers its way back',
+      /Quiet\. Tap to hear it\./.test(t)
+      && await page.evaluate(() => document.querySelector('[data-voice-pill="quiet"]')?.getAttribute('aria-pressed')) === 'true',
+      t.match(/Quiet[^\n]*/)?.[0] || '');
     check('Next is still gated by the step with Quiet on',
       (await nextButton(page))?.disabled === true, JSON.stringify(await nextButton(page)));
 
@@ -151,6 +168,21 @@ export default async function run(check) {
     await page.waitForTimeout(400);
     check('and nothing plays after Quiet', (await played(page)).length === 0,
       (await played(page)).join(', '));
+
+    /* THE BAR SAYS "Quiet. Tap to hear it." AND THAT HAS TO BE TRUE.
+
+       The tap that turns Quiet off is the same tap that asks for the line, and
+       React has not re-rendered in between — so a play() guarded on the `muted`
+       of the render the tap happened in refuses, and the bar's own invitation
+       brings back nothing. First tap, not second. */
+    await page.evaluate(() => { window.__played.length = 0; });
+    await page.evaluate(() => document.querySelector('[data-voice-play]')?.click());
+    await page.waitForTimeout(500);
+    const backOn = await played(page);
+    check('the tap the bar invites brings the line back on the FIRST tap',
+      backOn.length > 0, backOn.length ? backOn[0] : 'nothing played');
+    check('and Quiet is no longer lit',
+      await page.evaluate(() => document.querySelector('[data-voice-pill="quiet"]')?.getAttribute('aria-pressed')) === 'false');
     await page.close();
   }
 
@@ -190,7 +222,9 @@ export default async function run(check) {
         // per round, rather than trusting a readout that may still be 0.
         const read = [...document.querySelectorAll('div')]
           .map(d => d.textContent.trim()).find(t => /^\d+\/\d+$/.test(t));
-        const segs = [...document.querySelectorAll('button')].filter(x => !x.innerText.trim());
+        const segs = [...document.querySelectorAll('button')]
+          .filter(x => !x.closest('[data-voice-bar]'))
+          .filter(x => !x.innerText.trim());
         if (!segs.length) return false;
         const demoTarget = read ? Number(read.split('/')[0]) : 0;
         const pick = demoTarget > 0 ? demoTarget - 1 : attempt % segs.length;
@@ -309,8 +343,7 @@ export default async function run(check) {
        line. Measured as a fraction of the line, so it does not depend on which
        line happens to be playing. */
     const sweepReach = async () => {
-      await page.evaluate(() => [...document.querySelectorAll('button')]
-        .find(b => b.innerText.trim() === 'Again')?.click());
+      await page.evaluate(() => document.querySelector('[data-voice-play]')?.click());
       // Far enough in that one playback rate is several WORDS ahead of the
       // other. At 200ms of a 1.6s clip both rates were still on word one, and
       // the check compared two identical numbers and called it agreement.
@@ -326,8 +359,7 @@ export default async function run(check) {
       });
     };
     const atFull = await sweepReach();
-    await page.evaluate(() => [...document.querySelectorAll('button')]
-      .find(b => b.innerText.trim() === 'Slower')?.click());
+    await page.evaluate(() => document.querySelector('[data-voice-pill="slower"]')?.click());
     await page.waitForTimeout(120);
     const atSlow = await sweepReach();
     check('Slower slows the sweep with the voice, not just the voice',
@@ -379,8 +411,7 @@ export default async function run(check) {
     /* Replay it rather than racing it: the browser voice finishes a short
        question in well under a second, so sampling after the page settles
        watches a sentence that has already been read. */
-    await page.evaluate(() => [...document.querySelectorAll('button')]
-      .find(b => b.getAttribute('aria-label') === 'Read it to me')?.click());
+    await page.evaluate(() => document.querySelector('[data-voice-play]')?.click());
     const frames = [];
     for (let i = 0; i < 14; i++) { frames.push(await look()); await page.waitForTimeout(25); }
     const swept = frames.filter(f => f.words > 0);
@@ -438,7 +469,7 @@ export default async function run(check) {
     /* Replayed rather than raced. "71 + 44" takes the browser voice well under a
        second, so sampling after the screen settles watches a question that has
        already been read. */
-    await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+    await page.evaluate(() => document.querySelector('[data-voice-play]')?.click());
     const frames = [];
     for (let i = 0; i < 14; i++) { frames.push(await paper()); await page.waitForTimeout(25); }
     const read = frames.filter(f => f.inHeading > 0);
@@ -470,7 +501,7 @@ export default async function run(check) {
     await pl.waitForTimeout(600);
     const onPlacement = /FINDING YOUR LEVEL|of 24/i.test(await text(pl));
     if (onPlacement) {
-      await pl.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+      await pl.evaluate(() => document.querySelector('[data-voice-play]')?.click());
       let sawWords = 0;
       for (let i = 0; i < 14; i++) {
         sawWords = Math.max(sawWords, await pl.evaluate(() =>
@@ -496,7 +527,7 @@ export default async function run(check) {
     const onSnag = /The snag/i.test(t);
     check('a first lesson opens on the Snag', onSnag, t.slice(0, 70).replace(/\n/g, ' '));
     if (onSnag) {
-      await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+      await page.evaluate(() => document.querySelector('[data-voice-play]')?.click());
       const seen = [];
       for (let i = 0; i < 16; i++) {
         seen.push(await page.evaluate(() => {
@@ -518,7 +549,7 @@ export default async function run(check) {
         live.every(f => f.inQuestion < f.total),
         JSON.stringify(live[0]));
       check('one companion on the Snag, not two',
-        await page.evaluate(() => document.querySelectorAll('[aria-label="Read it to me"]').length) === 1);
+        await page.evaluate(() => document.querySelectorAll('[data-voice-play]').length) === 1);
     }
     await page.close();
   }
@@ -543,13 +574,13 @@ export default async function run(check) {
     if (started) {
       await page.waitForTimeout(900);
       check('one reader on the mission screen, not two',
-        await page.evaluate(() => document.querySelectorAll('[aria-label="Read it to me"]').length) === 1,
-        String(await page.evaluate(() => document.querySelectorAll('[aria-label="Read it to me"]').length)));
+        await page.evaluate(() => document.querySelectorAll('[data-voice-play]').length) === 1,
+        String(await page.evaluate(() => document.querySelectorAll('[data-voice-play]').length)));
 
       /* The face sits in the lesson's slot — inside the question card, above the
          prompt — not floating over the top of the screen on its own. */
       const placed = await page.evaluate(() => {
-        const face = document.querySelector('[aria-label="Read it to me"]');
+        const face = document.querySelector('[data-voice-play]');
         const h2 = document.querySelector('h2');
         if (!face || !h2) return null;
         const f = face.getBoundingClientRect();
@@ -561,7 +592,7 @@ export default async function run(check) {
       check('the companion sits in the lesson\'s slot, not floating over the screen',
         !!placed && placed.above && placed.near, JSON.stringify(placed));
 
-      await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+      await page.evaluate(() => document.querySelector('[data-voice-play]')?.click());
       const frames = [];
       for (let i = 0; i < 24; i++) {
         frames.push(await page.evaluate(() => {
@@ -722,19 +753,22 @@ export default async function run(check) {
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForTimeout(1200);
 
+    /* The bar's own state, not a sentence found somewhere on the page: §0c put
+       the reader's state in one place and it is the only honest source for
+       "does the screen claim to be reading". */
     const look = () => page.evaluate(() => {
-      const label = [...document.querySelectorAll('span')]
-        .map(x => x.innerText).find(t => /Reading it to you|Tap me to hear it/.test(t || '')) || null;
+      const bar = document.querySelector('[data-voice-bar]');
       const answers = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
       const h2 = document.querySelector('h2');
-      return { label, words: document.querySelectorAll('[data-say-word]').length,
+      return { state: bar?.dataset.voiceState || null, label: bar?.innerText.trim().split('\n')[0] || null,
+        words: document.querySelectorAll('[data-say-word]').length,
         inQuestion: h2 ? h2.querySelectorAll('[data-say-word]').length : 0,
         answers: answers.length, disabled: answers.filter(b => b.disabled).length };
     });
 
     const blocked = await look();
     check('a blocked read never claims to be reading',
-      blocked.label === 'Tap me to hear it.', JSON.stringify(blocked.label));
+      blocked.state === 'idle', JSON.stringify(blocked));
     check('and nothing is swept while nothing is being said', blocked.words === 0,
       `${blocked.words} words`);
     check('the screen stays fully tappable while the voice is blocked',
@@ -746,12 +780,12 @@ export default async function run(check) {
       window.__allowAudio = true;
       document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
     });
-    let sawWords = 0, sawLabel = null, sawInQuestion = 0;
+    let sawWords = 0, sawReading = false, sawInQuestion = 0;
     for (let i = 0; i < 20; i++) {
       const f = await look();
       sawWords = Math.max(sawWords, f.words);
       sawInQuestion = Math.max(sawInQuestion, f.inQuestion);
-      if (f.label === 'Reading it to you…') sawLabel = f.label;
+      if (f.state === 'reading') sawReading = true;
       await page.waitForTimeout(40);
     }
     /* The QUESTION's own read, not just any read. This passed for a while on
@@ -759,8 +793,8 @@ export default async function run(check) {
        the browser voice and had no invitation armed at all — stayed silent. */
     check('her first tap anywhere starts the read she was promised',
       sawWords > 0, `${sawWords} words swept after the tap`);
-    check('and the label only claims to read once something really is',
-      sawLabel === 'Reading it to you\u2026' || sawWords > 0, String(sawLabel));
+    check('and the bar only claims to read once something really is',
+      sawReading || sawWords > 0, sawReading ? 'reading' : `${sawWords} words`);
     await page.close();
   }
 
@@ -788,7 +822,7 @@ export default async function run(check) {
     });
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForTimeout(700);
-    await page.evaluate(() => document.querySelector('[aria-label="Read it to me"]')?.click());
+    await page.evaluate(() => document.querySelector('[data-voice-play]')?.click());
 
     const held = new Set();
     let spans = 0;
@@ -829,7 +863,7 @@ export default async function run(check) {
       let max = 0;
       const tick = setInterval(() => { max = Math.max(max, window.__playing); }, 10);
       for (let i = 0; i < 4; i++) {
-        [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Again')?.click();
+        document.querySelector('[data-voice-play]')?.click();
         await new Promise(r => setTimeout(r, 40));
       }
       await new Promise(r => setTimeout(r, 300));

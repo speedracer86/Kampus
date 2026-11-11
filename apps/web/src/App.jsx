@@ -269,6 +269,13 @@ export function App() {
     s.settings = { ...(s.settings || {}), voiceRate: r };
     return s;
   });
+  /* Quiet, from the voice bar on any reading surface (§0c). It is the SOUND
+     SETTING, not a per-screen toggle: a kid who cannot bear the voice presses it
+     once and means it everywhere and tomorrow too. */
+  const setMuted = (m) => update(s => {
+    s.settings = { ...(s.settings || {}), sound: !m };
+    return s;
+  });
   // A hash deep-link so a screen can be opened directly (headless screenshots, sharing a
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
@@ -494,6 +501,7 @@ export function App() {
 
     return <PlacementRunner question={placement.question}
       voice={VOICE} mode={voiceMode(state.grade)} blobDir={BLOB_DIR} muted={muted}
+      onRate={setVoiceRate} onMuted={setMuted}
       progress={placementProgress(placement.machine)}
       onExit={() => {
         // She chose to stop. Clear the flag rather than re-offering on every load.
@@ -751,6 +759,7 @@ export function App() {
     }
     return <AssessmentRunner kind={isQuiz ? 'quiz' : 'test'} questions={papers}
       voice={VOICE} mode={voiceMode(state.grade)} blobDir={BLOB_DIR} muted={muted}
+      onRate={setVoiceRate} onMuted={setMuted}
       worldColor={worldForUnit(unitById(currentDay(state).day?.unit))?.color}
       initialAnswers={state.openPaper?.answers} initialAt={state.openPaper?.at || 0}
       onProgress={(answers, at) => update(s => {
@@ -809,7 +818,7 @@ export function App() {
         grade={state.grade}
         blobDir={BLOB_DIR}
         voiceManifest={voiceManifest} voiceBase={VOICE_DIR} voiceCacheUrl={VOICE_CACHE_URL}
-        voiceRate={voiceRate} onVoiceRate={setVoiceRate}
+        voiceRate={voiceRate} onVoiceRate={setVoiceRate} onMuted={setMuted}
         muted={state.settings?.sound === false}
         pricer={(a) => { const p = payout({ ...a, bonusPct: bonusPct(state.owned) });
           return { amount: p.total, pills: p.parts.map(label => ({ label, kind: /streak/.test(label) ? 'streak' : /first/.test(label) ? 'first' : /blitz/.test(label) ? 'blitz' : /token/.test(label) ? 'token' : 'help' })) }; }}
@@ -824,7 +833,7 @@ export function App() {
     const w = WORLDS[topic];
     return <div style={{ minHeight: '100vh', background: color.ground }}>
       <QuizRound
-        voice={VOICE} muted={muted}
+        voice={VOICE} muted={muted} onRate={setVoiceRate} onMuted={setMuted}
         questions={questions}
         grade={state.grade}
         tier={state.tiers[tierKey(state.grade, topic)] || 1}

@@ -124,10 +124,10 @@ export function TeachPanel({ steps, onClose }) {
 const TOKENS_PER_RUN = 3;
 const BLITZ_WINDOW_MS = 8000;
 
-export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, worldColor = '#F0AFCE', mascot = 'Ice_cream', blobDir = 'blobs/', focusMode = true, blitz = false, onEvent = () => {}, onQuit, voice, muted = false }) {
+export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, worldColor = '#F0AFCE', mascot = 'Ice_cream', blobDir = 'blobs/', focusMode = true, blitz = false, onEvent = () => {}, onQuit, voice, muted = false, onRate, onMuted }) {
   const bz = band(grade);
   // The band comes from the grade this round is being sat at, exactly as it
-  // does in a lesson: a auto-reads, b taps the mascot, c taps "Read it".
+  // does in a lesson: a is read to without asking, b and c tap the bar's disc.
   const mode = voiceMode(grade);
   const fresh = () => ({ qNum: 0, order: questions.map((_, i) => i), retry: false, missed: [], correct: 0, asked: questions.length,
     streak: 0, best: 0, kredits: 0, feedback: null, picked: null, teachConfirm: false, teachOpen: false, helpOpen: null, helpUsed: false, tokenUsed: false,
@@ -294,6 +294,7 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
         {q.mode === 'choice' || !q.mode
           ? <Question question={asQuestion(q)} context="mission" tokensLeft={st.tokensLeft}
             voice={voice} mode={mode} blobDir={blobDir} muted={muted} worldColor={worldColor}
+            onRate={onRate} onMuted={onMuted}
             feedback={st.feedback} picked={st.picked} help={st.helpOpen} teachConfirm={st.teachConfirm}
             payout={st.feedback === 'correct' ? { amount: st.gained, pills: st.parts.map(([label, kind]) => ({ label, kind: PILL_KIND[kind] })) } : null}
             onAnswer={(i) => answer(i, i === q.answerIndex)}

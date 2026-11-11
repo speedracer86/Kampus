@@ -23,7 +23,9 @@ export default async function run(check) {
         const b = [...document.querySelectorAll('button')]
           .find(x => /^(Next|Start the mission|Skip to the move|Show me the move)/.test(x.innerText.trim()) && !x.disabled);
         if (b) { b.click(); return true; }
-        const seg = [...document.querySelectorAll('button')].filter(x => !x.innerText.trim());
+        const seg = [...document.querySelectorAll('button')]
+          .filter(x => !x.closest('[data-voice-bar]'))   // the reader's disc has no text either
+          .filter(x => !x.innerText.trim());
         if (seg.length) { seg[Math.min(1, seg.length - 1)].click(); return true; }
         const walk = [...document.querySelectorAll('button')].find(x => x.innerText.trim() === 'Tap for the next line');
         if (walk) { walk.click(); return true; }

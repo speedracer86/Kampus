@@ -170,22 +170,28 @@ try {
 
     const silent = await read('section[data-reteach="silent"]');
     check('an unscripted re-teach panel still renders its rows', silent?.rows === 3, JSON.stringify(silent?.rows));
-    check('and offers no voice controls at all',
-      !/Again|Slower|Quiet/.test(silent?.text || ''), (silent?.text || '').split('\n').slice(-2).join(' / '));
+    /* §0c: the bar is there whether or not the bank scripted this panel — an
+       unscripted one still reads its title aloud. What it must NOT have is the
+       old Again / Unmute chrome, which the bar replaced. */
+    check('an unscripted panel still gets the voice bar, and none of the old chrome',
+      /Slower/.test(silent?.text || '') && /Quiet/.test(silent?.text || '')
+      && !/\bAgain\b/.test(silent?.text || '') && !/Unmute/.test(silent?.text || ''),
+      (silent?.text || '').split('\n').slice(-2).join(' / '));
     check('nothing is highlighted when there is no script', silent?.lit.length === 0, JSON.stringify(silent?.lit));
 
     const voiced = await read('section[data-reteach="voiced"]');
     check('a scripted re-teach panel shows the spoken lines as text',
       /Look at the bottom row first/.test(voiced?.text || ''));
-    check('and offers the same three controls as the teach steps',
-      /Again/.test(voiced?.text || '') && /Slower/.test(voiced?.text || '') && /Quiet/.test(voiced?.text || ''));
+    check('and offers the same bar as the teach steps — a disc, Slower, Quiet',
+      /Slower/.test(voiced?.text || '') && /Quiet/.test(voiced?.text || '')
+      && !/\bAgain\b/.test(voiced?.text || ''));
     check('the way off the panel is live before a single clip plays', voiced?.goDisabled === false,
       voiced?.goDisabled === false ? 'enabled' : 'DISABLED');
 
     // Replay from the top and watch it, rather than reading the state it settles
     // in: the script is prompt → row.1 → row.2, and the order is the contract.
-    await page.evaluate(() => [...document.querySelectorAll('section[data-reteach="voiced"] button')]
-      .find(b => b.innerText.trim() === 'Again')?.click());
+    await page.evaluate(() =>
+      document.querySelector('section[data-reteach="voiced"] [data-voice-play]')?.click());
     const during = [];
     for (let i = 0; i < 20; i++) {
       during.push(await read('section[data-reteach="voiced"]'));
@@ -217,8 +223,8 @@ try {
       after?.continued === 0, `onContinue fired ${after?.continued} times`);
 
     // Quiet, the control a kid who cannot bear the voice will reach for.
-    await page.evaluate(() => [...document.querySelectorAll('section[data-reteach="voiced"] button')]
-      .find(b => b.innerText.trim() === 'Quiet')?.click());
+    await page.evaluate(() =>
+      document.querySelector('section[data-reteach="voiced"] [data-voice-pill="quiet"]')?.click());
     await page.waitForTimeout(60);
     await page.evaluate(() => { window.__played.length = 0; });
     await page.waitForTimeout(300);

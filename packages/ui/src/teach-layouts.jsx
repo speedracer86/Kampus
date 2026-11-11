@@ -11,7 +11,7 @@
    Every layout follows the same two ADHD rules as the rest of the product: a wrong
    pick reveals the hint and lets her carry on, and nothing is timed. */
 import { color, radius, font, numeral, world } from './tokens.js';
-import { Button, Kicker, Blob } from './primitives.jsx';
+import { Button, Kicker } from './primitives.jsx';
 
 const tBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -269,39 +269,3 @@ export function NotesCounter({ count = 0, total = 4 }) {
 }
 
 /* --------------------------------------------------------------- voice ----- */
-/**
- * Band a reads every step aloud on open; band b is the same row without the
- * controls; band c is the "Read it to me" pill the lesson already had. Quiet is
- * per-session and sticky — a kid who wants it off should not have to ask twice.
- */
-export function VoiceRow({ mode = 'c', text, worldColor = color.ink, quiet, onQuiet, speak, blobDir = '/blobs/', phone }) {
-  const [reading, setReading] = React.useState(false);
-  const read = (rate = 1) => { if (quiet) return; setReading(true); speak?.(text, rate); setTimeout(() => setReading(false), 1200); };
-  // Band a auto-reads each new step; b and c never auto-read.
-  React.useEffect(() => { if (mode === 'a' && text) read(); }, [text, mode, quiet]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (mode === 'c') return <button onClick={() => read()} style={{ ...tBase, border: 'none', cursor: 'pointer',
-    background: color.surface, borderRadius: radius.full, padding: '8px 15px', fontSize: 13, fontWeight: 700 }}>
-    Read it to me</button>;
-
-  return <div style={{ ...tBase, display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-    <span style={{ width: 64, height: 64, flex: 'none', borderRadius: radius.full, background: worldColor,
-      display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
-      <Blob name="Singing" size={48} dir={blobDir} /></span>
-    {mode === 'a' && <>
-      <div style={{ flex: 1, minWidth: 140 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, color: color.muted }}>
-          {quiet ? 'Quiet for now.' : reading ? 'Reading it to you…' : 'Ready when you are.'}</div>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 18, marginTop: 6 }}>
-          {[9, 15, 18, 13, 7].map((h, i) => <span key={i} style={{ width: 4, borderRadius: 2,
-            height: reading ? h : 4, background: color.ink, transition: 'height .18s ease' }} />)}
-        </div>
-      </div>
-      {!phone && <div style={{ display: 'flex', gap: 8 }}>
-        <Button variant="ink" size="sm" onClick={() => read()}>Again</Button>
-        <Button variant="outline" size="sm" onClick={() => read(0.8)}>Slower</Button>
-        <Button variant="ghost" size="sm" onClick={() => onQuiet?.(!quiet)}>{quiet ? 'Unmute' : 'Quiet'}</Button>
-      </div>}
-    </>}
-  </div>;
-}

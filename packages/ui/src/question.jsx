@@ -8,19 +8,25 @@
 import { color, type, radius, font, numeral } from './tokens.js';
 import { Kicker, Button } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
-import { useSpokenLine, rateFor, whenVoiceQuiet } from './say-it-show-it.jsx';
-import { Blob } from './primitives.jsx';
+import { useSpokenLine, rateFor, whenVoiceQuiet, VoiceBar, SLOWER_RATE } from './say-it-show-it.jsx';
+// (no illustration here any more: the reader's disc lives in the voice bar)
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
 /** Help offered per context. Quiz and test allow read-aloud only (§0 / README). */
+/* READ IT LEFT THE HELP GRID (§0c). It was a help pill only because the reader
+   was optional; the voice bar is now the first row of every sheet that reads, so
+   asking for the line back is not a form of help and does not belong in a list
+   with Hint and Teach me. A quiz and a test are left with no help at all, which
+   is what they always meant: on the paper, the only thing she was ever offered
+   was the read. */
 export const HELP_BY_CONTEXT = {
-  lesson: ['read', 'hint', 'show', 'teach'],
-  mission: ['read', 'hint', 'show', 'teach'],
-  quiz: ['read'],
-  test: ['read'],
+  lesson: ['hint', 'show', 'teach'],
+  mission: ['hint', 'show', 'teach'],
+  quiz: [],
+  test: [],
 };
-const HELP_LABEL = { read: 'Read it', hint: 'Hint', show: 'Show me', teach: 'Teach me' };
+const HELP_LABEL = { hint: 'Hint', show: 'Show me', teach: 'Teach me' };
 
 /** Cost caption for a help pill. Teach is free during a lesson's new skill (§0). */
 function helpCost(id, { tokensLeft, teachFree }) {
@@ -36,19 +42,27 @@ function GivenRow({ k, v, dim }) {
   </div>;
 }
 
-/** The 2x2 help grid. Desktop sits on ground; phone sits inside the sheet. */
+/** The help pills. Desktop sits on ground; phone sits inside the sheet. */
 function HelpGrid({ ids, open, onPick, tokensLeft, teachFree, phone }) {
-  return <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: phone ? 8 : 10 }}>
+  /* §0c: three full-width pills in ONE column on desktop, three in a row on
+     phone. Two columns of four only made sense while Read it was one of them. */
+  return <div style={{ display: 'grid',
+    gridTemplateColumns: phone ? `repeat(${Math.max(1, ids.length)}, 1fr)` : '1fr',
+    gap: phone ? 8 : 10 }}>
     {ids.map(id => {
       const picked = open === id, teach = id === 'teach';
       return <button key={id} onClick={() => onPick(id)} style={{ ...qBase, display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', gap: 10, cursor: 'pointer', border: 'none', textAlign: 'left',
-        minHeight: phone ? 44 : 52, padding: phone ? '0 14px' : '0 16px', borderRadius: radius.full,
+        minHeight: phone ? 44 : 48, padding: phone ? '0 10px' : '0 18px', borderRadius: radius.full,
         background: picked ? color.ink : teach ? color.gold : phone ? color.track : color.surface,
-        color: picked ? '#fff' : color.ink, fontSize: phone ? 14 : 15, fontWeight: 700 }}>
-        <span>{HELP_LABEL[id]}</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: picked ? 'rgba(255,255,255,.7)' : color.mutedDeep, whiteSpace: 'nowrap' }}>
-          {helpCost(id, { tokensLeft, teachFree })}</span>
+        color: picked ? '#fff' : color.ink, fontSize: phone ? 13.5 : 15, fontWeight: 700 }}>
+        <span style={{ whiteSpace: 'nowrap' }}>{HELP_LABEL[id]}</span>
+        {/* Three pills share one phone row (§0c), and "Free" is the least
+            informative thing on any of them — so on a phone only the pill that
+            actually costs something says what it costs. */}
+        {(!phone || teach) && <span style={{ fontSize: 12, fontWeight: 700,
+          color: picked ? 'rgba(255,255,255,.7)' : color.mutedDeep, whiteSpace: 'nowrap' }}>
+          {helpCost(id, { tokensLeft, teachFree })}</span>}
       </button>;
     })}
   </div>;
@@ -347,7 +361,7 @@ export function Question({
   feedback = null, picked = null, payout = null, help = null, teachConfirm = false, selected = null, snag = false,
   onAnswer = () => {}, onHelp = () => {}, onTeachConfirm = () => {}, onNext,
   onEvent = () => {}, style, worldColor, mode = 'c', voice, blobDir = '/blobs/', muted = false,
-  sweep = null,
+  sweep = null, onRate, onMuted,
 }) {
   const ref = React.useRef(null);
   const w = useWidth(ref);
@@ -360,8 +374,8 @@ export function Question({
   const accent = worldColor || color.ink;
 
   /* THE QUESTION SPEAKS, in the same voice and with the same sweep as the
-     teaching (owner, Nov 2026). Band policy is unchanged: a auto-reads, b has
-     the companion to tap, c keeps the "Read it to me" pill it already had.
+     teaching (owner, Nov 2026). Band policy is unchanged: a is read to without
+     asking; b and c tap the bar's disc (§0c).
 
      Fallback chain: the voice cache's clip, then the browser voice through
      plainSpeech(), then silence. The cache Worker is not deployed yet, so today
@@ -387,7 +401,12 @@ export function Question({
   const clipSrc = voice?.cacheUrl && saying.length <= 200
     ? `${voice.cacheUrl}?text=${encodeURIComponent(saying)}`
     : null;
-  const line = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted,
+  /* Quiet is the app's sound setting wherever the app gives us one to write
+     (`onMuted`), so one tap means it on every surface and after a reload. The
+     local flag is the fallback for a surface rendered without one. */
+  const [localQuiet, setLocalQuiet] = React.useState(false);
+  const quiet = muted || localQuiet;
+  const line = useSpokenLine({ src: clipSrc, text: words, speech: saying, muted: quiet,
     rate: rateFor(mode, voice?.rate) });
   /* A caller may own the read instead — the Snag does, because it reads its
      scene and then its question as one sentence and the held word crosses from
@@ -396,9 +415,9 @@ export function Question({
   const ownsRead = !sweep;
   React.useEffect(() => {
     // Waits for whoever is already reading (the move host, usually) to finish.
-    const cancel = (ownsRead && mode === 'a' && !muted) ? whenVoiceQuiet(() => line.play(undefined, { auto: true })) : null;
+    const cancel = (ownsRead && mode === 'a' && !quiet) ? whenVoiceQuiet(() => line.play(undefined, { auto: true })) : null;
     return () => { cancel?.(); line.stop(); };
-  }, [question.text, mode, muted, ownsRead]);  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [question.text, mode, quiet, ownsRead]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   // A Snag is "no pay, just a look": no help stack, because having the move is the point.
   const helpIds = snag ? [] : (HELP_BY_CONTEXT[context] || HELP_BY_CONTEXT.mission);
@@ -407,9 +426,6 @@ export function Question({
     if (locked) return;
     const next = help === id ? null : id;
     onHelp(next, { needsConfirm: id === 'teach' && !teachFree });
-    // The read-aloud pill now goes through the same path as the rest, so band c
-    // gets the sweep too rather than a different, quieter product.
-    if (next === 'read') (sweep ? sweep.onRead?.() : line.play());
     if (next) onEvent('help_open', { id: next });
   };
   const commit = (i) => { if (feedback) return; onAnswer(i); };
@@ -423,8 +439,11 @@ export function Question({
     const down = pressed === i && !feedback;
     return {
       ...qBase, display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', cursor: feedback ? 'default' : 'pointer',
-      background: right ? color.greenTint : wrong ? color.redTint : chosen ? color.fill : color.surface,
-      border: `1.5px solid ${right ? color.green : wrong ? color.red : chosen ? accent : color.rule}`,
+      /* §0c: a plain answer is a #F5F7F9 tile with NO border. The 1.5px rule was
+         there to hold a white tile off a white sheet, and it competed with the
+         three borders that mean something — right, wrong, chosen. */
+      background: right ? color.greenTint : wrong ? color.redTint : chosen ? color.surface : color.fill,
+      border: `1.5px solid ${right ? color.green : wrong ? color.red : chosen ? accent : 'transparent'}`,
       borderRadius: radius.lg, padding: phone ? '16px 16px' : '20px 22px', width: '100%',
       /* A tap should feel like it landed. The press is a scale, not a colour
          flash: colour on this card already means right, wrong or chosen, and a
@@ -463,21 +482,40 @@ export function Question({
       teachFree={teachFree} onTeachConfirm={onTeachConfirm} phone={phone} />
   </>;
 
-  /* Bands a and b get the companion's face, lit by the real speaking state —
-     the same disc the teach screens use, so she is the same person here. */
-  const companion = ownsRead && mode !== 'c' && <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-    <button onClick={() => line.play()} aria-label="Read it to me" style={{ ...qBase, border: 'none', padding: 0,
-      cursor: 'pointer', width: 44, height: 44, flex: 'none', borderRadius: radius.full, background: accent,
-      display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
-      <Blob name="Singing" size={34} dir={blobDir} /></button>
-    <span style={{ fontSize: 14, fontWeight: 600, color: color.muted }}>
-      {line.speaking ? 'Reading it to you\u2026' : 'Tap me to hear it.'}</span>
-  </div>;
+  /* THE VOICE BAR IS THE SHEET'S FIRST ROW (§0c).
+
+     It replaces band a and b's companion row above the h2 and band c's "Read
+     it" help pill — one chrome, one place, on every surface that reads. The
+     band changes the disc, the idle line and the prompt size; nothing about the
+     layout moves between grades 3 and 8, which is the defect this came from
+     (the quiz surface reflowing while she was reading it).
+
+     A caller may own the read instead — the Snag folds Karla's intro, the scene
+     and the question into one sentence — and then the bar plays THAT, through
+     `sweep.onRead`, so there is still exactly one reader and one bar.
+
+     NOTHING HERE GATES. Check, Next and Continue are live throughout. */
+  const reader = sweep
+    ? { speaking: !!sweep.speaking, play: (r, o) => sweep.onRead?.(r, o) }
+    : line;
+  const voiceBar = <VoiceBar mode={mode} phone={phone} worldColor={accent} blobDir={blobDir}
+    speaking={reader.speaking} muted={quiet} slower={(voice?.rate ?? 0) > 0 && voice.rate <= SLOWER_RATE}
+    onPlay={() => {
+      // The tap that turns Quiet off is also the tap that asks for the line, and
+      // `quiet` will not have changed yet when play() checks it — so say so.
+      if (quiet) { setLocalQuiet(false); onMuted?.(false); }
+      reader.play(undefined, { force: quiet });
+    }}
+    onSlower={() => { onRate?.(SLOWER_RATE); reader.play(SLOWER_RATE); }}
+    onQuiet={(next) => { setLocalQuiet(next); onMuted?.(next); if (next) line.stop(); }} />;
+
+  const promptSize = phone
+    ? (mode === 'a' ? 28 : mode === 'b' ? 26 : 24)
+    : (mode === 'a' ? 48 : mode === 'b' ? 44 : 40);
 
   const prompt = <>
     {snag && <Kicker style={{ marginBottom: 10 }}>No pay, just a look</Kicker>}
-    {companion}
-    <h2 style={{ fontSize: phone ? 26 : 40, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.18,
+    <h2 style={{ fontSize: promptSize, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.18,
       margin: 0, textWrap: 'pretty' }}>
       {/* Only once the sweep has actually started. A voice that reports no
           boundaries at all (Safari does this) would otherwise leave every word
@@ -501,7 +539,7 @@ export function Question({
   const answers = <div style={{ display: 'grid', gridTemplateColumns: phone ? '1fr' : '1fr 1fr', gap: 12, marginTop: phone ? 18 : 26 }}>
     {(question.answers || []).map((a, i) => <button key={i} onClick={() => pick(i)} {...press(i)} style={answerStyle(i)}>
       <span style={{ ...qBase, flex: 'none', width: 30, height: 30, borderRadius: radius.full,
-        background: (!feedback && (sel === i || selected === i)) ? accent : color.fill,
+        background: (!feedback && (sel === i || selected === i)) ? accent : color.surface,
         color: (!feedback && (sel === i || selected === i)) ? '#fff' : color.mutedDeep,
         display: 'grid', placeItems: 'center', fontSize: 13, fontWeight: 700,
         transition: 'background .18s ease, color .18s ease' }}>{i + 1}</span>
@@ -534,11 +572,13 @@ export function Question({
           {givens.slice(0, 3).map((g, i) => <div key={i}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: color.muted }}>{g.k}</div>
             <div style={{ ...numeral(26), marginTop: 2 }}>{g.v}</div></div>)}</div>}
-        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 20,
-          borderTop: `3px solid ${accent}` }}>
-          {prompt}{scaffold}{answers}{helpCol}{!snag && wrongBar}
-          {!snag && feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
-          {checkBar}
+        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
+          {voiceBar}
+          <div style={{ padding: '20px 16px' }}>
+            {prompt}{scaffold}{answers}{helpCol}{!snag && wrongBar}
+            {!snag && feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
+            {checkBar}
+          </div>
         </div>
       </>
       /* The left column only exists when it holds something. A Snag has no
@@ -548,14 +588,16 @@ export function Question({
       : <div style={{ display: 'grid', gridTemplateColumns: hasLeftColumn ? '340px 1fr' : '1fr',
         gap: 48, alignItems: 'start' }}>
         {hasLeftColumn && <div>{knowCol}{helpCol}</div>}
-        {/* The world the lesson is in, as a hairline on the sheet it is taught
-            in — the same colour the companion wears, so the question screen
-            belongs to the same place the teaching did. */}
-        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 32,
-          borderTop: `3px solid ${accent}` }}>
-          {prompt}{scaffold}{answers}{!snag && wrongBar}
-          {!snag && feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
-            <PayoutLine payout={payout} /></div>}
+        {/* §0c: the sheet carries no 3px world border. The world is already in
+            the spine, the disc and the chosen-answer ring; a coloured lid on the
+            sheet made the voice bar look like a second header. */}
+        <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
+          {voiceBar}
+          <div style={{ padding: '32px 40px' }}>
+            {prompt}{scaffold}{answers}{!snag && wrongBar}
+            {!snag && feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
+              <PayoutLine payout={payout} /></div>}
+          </div>
         </div>
       </div>}
   </div>;

@@ -47,7 +47,7 @@ export default async function run(check) {
     await page.waitForTimeout(500);
     let t = await text(page);
     check('the License opens on its intro with the two things it costs',
-      /License/i.test(t) && /20/.test(t) && /Read it only/i.test(t));
+      /License/i.test(t) && /20/.test(t) && /hear it read/i.test(t));
 
     const before = await bizSnapshot(page);
     await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Start|Begin|ready/i.test(b.innerText))?.click());

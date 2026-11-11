@@ -16,8 +16,8 @@
    Fallback: a step with no clips keeps today's behaviour — speechSynthesis on the
    step's `speak` text — so an unauthored tranche degrades to what shipped before.
 */
-import { color, radius, font } from './tokens.js';
-import { Button, Blob } from './primitives.jsx';
+import { color, radius, font, type } from './tokens.js';
+import { Blob } from './primitives.jsx';
 import { playLines, play as playOne, stop as stopAudio, useSpeaking, isSpeaking, progress } from './audio-bus.jsx';
 import { useReducedMotion } from './juice.jsx';
 import { speak as ttsSpeak, hushSpeech, speechActive, vtrace } from './util.jsx';
@@ -100,8 +100,9 @@ export function wordAt(plan, t, d) {
  * @param {string[]|null} p.clips                    manifest paths, or null to fall back
  * @param {(cue:string, index:number) => void} p.onCue fires as each line starts
  */
-export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, autoplay = true,
-  fallbackText, onCue, phone, mode = 'b', worldColor, blobDir = '/blobs/', voiceRate, onRate }) {
+export function useScript({ lines = [], clips, meta, speak, muted = false, autoplay = true,
+  fallbackText, onCue, phone, mode = 'b', worldColor, blobDir = '/blobs/', voiceRate, onRate,
+  onMuted } = {}) {
   const [at, setAt] = React.useState(-1);
   const [word, setWord] = React.useState(-1);
   // How much of the script she has already said. Kept apart from `at` because
@@ -119,8 +120,9 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
 
   const hasClips = Array.isArray(clips) && clips.length > 0;
 
-  const run = React.useCallback(async (playbackRate = rate) => {
-    if (quiet || muted) return;
+  const run = React.useCallback(async (playbackRate = rate, { force = false } = {}) => {
+    // `force`: see useSpokenLine's play. The tap that un-quiets also reads.
+    if ((quiet || muted) && !force) return;
     const mine = ++token.current;
     stopped.current = false;
     setThrough(0);
@@ -175,36 +177,46 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
     return () => cancelAnimationFrame(raf);
   }, [speaking, at, plan, reduced]);
 
-  const control = (label, onClick, variant = 'outline') =>
-    <Button key={label} variant={variant} size="sm" onClick={onClick}>{label}</Button>;
+  /* THE VOICE BAR IS THE SHEET'S FIRST ROW (§0c), not a row inside the body.
 
-  /* Band a keeps her companion (§0a).
+     It is built here because this hook owns the voice state — quiet, the pace,
+     whether she is speaking — and handed back for the SHEET to place, because a
+     sheet puts the bar at its own top edge (padding 0, `overflow: hidden` so the
+     radius still clips it) and the script down in its padded body.
 
-     This is not decoration. Grades 3-4 get a CHARACTER who reads to them, not a
-     row of text with buttons — and when the clips landed for grades 3-5, this
-     component replaced VoiceRow wholesale and quietly took the companion away
-     from the youngest band: the exact kids the voice pass was built for. The
-     teach spec caught it ("grades 3-4 get the reading companion, not the pill").
-     So the companion is part of say-it-show-it for band a, with the real
-     speaking state driving her face rather than VoiceRow's 1.2s guess. */
-  const companion = mode === 'a' && <div style={{ display: 'flex', alignItems: 'center', gap: 16,
-    marginBottom: 14, flexWrap: 'wrap' }}>
-    <span style={{ width: 64, height: 64, flex: 'none', borderRadius: radius.full,
-      background: worldColor || color.ink, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
-      <Blob name="Singing" size={48} dir={blobDir} /></span>
-    <div style={{ flex: 1, minWidth: 140 }}>
-      <div style={{ fontSize: 15, fontWeight: 600, color: color.muted }}>
-        {quiet || muted ? 'Quiet for now.' : speaking ? 'Reading it to you…' : 'Ready when you are.'}</div>
-      <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 18, marginTop: 6 }}>
-        {[9, 15, 18, 13, 7].map((h, i) => <span key={i} style={{ width: 4, borderRadius: 2,
-          height: speaking ? h : 4, background: color.ink, transition: 'height .18s ease' }} />)}
-      </div>
-    </div>
-  </div>;
+     What this replaced: band a's companion row above the h2, band c's "Read it"
+     help pill, and the Again / Slower / Quiet outline buttons under the script —
+     three chromes at three different left edges inside one sheet. Again is gone
+     as a button; the disc plays the line again, and carries an aria-label so a
+     kid and a spec reach for the same handle. */
+  const voiceBar = <VoiceBar mode={mode} phone={phone} worldColor={worldColor}
+    blobDir={blobDir} speaking={speaking} muted={quiet || muted}
+    slower={rate <= SLOWER_RATE}
+    onPlay={() => {
+      const wasQuiet = quiet || muted;
+      if (wasQuiet) { setQuiet(false); onMuted?.(false); stopped.current = false; }
+      run(undefined, { force: wasQuiet });
+    }}
+    onSlower={() => {
+      setRate(SLOWER_RATE);
+      onRate?.(SLOWER_RATE);     // remembered for this kid, on every surface
+      run(SLOWER_RATE);
+    }}
+    onQuiet={(next) => {
+      // Quiet stops playback. It does NOT stop the lesson: everything below
+      // remains tappable, and Next is untouched either way.
+      //
+      // It is also not a per-sheet toggle. A kid who cannot bear the voice hits
+      // Quiet once and means it everywhere, so it writes through to the sound
+      // setting when the app gives it somewhere to write; the local flag is the
+      // fallback for a surface rendered without one (the layouts gallery).
+      setQuiet(next);
+      onMuted?.(next);
+      if (next) { stopped.current = true; stopAudio(); setAt(-1); }
+    }}
+    style={{ borderTopLeftRadius: radius.sheet, borderTopRightRadius: radius.sheet }} />;
 
-  return <div style={{ ...sBase, marginBottom: 18 }}>
-    {companion}
-    {/* THE SCRIPT IS THE HERO WHILE SHE SPEAKS.
+  /* THE SCRIPT IS THE HERO WHILE SHE SPEAKS.
 
         Built against the owner's demo (design-incoming/say-it-show-it-demo.html,
         Nov 4) after a first version diverged from it. The demo is one flowing
@@ -218,8 +230,8 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
         or resized them as they became current, would move the text under her
         while she was trying to read it. Colour carries the state and nothing
         reflows — which is also the only way "nothing else moves while she
-        speaks" can be true of the script itself. */}
-    {!!lines.length && <p data-say-script style={{
+        speaks" can be true of the script itself. */
+  const script = !!lines.length && <p data-say-script style={{
       fontSize: phone ? 20 : 26, fontWeight: 600, letterSpacing: '-.02em',
       lineHeight: 1.35, margin: '0 0 26px', color: color.inkAhead, textWrap: 'pretty',
     }}>
@@ -251,26 +263,11 @@ export function SayItShowIt({ lines = [], clips, meta, speak, muted = false, aut
           {i < lines.length - 1 ? ' ' : ''}
         </span>;
       })}
-    </p>}
+    </p>;
 
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-      {control('Again', () => run())}
-      {control('Slower', () => {
-        setRate(SLOWER_RATE);
-        onRate?.(SLOWER_RATE);     // remembered for this kid, on every surface
-        run(SLOWER_RATE);
-      })}
-      {control(quiet ? 'Unmute' : 'Quiet', () => {
-        // Quiet stops playback. It does NOT stop the lesson: everything below
-        // remains tappable, and Next is untouched either way.
-        const next = !quiet;
-        setQuiet(next);
-        if (next) { stopped.current = true; stopAudio(); setAt(-1); }
-      }, 'ghost')}
-      {speaking && <span style={{ fontSize: 13, color: color.muted }}>Karla’s reading…</span>}
-    </div>
-  </div>;
+  return { bar: voiceBar, script, speaking, quiet: quiet || muted, play: run };
 }
+
 
 /**
  * One line, spoken, with the word sweep following whatever timing it can get.
@@ -308,6 +305,70 @@ export const rateFor = (mode, saved) => (saved > 0 ? saved : (mode === 'c' ? 1 :
 
 /** What Slower drops to. One number, so every surface agrees what "slower" is. */
 export const SLOWER_RATE = 0.75;
+
+/* THE VOICE BAR (§0c, 2026-11-10).
+
+   One row, the FIRST row inside the white sheet, on every surface that reads:
+   the question, the Snag, the re-teach, the quiz paper, the placement runner.
+   It replaces three different chromes that had grown up separately — band a's
+   companion row above the h2, band c's "Read it" help pill, and the Again /
+   Slower / Quiet outline buttons under the teach script. Those sat at three
+   different left edges inside the same sheet, and when the voice arrived on the
+   quiz the layout moved while she was reading it (owner's play-test, defect 2).
+
+   The band is a TWEAK, not a layout: it changes the disc, the idle line and the
+   prompt size. Nothing else about the bar moves between grades 3 and 8.
+
+   `Again` is gone as a button. The disc is the play control, which is also why
+   it carries an aria-label: it is the one handle a kid — or a spec — reaches for
+   to hear the line once more.
+
+   AUDIO NEVER GATES, in either direction. This component takes no progress
+   state and returns none; it cannot reach `solved`, Check, Next or Continue, and
+   none of them may wait on it.
+*/
+export function VoiceBar({
+  mode = 'c', speaking = false, muted = false, slower = false, phone = false,
+  worldColor, blobDir = '/blobs/', onPlay, onSlower, onQuiet, style,
+}) {
+  const disc = phone ? 44 : 48;
+  const label = muted ? 'Quiet. Tap to hear it.'
+    : speaking ? 'Hope is reading'
+    : mode === 'a' ? 'Reads on its own. Tap to hear it again.'
+      : mode === 'b' ? 'Tap to hear it.'
+        : 'Read it to me';
+  const pill = (text, on, onClick) => <button key={text} type="button" onClick={onClick}
+    data-voice-pill={text.toLowerCase()} aria-pressed={on ? 'true' : 'false'} style={{ ...sBase, border: 'none', cursor: 'pointer',
+      height: phone ? 44 : 36, padding: phone ? '0 16px' : '0 14px', borderRadius: radius.full,
+      background: on ? color.ink : color.fill, color: on ? '#fff' : color.ink,
+      fontSize: 13, fontWeight: 700, transition: 'background .18s ease, color .18s ease' }}>{text}</button>;
+
+  /* `data-voice-band` and `data-voice-disc` are what a spec should read, not the
+     state label: the label says "Hope is reading" whenever she is mid-sentence,
+     so a check written against the idle copy passes or fails on timing. The band
+     and the kind of disc are what §0c actually fixes per grade. */
+  return <div data-voice-bar data-voice-band={mode}
+    data-voice-disc={mode === 'c' ? 'glyph' : 'face'}
+    data-voice-state={muted ? 'quiet' : speaking ? 'reading' : 'idle'}
+    style={{ ...sBase, display: 'flex', alignItems: 'center',
+    gap: phone ? 10 : 12, padding: phone ? '14px 16px' : '20px 40px',
+    borderBottom: `1px solid ${color.rule}`, ...style }}>
+    <button type="button" data-voice-play onClick={() => onPlay?.()} aria-label="Hear it again"
+      style={{ ...sBase, border: 'none', padding: 0, cursor: 'pointer', flex: 'none',
+        width: disc, height: disc, borderRadius: radius.full, overflow: 'hidden',
+        display: 'grid', placeItems: 'center',
+        background: mode === 'c' ? color.ink : (worldColor || color.ink),
+        color: '#fff', fontSize: 13, fontWeight: 800 }}>
+      {mode === 'c'
+        ? (speaking ? '❚❚' : '▶')
+        : <Blob name="Singing" size={phone ? 34 : 38} dir={blobDir} />}
+    </button>
+    <span style={{ ...type.label, padding: '0 6px 0 4px' }}>{label}</span>
+    <span style={{ flex: 1 }} />
+    {pill('Slower', slower, () => onSlower?.())}
+    {pill('Quiet', muted, () => onQuiet?.(!muted))}
+  </div>;
+}
 
 /**
  * Run `fn` once nobody is speaking — READERS TAKE TURNS.
@@ -461,8 +522,14 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
     setBusy(false); setWord(-1);
   }, []);
 
-  const play = React.useCallback((playRate = rate, { auto = false } = {}) => {
-    if (muted) return;
+  /* `force` is for the one tap that turns Quiet off AND asks for the line in the
+     same gesture. Without it that tap does nothing: `setQuiet(false)` does not
+     change `muted` until the next render, so this guard — reading the value from
+     the render the tap happened in — still refuses, and a bar that says "Quiet.
+     Tap to hear it." brings nothing back. A read she asked for is never refused
+     because of a setting she just turned off. */
+  const play = React.useCallback((playRate = rate, { auto = false, force = false } = {}) => {
+    if (muted && !force) return;
     // A read the kid asked for needs no invitation; she has just tapped.
     vtrace('play', auto ? '(auto)' : '(tap)', JSON.stringify(String(speech || text).slice(0, 24)),
       'clip:', !!src);
@@ -543,6 +610,16 @@ export function useSpokenLine({ src, text, meta, speech, muted = false, rate = 1
 
       const u = ttsSpeak(spoken, {
         rate: BASE_TTS_RATE * r,
+        /* THE FIRST WORD IS HELD THE MOMENT SHE STARTS.
+
+           The clock does not take over for half a second — long enough for a
+           boundary voice to report itself first — and for that half second a
+           voice that reports nothing left the whole line in the not-yet-reached
+           grey. A dead beat at the start of every read on exactly the voices
+           the clock exists for. The word she is about to hear is word 0, and
+           saying so costs nothing: a boundary arriving replaces it immediately,
+           and the clock's first tick does too. */
+        onStart: () => { if (token.current === mine2 && !gotBoundary) setWord(0); },
         onBoundary: (charIndex) => {
           if (token.current !== mine2) return;
           if (!gotBoundary) vtrace('sweep: boundaries are live');

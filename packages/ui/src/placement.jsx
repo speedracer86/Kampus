@@ -64,7 +64,7 @@ export function PlacementIntro({ name, minutes = 15, onStart, onExit, blobDir = 
    anyone knows what she can read. Hope reads the question, with the sweep, for
    the same reason she reads everywhere else. */
 export function PlacementRunner({ question, progress = { asked: 0, of: 24 }, onAnswer, onExit,
-  voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor }) {
+  voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor, onRate, onMuted }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
   // Never shrink: a settled topic shortens the check, and a bar that went backwards
@@ -92,10 +92,12 @@ export function PlacementRunner({ question, progress = { asked: 0, of: 24 }, onA
           borderRadius: 4, transition: 'width .3s ease' }} />
       </div>
 
-      {/* 'quiz' context: "Read it" only. No hints and no Teach me — help here would
+      {/* 'quiz' context has no help list at all since §0c: Read it left the grid
+          and the reader is in the bar. No hints and no Teach me — help here would
           tell us she can do work she cannot yet do on her own. */}
       <Question question={question} context="quiz" feedback={null} onAnswer={(i) => onAnswer(i)}
-        voice={voice} mode={mode} blobDir={blobDir} muted={muted} worldColor={worldColor} />
+        voice={voice} mode={mode} blobDir={blobDir} muted={muted} worldColor={worldColor}
+        onRate={onRate} onMuted={onMuted} />
 
       <p style={{ fontSize: 15, color: color.muted, marginTop: 20 }}>
         Not sure? Pick the one you think is closest. Guessing costs you nothing here.</p>

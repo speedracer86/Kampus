@@ -180,7 +180,12 @@ export default async function run(check) {
     check('no score, no tally, no money on screen',
       !/\$\d/.test(t) && !/\b\d+\s*(of|out of)\s*\d+\b/i.test(t) && !/score|correct so far|right so far/i.test(t),
       t.match(/\$\d[^\n]*|\b\d+\s*(of|out of)\s*\d+\b/i)?.[0] || '');
-    check('no help beyond reading it aloud', t.includes('Read it') && !t.includes('Teach me') && !t.includes('Show me'));
+    /* §0c: Read it left the help grid, so the placement check has no help list
+       at all — the reader is simply there, in the bar. Hint, Show me and Teach
+       me still must not be. */
+    check('no help beyond the reader in the bar',
+      await page.evaluate(() => document.querySelectorAll('[data-voice-play]').length) === 1
+      && !t.includes('Teach me') && !t.includes('Show me') && !t.includes('Hint'));
 
     // Answer every question; any choice is fine, nothing is scored against her.
     let asked = 0;

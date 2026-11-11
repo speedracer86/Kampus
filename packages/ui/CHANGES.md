@@ -896,3 +896,87 @@ back. The blocked-read spec now runs on the Snag, where there is one reader and
 invitation arm/fire/withdraw. Off by default, costing one regex. Four defects in
 this path have existed only on real pages, and the one that was traced was named
 in a single run.
+
+### The voice bar: one reader, one place, every surface (§0c, Nov 2026)
+
+A design packet came back with four new binding sections (§0c–§0f) and a new
+screen file. This entry is §0c's **voice bar** only; the rest of §0c (the Teach
+me and re-teach redesigns, the worked animation stage) and §0d–§0f are not
+built.
+
+**What was wrong.** The voice had arrived on every surface one surface at a
+time, and each had grown its own chrome: band a's companion row above the h2,
+band c's "Read it" pill inside the help grid, the Again / Slower / Quiet outline
+buttons under the teach script, the Snag's own disc row, and `VoiceRow` standing
+in wherever the bank had no script. Five chromes, at four different left edges,
+inside one white sheet — which is why the quiz surface visibly reflowed while it
+was being read (the owner's play-test, defect 2).
+
+**What there is now.** One `VoiceBar`, rendered as the FIRST ROW of the sheet on
+every screen that reads: the question, the Snag, the teach step, the re-teach,
+the quiz paper, the placement check. 48px reader disc (44 on phone), the state
+label, then Slower and Quiet. The band is a tweak and not a layout: grades 3–6
+get her face on a world-coloured disc and grades 7–8 an ink glyph; the idle line
+and the prompt size change with it; nothing else moves between grade 3 and 8.
+
+- **Again is gone as a button.** The disc replays the line, and carries
+  `aria-label` plus `data-voice-play` so a kid and a spec reach for one handle.
+- **Quiet is the sound setting**, not a per-sheet flag. It writes through
+  `onMuted` to `settings.sound`, so one tap means it everywhere and tomorrow; a
+  surface rendered without the callback (the layouts gallery) keeps a local one.
+- **Read it left the help grid.** Help is three full-width pills in one column
+  on desktop, three in a row on phone. A quiz and a test now carry no help list
+  at all, which is what they always meant.
+- **The sheet lost its 3px world lid**, and a plain answer lost its 1.5px rule —
+  a `#F5F7F9` tile, so the three borders that mean something (right, wrong,
+  chosen) are the only borders.
+- `SayItShowIt` became `useScript`, which returns the `bar` and the `script` for
+  the SHEET to place: the bar at the sheet's own top edge (padding 0), the
+  script down in its padded body. The composed component is gone with it —
+  keeping a second, subtly different way to render the same two things is how
+  five chromes happened in the first place.
+- `VoiceRow` is deleted.
+- Every sheet's body padding now matches the bar's: 40 on desktop, 16 on phone.
+  The first cut left the teach body at 32 and the bar at 40, which is §0c's own
+  complaint (the reader and the prompt at different left edges) reproduced while
+  fixing it. Caught by measuring the rendered page, not by a spec.
+
+**Two things the specs taught here, both the same shape — a check that reaches
+for the wrong handle:**
+
+- The walk driver solves a layout by clicking buttons with no text. The reader's
+  disc has no text either, so the driver started tapping Quiet and the teach
+  flow stopped progressing. Both the harness and the specs now exclude
+  `[data-voice-bar]` structurally rather than by naming its buttons.
+- The band checks read the bar's state label, which says "Hope is reading"
+  whenever a clip happens to be playing — so they passed or failed on timing.
+  They read `data-voice-band` and `data-voice-disc` now, which is what §0c
+  actually fixes per grade. The companion check for "no Again" was worse: it
+  searched the page text, and the bank's own second worked example is kickered
+  AGAIN, so it was failing on content. It looks for a BUTTON called Again.
+
+**And one the review caught in my own diff.** The bar says "Quiet. Tap to hear
+it." — and that tap did nothing. The tap that turns Quiet off is the same tap
+that asks for the line, and React has not re-rendered in between, so `play()`
+read the `muted` of the render the tap happened in and refused. Two taps, with
+the screen having promised one. That is round two's ruling — a blocked read is
+an invitation, never a lie — reintroduced on every surface at once, by the
+change that was meant to make the reader honest. Both play paths take a `force`
+for that gesture now, and the spec clears `played` immediately before the tap so
+it fails on a second-tap product too.
+
+**The dead half-second at the start of every network-voice read.** Chasing a
+spec that failed here and passed on the previous commit, the live trace read
+`5, -1, -1, -1, -1, -1, -1, 0, 0, 0…`: a stale word from the previous read, then
+NOTHING held for 560ms, then the sweep. That is `boundaryWatch` — the clock
+waits half a second before taking over so a boundary voice gets first refusal —
+and on exactly the voices the clock exists for, every read opened with a beat of
+fully-grey text. `speak()` gained an `onStart`, and the first word is held the
+moment she begins; a boundary replaces it immediately, and so does the clock's
+first tick. Measured live, the dead window went from ~560ms to ~160ms.
+
+Found by reproducing the spec's page by hand rather than by reading the failure
+twice. The spec had been failing for a reason adjacent to the one it names.
+
+Mutation-checked: removing the bar from the question sheet fails eleven checks
+across the question, Inspection Day, the Snag and the mission.

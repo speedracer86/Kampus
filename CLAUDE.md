@@ -13,7 +13,11 @@ npm test                      # unit tests: 445 vitest tests (engine + curriculu
 npm run dev                   # apps/web at http://localhost:5173
 npm run build                 # production build of apps/web
 npm run test:webapp           # build apps/web, serve dist/, drive it: 208 checks
-node tests/test_webapp.mjs teach    # one spec (core|business|onboarding|teach|money|report|juice|voice)
+npm run build && node tests/test_webapp.mjs teach   # ONE spec (core|business|onboarding|teach|money|report|juice|voice)
+#   ^ the build is NOT optional. Running the .mjs alone drives whatever was built
+#     LAST, so a source edit you are testing is silently not under test — which
+#     looks exactly like the edit passing. A mutation check lost this way reports
+#     "the spec caught it" about a mutation that never reached the browser.
 npm run test:layouts          # the four §0b teach layouts, desktop + phone: 18 checks
 npm run test:e2e              # Playwright suite against the legacy index.html
 open index.html               # run the legacy v1 app: no server, no build

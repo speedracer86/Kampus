@@ -52,14 +52,14 @@ export const speechActive = () => active > 0;
 /**
  * Read text aloud (browser SpeechSynthesis). Silent where unsupported.
  *
- * `opts` may be a rate (the old second argument, still used by VoiceRow) or
- * `{ rate, onBoundary, onEnd }`. `onBoundary` receives the character index the
+ * `opts` may be a rate (the old second argument) or `{ rate, onStart, onBoundary,
+ * onEnd }`. `onBoundary` receives the character index the
  * voice has reached, which is what lets the word sweep follow the browser voice
  * as closely as it follows a recorded clip — real boundaries, not a timer.
  * Returns the utterance, or null where speech is unsupported.
  */
 export function speak(text, opts) {
-  const { rate = 0.95, onBoundary, onEnd } = (typeof opts === 'number' ? { rate: opts } : (opts || {}));
+  const { rate = 0.95, onBoundary, onEnd, onStart } = (typeof opts === 'number' ? { rate: opts } : (opts || {}));
   try {
     const u = new SpeechSynthesisUtterance(String(text).replace(/−/g, ' negative '));
     /* LOCAL VOICES FIRST, and it is not about quality.
@@ -95,8 +95,11 @@ export function speak(text, opts) {
       vtrace('tts settle', how, 'active now', active);
       onEnd?.(how);
     };
-    u.onstart = () => vtrace('tts start', JSON.stringify(String(text).slice(0, 24)),
-      'voice:', u.voice?.name || 'default', 'local:', u.voice?.localService);
+    u.onstart = () => {
+      vtrace('tts start', JSON.stringify(String(text).slice(0, 24)),
+        'voice:', u.voice?.name || 'default', 'local:', u.voice?.localService);
+      onStart?.();
+    };
     u.onend = () => settle('ended');
     /* `not-allowed` is Chrome's autoplay policy, not a broken voice: the page
        has had no user gesture yet. It is reported separately so the caller can

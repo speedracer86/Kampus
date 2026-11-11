@@ -283,7 +283,12 @@ export async function answerMoment(page, { right = false } = {}) {
    Answers come from the bank via year.js, not from the page: a test that reads the
    answer out of the DOM would pass against a screen showing the wrong one. */
 
-/** The chrome around a step; everything else inside the sheet belongs to the layout. */
+/** The chrome around a step; everything else inside the sheet belongs to the layout.
+
+    The voice bar moved INSIDE the sheet in §0c, so it is excluded structurally
+    (`[data-voice-bar]`) rather than by naming its buttons: its disc has no text
+    at all in band c, and a label-only filter let the reader's controls through
+    as "the layout's own", which is how the walk driver started tapping Quiet. */
 export const CHROME = ['Back', 'Next', 'Start the mission →', 'Write it down',
   'Read it to me', 'Again', 'Slower', 'Quiet', 'Unmute', 'Exit', 'Written ✓'];
 
@@ -295,6 +300,7 @@ export const layoutButtons = (page) => page.evaluate((chrome) => {
   while (sheet && !sheet.querySelector('h2')) sheet = sheet.parentElement;
   if (!sheet) return [];
   return [...sheet.querySelectorAll('button')]
+    .filter(b => !b.closest('[data-voice-bar]'))
     .map((b, i) => ({ i, text: b.innerText.trim() }))
     .filter(b => !chrome.includes(b.text));
 }, CHROME);
@@ -303,7 +309,9 @@ export const clickLayoutButton = (page, nth) => page.evaluate(({ chrome, nth }) 
   const next = [...document.querySelectorAll('button')].find(b => /^(Next|Start the mission)/.test(b.innerText.trim()));
   let sheet = next.parentElement;
   while (sheet && !sheet.querySelector('h2')) sheet = sheet.parentElement;
-  const own = [...sheet.querySelectorAll('button')].filter(b => !chrome.includes(b.innerText.trim()));
+  const own = [...sheet.querySelectorAll('button')]
+    .filter(b => !b.closest('[data-voice-bar]'))
+    .filter(b => !chrome.includes(b.innerText.trim()));
   own[nth]?.click();
   return own.length;
 }, { chrome: CHROME, nth });

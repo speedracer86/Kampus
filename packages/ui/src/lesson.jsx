@@ -14,9 +14,9 @@ import { Button, Kicker, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
 import { Question, rich, richWords, plainSpeech } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
-import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, VoiceRow, voiceMode } from './teach-layouts.jsx';
+import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, voiceMode } from './teach-layouts.jsx';
 import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
-import { SayItShowIt, clipsFor, clipMetaFor, useSpokenLine, SweptLine, rateFor, whenVoiceQuiet } from './say-it-show-it.jsx';
+import { useScript, clipsFor, clipMetaFor, useSpokenLine, SweptLine, rateFor, whenVoiceQuiet, VoiceBar, SLOWER_RATE } from './say-it-show-it.jsx';
 
 const lBase = { fontFamily: font.family, boxSizing: 'border-box' };
 export const MOVES = ['warmup', 'new', 'guided', 'mixed', 'prove'];
@@ -95,7 +95,7 @@ export function LessonSpine({ moves, active, progress, earned, tokensLeft, onJum
     keep working. Lesson state is {stepIdx, solved[], notes[]} — notes are what
     "Write it down" appends, and they are the cheat-sheet column she keeps. */
 export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', voice, muted = false,
-  onDone, onEvent = () => {}, phone, voiceRate, onRate }) {
+  onDone, onEvent = () => {}, phone, voiceRate, onRate, onMuted }) {
   // The second worked example is IN teach.steps, spliced in by the seam (year.js)
   // before the final Try it. It used to sit behind a "Show me another one" button;
   // owner verdict, Nov 2026: an opt-in affordance asks for exactly the executive
@@ -110,7 +110,6 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   const [solved, setSolved] = React.useState(() => steps.map(s => !s.interactive && !s.layout));
   const [notes, setNotes] = React.useState([]);
   const [fresh, setFresh] = React.useState(null);     // the note highlighted for one beat
-  const [quiet, setQuiet] = React.useState(false);
   // The cue from the line Karla is on. A nonce rather than a plain string so the
   // same cue twice running (Again, or two lines that both pulse) fires twice.
   const [cue, setCue] = React.useState({ name: null, nonce: 0 });
@@ -174,9 +173,9 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
      drifted apart the moment the hero script arrived (34 against the h2's 40). */
   const headlineSize = Layout ? (mode === 'a' && !phone ? 40 : promptSize) : (phone ? 24 : 36);
 
-  /* Say-it-show-it takes over the voice row wherever the bank has a script AND the
-     manifest has clips for this step. Everywhere else the old VoiceRow stands, so
-     an unauthored tranche degrades to exactly what shipped before.
+  /* Say-it-show-it owns the read on this surface — the voice bar and, where the
+     bank has a script and the manifest has clips, the swept script under it. A
+     step with neither still gets the bar and reads its prompt aloud.
 
      NOTE for anyone touching this: nothing below feeds `solved`, `canNext` or Next
      in any way. Audio never gates (docs/VOICE_PASS.md §2) and the spec asserts the
@@ -190,18 +189,29 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
   const clipMeta = step?.voiceRef && voice?.manifest
     ? clipMetaFor(voice.manifest, voice.skill, step.voiceRef.kind, step.voiceRef.index)
     : null;
-  const body = <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 20 : 32 }}>
-    {sayLines?.length
-      ? <SayItShowIt lines={sayLines} clips={clips} meta={clipMeta} muted={muted} phone={phone}
-          mode={mode} worldColor={worldColor || color.ink} blobDir={blobDir}
-          voiceRate={voiceRate} onRate={onRate}
-          speak={speak} fallbackText={step?.speak || step?.prompt}
-          onCue={(name, i) => {
-            setCue(c => ({ name, nonce: c.nonce + 1 }));
-            onEvent('speak_line', { cue: name, index: i, step: at });
-          }} />
-      : mode !== 'c' && <VoiceRow mode={mode} text={step?.speak || step?.prompt} worldColor={worldColor || color.ink}
-        quiet={quiet} onQuiet={setQuiet} speak={speak} blobDir={blobDir} phone={phone} />}
+  /* THE VOICE BAR IS THE SHEET'S FIRST ROW (§0c), so the sheet itself carries no
+     padding: the bar sits at its edges and the body below has its own. And
+     say-it-show-it is rendered for EVERY step, script or not — it is what owns
+     the voice state, so a step the bank has not scripted still gets the bar and
+     still reads its prompt through the browser voice. VoiceRow, which used to
+     stand in for exactly that case with a different chrome, is gone. */
+  /* The body's left edge has to be the BAR's left edge (§0c's whole point was
+     that the reader, the prompt and the controls stopped agreeing): 16 on phone,
+     40 on desktop, matching the bar's own padding. */
+  const sheetPad = phone ? '20px 16px' : '32px 40px';
+  const voiced = useScript({
+    lines: sayLines || [], clips, meta: clipMeta, muted, phone,
+    mode, worldColor: worldColor || color.ink, blobDir, voiceRate, onRate, onMuted,
+    speak, fallbackText: step?.speak || step?.prompt,
+    onCue: (name, i) => {
+      setCue(c => ({ name, nonce: c.nonce + 1 }));
+      onEvent('speak_line', { cue: name, index: i, step: at });
+    },
+  });
+  const body = <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
+    {voiced.bar}
+    <div style={{ padding: sheetPad }}>
+    {voiced.script}
     {kicker && <Kicker style={{ marginBottom: 10 }}>{kicker}</Kicker>}
     {/* `prompt` and `takeaway` highlight what they name — the only two cues that
         point at screen furniture rather than at the math. Safe on a Try it: they
@@ -231,11 +241,10 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
         onDone();
       }}>{at + 1 < steps.length ? 'Next' : 'Start the mission →'}</Button>
     </div>
+    </div>
   </div>;
 
   return <div style={{ ...lBase }}>
-    {mode === 'c' && step?.prompt && <div style={{ marginBottom: 14 }}>
-      <VoiceRow mode="c" text={step.speak || step.prompt} speak={speak} /></div>}
     {phone ? <>{body}<div style={{ marginTop: 20 }}>{column}</div></>
       : <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>{column}{body}</div>}
   </div>;
@@ -243,8 +252,20 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
 
 /** A Snag with no honest distractors: the question, then the answer on request.
     Nothing is scored here either way — the Snag never pays and never penalises. */
-export function SnagReveal({ sn, shown, onReveal, phone, sweep }) {
-  return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32 }}>
+export function SnagReveal({ sn, shown, onReveal, phone, sweep, mode = 'c', worldColor,
+  blobDir = '/blobs/', muted = false, onRate, onMuted }) {
+  const [localQuiet, setLocalQuiet] = React.useState(false);
+  const quiet = muted || localQuiet;
+  return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
+    <VoiceBar mode={mode} phone={phone} worldColor={worldColor || color.ink} blobDir={blobDir}
+      speaking={!!sweep?.speaking} muted={quiet}
+      onPlay={() => {
+        if (quiet) { setLocalQuiet(false); onMuted?.(false); }
+        sweep?.onRead?.(undefined, { force: quiet });
+      }}
+      onSlower={() => { onRate?.(SLOWER_RATE); sweep?.onRead?.(SLOWER_RATE); }}
+      onQuiet={(next) => { setLocalQuiet(next); onMuted?.(next); }} />
+    <div style={{ padding: phone ? '22px 16px' : '32px 40px' }}>
     {/* Through rich(), like every other question: this one rendered its string
         raw, so a fraction or an exponent in a Snag would have printed its tags. */}
     <h2 style={{ fontSize: phone ? 24 : 34, fontWeight: 600, letterSpacing: '-.025em', lineHeight: 1.25, margin: 0 }}>
@@ -259,6 +280,7 @@ export function SnagReveal({ sn, shown, onReveal, phone, sweep }) {
           Say it out loud or just think it. Then look — this one is not marked.</p>
         <Button variant="outline" style={{ marginTop: 18 }} onClick={onReveal}>Show me what it was</Button>
       </>}
+    </div>
   </div>;
 }
 
@@ -322,7 +344,7 @@ function MoveHost({ intro, voice, mode = 'c', muted = false, worldColor, blobDir
    give away, no gate to open. The standard law still holds — nothing read
    aloud points at the answer, and nothing here touches what the Snag records. */
 function SnagScreen({ sn, intro, pickable, snagTried, onAttempt, onReveal, phone, tokensLeft,
-  voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor }) {
+  voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor, onRate, onMuted }) {
   /* Karla's intro, the scene and the question are ONE beat, read by one voice.
 
      They were three things a moment ago: the move host read the intro with its
@@ -363,20 +385,13 @@ function SnagScreen({ sn, intro, pickable, snagTried, onAttempt, onReveal, phone
      normally; only the one she is on carries the sweep. */
   const at = line.word;
   const on = (start, end) => (live && at >= start && at < end ? { word: at, offset: start } : undefined);
-  const sweep = { word: on(leadWords, words.length) ? at : -1, offset: leadWords, onRead: () => play() };
+  const sweep = { word: on(leadWords, words.length) ? at : -1, offset: leadWords,
+    onRead: (r, o) => play(r, o), speaking: line.speaking };
 
   return <>
     {!!intro?.say && <div style={{ ...lBase, fontSize: phone ? 15 : 16.5, fontWeight: 600,
       lineHeight: 1.4, marginBottom: 12, color: color.muted }}>
       {rich(intro.say, on(0, introWords.length))}</div>}
-    {mode !== 'c' && <div style={{ ...lBase, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-      <button onClick={() => play()} aria-label="Read it to me" style={{ ...lBase, border: 'none', padding: 0,
-        cursor: 'pointer', width: 44, height: 44, flex: 'none', borderRadius: radius.full,
-        background: worldColor || color.ink, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
-        <Blob name="Singing" size={34} dir={blobDir} /></button>
-      <span style={{ fontSize: 14, fontWeight: 600, color: color.muted }}>
-        {line.speaking ? 'Reading it to you\u2026' : 'Tap me to hear it.'}</span>
-    </div>}
     <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 32, marginBottom: 18 }}>
       <Kicker style={{ marginBottom: 10 }}>The snag</Kicker>
       <p style={{ fontSize: phone ? 18 : 22, lineHeight: 1.45, margin: 0 }}>
@@ -388,9 +403,11 @@ function SnagScreen({ sn, intro, pickable, snagTried, onAttempt, onReveal, phone
         question={{ text: sn.q, answers: sn.answers, correct: sn.answers.indexOf(String(sn.ans)) }}
         context="lesson" tokensLeft={tokensLeft} feedback={null}
         sweep={sweep} worldColor={worldColor} blobDir={blobDir} muted={muted} mode={mode}
+        onRate={onRate} onMuted={onMuted}
         onAnswer={onAttempt}
         onHelp={() => {}} />
-      : <SnagReveal sn={sn} shown={snagTried} phone={phone} sweep={sweep}
+      : <SnagReveal sn={sn} shown={snagTried} phone={phone} sweep={sweep} mode={mode}
+        worldColor={worldColor} blobDir={blobDir} muted={muted} onRate={onRate} onMuted={onMuted}
         onReveal={onReveal} />}
   </>;
 }
@@ -414,7 +431,8 @@ function SnagScreen({ sn, intro, pickable, snagTried, onAttempt, onReveal, phone
         AUDIO NEVER GATES (docs/VOICE_PASS.md §2), in both directions — it may not
         block her, and it may not advance her either. */
 export function ReteachView({ teach, onContinue, label = 'Try one →', phone,
-  voice, muted = false, onEvent }) {
+  voice, muted = false, onEvent, mode = 'c', worldColor, blobDir = '/blobs/',
+  voiceRate, onRate, onMuted }) {
   const [cue, setCue] = React.useState({ name: null, nonce: 0 });
   const lines = teach?.speakLines;
   const clips = teach?.voiceRef && voice?.manifest
@@ -427,20 +445,27 @@ export function ReteachView({ teach, onContinue, label = 'Try one →', phone,
   const litRow = /^row\.\d+$/.test(cue.name || '') ? Number(cue.name.slice(4)) - 1 : -1;
   const litTitle = cue.name === 'prompt';
   const held = color.goldTint || '#FBF3E4';
+  const voiced = useScript({
+    lines: lines || [], clips, meta: clipMeta, muted, phone, mode,
+    worldColor: worldColor || color.ink, blobDir, voiceRate, onRate, onMuted,
+    speak, fallbackText: teach.speak || teach.title,
+    onCue: (name, i) => {
+      setCue(c => ({ name, nonce: c.nonce + 1 }));
+      onEvent?.('speak_line', { cue: name, index: i, where: 'reteach' });
+    },
+  });
 
-  return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: phone ? 22 : 36 }}>
+  const pad = phone ? '22px 16px' : '36px 40px';
+  return <div style={{ ...lBase, background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
+    {voiced.bar}
+    <div style={{ padding: pad }}>
     <Kicker style={{ marginBottom: 10 }}>{teach.kicker || 'New idea'}</Kicker>
     <h2 data-reteach-title data-lit={litTitle ? 'yes' : 'no'}
       style={{ fontSize: phone ? 28 : 40, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 10px',
         background: litTitle ? held : 'transparent', borderRadius: radius.sm, transition: 'background .3s',
         boxShadow: litTitle ? `0 0 0 8px ${held}` : 'none' }}>{teach.title}</h2>
     {teach.lede && <p style={{ fontSize: 18, lineHeight: 1.5, color: color.muted, margin: '0 0 24px' }}>{teach.lede}</p>}
-    {!!lines?.length && <SayItShowIt lines={lines} clips={clips} meta={clipMeta} muted={muted} phone={phone}
-      speak={speak} fallbackText={teach.speak || teach.title}
-      onCue={(name, i) => {
-        setCue(c => ({ name, nonce: c.nonce + 1 }));
-        onEvent?.('speak_line', { cue: name, index: i, where: 'reteach' });
-      }} />}
+    {voiced.script}
     <div style={{ borderTop: `1px solid ${color.rule}` }}>
       {(teach.rows || []).map((r, i, all) => <div key={i} data-reteach-row={i + 1}
         data-lit={i === litRow ? 'yes' : 'no'} style={{ display: 'flex', alignItems: 'baseline', gap: 18,
@@ -452,6 +477,7 @@ export function ReteachView({ teach, onContinue, label = 'Try one →', phone,
       </div>)}
     </div>
     <div style={{ marginTop: 26 }}><Button variant="ink" onClick={onContinue}>{label}</Button></div>
+    </div>
   </div>;
 }
 
@@ -505,7 +531,7 @@ const phaseFor = (m) => (m?.snag ? 'snag' : (m?.teach && !m.questions) ? 'teach'
 
 export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rewardCents = 50,
   blobDir = '/blobs/', voiceManifest = null, voiceBase = '/voice/', voiceCacheUrl = null,
-  voiceRate = null, onVoiceRate, muted = false,
+  voiceRate = null, onVoiceRate, muted = false, onMuted,
   pricer = defaultPricer, onEvent = () => {}, onExit, onDone }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 860;
@@ -661,7 +687,7 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
     return frame(<div>
       <SnagScreen sn={sn} intro={move.snagIntro} pickable={pickable} snagTried={snagTried} phone={phone} tokensLeft={tokensLeft}
         voice={{ cacheUrl: voiceCacheUrl, rate: voiceRate }} mode={voiceMode(grade)} blobDir={blobDir} muted={muted}
-        worldColor={lesson.world?.color}
+        worldColor={lesson.world?.color} onRate={onVoiceRate} onMuted={onMuted}
         onAttempt={() => { onEvent('snag_attempt', { move: move.id }); setSnagTried(true); }}
         onReveal={() => { onEvent('snag_attempt', { move: move.id, revealed: true }); setSnagTried(true); }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginTop: 20 }}>
@@ -677,11 +703,12 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
   if (phase === 'teach') return frame(<TeachSteps teach={move.teach} phone={phone} onEvent={onEvent}
     grade={grade} worldColor={lesson.world?.color} blobDir={blobDir} muted={muted}
     voice={{ manifest: voiceManifest, base: voiceBase, skill: lesson.skill }}
-    voiceRate={voiceRate} onRate={onVoiceRate}
+    voiceRate={voiceRate} onRate={onVoiceRate} onMuted={onMuted}
     onDone={() => { onEvent('move_complete', { move: move.id }); setProgress(p => ({ ...p, [move.id]: { done: 1 } })); finishMove(); }} />);
 
   if (phase === 'reteach') return frame(<ReteachView teach={lesson.reteach} phone={phone} label="2 fresh ones →"
-    muted={muted} onEvent={onEvent}
+    muted={muted} onEvent={onEvent} mode={voiceMode(grade)} worldColor={lesson.world?.color}
+    blobDir={blobDir} voiceRate={voiceRate} onRate={onVoiceRate} onMuted={onMuted}
     voice={{ manifest: voiceManifest, base: voiceBase, skill: lesson.skill }}
     onContinue={() => { setFresh(true); setQi(0); resetUi(); setPhase('run'); }} />);
 
@@ -691,7 +718,7 @@ export function DailyLesson({ lesson, tier = 1, grade = 6, tokensPerRun = 3, rew
     {host(move.intro)}
     <Question question={q} context="lesson" teachFree={teachFree} tokensLeft={tokensLeft}
     worldColor={lesson.world?.color} mode={voiceMode(grade)} blobDir={blobDir} muted={muted}
-    voice={{ cacheUrl: voiceCacheUrl, rate: voiceRate }}
+    voice={{ cacheUrl: voiceCacheUrl, rate: voiceRate }} onRate={onVoiceRate} onMuted={onMuted}
     feedback={ui.feedback} picked={ui.picked} payout={ui.payout} help={ui.help} teachConfirm={ui.teachConfirm}
     onAnswer={answer}
     onHelp={(next, { needsConfirm } = {}) => setUi(u => ({ ...u, help: next, teachConfirm: next === 'teach' && !!needsConfirm && !teachFree }))}

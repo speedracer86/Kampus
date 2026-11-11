@@ -106,8 +106,16 @@ export default async function run(check) {
     t = await text(page);
     check('writing it down drops the note into the cheat-sheet column', /your notes/i.test(t) && t.includes('Written ✓'));
 
-    // Grades 7–8 are voice band c: the pill, never the auto-reading companion.
-    check('grades 7–8 keep the quiet "Read it to me" pill', t.includes('Read it to me') && !/Reading it to you/.test(t));
+    /* Grades 7–8 are voice band c: §0c gives them the ink glyph disc and the
+       line "Read it to me". Read off the bar's own attributes, not the label —
+       the label reads "Hope is reading" whenever a clip happens to be playing,
+       which made the first version of this check pass or fail on timing. */
+    const bar = await page.evaluate(() => {
+      const b = document.querySelector('[data-voice-bar]');
+      return b && { band: b.dataset.voiceBand, disc: b.dataset.voiceDisc, text: b.innerText.trim() };
+    });
+    check('grades 7–8 get the ink glyph disc, not the one that reads on its own',
+      bar?.band === 'c' && bar?.disc === 'glyph', JSON.stringify(bar));
 
     /* Teach depth, IN the flow: the second worked example is a default step
        before the Try it, not an opt-in. Owner verdict, Nov 2026 — a "Show me
@@ -148,11 +156,23 @@ export default async function run(check) {
     const arrived = await driveToTeach(page);
     const t = await text(page);
     check('a grade-4 teach panel was reached', arrived, t.slice(0, 70).replace(/\n/g, ' '));
-    check('grades 3–4 get the reading companion, not the pill',
-      /Reading it to you|Ready when you are/.test(t) && !t.includes('Read it to me'),
-      t.match(/Read[^\n]*|Ready[^\n]*/)?.[0] || '');
-    check('the companion offers Again, Slower and Quiet — and no timer',
-      t.includes('Again') && t.includes('Slower') && t.includes('Quiet'));
+    const bar4 = await page.evaluate(() => {
+      const b = document.querySelector('[data-voice-bar]');
+      return b && { band: b.dataset.voiceBand, disc: b.dataset.voiceDisc, text: b.innerText.trim() };
+    });
+    check('grades 3–4 get her face on the disc, and she reads on her own',
+      bar4?.band === 'a' && bar4?.disc === 'face', JSON.stringify(bar4));
+    /* Slower and Quiet, one disc, and no Again BUTTON. Not "no Again on the
+       page": the bank's own second worked example is kickered AGAIN, and a text
+       search for the word failed on content rather than on chrome. */
+    check('the bar offers Slower and Quiet, one disc, and no timer',
+      await page.evaluate(() => {
+        const b = document.querySelector('[data-voice-bar]');
+        const again = [...document.querySelectorAll('button')].some(x => x.innerText.trim() === 'Again');
+        return !!b && !!b.querySelector('[data-voice-pill="slower"]') && !!b.querySelector('[data-voice-pill="quiet"]')
+          && document.querySelectorAll('[data-voice-play]').length === 1 && !again
+          && !/\d+\s*(s|sec|seconds?)\b/i.test(b.innerText);
+      }));
     await page.close();
   }
 

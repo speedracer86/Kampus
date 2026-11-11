@@ -147,7 +147,7 @@ one generation run, one commit.
 
 Landed ahead of it (everything that does not depend on the scripts):
 
-- `ReteachView` takes `voice` / `muted` / `onEvent`, renders `SayItShowIt` when the
+- `ReteachView` takes `voice` / `muted` / `onEvent`, and drives `useScript` when the
   bank has a script, and handles `row.N` and `prompt`. A row cue **highlights**,
   it does not reveal — the rows are a reference she is reading after a miss, and
   hiding four of them to reveal them one at a time takes information away at the
@@ -234,3 +234,48 @@ pull the trace before changing code.
   language laws, same tryIt rule. It lands in the working tree like tranche 2 did
   — `speak.js` and `speak.test.js`, manifest tests red until the generation run
   turns them green. Roughly 12,000 characters expected; `--dry` gives the number.
+
+## §0c — the voice bar (Nov 2026)
+
+Every surface that reads has exactly ONE voice bar, and it is the first row of
+the white sheet: question, Snag, teach step, re-teach, quiz paper, placement.
+Before this there were five chromes in four places; the quiz surface reflowed
+while it was being read because of it.
+
+What the bar is, in one line each:
+
+| Part | Rule |
+|---|---|
+| Disc | 48px (44 phone). Grades 3–6 her face on the world colour; 7–8 an ink ▶ / ❚❚. Tapping it replays the line — there is no Again button. |
+| Label | "Hope is reading" while she is. Idle: 3–4 "Reads on its own. Tap to hear it again." · 5–6 "Tap to hear it." · 7–8 "Read it to me". Muted: "Quiet. Tap to hear it." |
+| Slower | Writes `settings.voiceRate = 0.75` — her pace on every surface, from then on. |
+| Quiet | Writes `settings.sound = false`. One tap, everywhere, and after a reload. Lit (ink/white, `aria-pressed`) when on. |
+
+**Reading it from a test.** Never from the label — it says "Hope is reading"
+whenever a clip is playing, so a check written against the idle copy passes or
+fails on timing. The bar carries:
+
+- `data-voice-bar` — the bar itself. Exclude it structurally from any sweep of
+  the sheet's buttons: its disc has no text, so an "empty-text button" heuristic
+  will click the reader instead of the layout.
+- `data-voice-band` — `a` | `b` | `c`, and `data-voice-disc` — `face` | `glyph`.
+- `data-voice-state` — `idle` | `reading` | `quiet`. This is the only honest
+  answer to "does the screen claim to be reading".
+- `data-voice-play` on the disc, `data-voice-pill="slower|quiet"` on the pills.
+
+**The first word is held on `onStart`.** The clock does not take over for 500ms
+(a boundary voice gets first refusal), so without this a no-boundary voice left
+the whole line grey for half a second — a dead beat at the start of every read,
+on exactly the voices the clock exists for. A boundary, or the clock's first
+tick, replaces word 0 immediately. Any new timing source keeps this: the first
+word is held as soon as she starts, never later.
+
+**The un-quiet tap.** `play(rate, { force })` exists for one gesture: the tap
+that turns Quiet off AND asks for the line. `setQuiet(false)` does not change
+`muted` until the next render, so a guard reading the value from the render the
+tap happened in refuses — and the bar's own "Quiet. Tap to hear it." brings back
+nothing. Any new reader must pass `force` on that path, and its spec must clear
+the played list immediately before the tap, or a two-tap product passes.
+
+Audio still never gates, in either direction: nothing in the bar reaches
+`solved`, Check, Next or Continue, and none of them waits on it.

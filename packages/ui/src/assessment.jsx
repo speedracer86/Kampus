@@ -43,7 +43,8 @@ export function AssessmentIntro({ kind = 'quiz', grade, unit, intro, onStart, on
   const rows = [
     ['Questions', kind === 'quiz' ? '10' : '20'],
     ['Timer', 'None'],
-    ['Help', 'Read it only'],
+    // §0c: the read is not one of the helps any more, it is always in the bar.
+    ['Help', 'She can hear it read'],
     ['Reward', dollars(kind === 'quiz' ? 100 : 150) + ' for taking it'],
     ['Retake', kind === 'quiz' ? 'Any time' : 'After a repair plan'],
   ];
@@ -112,7 +113,8 @@ export function QuestionMap({ total, answers = [], at, onJump, phone }) {
  * Scoring and gating are untouched by any of it.
  */
 export function AssessmentRunner({ kind = 'quiz', questions = [], initialAnswers, initialAt = 0,
-  onProgress, onHandIn, onExit, voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor }) {
+  onProgress, onHandIn, onExit, voice, mode = 'c', blobDir = '/blobs/', muted = false, worldColor,
+  onRate, onMuted }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 900;
   const [answers, setAnswers] = React.useState(() =>
@@ -153,6 +155,7 @@ export function AssessmentRunner({ kind = 'quiz', questions = [], initialAnswers
       {/* feedback stays null: nothing is right or wrong until it is handed in */}
       {q && <Question question={q} context={kind} selected={answers[at]} feedback={null}
         voice={voice} mode={mode} blobDir={blobDir} muted={muted} worldColor={worldColor}
+        onRate={onRate} onMuted={onMuted}
         tokensLeft={0} onAnswer={pick} onHelp={() => {}} />}
 
       {phone && <div style={{ marginTop: 20 }}>
