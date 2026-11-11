@@ -66,7 +66,7 @@ function EarnedRow({ row, overLimit, onApprove, onHold, onUndo, phone }) {
 }
 
 /**
- * data: {kid{name, grade, day, daysPlayed}, pending[], asks[], approvedThisWeek, cap,
+ * data: {kid{name, grade, day}, pending[], asks[], approvedThisWeek, cap,
  *        progress[], stats[], settings{cap, lessonLength, allowBlitz, sprints, vacation}}
  */
 /**
@@ -75,10 +75,10 @@ function EarnedRow({ row, overLimit, onApprove, onHold, onUndo, phone }) {
  * @param {() => void} [p.onSignOut] absent with sync off, and then nothing about
  *   this screen changes — there is no account to sign out of.
  */
-export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {}, account, onSignOut }) {
+export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {}, account, onSignOut, onLock }) {
   const ref = React.useRef(null);
   const phone = useWidth(ref) < 900;
-  const [tab, setTab] = React.useState('approvals');
+  const [tab, setTab] = React.useState('report');
   const d = data || {};
   const kid = d.kid || {};
   const s = d.settings || {};
@@ -87,8 +87,8 @@ export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {}, accoun
   const capLeft = Math.max(0, cap - used);
 
   const TABS = [
-    ['approvals', 'Approvals', (d.pending || []).length + (d.asks || []).length],
     ['report', 'This week', 0],
+    ['approvals', 'Approvals', (d.pending || []).length + (d.asks || []).length],
     ['progress', 'Progress', 0],
     ['settings', 'Settings', 0],
   ];
@@ -100,28 +100,55 @@ export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {}, accoun
       gridTemplateColumns: phone ? '1fr' : '340px 1fr', gap: 48, alignItems: 'start' }}>
 
       <div>
-        <h1 style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 4px' }}>{kid.name || 'Your kid'}</h1>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+          <h1 style={{ flex: 1, fontSize: phone ? 24 : 28, fontWeight: 600, letterSpacing: '-.025em',
+            margin: '0 0 4px' }}>{kid.name || 'Your kid'}</h1>
+          {/* A way back behind the PIN without leaving the page — the grown-ups
+              side should not stay open because nobody found the door. */}
+          {onLock && <button onClick={onLock} style={{ ...gBase, border: 'none', cursor: 'pointer',
+            background: color.surface, borderRadius: radius.full, padding: '8px 14px',
+            fontSize: 13, fontWeight: 700, flex: 'none' }}>Lock</button>}
+        </div>
         <div style={{ fontSize: 14, color: color.muted, fontWeight: 600 }}>
           {/* Days played, not a streak: §4 bans the chain on the kid's side, and showing
               a parent one just moves the guilt. */}
-          Grade {kid.grade} · day {kid.day} · {kid.daysPlayed || 0} days played</div>
+          Grade {kid.grade} · day {kid.day}</div>
 
-        <div style={{ marginTop: 22 }}>
-          {TABS.map(([id, label, count]) => <button key={id} onClick={() => setTab(id)}
-            style={{ ...gBase, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
-              width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left', marginBottom: 6,
-              borderRadius: 16, padding: '13px 16px', fontSize: 16,
-              fontWeight: tab === id ? 800 : 600,
-              background: tab === id ? color.surface : 'transparent', color: color.ink }}>
-            <span>{label}</span>
-            {count > 0 && <span style={{ background: color.ink, color: '#fff', borderRadius: radius.full,
-              minWidth: 22, padding: '2px 8px', fontSize: 12.5, fontWeight: 700, textAlign: 'center' }}>{count}</span>}
-          </button>)}
-        </div>
+        {/* §0d: four stacked rows is a desktop sidebar. On a phone it is ONE
+            segmented control — four equal options in a single white pill —
+            because four full-width rows push the week itself below the fold,
+            and the week is the thing this screen now opens on. */}
+        {phone
+          ? <div style={{ display: 'flex', background: color.surface, borderRadius: radius.full,
+            padding: 4, gap: 2, marginTop: 16 }}>
+            {TABS.map(([id, label, count]) => <button key={id} onClick={() => setTab(id)}
+              style={{ ...gBase, flex: 1, minWidth: 0, border: 'none', cursor: 'pointer',
+                borderRadius: radius.full, padding: '10px 4px', fontSize: 13, fontWeight: tab === id ? 800 : 600,
+                background: tab === id ? color.ink : 'transparent', color: tab === id ? '#fff' : color.ink,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {label}
+              {count > 0 && <span style={{ background: tab === id ? 'rgba(255,255,255,.22)' : color.ink,
+                color: '#fff', borderRadius: radius.full, minWidth: 18, padding: '1px 5px',
+                fontSize: 11, fontWeight: 700 }}>{count}</span>}
+            </button>)}
+          </div>
+          : <div style={{ marginTop: 22 }}>
+            {TABS.map(([id, label, count]) => <button key={id} onClick={() => setTab(id)}
+              style={{ ...gBase, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                width: '100%', border: 'none', cursor: 'pointer', textAlign: 'left', marginBottom: 6,
+                borderRadius: 16, padding: '13px 16px', fontSize: 16,
+                fontWeight: tab === id ? 800 : 600,
+                background: tab === id ? color.surface : 'transparent', color: color.ink }}>
+              <span>{label}</span>
+              {count > 0 && <span style={{ background: color.ink, color: '#fff', borderRadius: radius.full,
+                minWidth: 22, padding: '2px 8px', fontSize: 12.5, fontWeight: 700, textAlign: 'center' }}>{count}</span>}
+            </button>)}
+          </div>}
 
         <div style={{ background: color.surface, borderRadius: 16, padding: 18, marginTop: 16 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, fontWeight: 700, marginBottom: 8 }}>
-            <span>This week</span><span>{dollars(used)} of {dollars(cap)}</span>
+            <span>Weekly limit</span><span>{dollars(used)} of {dollars(cap)}</span>
           </div>
           <div style={{ height: 8, borderRadius: 4, background: color.track, overflow: 'hidden' }}>
             <div style={{ width: `${cap ? Math.min(100, (used / cap) * 100) : 0}%`, height: '100%', background: color.greenDeep }} />
@@ -163,7 +190,9 @@ export function GrownUps({ data, blobDir = '/blobs/', onEvent = () => {}, accoun
         </>)}
 
         {tab === 'report' && (d.report
-          ? <PilotReport report={d.report} name={d.kid?.name || 'She'} blobDir={blobDir} />
+          ? <PilotReport report={d.report} name={d.kid?.name || 'She'} blobDir={blobDir}
+            onOpenApprovals={() => setTab('approvals')}
+            onShare={() => onEvent('share_week', { week: d.report?.week })} />
           : sheet(<div style={{ padding: phone ? '20px' : '26px 32px', fontSize: 15, color: color.muted }}>
             No week to show yet.</div>))}
 

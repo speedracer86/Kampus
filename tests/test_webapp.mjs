@@ -15,7 +15,7 @@
    The summary line is unchanged on purpose: CI greps it, and so do I.
 
    Usage: npm run test:webapp     (PW_CHROME points at an existing Chromium) */
-import { start, stop, createCheck, pageErrors, spoken } from './webapp/harness.mjs';
+import { start, stop, createCheck, pageErrors, spoken, escapeLeaks } from './webapp/harness.mjs';
 
 const SPECS = ['core', 'business', 'onboarding', 'teach', 'money', 'report', 'juice', 'voice'];
 
@@ -73,6 +73,12 @@ try {
   if (chosen.length === SPECS.length) {
     aggregate(`the voice was exercised at all (${spoken.length} utterances)`, spoken.length > 0);
   }
+  /* `\u00b7` in a JSX TEXT node is not an escape and renders as six characters.
+     Shipped three times before this guard existed, and invisible to every check
+     that looks for the words either side of it. */
+  aggregate('no screen prints an escape sequence instead of a character',
+    escapeLeaks.length === 0, escapeLeaks.slice(0, 2).join(' | '));
+
   const markup = spoken.filter(s => /<[^>]+>/.test(s));
   aggregate('nothing the product reads aloud carries markup',
     markup.length === 0, markup.slice(0, 2).map(s => s.slice(0, 70)).join(' | '));

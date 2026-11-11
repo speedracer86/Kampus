@@ -107,13 +107,30 @@ export default async function run(check) {
   await page.waitForTimeout(400);
 
   check('Grown-ups opens behind the PIN', await intoGrownUps(page));
+
+  /* §0d: the week is the FIRST tab and the one the frame opens on. A grown-up
+     should land on what she DID, not on a queue of things waiting on them —
+     which is also the only screen in the product that can read as a bill. */
+  const landed = await text(page);
+  check('Grown-ups opens on the week, before the queue',
+    /Here.s Talia.s week|A quiet week/.test(landed),
+    landed.split('\n').slice(8, 12).join(' / '));
+  /* The meta line lost its streak: "days played" is a chain by another name,
+     and showing a parent one just moves the guilt rather than removing it. */
+  check('the kid\'s line counts no streak',
+    !/days played|day streak|in a row/i.test(landed),
+    landed.match(/[^\n]*days played[^\n]*|[^\n]*streak[^\n]*/i)?.[0] || 'none');
+
   check('there is a weekly report to open', await clickText(page, 'This week'));
   await page.waitForTimeout(400);
   let t = await text(page);
 
+  /* §0d moved the name out of the crumb and into the headline: the crumb is the
+     WEEK ("This week · Nov 9 to Nov 12") and the headline is hers. Both have to
+     be there — the crumb alone would pass on any tab that mentions the week. */
   check('the report names the week as hers, not as a score',
-    /this week · talia/i.test(t) && /Here.s Talia.s week/.test(t),
-    t.match(/Here.s Talia[^\n]*/)?.[0] || t.slice(0, 90).replace(/\n/g, ' '));
+    /This week · [A-Z][a-z]{2} \d+/.test(t) && /Here.s Talia.s week/.test(t),
+    t.match(/This week[^\n]*|Here.s Talia[^\n]*/)?.[0] || t.slice(0, 90).replace(/\n/g, ' '));
 
   /* The figures, against the independent count. */
   const figure = (label) => {
@@ -153,6 +170,32 @@ export default async function run(check) {
     !/\d+%/.test(t) && !/accuracy|correct|right answers/i.test(t),
     t.match(/\d+%|accuracy|correct/i)?.[0] || '');
 
+  /* §0d: one dot per unit, exactly one of them the unit she is on. A shape she
+     is somewhere inside, rather than a bar measuring how much is missing. */
+  const dots = await page.evaluate(() => {
+    const el = document.querySelector('[data-unit-dots]');
+    if (!el) return null;
+    const d = [...el.querySelectorAll('[data-unit]')].map(x => x.dataset.state);
+    return { n: d.length, current: d.filter(x => x === 'current').length,
+      done: d.filter(x => x === 'done').length, order: d.join(',') };
+  });
+  const unitNow = Number((t.match(/unit (\d) of (\d)/) || [])[1]);
+  const unitsAll = Number((t.match(/unit (\d) of (\d)/) || [])[2]);
+  check('one unit dot per unit, with exactly one of them current',
+    dots?.n === unitsAll && dots?.current === 1, JSON.stringify(dots));
+  check('and the dots before the current one are the ones she has done',
+    dots?.done === unitNow - 1 && !/done/.test((dots?.order || '').split(',').slice(unitNow).join(',')),
+    dots?.order);
+
+  /* The footer names the week a parent could find on a calendar. The week KEY
+     is an epoch count in the 2900s and means nothing to anyone. */
+  const footer = t.match(/Kampus · week (\d+)[^\n]*/)?.[0] || '';
+  const weekNo = Number((footer.match(/week (\d+)/) || [])[1]);
+  check('the footer names a calendar week, not the epoch bucket',
+    weekNo >= 1 && weekNo <= 53, footer);
+  check('and dates the span in words, not in ISO', /[A-Z][a-z]{2} \d+ to [A-Z][a-z]{2} \d+/.test(footer)
+    && !/\d{4}-\d{2}-\d{2}/.test(footer), footer);
+
   /* It has to read on a phone and survive a screenshot. */
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(300);
@@ -161,6 +204,16 @@ export default async function run(check) {
   const phoneText = await text(page);
   check('and still carries every figure at phone width',
     /days she showed up/.test(phoneText) && /you approved/.test(phoneText) && /Grade 6/.test(phoneText));
+  /* §0d: four stacked rows push the week below the fold on a phone, so the tabs
+     become ONE segmented control. Measured, not read: all four on one line. */
+  const tabsRow = await page.evaluate(() => {
+    const btns = [...document.querySelectorAll('button')]
+      .filter(b => ['This week', 'Approvals', 'Progress', 'Settings'].includes(b.innerText.trim().split('\n')[0]));
+    const tops = new Set(btns.map(b => Math.round(b.getBoundingClientRect().top)));
+    return { n: btns.length, rows: tops.size };
+  });
+  check('the phone tabs are one segmented control, not four stacked rows',
+    tabsRow?.n === 4 && tabsRow?.rows === 1, JSON.stringify(tabsRow));
   await page.close();
 
   /* A week with nothing in it is a fact, not a failing. */
@@ -170,7 +223,8 @@ export default async function run(check) {
   await clickText(quiet, 'This week');
   await quiet.waitForTimeout(400);
   const q = await text(quiet);
-  check('the quiet week really opened the report, not another tab', /this week · talia/i.test(q));
+  check('the quiet week really opened the report, not another tab',
+    /A quiet week\. Here.s where Talia is\./.test(q), q.slice(0, 80).replace(/\n/g, ' '));
   check('a quiet week is reported as where she is',
     /A quiet week\. Here.s where Talia is\./.test(q), q.match(/A quiet week[^\n]*/)?.[0] || q.slice(0, 80).replace(/\n/g, ' '));
   check('a quiet week says nothing was lost, and blames nobody',

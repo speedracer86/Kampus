@@ -53,6 +53,33 @@ export function canonical(events = []) {
 /** Monday-based week key for a day string, matching the engine's own bucketing. */
 export const weekOf = (day) => weekKey(Date.parse(`${day}T12:00:00Z`));
 
+/* The Monday a week key names, back out of the key's own arithmetic
+   (`floor((ms/day + 3) / 7)` — the +3 is what makes the week start on a Monday).
+   Derived rather than stored so it can never disagree with the bucketing the
+   figures were counted with. */
+export const mondayOf = (week) => new Date((Number(week) * 7 - 3) * 86400000);
+
+/* The span the report covers: Monday to today, or to the Sunday if the week is
+   already over. "Nov 9 to Nov 12" on a Thursday — not Monday to Sunday, which
+   would promise days that have not happened yet. */
+export function weekRange(week, now = new Date()) {
+  const from = mondayOf(week);
+  const sunday = new Date(from.getTime() + 6 * 86400000);
+  const to = now < from ? from : (now > sunday ? sunday : now);
+  const iso = (d) => d.toISOString().slice(0, 10);
+  return { from: iso(from), to: iso(to) };
+}
+
+/* The ISO week-of-year, for the report's footer. The week KEY is an epoch week
+   count (2970-odd) and means nothing to a parent; "week 46" is the number they
+   would recognise from a calendar. */
+export function weekOfYear(week) {
+  const d = mondayOf(week);
+  const thursday = new Date(d.getTime() + 3 * 86400000);
+  const jan1 = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 1));
+  return Math.floor((thursday - jan1) / 86400000 / 7) + 1;
+}
+
 /** The events of one week, newest week by default. */
 export function eventsForWeek(events = [], week = weekKey()) {
   return canonical(events).filter(e => e.day && weekOf(e.day) === week);
@@ -91,6 +118,8 @@ export function pilotReport(state = {}, events = [], { week = weekKey(), days = 
 
   return {
     week,
+    weekNumber: weekOfYear(week),
+    range: weekRange(week),
     showedUp: { days: daysSeen.length, of: days, dates: daysSeen },
     lessons: { finished: rollup.lessonsCompleted },
     stand: { daysOpen: standDays.length },

@@ -31,25 +31,50 @@ export default async function run(check) {
       check('the question says what is being ASKED, not just the maths',
         /[A-Za-z]{3,}/.test(heading), JSON.stringify(heading.slice(0, 60)));
 
-      // Answer wrongly on purpose: pick whichever option is not the answer.
-      const missed = await page.evaluate(() => {
+      /* Answer wrongly on purpose. Which option is wrong is not knowable from
+         the page, so this takes one and tries again on the next question if it
+         happened to be right.
+
+         WAITED FOR, NOT SLEPT THROUGH. The fixed 500/1500/600ms version passed alone
+         and failed in the full run, where eight specs drive eight browsers at
+         once: the page had not reached the next question when the second click
+         landed, so it hit an already-answered one and nothing opened. The check
+         then reported "a miss opens nothing", which is a true sentence about a
+         screen that was never missed on. */
+      const missOnce = () => page.evaluate((last) => {
         const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
         if (opts.length < 2) return false;
-        opts[0].click();
+        opts[last ? opts.length - 1 : 0].click();
         return true;
-      });
-      await page.waitForTimeout(500);
-      let t = await text(page);
-      if (!/Not yet|Try again/i.test(t) && missed) {
-        // That one happened to be right; take the next question and miss it.
-        await page.waitForTimeout(1500);
+      }, false);
+      const until = async (fn, ms = 6000, every = 100) => {
+        for (let i = 0; i < Math.ceil(ms / every); i++) {
+          if (await fn()) return true;
+          await page.waitForTimeout(every);
+        }
+        return false;
+      };
+      const marked = () => page.evaluate(() => /Not yet|Try again/i.test(document.body.innerText));
+      const fresh = (was) => page.evaluate((prev) => {
+        const h = document.querySelector('h2')?.innerText || '';
+        return h !== prev && /[A-Za-z]{3,}/.test(h) &&
+          [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim())).length >= 2;
+      }, was);
+
+      let missed = await missOnce();
+      let t = '';
+      if (missed && !(await until(marked, 2500))) {
+        // That one happened to be right. Wait for the NEXT question to arrive —
+        // by its heading changing, not by the clock — and miss that one.
+        const was = await page.evaluate(() => document.querySelector('h2')?.innerText || '');
+        await until(() => fresh(was), 8000);
         await page.evaluate(() => {
           const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
           opts[opts.length - 1]?.click();
         });
-        await page.waitForTimeout(600);
-        t = await text(page);
+        await until(marked, 4000);
       }
+      t = await text(page);
 
       // The walk itself, not the "Not yet" bar — that appears either way and
       // would have passed against a product that opened nothing.

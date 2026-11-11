@@ -170,7 +170,15 @@ export const rowAction = (page, label, action) => page.evaluate(({ label, action
 }, { label, action });
 
 /** Through the Grown-ups PIN gate, whatever state it is in. */
-export async function intoGrownUps(page, pin = '1234') {
+/* Past the PIN and onto a named tab.
+
+   §0d made "This week" the tab the frame OPENS on, and every caller that wanted
+   Approvals was silently reading the wrong screen — the old success check
+   (/Approvals|Earned|Nothing waiting/) kept passing because "Approvals" is still
+   a label in the nav. A caller says which tab it means now, and the check is
+   that the tab's OWN content arrived. */
+export async function intoGrownUps(page, opts = {}) {
+  const { pin = '1234', tab = null } = (typeof opts === 'string' ? { pin: opts } : opts);
   for (const d of pin) {
     await page.evaluate((x) => [...document.querySelectorAll('button')].find(b => b.textContent.trim() === x)?.click(), d);
   }
@@ -182,7 +190,22 @@ export async function intoGrownUps(page, pin = '1234') {
     }
     await page.waitForTimeout(700);
   }
-  return /Approvals|Earned|Nothing waiting/i.test(await text(page));
+  const landed = /This week|Approvals|Earned|Nothing waiting/i.test(await text(page));
+  if (!landed || !tab) return landed;
+  // Clicking the tab BUTTON, not any text that happens to match its name.
+  const clicked = await page.evaluate((label) => {
+    const b = [...document.querySelectorAll('button')]
+      .find(x => x.innerText.trim().split('\n')[0] === label);
+    if (b) { b.click(); return true; }
+    return false;
+  }, tab);
+  await page.waitForTimeout(400);
+  if (!clicked) return false;
+  // The tab's own content, not its label in the nav.
+  const t = await text(page);
+  if (tab === 'Approvals') return /Earned|Nothing waiting|Waiting on you/i.test(t);
+  if (tab === 'This week') return /Here.s .*week|A quiet week/i.test(t);
+  return true;
 }
 
 /* ---------------------------------------------------------------------------
@@ -282,6 +305,18 @@ export async function answerMoment(page, { right = false } = {}) {
 
    Answers come from the bank via year.js, not from the page: a test that reads the
    answer out of the DOM would pass against a screen showing the wrong one. */
+
+/* NO SCREEN PRINTS AN ESCAPE SEQUENCE.
+
+   `\u00b7` inside a JSX TEXT node is not an escape — JSX text is not a string
+   literal — so it renders as six literal characters. It has shipped to a screen
+   three times now (the placement result's apostrophe, the report's separators
+   twice), and it is invisible to every check that looks for the words either
+   side of it. One regex over the whole rendered page catches the class.
+
+   The curly quote, the dash and the arrows are the characters this product
+   actually uses; a bare `\n` or `\t` on screen would be the same mistake. */
+export const escapeLeak = (t) => (String(t || '').match(/\\u[0-9a-fA-F]{4}|\\[nt](?![a-z])/g) || []);
 
 /** The chrome around a step; everything else inside the sheet belongs to the layout.
 
@@ -546,7 +581,15 @@ export async function openBlank(hash = '') {
   return page;
 }
 
-export const text = (page) => page.evaluate(() => document.body.innerText);
+/* Every screen any spec reads is also checked for escape leaks, because the
+   specs read `text()` everywhere and the leak is invisible to all of them. */
+export const escapeLeaks = [];
+export const text = async (page) => {
+  const t = await page.evaluate(() => document.body.innerText);
+  const bad = escapeLeak(t);
+  if (bad.length) escapeLeaks.push(`${bad[0]} in: ${String(t).split('\n').find(l => escapeLeak(l).length)?.slice(0, 60)}`);
+  return t;
+};
 
 
 /** The app's own week key, so a seeded ledger lands in the week it is testing. */

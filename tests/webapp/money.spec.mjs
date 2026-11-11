@@ -128,7 +128,8 @@ export default async function run(check) {
       settings: { cap: 500 }, week: { key: wk, earned: 0, spent: 0 } }, '#parents');
     await page.waitForTimeout(500);
     check('Grown-ups is behind a PIN', /Grown-ups only|Pick a PIN/i.test(await text(page)));
-    check('the gate opens', await intoGrownUps(page));
+    check('the gate opens on Approvals when that is what we asked for',
+      await intoGrownUps(page, { tab: 'Approvals' }));
 
     let t = await text(page);
     check('both waiting rows are shown with what they were for',
@@ -226,7 +227,7 @@ export default async function run(check) {
     // The grown-up finds it waiting and says yes.
     await page.evaluate(() => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Grown-ups')?.click());
     await page.waitForTimeout(400);
-    await intoGrownUps(page);
+    await intoGrownUps(page, { tab: 'Approvals' });
     t = await text(page);
     check('the grown-up sees the work waiting, in their own words',
       /Inspection Day|Unit quiz|Quiz/i.test(t) && /\$1\.00/.test(t),

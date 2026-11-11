@@ -1042,3 +1042,54 @@ again, and a `floor` panel in the gallery pins it.
 All four new UI guards are mutation-checked: inventing a world for a level kid,
 dropping the Ahead/Starts-earlier tags, never switching to the phone shape, and
 promising the floor a review shelf — each fails its own check.
+
+### The weekly report: what she did, on the tab that opens (§0d, Nov 2026)
+
+**The frame.** "This week" is the first tab and the one Grown-ups opens on. A
+parent should land on what she DID, not on a queue of things waiting on them —
+Approvals is the one screen in this product that can read as a bill. The limit
+bar is relabelled "Weekly limit", and the kid's meta line drops "days played":
+a streak by another name, and showing a parent one moves the guilt rather than
+removing it. `daysPlayed` left the data contract too, rather than staying as a
+field the frame quietly ignores.
+
+**The sheet.** Three sections split by hairlines. The figures sit in a
+three-column grid with vertical rules between them, so the row reads as one
+statement about her week instead of three cards floated apart. Money puts "Open
+Approvals →" in the third column, and it switches tabs. "Where she is" gained
+one dot per unit — a shape she is somewhere inside, rather than a bar measuring
+how much is missing. The footer names a CALENDAR week: `weekKey` is an epoch
+week count in the 2900s and means nothing to a parent, so the seam now derives
+`weekNumber` (ISO week of year) and `range` (Monday to today, never Monday to
+Sunday — that would promise days which have not happened).
+
+**Phone.** Four stacked rows pushed the week below the fold, so the tabs became
+one segmented control; a Lock pill sits beside her name, because the grown-ups
+side should not stay open because nobody found the door.
+
+**A mistake made three times, now guarded.** `·` inside a JSX TEXT node is
+not an escape — JSX text is not a string literal — so it renders as six literal
+characters. It reached a screen three times in one session (the placement
+result's apostrophe, this report's separators twice) and is invisible to every
+check that reads the words either side of it. `text()` in the harness scans
+every screen any spec visits, and the run reports the leak with its line:
+`· in: This week · Oct 12 to Oct 15`.
+
+**And a helper that was passing on its own nav.** Ten approvals checks failed
+when the opening tab changed — correctly, because they were reading a different
+screen. But `intoGrownUps` had returned true on `/Approvals|Earned|Nothing
+waiting/`, and "Approvals" is still a LABEL in the nav: the helper would have
+gone on reporting success for a caller reading the wrong tab. It takes a tab
+name now and checks the tab's own content. Mutating it to stop clicking
+reproduces all ten failures.
+
+**And a spec that slept instead of waiting.** `a miss opens the worked steps by
+itself` passed alone and failed in the full run, where all eight specs drive
+eight browsers at once: its fixed 500/1500/600ms waits were not enough, so the
+second click landed on an already-answered question and nothing opened. The
+check then reported "a miss opens nothing" — a true sentence about a screen that
+was never missed on. It waits on the "Not yet" mark and on the next question's
+heading changing now, not on the clock.
+
+Mutation-checked: every unit dot current, the footer printing the epoch key, and
+the phone keeping four stacked rows each fail their own check.

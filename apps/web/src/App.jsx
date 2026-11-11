@@ -650,6 +650,7 @@ export function App() {
     const cap = state.settings?.cap ?? DEFAULT_CAP_CENTS;
     const setS = (k, v) => update(s => { s.settings = { ...(s.settings || {}), [k]: v }; return s; });
     return <Shell {...shellProps('parents')}><GrownUps
+      onLock={() => setPinOk(false)}
       account={account ? { email: account.email } : null}
       onSignOut={SYNC_ON ? (() => { signOut().then(() => setAccount(null)); }) : undefined}
       blobDir={BLOB_DIR}
@@ -657,7 +658,7 @@ export function App() {
         // The weekly artifact a pilot family receives. Folded in report.js out of
         // weeklyRollup / returnRate / lessonReadiness — this screen formats only.
         report: pilotReport(state, storedEvents(studentId), { week: weekKey() }),
-        kid: { name: state.name || 'Your kid', grade: state.grade, day: Object.keys(state.days || {}).length, daysPlayed: Object.keys(state.days || {}).length },
+        kid: { name: state.name || 'Your kid', grade: state.grade, day: Object.keys(state.days || {}).length },
         // Waiting first, then recently decided — §0 keeps closed rows visible with an Undo.
         pending: [
           ...ledger.filter(r => r.cents > 0 && r.status === 'pending'),
