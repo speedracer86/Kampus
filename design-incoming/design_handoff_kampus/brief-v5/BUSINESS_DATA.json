@@ -1,0 +1,136 @@
+{
+  "bizState": {
+    "band": "c",
+    "price": 2,
+    "lots": [],
+    "sugar": 0,
+    "cups": 0,
+    "marketPrices": {
+      "lemons": 0.5,
+      "sugar": 0.3,
+      "cups": 0.18
+    },
+    "reputation": 52,
+    "regulars": [
+      {
+        "id": "juan",
+        "affinity": 48
+      },
+      {
+        "id": "delfina",
+        "affinity": 48
+      },
+      {
+        "id": "tom",
+        "affinity": 48
+      }
+    ],
+    "lastOpenDay": "2026-11-01",
+    "lastTickDay": "2026-11-01",
+    "vacation": false,
+    "ledger": [
+      {
+        "day": "2026-11-01",
+        "served": 11,
+        "missed": 15,
+        "cupsSold": 18,
+        "revenue": 36,
+        "cost": 17.64,
+        "profit": 18.36
+      }
+    ],
+    "events": []
+  },
+  "queueSample": [
+    {
+      "persona": "delfina",
+      "name": "Delfina",
+      "blob": "Singing",
+      "order": {
+        "cups": 2
+      },
+      "isRegular": true
+    },
+    {
+      "persona": "leo",
+      "name": "Leo",
+      "blob": "Explore",
+      "order": {
+        "cups": 1
+      },
+      "isRegular": false
+    },
+    {
+      "persona": "delfina",
+      "name": "Delfina",
+      "blob": "Singing",
+      "order": {
+        "cups": 2
+      },
+      "isRegular": false
+    },
+    {
+      "persona": "tom",
+      "name": "Tom",
+      "blob": "Golf",
+      "order": {
+        "cups": 1
+      },
+      "isRegular": true
+    },
+    {
+      "persona": "tom",
+      "name": "Tom",
+      "blob": "Golf",
+      "order": {
+        "cups": 3
+      },
+      "isRegular": true
+    },
+    {
+      "persona": "leo",
+      "name": "Leo",
+      "blob": "Explore",
+      "order": {
+        "cups": 1
+      },
+      "isRegular": false
+    }
+  ],
+  "momentSample": {
+    "prompt": "Business moment",
+    "q": "Ava asks for 25% off a big order. Your cost per cup is $0.98, price $2.00. Still profitable?",
+    "ans": "yes — $0.52/cup",
+    "wrongs": [
+      "no — you'd lose money",
+      "can't tell without more info"
+    ],
+    "skill": "Margin after discount",
+    "steps": [
+      "Discounted price: $2.00 × 0.75 = $1.50.",
+      "Compare to cost $0.98: margin is <b>$0.52</b> per cup — deal."
+    ],
+    "moment": true
+  },
+  "dayResult": {
+    "day": "2026-11-01",
+    "served": 11,
+    "missed": 15,
+    "cupsSold": 18,
+    "revenue": 36,
+    "cost": 17.64,
+    "profit": 18.36
+  },
+  "spoilageEvent": {
+    "type": "spoilage",
+    "qty": 8,
+    "lesson": "planning",
+    "text": "8 lemons went soft — want the quantity-planning trick?"
+  },
+  "comebackPromo": {
+    "discountPct": 25,
+    "days": 2,
+    "repBoostPerDay": 8,
+    "pitch": "Reopening sale: 25% off for two days. Flyers out, regulars return."
+  }
+}

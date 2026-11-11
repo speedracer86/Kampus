@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E4E7EB;font-family:'Inter Tight',sans-serif;color:#23252B;-webkit-font-smoothing:antialiased}a{color:#2E7C46}a:hover{color:#23252B}</style>
+</helmet>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:860px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 5 · Locked picks on phone</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Phone versions of the three locked screens: voice <a href="#24a">24a</a>, Teach me <a href="#25a">25a</a>, re-teach <a href="#25b">25b</a>. The voice bar is the first row of the sheet on every screen that reads. The animation stage stacks: animation, step line, then Watch again. Same state as the desktop artboards.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+    <div id="26a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">26a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Voice bar at the top of the sheet · phone</span></div>
+      <div data-screen-label="26a Voice phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+        <div style="padding:56px 20px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex:none;">✕</div>
+            <div style="flex:1;font-size:15px;font-weight:800;">Prove it · 2 of 2</div>
+            <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12px;font-weight:700;">The Market</span>
+          </div>
+        <div style="flex:1;overflow-y:auto;padding:0 12px 16px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 8px;border-top:1.5px solid rgba(35,37,43,.12);border-bottom:1.5px solid rgba(35,37,43,.12);">
+            <sc-for list="{{ vGivens }}" as="g" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:6px;padding:12px 0;"><div style="font-size:12px;font-weight:700;color:rgba(35,37,43,.6);">{{ g.k }}</div><div style="font-weight:300;letter-spacing:-.04em;font-size:24px;line-height:1.05;color:{{ g.color }};">{{ g.v }}</div></div></sc-for>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #EEECE7;">
+                <div onClick="{{ playV }}" style="width:44px;height:44px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;cursor:pointer;">{{ vGlyph }}</div>
+                <div style="flex:1;font-size:13.5px;font-weight:700;line-height:1.25;min-width:0;">{{ vLabel }}</div>
+                <div onClick="{{ toggleSlow }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+                <div onClick="{{ toggleQuiet }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+              </div>
+            <div style="padding:20px 20px 20px;display:flex;flex-direction:column;gap:18px;">
+              <div style="display:flex;flex-wrap:wrap;column-gap:.22em;font-size:{{ promptSizePhone }};font-weight:600;line-height:1.24;letter-spacing:-.02em;"><sc-for list="{{ vWords }}" as="w" hint-placeholder-count="14"><span style="background:{{ w.bg }};color:{{ w.fg }};border-radius:6px;padding:0 3px;margin:0 -3px;transition:background .1s linear,color .25s ease;">{{ w.t }}</span></sc-for></div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+                <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:10px;padding:14px;min-height:56px;box-sizing:border-box;border-radius:18px;background:#F5F7F9;"><span style="width:24px;height:24px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-size:26px;line-height:1;">{{ a.label }}</span></div></sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:16px;border-top:1px solid #EEECE7;">
+                <sc-for list="{{ vHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;justify-content:center;gap:1px;height:48px;padding:0 14px;border-radius:999px;background:{{ h.pbg }};"><span style="font-size:13.5px;font-weight:700;white-space:nowrap;">{{ h.label }}</span><span style="font-size:11px;font-weight:700;color:rgba(35,37,43,.6);">{{ h.cost }}</span></div></sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 20px 34px;border-top:1.5px solid rgba(35,37,43,.12);">
+            <div style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15.5px;font-weight:700;">Check</div>
+          </div>
+      </div>
+    </div>
+    <div id="26b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">26b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Teach me with the animation stage · phone</span></div>
+      <div data-screen-label="26b Teach me phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+        <div style="padding:56px 20px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex:none;">✕</div>
+            <div style="flex:1;font-size:15px;font-weight:800;">Mixed · 3 of 4</div>
+            <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12px;font-weight:700;">The Market</span>
+          </div>
+        <div style="flex:1;overflow-y:auto;padding:0 12px 16px;">
+          <div style="background:#fff;border-radius:28px;padding:22px 16px 16px;display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;flex-direction:column;gap:8px;padding:0 4px;">
+              <div style="display:flex;align-items:center;"><span style="flex:1;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Teach me · token used, full pay</span><span onClick="{{ tmReset }}" style="font-size:12px;font-weight:700;color:rgba(35,37,43,.6);">{{ tmCount }}</span></div>
+              <div style="font-size:19px;font-weight:600;line-height:1.28;letter-spacing:-.015em;">A table spent $64. They leave a 15% tip. How much is the tip?</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;background:#F5F7F9;">
+                <div style="width:298px;height:82px;"><div style="width:372px;height:102px;display:flex;align-items:flex-end;transform:scale(.8);transform-origin:0 0;">
+                <sc-if value="{{ S1.s0 }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:relative;display:flex;padding-top:30px;font-weight:300;font-size:72px;line-height:1;font-variant-numeric:tabular-nums;text-align:center;">
+                    <span style="width:40px;color:rgba(35,37,43,.45);">$</span><span style="width:44px;">6</span><span style="width:44px;margin-left:{{ S1.m4 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">4</span><span style="width:44px;margin-left:{{ S1.m0 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">0</span><span style="width:44px;color:{{ S1.z2 }};transition:color .3s .5s;">0</span>
+                    <span style="position:absolute;bottom:6px;left:{{ S1.dotLeft }};width:12px;height:12px;border-radius:999px;background:{{ S1.dotBg }};transition:left .6s cubic-bezier(.32,.72,.33,1),background .3s .4s;"></span>
+                    <svg width="284" height="34" viewBox="0 0 284 34" style="position:absolute;top:0;left:0;overflow:visible;"><path d="M136 30 C136 4 92 4 92 26" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" style="stroke-dasharray:92;stroke-dashoffset:{{ S1.arc }};transition:stroke-dashoffset .6s ease;"></path><path d="M86 19 L92 27 L99 20" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:{{ S1.op }};transition:opacity .2s .5s;"></path></svg>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S1.s1 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S1.gap2 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:120px;border-radius:16px 0 0 16px;background:#23252B;color:#fff;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S1.halfBg }};color:{{ S1.halfFg }};transition:background .4s .3s,color .4s .3s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;color:#fff;opacity:{{ S1.op0 }};transition:opacity .2s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$6.40</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S1.s2 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S1.gap3 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);color:#fff;font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:240px;border-radius:16px 0 0 16px;background:{{ S1.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op0 }};transition:opacity .2s;">$6.40</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S1.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op0 }};transition:opacity .2s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;opacity:{{ S1.op }};transition:opacity .3s .5s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$9.60</div>
+                  </div>
+                </sc-if>
+              </div></div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ S1.kick }}</div>
+                  <div style="font-size:16px;font-weight:600;line-height:1.35;">{{ S1.line }}</div>
+                  <div style="font-size:14px;font-weight:600;color:#2E7C46;font-variant-numeric:tabular-nums;opacity:{{ S1.op }};transition:opacity .3s .5s;">{{ S1.read }}</div>
+                </div>
+                <div onClick="{{ replayDec }}" style="align-self:flex-start;height:44px;display:flex;align-items:center;padding:0 16px;border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">Watch again</div>
+              </div>
+            <div style="display:flex;flex-direction:column;padding:0 4px;">
+              <sc-for list="{{ tRows }}" as="r" hint-placeholder-count="3">
+                <sc-if value="{{ r.shown }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:88px minmax(0,1fr);gap:10px;align-items:baseline;padding:12px 0;border-top:1.5px solid #EEECE7;"><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:28px;line-height:1;color:{{ r.color }};">{{ r.val }}</span><span style="font-size:15px;font-weight:600;line-height:1.35;color:{{ r.color }};">{{ r.how }}</span></div></sc-if>
+                <sc-if value="{{ r.hidden }}" hint-placeholder-val="{{ false }}"><div onClick="{{ tmNext }}" style="height:48px;display:flex;align-items:center;padding:0 16px;margin-top:6px;border-radius:14px;background:#F5F7F9;font-size:14px;font-weight:600;color:{{ r.slotFg }};cursor:{{ r.cursor }};">{{ r.slot }}</div></sc-if>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        <div style="padding:12px 20px 34px;border-top:1.5px solid rgba(35,37,43,.12);">
+            <div style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;">Back to the question →</div>
+          </div>
+      </div>
+    </div>
+    <div id="26c" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">26c</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Re-teach with voice and the animation stage · phone</span></div>
+      <div data-screen-label="26c Re-teach phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+        <div style="padding:56px 20px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex:none;">✕</div>
+            <div style="flex:1;font-size:15px;font-weight:800;">Prove it · one more look</div>
+          </div>
+        <div style="flex:1;overflow-y:auto;padding:0 12px 16px;">
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid #EEECE7;">
+                <div onClick="{{ playR }}" style="width:44px;height:44px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;cursor:pointer;">{{ rGlyph }}</div>
+                <div style="flex:1;font-size:13.5px;font-weight:700;line-height:1.25;min-width:0;">{{ rLabel }}</div>
+                <div onClick="{{ toggleSlow }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+                <div onClick="{{ toggleQuiet }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+              </div>
+            <div style="padding:20px 16px 16px;display:flex;flex-direction:column;gap:16px;">
+              <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;">
+                <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Same idea, new numbers</div>
+                <div style="font-size:26px;font-weight:600;line-height:1.18;letter-spacing:-.025em;">Build the percent from 10%.</div>
+                <div style="font-size:15.5px;line-height:1.45;color:rgba(35,37,43,.75);">Here is 15% of $64.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:18px;background:#F5F7F9;">
+                <div style="width:298px;height:82px;"><div style="width:372px;height:102px;display:flex;align-items:flex-end;transform:scale(.8);transform-origin:0 0;">
+                <sc-if value="{{ S2.s0 }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:relative;display:flex;padding-top:30px;font-weight:300;font-size:72px;line-height:1;font-variant-numeric:tabular-nums;text-align:center;">
+                    <span style="width:40px;color:rgba(35,37,43,.45);">$</span><span style="width:44px;">6</span><span style="width:44px;margin-left:{{ S2.m4 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">4</span><span style="width:44px;margin-left:{{ S2.m0 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">0</span><span style="width:44px;color:{{ S2.z2 }};transition:color .3s .5s;">0</span>
+                    <span style="position:absolute;bottom:6px;left:{{ S2.dotLeft }};width:12px;height:12px;border-radius:999px;background:{{ S2.dotBg }};transition:left .6s cubic-bezier(.32,.72,.33,1),background .3s .4s;"></span>
+                    <svg width="284" height="34" viewBox="0 0 284 34" style="position:absolute;top:0;left:0;overflow:visible;"><path d="M136 30 C136 4 92 4 92 26" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" style="stroke-dasharray:92;stroke-dashoffset:{{ S2.arc }};transition:stroke-dashoffset .6s ease;"></path><path d="M86 19 L92 27 L99 20" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:{{ S2.op }};transition:opacity .2s .5s;"></path></svg>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S2.s1 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S2.gap2 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:120px;border-radius:16px 0 0 16px;background:#23252B;color:#fff;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S2.halfBg }};color:{{ S2.halfFg }};transition:background .4s .3s,color .4s .3s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;color:#fff;opacity:{{ S2.op0 }};transition:opacity .2s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$6.40</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S2.s2 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S2.gap3 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);color:#fff;font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:240px;border-radius:16px 0 0 16px;background:{{ S2.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op0 }};transition:opacity .2s;">$6.40</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S2.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op0 }};transition:opacity .2s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;opacity:{{ S2.op }};transition:opacity .3s .5s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$9.60</div>
+                  </div>
+                </sc-if>
+              </div></div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ S2.kick }}</div>
+                  <div style="font-size:16px;font-weight:600;line-height:1.35;">{{ S2.line }}</div>
+                  <div style="font-size:14px;font-weight:600;color:#2E7C46;font-variant-numeric:tabular-nums;opacity:{{ S2.op }};transition:opacity .3s .5s;">{{ S2.read }}</div>
+                </div>
+                <div onClick="{{ playR }}" style="align-self:flex-start;height:44px;display:flex;align-items:center;padding:0 16px;border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">Watch again</div>
+              </div>
+            </div>
+            <sc-for list="{{ rRows }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:baseline;gap:10px;padding:14px 20px;border-top:1.5px solid #EEECE7;background:{{ r.bg }};transition:background .2s;"><span style="font-weight:300;letter-spacing:-.045em;font-size:26px;line-height:1;">{{ r.n }}</span><span style="font-size:14.5px;font-weight:600;line-height:1.35;">{{ r.how }}</span><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:26px;line-height:1;color:{{ r.color }};">{{ r.val }}</span></div></sc-for>
+          </div>
+        </div>
+        <div style="padding:12px 20px 34px;border-top:1.5px solid rgba(35,37,43,.12);">
+            <div style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;">2 fresh ones →</div>
+          </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:860px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 4 · The decimal hop, for visual learners</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Picks so far: voice <a href="#24a">24a</a>, Teach me <a href="#22b">22b</a>, re-teach <a href="#23a">23a</a>. Both screens below gain a stage that shows the move itself: one small animation per number shown. $64.00: the decimal point hops one place left. $6.40: the bar splits in half. $6.40 and $3.20: the bars join into $9.60. The stage follows the line on screen. In Teach me it plays on its own when the line appears. In re-teach the voice cue for the 10% row fires it, and the voice bar sits at the top as in 24a. "Watch again" replays it; nothing waits on it.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+    <div id="25a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">25a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Teach me in the sheet, with the decimal hop</span></div>
+      <div data-screen-label="25a Teach me with decimal hop" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;">
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+          <sc-for list="{{ tHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+        </div>
+        <div style="background:#fff;border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 28px;display:flex;flex-direction:column;gap:22px;">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Teach me · token used, full pay</div>
+              <div style="font-size:24px;font-weight:600;line-height:1.25;letter-spacing:-.02em;">A table spent $64. They leave a 15% tip. How much is the tip?</div>
+            </div>
+            <div style="display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:32px;row-gap:16px;padding:20px 28px;border-radius:20px;background:#F5F7F9;">
+              <div style="grid-column:1;grid-row:1;width:372px;height:102px;display:flex;align-items:flex-end;">
+                <sc-if value="{{ S1.s0 }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:relative;display:flex;padding-top:30px;font-weight:300;font-size:72px;line-height:1;font-variant-numeric:tabular-nums;text-align:center;">
+                    <span style="width:40px;color:rgba(35,37,43,.45);">$</span><span style="width:44px;">6</span><span style="width:44px;margin-left:{{ S1.m4 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">4</span><span style="width:44px;margin-left:{{ S1.m0 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">0</span><span style="width:44px;color:{{ S1.z2 }};transition:color .3s .5s;">0</span>
+                    <span style="position:absolute;bottom:6px;left:{{ S1.dotLeft }};width:12px;height:12px;border-radius:999px;background:{{ S1.dotBg }};transition:left .6s cubic-bezier(.32,.72,.33,1),background .3s .4s;"></span>
+                    <svg width="284" height="34" viewBox="0 0 284 34" style="position:absolute;top:0;left:0;overflow:visible;"><path d="M136 30 C136 4 92 4 92 26" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" style="stroke-dasharray:92;stroke-dashoffset:{{ S1.arc }};transition:stroke-dashoffset .6s ease;"></path><path d="M86 19 L92 27 L99 20" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:{{ S1.op }};transition:opacity .2s .5s;"></path></svg>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S1.s1 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S1.gap2 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:120px;border-radius:16px 0 0 16px;background:#23252B;color:#fff;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S1.halfBg }};color:{{ S1.halfFg }};transition:background .4s .3s,color .4s .3s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;color:#fff;opacity:{{ S1.op0 }};transition:opacity .2s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$6.40</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S1.s2 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S1.gap3 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);color:#fff;font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:240px;border-radius:16px 0 0 16px;background:{{ S1.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op0 }};transition:opacity .2s;">$6.40</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S1.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S1.op0 }};transition:opacity .2s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;opacity:{{ S1.op }};transition:opacity .3s .5s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$9.60</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div onClick="{{ replayDec }}" style="grid-column:1;grid-row:2;justify-self:start;height:40px;display:flex;align-items:center;padding:0 16px;border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;" style-hover="background:#E6EAEE;">Watch again</div>
+              <div style="grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ S1.kick }}</div>
+                <div style="font-size:17px;font-weight:600;line-height:1.4;">{{ S1.line }}</div>
+                <div style="font-size:15px;font-weight:600;color:#2E7C46;font-variant-numeric:tabular-nums;opacity:{{ S1.op }};transition:opacity .3s .5s;">{{ S1.read }}</div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ tRows }}" as="r" hint-placeholder-count="3">
+                <sc-if value="{{ r.shown }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:baseline;padding:18px 0;border-top:1.5px solid #EEECE7;"><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ r.color }};">{{ r.val }}</span><span style="font-size:17px;font-weight:600;line-height:1.4;color:{{ r.color }};">{{ r.how }}</span></div></sc-if>
+                <sc-if value="{{ r.hidden }}" hint-placeholder-val="{{ false }}"><div onClick="{{ tmNext }}" style="height:56px;display:flex;align-items:center;padding:0 20px;margin-top:8px;border-radius:16px;background:#F5F7F9;font-size:15px;font-weight:600;color:{{ r.slotFg }};cursor:{{ r.cursor }};">{{ r.slot }}</div></sc-if>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div onClick="{{ tmReset }}" style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);cursor:pointer;">{{ tmCount }}</div>
+            <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">Back to the question →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="25b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">25b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Re-teach, voice bar on top, hop fired by the voice</span></div>
+      <div data-screen-label="25b Re-teach with decimal hop" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;"><div style="font-size:28px;font-weight:600;letter-spacing:-.025em;">One more look</div><div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Same idea, slower. Then 2 fresh ones.</div></div>
+        <div style="background:#fff;border-radius:28px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:10px;padding:20px 40px;border-bottom:1px solid #EEECE7;">
+            <div onClick="{{ playR }}" style="width:48px;height:48px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;">{{ rGlyph }}</div>
+            <div style="flex:1;font-size:14.5px;font-weight:700;padding:0 6px 0 4px;">{{ rLabel }}</div>
+            <div onClick="{{ toggleSlow }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+            <div onClick="{{ toggleQuiet }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+          </div>
+          <div style="padding:32px 40px 28px;display:flex;flex-direction:column;gap:22px;">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Same idea, new numbers</div>
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;">Build the percent from 10%.</div>
+              <div style="font-size:18px;line-height:1.45;color:rgba(35,37,43,.75);">Here is 15% of $64.</div>
+            </div>
+            <div style="display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:32px;row-gap:16px;padding:20px 28px;border-radius:20px;background:#F5F7F9;">
+              <div style="grid-column:1;grid-row:1;width:372px;height:102px;display:flex;align-items:flex-end;">
+                <sc-if value="{{ S2.s0 }}" hint-placeholder-val="{{ true }}">
+                  <div style="position:relative;display:flex;padding-top:30px;font-weight:300;font-size:72px;line-height:1;font-variant-numeric:tabular-nums;text-align:center;">
+                    <span style="width:40px;color:rgba(35,37,43,.45);">$</span><span style="width:44px;">6</span><span style="width:44px;margin-left:{{ S2.m4 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">4</span><span style="width:44px;margin-left:{{ S2.m0 }};transition:margin .6s cubic-bezier(.32,.72,.33,1);">0</span><span style="width:44px;color:{{ S2.z2 }};transition:color .3s .5s;">0</span>
+                    <span style="position:absolute;bottom:6px;left:{{ S2.dotLeft }};width:12px;height:12px;border-radius:999px;background:{{ S2.dotBg }};transition:left .6s cubic-bezier(.32,.72,.33,1),background .3s .4s;"></span>
+                    <svg width="284" height="34" viewBox="0 0 284 34" style="position:absolute;top:0;left:0;overflow:visible;"><path d="M136 30 C136 4 92 4 92 26" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" style="stroke-dasharray:92;stroke-dashoffset:{{ S2.arc }};transition:stroke-dashoffset .6s ease;"></path><path d="M86 19 L92 27 L99 20" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:{{ S2.op }};transition:opacity .2s .5s;"></path></svg>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S2.s1 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S2.gap2 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:120px;border-radius:16px 0 0 16px;background:#23252B;color:#fff;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S2.halfBg }};color:{{ S2.halfFg }};transition:background .4s .3s,color .4s .3s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op }};transition:opacity .3s .4s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;color:#fff;opacity:{{ S2.op0 }};transition:opacity .2s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$6.40</div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ S2.s2 }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;display:flex;gap:{{ S2.gap3 }};transition:gap .5s cubic-bezier(.32,.72,.33,1);color:#fff;font-weight:300;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums;">
+                    <div style="width:240px;border-radius:16px 0 0 16px;background:{{ S2.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op0 }};transition:opacity .2s;">$6.40</span></div>
+                    <div style="width:120px;border-radius:0 16px 16px 0;background:{{ S2.sumBg }};transition:background .3s .4s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;"><span style="opacity:{{ S2.op0 }};transition:opacity .2s;">$3.20</span></div>
+                    <div style="position:absolute;left:0;top:0;opacity:{{ S2.op }};transition:opacity .3s .5s;height:72px;display:flex;align-items:center;padding:0 16px;box-sizing:border-box;">$9.60</div>
+                  </div>
+                </sc-if>
+              </div>
+              <div onClick="{{ playR }}" style="grid-column:1;grid-row:2;justify-self:start;height:40px;display:flex;align-items:center;padding:0 16px;border-radius:999px;background:#fff;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;" style-hover="background:#E6EAEE;">Watch again</div>
+              <div style="grid-column:2;grid-row:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ S2.kick }}</div>
+                <div style="font-size:17px;font-weight:600;line-height:1.4;">{{ S2.line }}</div>
+                <div style="font-size:15px;font-weight:600;color:#2E7C46;font-variant-numeric:tabular-nums;opacity:{{ S2.op }};transition:opacity .3s .5s;">{{ S2.read }}</div>
+              </div>
+            </div>
+          </div>
+          <sc-for list="{{ rRows }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:120px minmax(0,1fr) auto;align-items:baseline;gap:20px;padding:18px 40px;border-top:1.5px solid #EEECE7;background:{{ r.bg }};transition:background .2s;"><div style="font-weight:300;letter-spacing:-.045em;font-size:40px;line-height:1;">{{ r.n }}</div><div style="font-size:17px;font-weight:600;line-height:1.4;">{{ r.how }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ r.color }};">{{ r.val }}</div></div></sc-for>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">Next: 2 fresh questions.</div>
+            <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">2 fresh ones →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:860px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 3 · Voice bar above the prompt</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;"><a href="#21a">21a</a> with the reader row moved to the top of the sheet. The disc, label and pills share the prompt's left edge, split from it by the sheet rule, so the prompt never shifts when the label changes. The footer goes back to feedback and Check.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+    <div id="24a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">24a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Voice bar at the top of the sheet</span></div>
+      <div data-screen-label="24a Voice bar above prompt" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+        <div style="display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+          <div style="display:flex;flex-direction:column;gap:6px;"><div style="font-size:28px;font-weight:600;letter-spacing:-.025em;">What you know</div><div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">The problem, pulled apart.</div></div>
+          <div style="display:flex;flex-direction:column;border-bottom:1.5px solid rgba(35,37,43,.12);">
+            <sc-for list="{{ vGivens }}" as="g" hint-placeholder-count="3"><div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);"><div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div></div></sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+            <sc-for list="{{ vHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};cursor:pointer;"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:28px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:10px;padding:20px 40px;border-bottom:1px solid #EEECE7;">
+            <div onClick="{{ playV }}" style="width:48px;height:48px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;">{{ vGlyph }}</div>
+            <div style="flex:1;font-size:14.5px;font-weight:700;padding:0 6px 0 4px;">{{ vLabel }}</div>
+            <div onClick="{{ toggleSlow }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+            <div onClick="{{ toggleQuiet }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+          </div>
+          <div style="padding:32px 40px;display:flex;flex-direction:column;gap:28px;">
+            <div style="display:flex;flex-wrap:wrap;column-gap:.22em;font-size:{{ promptSize }};font-weight:600;line-height:1.22;letter-spacing:-.025em;max-width:680px;"><sc-for list="{{ vWords }}" as="w" hint-placeholder-count="14"><span style="background:{{ w.bg }};color:{{ w.fg }};border-radius:8px;padding:0 4px;margin:0 -4px;transition:background .1s linear,color .25s ease;">{{ w.t }}</span></sc-for></div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:#F5F7F9;cursor:pointer;"><span style="width:28px;height:28px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span></div></sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">Pick one. No timer.</div>
+            <div style="padding:14px 28px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15px;font-weight:700;">Check</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:36px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:860px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 2 · Voice, Teach me, re-teach · redrawn from the repo</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">The shipped screens put the reader, its controls, the 3px world border and the wrong-answer bar inside the sheet at different left edges. Each option below gives the voice one fixed home and keeps every block on the 340 | 1fr grid. Read it leaves the help grid, since the reader is always present. Top spine is unchanged from <a href="#7a">7a</a>. Tap a reader disc to play the sweep. Band (3–4, 5–6, 7–8) is a tweak: it changes the disc, the idle line and the prompt size. Phones show the layout all three options share.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="font-size:13px;font-weight:800;">Voice read-aloud and word sweep</div>
+    <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+      <div id="21a" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">21a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Voice bar in the sheet footer</span></div>
+        <div data-screen-label="21a Voice bar in footer" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="font-size:28px;font-weight:600;letter-spacing:-.025em;">What you know</div><div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">The problem, pulled apart.</div></div>
+            <div style="display:flex;flex-direction:column;border-bottom:1.5px solid rgba(35,37,43,.12);">
+              <sc-for list="{{ vGivens }}" as="g" hint-placeholder-count="3"><div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);"><div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div></div></sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+              <sc-for list="{{ vHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};cursor:pointer;"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:28px;">
+              <div style="display:flex;flex-wrap:wrap;column-gap:.22em;font-size:{{ promptSize }};font-weight:600;line-height:1.22;letter-spacing:-.025em;max-width:680px;"><sc-for list="{{ vWords }}" as="w" hint-placeholder-count="14"><span style="background:{{ w.bg }};color:{{ w.fg }};border-radius:8px;padding:0 4px;margin:0 -4px;transition:background .1s linear,color .25s ease;">{{ w.t }}</span></sc-for></div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:#F5F7F9;cursor:pointer;"><span style="width:28px;height:28px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span></div></sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div onClick="{{ playV }}" style="width:48px;height:48px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;">{{ vGlyph }}</div>
+              <div style="font-size:14.5px;font-weight:700;padding:0 6px 0 4px;">{{ vLabel }}</div>
+              <div onClick="{{ toggleSlow }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+              <div onClick="{{ toggleQuiet }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+              <div style="flex:1;text-align:right;font-size:15px;font-weight:600;color:rgba(35,37,43,.55);padding-right:6px;">Pick one. No timer.</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15px;font-weight:700;">Check</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="21b" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">21b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Reader heads the left column</span></div>
+        <div data-screen-label="21b Reader in left column" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div onClick="{{ playV }}" style="width:64px;height:64px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;cursor:pointer;">{{ vGlyph }}</div>
+              <div style="display:flex;flex-direction:column;gap:8px;min-width:0;">
+                <div style="font-size:15px;font-weight:700;line-height:1.3;">{{ vLabel }}</div>
+                <div style="display:flex;gap:6px;">
+                  <div onClick="{{ toggleSlow }}" style="height:32px;display:flex;align-items:center;padding:0 13px;border-radius:999px;background:{{ slowGBg }};color:{{ slowFg }};font-size:12.5px;font-weight:700;cursor:pointer;">Slower</div>
+                  <div onClick="{{ toggleQuiet }}" style="height:32px;display:flex;align-items:center;padding:0 13px;border-radius:999px;background:{{ quietGBg }};color:{{ quietFg }};font-size:12.5px;font-weight:700;cursor:pointer;">Quiet</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;border-bottom:1.5px solid rgba(35,37,43,.12);">
+              <sc-for list="{{ vGivens }}" as="g" hint-placeholder-count="3"><div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);"><div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div></div></sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+              <sc-for list="{{ vHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};cursor:pointer;"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:28px;">
+              <div style="display:flex;flex-wrap:wrap;column-gap:.22em;font-size:{{ promptSize }};font-weight:600;line-height:1.22;letter-spacing:-.025em;max-width:680px;"><sc-for list="{{ vWords }}" as="w" hint-placeholder-count="14"><span style="background:{{ w.bg }};color:{{ w.fg }};border-radius:8px;padding:0 4px;margin:0 -4px;transition:background .1s linear,color .25s ease;">{{ w.t }}</span></sc-for></div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:#F5F7F9;cursor:pointer;"><span style="width:28px;height:28px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span></div></sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">Pick one. No timer.</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15px;font-weight:700;">Check</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="21c" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">21c</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Reader rail beside the prompt</span></div>
+        <div data-screen-label="21c Reader rail in sheet" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+            <div style="display:flex;flex-direction:column;gap:6px;"><div style="font-size:28px;font-weight:600;letter-spacing:-.025em;">What you know</div><div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">The problem, pulled apart.</div></div>
+            <div style="display:flex;flex-direction:column;border-bottom:1.5px solid rgba(35,37,43,.12);">
+              <sc-for list="{{ vGivens }}" as="g" hint-placeholder-count="3"><div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);"><div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div></div></sc-for>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+              <sc-for list="{{ vHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};cursor:pointer;"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 32px;display:grid;grid-template-columns:52px minmax(0,1fr);column-gap:24px;align-items:start;">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div onClick="{{ playV }}" style="width:52px;height:52px;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;">{{ vGlyph }}</div>
+                <div onClick="{{ toggleSlow }}" style="width:52px;height:52px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;cursor:pointer;">Slow</div>
+                <div onClick="{{ toggleQuiet }}" style="width:52px;height:52px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;cursor:pointer;">Quiet</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:28px;">
+                <div style="display:flex;flex-wrap:wrap;column-gap:.22em;font-size:{{ promptSize }};font-weight:600;line-height:1.22;letter-spacing:-.025em;"><sc-for list="{{ vWords }}" as="w" hint-placeholder-count="14"><span style="background:{{ w.bg }};color:{{ w.fg }};border-radius:8px;padding:0 4px;margin:0 -4px;transition:background .1s linear,color .25s ease;">{{ w.t }}</span></sc-for></div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                  <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:#F5F7F9;cursor:pointer;"><span style="width:28px;height:28px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span></div></sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px 20px 116px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">Pick one. No timer.</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15px;font-weight:700;">Check</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="21d" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">21d</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone · voice docks above Check</span></div>
+        <div data-screen-label="21d Voice phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+          <div style="padding:56px 20px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex:none;">✕</div>
+            <div style="flex:1;font-size:15px;font-weight:800;">Prove it · 2 of 2</div>
+            <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12px;font-weight:700;">The Market</span>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:0 12px 16px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 8px;border-top:1.5px solid rgba(35,37,43,.12);border-bottom:1.5px solid rgba(35,37,43,.12);">
+              <sc-for list="{{ vGivens }}" as="g" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:6px;padding:12px 0;"><div style="font-size:12px;font-weight:700;color:rgba(35,37,43,.6);">{{ g.k }}</div><div style="font-weight:300;letter-spacing:-.04em;font-size:24px;line-height:1.05;color:{{ g.color }};">{{ g.v }}</div></div></sc-for>
+            </div>
+            <div style="background:#fff;border-radius:28px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:18px;">
+              <div style="display:flex;flex-wrap:wrap;column-gap:.22em;font-size:{{ promptSizePhone }};font-weight:600;line-height:1.24;letter-spacing:-.02em;"><sc-for list="{{ vWords }}" as="w" hint-placeholder-count="14"><span style="background:{{ w.bg }};color:{{ w.fg }};border-radius:6px;padding:0 3px;margin:0 -3px;transition:background .1s linear,color .25s ease;">{{ w.t }}</span></sc-for></div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+                <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:10px;padding:14px;min-height:56px;box-sizing:border-box;border-radius:18px;background:#F5F7F9;"><span style="width:24px;height:24px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-size:26px;line-height:1;">{{ a.label }}</span></div></sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:16px;border-top:1px solid #EEECE7;">
+                <sc-for list="{{ vHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;justify-content:center;gap:1px;height:48px;padding:0 14px;border-radius:999px;background:{{ h.pbg }};"><span style="font-size:13.5px;font-weight:700;white-space:nowrap;">{{ h.label }}</span><span style="font-size:11px;font-weight:700;color:rgba(35,37,43,.6);">{{ h.cost }}</span></div></sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="padding:12px 20px 34px;display:flex;flex-direction:column;gap:10px;border-top:1.5px solid rgba(35,37,43,.12);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div onClick="{{ playV }}" style="width:44px;height:44px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;cursor:pointer;">{{ vGlyph }}</div>
+              <div style="flex:1;font-size:13.5px;font-weight:700;line-height:1.25;min-width:0;">{{ vLabel }}</div>
+              <div onClick="{{ toggleSlow }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowGBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+              <div onClick="{{ toggleQuiet }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietGBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+            </div>
+            <div style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15.5px;font-weight:700;">Check</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="font-size:13px;font-weight:800;">Teach me, one line per tap</div>
+    <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+      <div id="22a" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">22a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Walk in the help box · values on one column</span></div>
+        <div data-screen-label="22a Teach me in help box" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+            <sc-for list="{{ tHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+            <div style="display:flex;flex-direction:column;background:#fff;border-radius:20px;padding:18px 20px;margin-top:8px;">
+              <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;"><span style="flex:1;font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Teach me</span><span onClick="{{ tmReset }}" style="font-size:12.5px;font-weight:700;color:rgba(35,37,43,.6);cursor:pointer;">{{ tmCount }}</span></div>
+              <sc-for list="{{ tRows }}" as="r" hint-placeholder-count="3">
+                <sc-if value="{{ r.shown }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;align-items:baseline;padding:12px 0;border-top:1px solid #EEECE7;"><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:30px;line-height:1;color:{{ r.color }};">{{ r.val }}</span><span style="font-size:15px;font-weight:600;line-height:1.4;color:{{ r.color }};">{{ r.how }}</span></div></sc-if>
+                <sc-if value="{{ r.hidden }}" hint-placeholder-val="{{ false }}"><div onClick="{{ tmNext }}" style="height:44px;display:flex;align-items:center;padding:0 16px;margin-top:6px;border-radius:14px;background:#F5F7F9;font-size:13.5px;font-weight:600;color:{{ r.slotFg }};cursor:{{ r.cursor }};">{{ r.slot }}</div></sc-if>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:28px;opacity:.45;">
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">A table spent $64. They leave a 15% tip. How much is the tip?</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:#F5F7F9;"><span style="width:28px;height:28px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-size:34px;line-height:1;">{{ a.label }}</span></div></sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="22b" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">22b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Walk takes the sheet · same rows as the lesson</span></div>
+        <div data-screen-label="22b Teach me in sheet" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+            <sc-for list="{{ tHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 28px;display:flex;flex-direction:column;gap:22px;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Teach me · token used, full pay</div>
+                <div style="font-size:24px;font-weight:600;line-height:1.25;letter-spacing:-.02em;">A table spent $64. They leave a 15% tip. How much is the tip?</div>
+              </div>
+              <div style="display:flex;flex-direction:column;">
+                <sc-for list="{{ tRows }}" as="r" hint-placeholder-count="3">
+                  <sc-if value="{{ r.shown }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:20px;align-items:baseline;padding:18px 0;border-top:1.5px solid #EEECE7;"><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ r.color }};">{{ r.val }}</span><span style="font-size:17px;font-weight:600;line-height:1.4;color:{{ r.color }};">{{ r.how }}</span></div></sc-if>
+                  <sc-if value="{{ r.hidden }}" hint-placeholder-val="{{ false }}"><div onClick="{{ tmNext }}" style="height:56px;display:flex;align-items:center;padding:0 20px;margin-top:8px;border-radius:16px;background:#F5F7F9;font-size:15px;font-weight:600;color:{{ r.slotFg }};cursor:{{ r.cursor }};">{{ r.slot }}</div></sc-if>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div onClick="{{ tmReset }}" style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);cursor:pointer;">{{ tmCount }}</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">Back to the question →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="22c" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">22c</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Step strip above the answers · answers stay live</span></div>
+        <div data-screen-label="22c Teach me strip" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Need help</div>
+            <sc-for list="{{ tHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:8px;height:48px;padding:0 18px;border-radius:999px;background:{{ h.bg }};color:{{ h.fg }};"><span style="flex:1;font-size:14.5px;font-weight:700;">{{ h.label }}</span><span style="font-size:12px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:24px;">
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">A table spent $64. They leave a 15% tip. How much is the tip?</div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:6px;border-radius:22px;background:#F5F7F9;">
+                <sc-for list="{{ tRows }}" as="r" hint-placeholder-count="3">
+                  <sc-if value="{{ r.shown }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:8px;padding:16px 18px;min-height:132px;box-sizing:border-box;border-radius:16px;background:#fff;"><span style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ r.n }}</span><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;color:{{ r.color }};">{{ r.val }}</span><span style="font-size:14px;font-weight:600;line-height:1.35;color:rgba(35,37,43,.7);">{{ r.how }}</span></div></sc-if>
+                  <sc-if value="{{ r.hidden }}" hint-placeholder-val="{{ false }}"><div onClick="{{ tmNext }}" style="display:flex;flex-direction:column;gap:8px;padding:16px 18px;min-height:132px;box-sizing:border-box;border-radius:16px;cursor:{{ r.cursor }};"><span style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.45);">{{ r.n }}</span><span style="font-size:14px;font-weight:600;color:{{ r.slotFg }};">{{ r.slot }}</span></div></sc-if>
+                </sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:#F5F7F9;cursor:pointer;"><span style="width:28px;height:28px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-size:34px;line-height:1;">{{ a.label }}</span></div></sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">Token used. This answer keeps full pay.</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15px;font-weight:700;">Check</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="22d" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">22d</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone · walk under the help pills</span></div>
+        <div data-screen-label="22d Teach me phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+          <div style="padding:56px 20px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex:none;">✕</div>
+            <div style="flex:1;font-size:15px;font-weight:800;">Mixed · 3 of 4</div>
+            <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12px;font-weight:700;">The Market</span>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:0 12px 16px;display:flex;flex-direction:column;gap:14px;">
+            <div style="background:#fff;border-radius:28px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:16px;">
+              <div style="font-size:22px;font-weight:600;line-height:1.24;letter-spacing:-.02em;">A table spent $64. They leave a 15% tip. How much is the tip?</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+                <sc-for list="{{ vAnswers }}" as="a" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:10px;padding:0 14px;height:52px;border-radius:18px;background:#F5F7F9;"><span style="width:24px;height:24px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ a.key }}</span><span style="font-weight:300;letter-spacing:-.04em;font-size:24px;line-height:1;">{{ a.label }}</span></div></sc-for>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-top:16px;border-top:1px solid #EEECE7;">
+                <sc-for list="{{ tHelp }}" as="h" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;justify-content:center;gap:1px;height:48px;padding:0 14px;border-radius:999px;background:{{ h.pbg }};color:{{ h.fg }};"><span style="font-size:13.5px;font-weight:700;white-space:nowrap;">{{ h.label }}</span><span style="font-size:11px;font-weight:700;color:{{ h.costFg }};">{{ h.cost }}</span></div></sc-for>
+              </div>
+              <div style="display:flex;flex-direction:column;background:#F2F4F6;border-radius:18px;padding:14px 16px;">
+                <div style="display:flex;align-items:center;padding-bottom:8px;"><span style="flex:1;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Teach me</span><span onClick="{{ tmReset }}" style="font-size:12px;font-weight:700;color:rgba(35,37,43,.6);">{{ tmCount }}</span></div>
+                <sc-for list="{{ tRows }}" as="r" hint-placeholder-count="3">
+                  <sc-if value="{{ r.shown }}" hint-placeholder-val="{{ true }}"><div style="display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:baseline;padding:10px 0;border-top:1px solid rgba(35,37,43,.08);"><span style="font-weight:300;letter-spacing:-.045em;font-size:24px;line-height:1;color:{{ r.color }};">{{ r.val }}</span><span style="font-size:14.5px;font-weight:600;line-height:1.35;color:{{ r.color }};">{{ r.how }}</span></div></sc-if>
+                  <sc-if value="{{ r.hidden }}" hint-placeholder-val="{{ false }}"><div onClick="{{ tmNext }}" style="height:44px;display:flex;align-items:center;padding:0 14px;margin-top:6px;border-radius:14px;background:#fff;font-size:13.5px;font-weight:600;color:{{ r.slotFg }};cursor:{{ r.cursor }};">{{ r.slot }}</div></sc-if>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+          <div style="padding:12px 20px 34px;border-top:1.5px solid rgba(35,37,43,.12);">
+            <div style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15.5px;font-weight:700;">Check</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div style="font-size:13px;font-weight:800;">Re-teach panel with voice · Continue is live the whole time</div>
+    <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+      <div id="23a" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">23a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Rows are the script · voice bar in the footer</span></div>
+        <div data-screen-label="23a Re-teach rows as script" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;"><div style="font-size:28px;font-weight:600;letter-spacing:-.025em;">One more look</div><div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Same idea, slower. Then 2 fresh ones.</div></div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 0;display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Same idea, new numbers</div>
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;">Build the percent from 10%.</div>
+              <div style="font-size:18px;line-height:1.45;color:rgba(35,37,43,.75);padding-bottom:28px;">Here is 15% of $64.</div>
+            </div>
+            <sc-for list="{{ rRows }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:120px minmax(0,1fr) auto;align-items:baseline;gap:20px;padding:18px 40px;border-top:1.5px solid #EEECE7;background:{{ r.bg }};transition:background .2s;"><div style="font-weight:300;letter-spacing:-.045em;font-size:40px;line-height:1;">{{ r.n }}</div><div style="font-size:17px;font-weight:600;line-height:1.4;">{{ r.how }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ r.color }};">{{ r.val }}</div></div></sc-for>
+            <div style="display:flex;align-items:center;gap:10px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div onClick="{{ playR }}" style="width:48px;height:48px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;">{{ rGlyph }}</div>
+              <div style="font-size:14.5px;font-weight:700;padding:0 6px 0 4px;">{{ rLabel }}</div>
+              <div onClick="{{ toggleSlow }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+              <div onClick="{{ toggleQuiet }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+              <div style="flex:1;"></div>
+              <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">2 fresh ones →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="23b" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">23b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Script is the hero · controls on the kicker line</span></div>
+        <div data-screen-label="23b Re-teach script hero" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:0 4px;"><div style="font-size:28px;font-weight:600;letter-spacing:-.025em;">One more look</div><div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Same idea, slower. Then 2 fresh ones.</div></div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:32px 40px 28px;display:flex;flex-direction:column;gap:16px;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="flex:1;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Same idea, new numbers · 15% of $64</div>
+                <div onClick="{{ playR }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:#23252B;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">{{ rLabel }}</div>
+                <div onClick="{{ toggleSlow }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+                <div onClick="{{ toggleQuiet }}" style="height:36px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+              </div>
+              <div style="font-size:30px;font-weight:600;line-height:1.4;letter-spacing:-.02em;max-width:660px;"><sc-for list="{{ rLines }}" as="l" hint-placeholder-count="3"><span style="background:{{ l.bg }};color:{{ l.fg }};border-radius:8px;padding:2px 0;transition:background .15s,color .25s;">{{ l.t }}</span></sc-for></div>
+            </div>
+            <sc-for list="{{ rRows }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:120px minmax(0,1fr) auto;align-items:baseline;gap:20px;padding:18px 40px;border-top:1.5px solid #EEECE7;background:{{ r.bg }};transition:background .2s;"><div style="font-weight:300;letter-spacing:-.045em;font-size:40px;line-height:1;">{{ r.n }}</div><div style="font-size:17px;font-weight:600;line-height:1.4;">{{ r.how }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ r.color }};">{{ r.val }}</div></div></sc-for>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">Next: 2 fresh questions.</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">2 fresh ones →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="23c" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">23c</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Script in the left column, as cheat-sheet lines</span></div>
+        <div data-screen-label="23c Re-teach script left" style="width:1280px;background:#F5F7F9;border-radius:14px;box-sizing:border-box;padding:36px 48px 48px;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;align-items:start;">
+          <div style="display:flex;flex-direction:column;gap:24px;padding:0 4px;">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <div onClick="{{ playR }}" style="width:64px;height:64px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;cursor:pointer;">{{ rGlyph }}</div>
+              <div style="display:flex;flex-direction:column;gap:8px;min-width:0;">
+                <div style="font-size:15px;font-weight:700;line-height:1.3;">{{ rLabel }}</div>
+                <div style="display:flex;gap:6px;">
+                  <div onClick="{{ toggleSlow }}" style="height:32px;display:flex;align-items:center;padding:0 13px;border-radius:999px;background:{{ slowGBg }};color:{{ slowFg }};font-size:12.5px;font-weight:700;cursor:pointer;">Slower</div>
+                  <div onClick="{{ toggleQuiet }}" style="height:32px;display:flex;align-items:center;padding:0 13px;border-radius:999px;background:{{ quietGBg }};color:{{ quietFg }};font-size:12.5px;font-weight:700;cursor:pointer;">Quiet</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;border-bottom:1.5px solid rgba(35,37,43,.12);">
+              <sc-for list="{{ rLines }}" as="l" hint-placeholder-count="3"><div style="padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);font-size:17px;font-weight:600;line-height:1.4;color:{{ l.fg }};transition:color .25s;"><span style="background:{{ l.bg }};border-radius:6px;padding:2px 0;">{{ l.t }}</span></div></sc-for>
+            </div>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;">
+            <div style="padding:40px 40px 0;display:flex;flex-direction:column;gap:10px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Same idea, new numbers</div>
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;">Build the percent from 10%.</div>
+              <div style="font-size:18px;line-height:1.45;color:rgba(35,37,43,.75);padding-bottom:28px;">Here is 15% of $64.</div>
+            </div>
+            <sc-for list="{{ rRows }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:120px minmax(0,1fr) auto;align-items:baseline;gap:20px;padding:18px 40px;border-top:1.5px solid #EEECE7;background:{{ r.bg }};transition:background .2s;"><div style="font-weight:300;letter-spacing:-.045em;font-size:40px;line-height:1;">{{ r.n }}</div><div style="font-size:17px;font-weight:600;line-height:1.4;">{{ r.how }}</div><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ r.color }};">{{ r.val }}</div></div></sc-for>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">Next: 2 fresh questions.</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">2 fresh ones →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="23d" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">23d</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone · voice docks above Continue</span></div>
+        <div data-screen-label="23d Re-teach phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+          <div style="padding:56px 20px 12px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex:none;">✕</div>
+            <div style="flex:1;font-size:15px;font-weight:800;">Prove it · one more look</div>
+          </div>
+          <div style="flex:1;overflow-y:auto;padding:0 12px 16px;">
+            <div style="background:#fff;border-radius:28px;overflow:hidden;">
+              <div style="padding:24px 20px 18px;display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Same idea, new numbers</div>
+                <div style="font-size:28px;font-weight:600;line-height:1.18;letter-spacing:-.025em;">Build the percent from 10%.</div>
+                <div style="font-size:16px;line-height:1.45;color:rgba(35,37,43,.75);">Here is 15% of $64.</div>
+              </div>
+              <sc-for list="{{ rRows }}" as="r" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:6px;padding:14px 20px;border-top:1.5px solid #EEECE7;background:{{ r.bg }};transition:background .2s;"><div style="display:flex;align-items:baseline;justify-content:space-between;"><span style="font-weight:300;letter-spacing:-.045em;font-size:32px;line-height:1;">{{ r.n }}</span><span style="font-weight:300;letter-spacing:-.045em;font-size:32px;line-height:1;color:{{ r.color }};">{{ r.val }}</span></div><div style="font-size:15px;font-weight:600;line-height:1.4;">{{ r.how }}</div></div></sc-for>
+            </div>
+          </div>
+          <div style="padding:12px 20px 34px;display:flex;flex-direction:column;gap:10px;border-top:1.5px solid rgba(35,37,43,.12);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div onClick="{{ playR }}" style="width:44px;height:44px;flex:none;border-radius:999px;background:{{ discBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;cursor:pointer;">{{ rGlyph }}</div>
+              <div style="flex:1;font-size:13.5px;font-weight:700;line-height:1.25;min-width:0;">{{ rLabel }}</div>
+              <div onClick="{{ toggleSlow }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ slowGBg }};color:{{ slowFg }};font-size:13px;font-weight:700;cursor:pointer;">Slower</div>
+              <div onClick="{{ toggleQuiet }}" style="height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:{{ quietGBg }};color:{{ quietFg }};font-size:13px;font-weight:700;cursor:pointer;">Quiet</div>
+            </div>
+            <div style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;">2 fresh ones →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 1 · Daily lesson, five moves</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Built on the locked question screen (4d). The top spine shows the five moves and each question inside them, with no timer. Warm-up is 4 review questions. New idea teaches before any question, and Teach is free for the rest of that skill. Guided help fades from lots to none. Mixed pays a small bonus. Prove it needs 2 clean answers: a miss shows the step, re-teaches, then gives 2 fresh questions. Playable; click a move in the spine to jump.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+  <div id="7a" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">7a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Daily lesson desktop</span></div>
+    <div data-screen-label="7a Daily lesson desktop" style="width:1280px;min-height:800px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:28px;padding:18px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;">
+          <sc-for list="{{ spine }}" as="s" hint-placeholder-count="5">
+            <div onClick="{{ s.pick }}" style="display:flex;flex-direction:column;gap:7px;cursor:pointer;">
+              <div style="display:flex;align-items:baseline;gap:6px;">
+                <span style="font-size:13px;font-weight:800;color:{{ s.fg }};">{{ s.label }}</span>
+                <span style="font-size:11.5px;font-weight:700;color:rgba(35,37,43,.45);">{{ s.meta }}</span>
+              </div>
+              <div style="display:flex;gap:3px;"><sc-for list="{{ s.segs }}" as="c" hint-placeholder-count="4"><span style="flex:1;height:6px;border-radius:999px;background:{{ c }};"></span></sc-for></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#2E7C46;">{{ earnedLabel }}</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;">
+            <span style="font-size:12.5px;font-weight:700;">Teach Tokens</span>
+            <div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+          </div>
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Untimed</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;">{{ leftTitle }}</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">{{ leftSub }}</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+          <sc-if value="{{ isQ }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ givens }}" as="g" hint-placeholder-count="3">
+                <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                  <div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div>
+                  <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);border-bottom:1.5px solid rgba(35,37,43,.12);">
+                <div style="flex:1;font-size:15px;font-weight:700;">Problem family</div>
+                <span style="padding:5px 11px;border-radius:999px;background:#23252B;color:#fff;font-size:12.5px;font-weight:700;">{{ fam }}</span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding:0 0 8px;">Need help</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+                <sc-for list="{{ helpRows }}" as="r" hint-placeholder-count="4">
+                  <div onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};cursor:pointer;">
+                    <span style="flex:1;font-size:14.5px;font-weight:700;">{{ r.label }}</span>
+                    <span style="font-size:12px;font-weight:700;color:{{ r.costFg }};">{{ r.cost }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ helpTitle }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:10px;background:#fff;border-radius:20px;padding:18px 20px;margin-top:8px;">
+                  <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ helpTitle }}</div>
+                  <sc-if value="{{ helpBody }}" hint-placeholder-val="{{ false }}"><div style="font-size:17px;font-weight:400;line-height:1.45;text-wrap:pretty;white-space:pre-line;">{{ helpBody }}</div></sc-if>
+                  <sc-if value="{{ helpConfirm }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                      <div style="font-size:15px;font-weight:600;line-height:1.45;">{{ confirmText }}</div>
+                      <div style="display:flex;gap:8px;">
+                        <div onClick="{{ tryFirst }}" style="padding:10px 16px;border-radius:999px;background:#23252B;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">I'll try first</div>
+                        <div onClick="{{ useToken }}" style="padding:10px 16px;border-radius:999px;border:1.5px solid #23252B;font-size:13.5px;font-weight:700;cursor:pointer;">{{ useLabel }}</div>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isTeachView }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ ideaFacts }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                  <div style="flex:1;font-size:15px;font-weight:700;">{{ f.k }}</div>
+                  <div style="font-size:15px;font-weight:600;color:rgba(35,37,43,.6);">{{ f.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ doneMoves }}" as="d" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                  <span style="width:22px;height:22px;border-radius:999px;background:#58B372;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">✓</span>
+                  <div style="flex:1;font-size:15px;font-weight:700;">{{ d.label }}</div>
+                  <div style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">{{ d.meta }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">The Market</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">{{ crumb }}</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:{{ sheet }};border-radius:28px;overflow:hidden;">
+          <sc-if value="{{ isQ }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:28px;opacity:{{ qOp }};transition:opacity .25s;">
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">{{ qText }}</div>
+              <sc-if value="{{ scaffold }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:18px;background:#F5F7F9;">
+                  <span style="padding:4px 10px;border-radius:999px;background:#fff;font-size:12px;font-weight:700;color:rgba(35,37,43,.7);white-space:nowrap;">{{ scaffoldLvl }}</span>
+                  <span style="font-size:17px;font-weight:500;line-height:1.4;">{{ scaffold }}</span>
+                </div>
+              </sc-if>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+                  <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;transition:background .15s;">
+                    <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span>
+                    <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;display:flex;align-items:center;gap:16px;min-width:0;">
+                <sc-if value="{{ showPay }}" hint-placeholder-val="{{ false }}"><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">{{ payLabel }}</div></sc-if>
+                <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                  <div style="font-size:16px;font-weight:600;line-height:1.4;color:{{ fbColor }};text-wrap:pretty;">{{ fb }}</div>
+                  <sc-if value="{{ showPay }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ payPills }}" as="p" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12px;font-weight:700;">{{ p.t }}</span></sc-for></div></sc-if>
+                </div>
+              </div>
+              <div onClick="{{ act }}" style="padding:14px 28px;border-radius:999px;background:{{ btnBg }};color:{{ btnFg }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ btn }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isTeachView }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:28px;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ teachKicker }}</div>
+                <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">{{ teachTitle }}</div>
+                <div style="font-size:18px;font-weight:400;line-height:1.45;color:rgba(35,37,43,.75);max-width:620px;text-wrap:pretty;">{{ teachLede }}</div>
+              </div>
+              <div style="display:flex;flex-direction:column;">
+                <sc-for list="{{ teachSteps }}" as="t" hint-placeholder-count="3">
+                  <div style="display:grid;grid-template-columns:120px minmax(0,1fr) auto;align-items:baseline;gap:20px;padding:18px 0;border-top:1.5px solid #EEECE7;">
+                    <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;">{{ t.n }}</div>
+                    <div style="font-size:17px;font-weight:600;line-height:1.4;">{{ t.how }}</div>
+                    <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ t.color }};">{{ t.v }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">{{ teachFoot }}</div>
+              <div onClick="{{ teachGo }}" style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ teachBtn }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:28px;">
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;">Lesson done. Percent of a number is yours.</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <div style="display:flex;flex-direction:column;gap:10px;padding:22px;border-radius:20px;background:#F5F7F9;">
+                  <div style="font-size:13px;font-weight:700;color:rgba(35,37,43,.6);">Kredits today</div>
+                  <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:56px;line-height:1;color:#2E7C46;">{{ earnedBig }}</div>
+                  <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.6);">Spend them in your shop.</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:10px;padding:22px;border-radius:20px;background:#F5F7F9;">
+                  <div style="font-size:13px;font-weight:700;color:rgba(35,37,43,.6);">Real reward</div>
+                  <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:56px;line-height:1;">$0.50</div>
+                  <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.6);">For finishing. Waiting on a grown-up to approve.</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">The register is open. Today's customers want tips worked out.</div>
+              <div onClick="{{ restart }}" style="padding:14px 22px;border-radius:999px;border:1.5px solid #23252B;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">Run it again</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">Open the shop →</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="7b" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">7b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Daily lesson phone · same state as 7a</span></div>
+    <div data-screen-label="7b Daily lesson phone" style="width:390px;height:844px;background:{{ ground }};border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+      <div style="padding:56px 20px 12px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer;flex:none;">✕</div>
+          <div style="flex:1;font-size:15px;font-weight:800;">{{ moveName }}</div>
+          <div style="padding:10px 12px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;color:#2E7C46;font-variant-numeric:tabular-nums;">{{ earnedBig }}</div>
+          <div style="display:flex;align-items:center;gap:4px;padding:12px;border-radius:999px;background:#fff;flex:none;"><sc-for list="{{ tokenDots }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;">
+          <sc-for list="{{ spine }}" as="s" hint-placeholder-count="5">
+            <div onClick="{{ s.pick }}" style="display:flex;gap:2px;padding:8px 0;cursor:pointer;"><sc-for list="{{ s.segs }}" as="c" hint-placeholder-count="4"><span style="flex:1;height:5px;border-radius:999px;background:{{ c }};"></span></sc-for></div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 12px 20px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:14px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:0 8px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12px;font-weight:700;">The Market</span>
+          <span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">{{ crumbShort }}</span>
+        </div>
+        <sc-if value="{{ isQ }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0 8px;border-top:1.5px solid rgba(35,37,43,.12);border-bottom:1.5px solid rgba(35,37,43,.12);">
+            <sc-for list="{{ givens }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:6px;padding:12px 0;min-width:0;">
+                <div style="font-size:12px;font-weight:700;color:rgba(35,37,43,.6);">{{ g.k }}</div>
+                <div style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:24px;line-height:1.05;color:{{ g.color }};">{{ g.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:24px 20px 20px;display:flex;flex-direction:column;gap:18px;opacity:{{ qOp }};transition:opacity .25s;">
+              <div style="font-size:24px;font-weight:600;line-height:1.22;letter-spacing:-.02em;text-wrap:pretty;">{{ qText }}</div>
+              <sc-if value="{{ scaffold }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:#F5F7F9;">
+                  <span style="font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ scaffoldLvl }}</span>
+                  <span style="font-size:15.5px;font-weight:500;line-height:1.4;">{{ scaffold }}</span>
+                </div>
+              </sc-if>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+                <sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+                  <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:10px;padding:14px;min-height:56px;box-sizing:border-box;border-radius:18px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;">
+                    <span style="width:24px;height:24px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ a.key }}</span>
+                    <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:26px;line-height:1;">{{ a.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;padding:16px 20px 20px;border-top:1px solid #EEECE7;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Need help</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+                <sc-for list="{{ helpRows }}" as="r" hint-placeholder-count="4">
+                  <div onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:6px;padding:0 14px;height:44px;border-radius:999px;background:{{ r.phoneBg }};color:{{ r.fg }};cursor:pointer;">
+                    <span style="flex:1;font-size:14px;font-weight:700;white-space:nowrap;">{{ r.label }}</span>
+                    <span style="font-size:11.5px;font-weight:700;color:{{ r.costFg }};white-space:nowrap;">{{ r.cost }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-if value="{{ helpTitle }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:8px;background:#F2F4F6;border-radius:18px;padding:14px 16px;margin-top:4px;">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ helpTitle }}</div>
+                  <sc-if value="{{ helpBody }}" hint-placeholder-val="{{ false }}"><div style="font-size:15.5px;font-weight:400;line-height:1.45;text-wrap:pretty;white-space:pre-line;">{{ helpBody }}</div></sc-if>
+                  <sc-if value="{{ helpConfirm }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                      <div style="font-size:14.5px;font-weight:600;line-height:1.45;">{{ confirmText }}</div>
+                      <div style="display:flex;gap:6px;">
+                        <div onClick="{{ tryFirst }}" style="flex:1;height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:#23252B;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">I'll try first</div>
+                        <div onClick="{{ useToken }}" style="flex:1;height:44px;box-sizing:border-box;display:flex;align-items:center;padding:0 14px;border-radius:999px;border:1.5px solid #23252B;font-size:13.5px;font-weight:700;cursor:pointer;">{{ useLabel }}</div>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isTeachView }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:28px;padding:24px 20px;display:flex;flex-direction:column;gap:18px;">
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ teachKicker }}</div>
+              <div style="font-size:28px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;">{{ teachTitle }}</div>
+              <div style="font-size:16px;font-weight:400;line-height:1.45;color:rgba(35,37,43,.75);text-wrap:pretty;">{{ teachLede }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ teachSteps }}" as="t" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:6px;padding:14px 0;border-top:1.5px solid #EEECE7;">
+                  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">
+                    <span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:32px;line-height:1;">{{ t.n }}</span>
+                    <span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:32px;line-height:1;color:{{ t.color }};">{{ t.v }}</span>
+                  </div>
+                  <div style="font-size:15px;font-weight:600;line-height:1.4;">{{ t.how }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:14px;font-weight:600;line-height:1.4;color:rgba(35,37,43,.55);">{{ teachFoot }}</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:28px;padding:24px 20px;display:flex;flex-direction:column;gap:16px;">
+            <div style="font-size:28px;font-weight:600;line-height:1.18;letter-spacing:-.025em;">Lesson done. Percent of a number is yours.</div>
+            <div style="display:flex;flex-direction:column;">
+              <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid #EEECE7;">
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">Kredits today</span><span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">Spend them in your shop.</span></div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:#2E7C46;">{{ earnedBig }}</div>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid #EEECE7;">
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">Real reward</span><span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">For finishing. A grown-up approves it.</span></div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;">$0.50</div>
+              </div>
+            </div>
+            <div style="font-size:14px;font-weight:600;line-height:1.4;color:rgba(35,37,43,.55);">The register is open. Today's customers want tips worked out.</div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="padding:14px 20px 34px;display:flex;flex-direction:column;gap:10px;border-top:1.5px solid rgba(35,37,43,.12);">
+        <sc-if value="{{ isQ }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <sc-if value="{{ showPay }}" hint-placeholder-val="{{ false }}"><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;color:#2E7C46;">{{ payLabel }}</div></sc-if>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;">
+              <div style="font-size:14.5px;font-weight:600;line-height:1.35;color:{{ fbColor }};text-wrap:pretty;">{{ fb }}</div>
+              <sc-if value="{{ showPay }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ payPills }}" as="p" hint-placeholder-count="2"><span style="padding:3px 8px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:11px;font-weight:700;">{{ p.t }}</span></sc-for></div></sc-if>
+            </div>
+          </div>
+          <div onClick="{{ act }}" style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:{{ btnBg }};color:{{ btnFg }};font-size:15.5px;font-weight:700;cursor:pointer;">{{ btn }}</div>
+        </sc-if>
+        <sc-if value="{{ isTeachView }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ teachGo }}" style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;">{{ teachBtn }}</div>
+        </sc-if>
+        <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:8px;">
+            <div onClick="{{ restart }}" style="height:52px;box-sizing:border-box;display:flex;align-items:center;padding:0 18px;border-radius:999px;border:1.5px solid #23252B;font-size:15px;font-weight:700;cursor:pointer;">Again</div>
+            <div style="flex:1;height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;">Open the shop →</div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;band&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;a&quot;,&quot;b&quot;,&quot;c&quot;],&quot;default&quot;:&quot;c&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Turn 2 · voice&quot;},&quot;ground&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grey&quot;,&quot;mist&quot;],&quot;default&quot;:&quot;grey&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tokensStart&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:0,&quot;max&quot;:3,&quot;step&quot;:1,&quot;default&quot;:3,&quot;tsType&quot;:&quot;number&quot;}}">class Component extends DCLogic {
+  state = {};
+  get VW() { return 'A table spent $64. They leave a 15% tip. How much is the tip?'.split(' '); }
+  componentDidMount() {
+    if ((this.props.band ?? 'c') === 'a') this._auto = setTimeout(() => this.playV(), 900);
+    this._dec = setTimeout(() => this.setState({ dec: true }), 1200);
+  }
+  replayDec() { clearTimeout(this._dec); this.setState({ dec: false }); this._dec = setTimeout(() => this.setState({ dec: true }), 450); }
+  componentWillUnmount() { clearTimeout(this._auto); clearInterval(this._vt); clearInterval(this._rt); }
+  runV() {
+    clearInterval(this._vt);
+    this._vt = setInterval(() => {
+      if ((this.state.v ?? -1) + 1 >= this.VW.length) { clearInterval(this._vt); this.setState({ vOn: false, v: -1 }); }
+      else this.setState(s => ({ v: (s.v ?? -1) + 1 }));
+    }, this.state.slow ? 440 : 290);
+  }
+  playV() {
+    if (this.state.vOn) { clearInterval(this._vt); this.setState({ vOn: false, v: -1 }); return; }
+    this.setState({ vOn: true, v: 0, quiet: false }, () => this.runV());
+  }
+  playR() {
+    clearInterval(this._rt);
+    if (this.state.rOn) { this.setState({ rOn: false, r: -1 }); return; }
+    this.setState({ rOn: true, r: -1, quiet: false });
+    clearTimeout(this._dec);
+    const cue = n => { this.setState({ r: n, a2: false }); clearTimeout(this._a2); this._a2 = setTimeout(() => this.setState({ a2: true }), 350); };
+    this._dec = setTimeout(() => {
+      cue(0);
+      this._rt = setInterval(() => {
+        if ((this.state.r ?? -1) + 1 >= 3) { clearInterval(this._rt); this.setState({ rOn: false, r: 3 }); }
+        else cue(this.state.r + 1);
+      }, this.state.slow ? 3200 : 2400);
+    }, 450);
+  }
+  renderVals() {
+    const st = this.state;
+    const mk = (t, g, find, fam, a, r, hint, show, sc, lvl) => ({ t, g, find, fam, a, r, hint, show, sc, lvl });
+    const P = 'Percent of';
+    const Q = {
+      warm: [
+        mk('A $60 jacket is 25% off. How much do you save?', [['Price', '$60'], ['Off', '25%']], 'the savings', P, ['$12', '$15', '$20', '$45'], 1, '25% is one quarter.', '$60 ÷ 4 = $15.'),
+        mk('You sold 3/4 of your 24 cookies. How many sold?', [['Cookies', '24'], ['Sold', '3/4']], 'how many', 'Fraction of', ['16', '18', '20', '6'], 1, 'Find 1/4 first.', '24 ÷ 4 = 6. Three of those is 18.'),
+        mk('Lemonade is 2 cups mix to 5 cups water. How much mix for 15 cups water?', [['Mix', '2'], ['Water', '5 → 15']], 'the mix', 'Ratio', ['4', '5', '6', '7.5'], 2, 'How many 5s are in 15?', '15 is 3 × 5, so 3 × 2 = 6 cups.'),
+        mk('Write 0.4 as a percent.', [['Decimal', '0.4']], 'the percent', 'Convert', ['4%', '40%', '0.4%', '400%'], 1, 'Percent means out of 100.', '0.4 = 40 out of 100 = 40%.'),
+      ],
+      guided: [
+        mk('Your stand made $30. 20% goes to supplies. How much is that?', [['Made', '$30'], ['Supplies', '20%']], 'the supplies', P, ['$3', '$6', '$9', '$10'], 1, '20% is two 10%s.', '10% is $3, so 20% is $6.', '10% of $30 = $3. Now take two of them.', 'Lots of help'),
+        mk('A $60 order gets a 15% delivery fee. What is the fee?', [['Order', '$60'], ['Fee', '15%']], 'the fee', P, ['$6', '$9', '$12', '$15'], 1, '15% is 10% plus 5%.', '$6 + $3 = $9.', '10% of $60 = $6. 5% is half of that.', 'Lots of help'),
+        mk('You keep 30% of $40 in tips. How much do you keep?', [['Tips', '$40'], ['Keep', '30%']], 'what you keep', P, ['$3', '$10', '$12', '$14'], 2, 'Three 10%s.', '10% is $4, so 30% is $12.', 'Start with 10% of $40.', 'Some help'),
+        mk('A supplier charges 5% on an $80 bill. How much extra?', [['Bill', '$80'], ['Charge', '5%']], 'the charge', P, ['$4', '$5', '$8', '$16'], 0, '5% is half of 10%.', '10% is $8, half is $4.', 'Find 10% first.', 'Some help'),
+        mk('25% of today\'s $36 goes to savings. How much is saved?', [['Today', '$36'], ['Save', '25%']], 'the savings', P, ['$6', '$9', '$12', '$25'], 1, '25% is a quarter.', '$36 ÷ 4 = $9.'),
+        mk('A $50 order has 12% tax. What is the tax?', [['Order', '$50'], ['Tax', '12%']], 'the tax', P, ['$5', '$6', '$6.50', '$12'], 1, '12% is 10% plus 2%.', '$5 + $1 = $6.'),
+      ],
+      mixed: [
+        mk('35% of a $20 sale is profit. How much profit?', [['Sale', '$20'], ['Profit', '35%']], 'the profit', P, ['$5', '$7', '$3.50', '$13'], 1, '30% plus 5%.', '$6 + $1 = $7.'),
+        mk('2/3 of your 27 muffins are blueberry. How many?', [['Muffins', '27'], ['Blueberry', '2/3']], 'how many', 'Fraction of', ['9', '18', '24', '21'], 1, 'Find 1/3 first.', '27 ÷ 3 = 9, two of those is 18.'),
+        mk('3 lemons make 2 pitchers. How many lemons for 8 pitchers?', [['Lemons', '3'], ['Pitchers', '2 → 8']], 'the lemons', 'Ratio', ['10', '12', '16', '6'], 1, '8 pitchers is 4 times 2.', '4 × 3 = 12 lemons.'),
+        mk('40% of a $55 day goes to rent. How much is rent?', [['Day', '$55'], ['Rent', '40%']], 'the rent', P, ['$20', '$22', '$15', '$33'], 1, 'Four 10%s.', '10% is $5.50, × 4 = $22.'),
+      ],
+      prove: [
+        mk('18% of a $50 day goes to supplies. How much is that?', [['Day', '$50'], ['Supplies', '18%']], 'the supplies', P, ['$5', '$9', '$10', '$18'], 1, '10% plus 8%, or 20% minus 2%.', '$10 − $1 = $9.'),
+        mk('A table spent $64. They leave a 15% tip. How much is the tip?', [['Bill', '$64'], ['Tip', '15%']], 'the tip', P, ['$6.40', '$9.60', '$8.40', '$12'], 1, '10% plus 5%.', '$6.40 + $3.20 = $9.60.'),
+      ],
+      fresh: [
+        mk('12% of a $25 sale is your cut. How much is that?', [['Sale', '$25'], ['Cut', '12%']], 'your cut', P, ['$2.50', '$3', '$3.50', '$12'], 1, '10% plus 2%.', '$2.50 + $0.50 = $3.'),
+        mk('35% of $60 goes back into stock. How much is that?', [['Total', '$60'], ['Stock', '35%']], 'the stock money', P, ['$18', '$21', '$24', '$35'], 1, '30% plus 5%.', '$18 + $3 = $21.'),
+      ],
+    };
+    const MOVES = [['warm', 'Warm-up', 'review'], ['idea', 'New idea', 'teach'], ['guided', 'Guided', 'help fades'], ['mixed', 'Mixed', '+3 bonus'], ['prove', 'Prove it', '2 clean']];
+    const m = st.m ?? 0, q = st.q ?? 0, fresh = !!st.fresh, reteach = !!st.reteach;
+    const listFor = i => i === 1 ? [null] : i === 4 ? (fresh ? Q.fresh : Q.prove) : Q[MOVES[i][0]];
+    const isDone = m >= 5, isIdea = m === 1, isTeachView = !isDone && (isIdea || reteach), isQ = !isDone && !isTeachView;
+    const cur = isQ ? listFor(m)[q] : null;
+    const tokens = st.tokens ?? Math.max(0, Math.min(3, this.props.tokensStart ?? 3));
+    const tokenDots = [0, 1, 2].map(i => i < tokens ? '#E8C94F' : 'transparent');
+    const earned = st.earned ?? 0;
+    const reset = { sel: null, checked: false, tries: 0, hp: null, taught: false, usedToken: false, halfTeach: false, missed: false, lastPay: 0, lastPills: [] };
+    const go = (mi, qi = 0, extra = {}) => this.setState({ ...reset, m: mi, q: qi, reteach: false, ...extra });
+
+    const spine = MOVES.map(([k, label, meta], i) => {
+      const n = i === 1 ? 1 : listFor(i).length;
+      const segs = Array.from({ length: n }, (_, j) => i < m || isDone ? '#58B372' : i > m ? '#D9DEE4' : j < q ? '#58B372' : j === q ? '#23252B' : '#D9DEE4');
+      return { label, meta, segs, fg: i === m ? '#23252B' : i < m || isDone ? '#2E7C46' : 'rgba(35,37,43,.5)', pick: () => go(i, 0, { fresh: false }) };
+    });
+
+    const newSkill = m === 1 || m === 2;
+    const hp = st.hp ?? null;
+    const HP = [['read', 'Read it'], ['hint', 'Hint'], ['show', 'Show me'], ['teach', 'Teach me']];
+    const teachCost = newSkill ? 'Free today' : tokens > 0 ? '1 token' : 'Half pay';
+    const helpRows = HP.map(([k, label]) => {
+      const on = hp === k;
+      return { label, cost: k === 'teach' ? teachCost : 'Free', bg: on ? '#23252B' : k === 'teach' ? '#E8C94F' : '#fff', phoneBg: on ? '#23252B' : k === 'teach' ? '#E8C94F' : '#EEF1F4', fg: on ? '#fff' : '#23252B', costFg: on ? 'rgba(255,255,255,.7)' : 'rgba(35,37,43,.6)',
+        pick: () => this.setState(s => k === 'teach' && newSkill ? { hp: 'teach', taught: true } : { hp: s.hp === k ? null : k }) };
+    });
+    const helpTitle = hp ? HP.find(h => h[0] === hp)[1] : '';
+    const teachBody = cur ? '1. ' + cur.hint + '\n2. ' + cur.show + '\n3. Check it: does your answer fit ' + cur.find + '?' : '';
+    const helpBody = !cur || !hp ? '' : hp === 'read' ? 'Playing the question · 0:06' : hp === 'hint' ? cur.hint : hp === 'show' ? cur.show : st.taught ? teachBody : '';
+    const helpConfirm = hp === 'teach' && !st.taught;
+    const confirmText = tokens > 0 ? 'Spend a Teach Token? ' + tokens + ' left this run. A token keeps full pay. Save them for the hard ones.' : 'No tokens left this run. Teach still works, at half pay for this answer.';
+    const useLabel = tokens > 0 ? 'Use a token' : 'Teach me anyway';
+    const tryFirst = () => this.setState({ hp: null });
+    const useToken = () => this.setState(s => ({ taught: true, usedToken: (s.tokens ?? tokens) > 0, halfTeach: (s.tokens ?? tokens) === 0, tokens: Math.max(0, (s.tokens ?? tokens) - 1) }));
+
+    const sel = st.sel ?? null, checked = !!st.checked, right = checked && cur && sel === cur.r;
+    const answers = cur ? cur.a.map((label, i) => {
+      const isSel = sel === i;
+      return { label, key: String(i + 1),
+        bg: checked ? (i === cur.r && right ? '#EAF6EE' : isSel ? '#FBEDEC' : '#F5F7F9') : (isSel ? '#23252B' : '#F5F7F9'),
+        fg: !checked && isSel ? '#fff' : '#23252B', keyBg: !checked && isSel ? 'rgba(255,255,255,.16)' : '#fff',
+        border: checked && i === cur.r && right ? '1.5px solid #58B372' : checked && isSel ? '1.5px solid #E4766C' : '1.5px solid transparent',
+        pick: () => { if (!st.checked) this.setState({ sel: i }); } };
+    }) : [];
+    const givens = cur ? cur.g.map(([k, v]) => ({ k, v, color: '#23252B' })).concat([{ k: 'Find', v: cur.find, color: 'rgba(35,37,43,.45)' }]) : [];
+
+    const isProve = m === 4;
+    const act = () => {
+      if (sel === null || !cur) return;
+      if (!checked) {
+        const ok = sel === cur.r;
+        if (!ok) { this.setState(isProve ? { checked: true, missed: true } : { checked: true }); return; }
+        const first = (st.tries ?? 0) === 0;
+        const streak = first ? (st.streak ?? 0) + 1 : 1;
+        const mult = streak >= 8 ? 3 : streak >= 5 ? 2 : streak >= 3 ? 1.5 : 1;
+        const half = !!st.halfTeach;
+        const pay = Math.ceil((10 * mult + (first ? 5 : 0) + (m === 3 ? 3 : 0)) * (half ? .5 : 1));
+        const pills = [{ t: 'base 10', bg: '#F5F7F9', fg: '#23252B' }]
+          .concat(mult > 1 ? [{ t: '×' + mult + ' streak', bg: '#23252B', fg: '#fff' }] : [])
+          .concat(first ? [{ t: '+5 first try', bg: '#EAF6EE', fg: '#2E7C46' }] : [])
+          .concat(m === 3 ? [{ t: '+3 mixed', bg: '#EAF6EE', fg: '#2E7C46' }] : [])
+          .concat(st.usedToken ? [{ t: 'token used · full pay', bg: '#FBF6E4', fg: '#8A6D1C' }] : [])
+          .concat(half ? [{ t: 'half pay · teach', bg: '#FBF6E4', fg: '#8A6D1C' }] : []);
+        this.setState(s => ({ checked: true, streak, lastPay: pay, lastPills: pills, earned: (s.earned ?? 0) + pay }));
+        return;
+      }
+      if (!right) {
+        if (isProve) { this.setState({ ...reset, reteach: true }); return; }
+        this.setState(s => ({ checked: false, sel: null, tries: (s.tries ?? 0) + 1 }));
+        return;
+      }
+      const n = listFor(m).length;
+      if (q + 1 < n) go(m, q + 1, { fresh });
+      else go(m + 1, 0, { fresh: false });
+    };
+    const fb = !cur ? '' : !checked ? (sel === null ? 'Pick one. No timer.' : 'Lock it in when you\'re ready.')
+      : right ? (isProve ? 'Clean. ' + (q === 0 ? 'One more.' : 'Skill proved.') : 'Profit. W.')
+      : 'Not yet. Here\'s the step: ' + cur.show + (isProve ? ' Let\'s go over it, then 2 fresh ones.' : '');
+    const fbColor = !checked ? 'rgba(35,37,43,.55)' : right ? '#2E7C46' : '#C2463B';
+    const btn = !checked ? 'Check' : right ? (isProve && q === 1 ? 'Finish →' : 'Next →') : isProve ? 'Go over it' : 'Try again';
+    const btnBg = sel === null ? '#E6EAEE' : '#23252B', btnFg = sel === null ? 'rgba(35,37,43,.45)' : '#fff';
+
+    const curMove = MOVES[Math.min(m, 4)];
+    const nQ = isQ ? listFor(m).length : 0;
+    const crumb = isDone ? 'Lesson done' : isTeachView ? (reteach ? 'Prove it · going over it' : 'New idea · percent of a number') : curMove[1] + ' · ' + (q + 1) + ' of ' + nQ + (m === 0 ? ' · review' : m === 3 ? ' · mixed bag' : '');
+    const leftTitle = isDone ? 'Five of five' : isTeachView ? (reteach ? 'One more look' : 'New idea') : 'What you know';
+    const leftSub = isDone ? 'No timer. Took about 17 minutes.' : isTeachView ? (reteach ? 'Same idea, slower. Then 2 fresh ones.' : 'Teach is free for this skill today.') : 'The problem, pulled apart.';
+    const ideaFacts = [{ k: 'Skill', v: 'Percent of a number' }, { k: 'Unit', v: 'Price the dinner' }, { k: 'Teach Tokens', v: 'Not used today' }];
+    const teachSteps = [
+      { n: '10%', how: 'Move the decimal one place left. $48 becomes $4.80.', v: '$4.80', color: '#23252B' },
+      { n: '5%', how: 'Half of 10%.', v: '$2.40', color: '#23252B' },
+      { n: '15%', how: 'Add them. Any percent is built from 10s, 5s and 1s.', v: '$7.20', color: '#2E7C46' },
+    ];
+    const doneMoves = MOVES.map(([k, label], i) => ({ label, meta: i === 1 ? 'taught' : listFor(i).length + ' questions' }));
+    const restart = () => this.setState({ ...reset, m: 0, q: 0, fresh: false, reteach: false, earned: 0, streak: 0, tokens: undefined });
+
+    const band = this.props.band ?? 'c', kid = band !== 'c';
+    const vOn = !!st.vOn, v = st.v ?? -1, slow = !!st.slow, quiet = !!st.quiet, rOn = !!st.rOn, r = st.r ?? -1;
+    const tog = on => ({ bg: on ? '#23252B' : '#F5F7F9', gbg: on ? '#23252B' : '#fff', fg: on ? '#fff' : '#23252B' });
+    const sl = tog(slow), qt = tog(quiet);
+    const idle = quiet ? 'Quiet. Tap to hear it.' : band === 'a' ? 'Reads on its own. Tap to hear it again.' : band === 'b' ? 'Tap to hear it.' : 'Read it to me';
+    const tm = st.tm ?? 1;
+    const TR = [['$6.40', '10% of $64. Move the decimal one place left.'], ['$3.20', '5% is half of 10%.'], ['$9.60', 'Add them. 10% + 5% = 15%.']];
+    const RL = ['Start with ten percent. Move the decimal one place left.', 'Five percent is half of that.', 'Add them and you have fifteen percent.'];
+    const RR = [['10%', 'Move the decimal one place left.', '$6.40'], ['5%', 'Half of 10%.', '$3.20'], ['15%', 'Add them.', '$9.60']];
+    const mkHelp = on => [['Hint', 'Free'], ['Show me', 'Free'], ['Teach me', '1 token']].map(([label, cost], i) => {
+      const p = on && i === 2;
+      return { label, cost, bg: p ? '#23252B' : i === 2 ? '#E8C94F' : '#fff', pbg: p ? '#23252B' : i === 2 ? '#E8C94F' : '#EEF1F4', fg: p ? '#fff' : '#23252B', costFg: p ? 'rgba(255,255,255,.7)' : 'rgba(35,37,43,.6)' };
+    });
+    const SC = [['Step 1 · watch the decimal', '10% is one hop to the left.', '$64.00 becomes $6.40'], ['Step 2 · watch it split', '5% is half of 10%.', '$6.40 ÷ 2 = $3.20'], ['Step 3 · watch them join', '10% and 5% make 15%.', '$6.40 + $3.20 = $9.60']];
+    const stage = (s, on) => ({ s0: s === 0, s1: s === 1, s2: s === 2, kick: SC[s][0], line: SC[s][1], read: SC[s][2],
+      dotLeft: on ? '86px' : '130px', m4: on ? '16px' : '0px', m0: on ? '0px' : '16px', dotBg: on ? '#2E7C46' : '#23252B', z2: on ? 'transparent' : '#23252B', arc: on ? 0 : 92, op: on ? 1 : 0, op0: on ? 0 : 1,
+      gap2: on ? '12px' : '0px', halfBg: on ? '#E6EAEE' : '#23252B', halfFg: on ? 'rgba(35,37,43,.45)' : '#fff', gap3: on ? '0px' : '12px', sumBg: on ? '#2E7C46' : '#23252B' });
+    const X = {
+      S1: stage(Math.max(0, Math.min(2, tm - 1)), !!st.dec), S2: stage(Math.max(0, Math.min(2, r)), r >= 0 && st.a2 !== false),
+      replayDec: () => this.replayDec(),
+      vWords: this.VW.map((t, i) => ({ t, bg: vOn && i === v ? '#FFE9A8' : 'transparent', fg: vOn && i > v ? '#B9BBC1' : '#23252B' })),
+      promptSize: band === 'a' ? '48px' : band === 'b' ? '44px' : '40px', promptSizePhone: band === 'a' ? '28px' : band === 'b' ? '26px' : '24px',
+      discBg: kid ? '#F4BE93 url(blobs/Singing.svg) center/72% no-repeat' : '#23252B',
+      vGlyph: kid ? '' : vOn ? '❚❚' : '▶', rGlyph: kid ? '' : rOn ? '❚❚' : '▶',
+      vLabel: vOn ? 'Hope is reading' : idle, rLabel: rOn ? 'Hope is reading' : idle,
+      playV: () => this.playV(), playR: () => this.playR(),
+      toggleSlow: () => this.setState(s => ({ slow: !s.slow }), () => { if (this.state.vOn) this.runV(); }),
+      toggleQuiet: () => { clearInterval(this._vt); clearInterval(this._rt); this.setState(s => ({ quiet: !s.quiet, vOn: false, v: -1, rOn: false, r: -1 })); },
+      slowBg: sl.bg, slowGBg: sl.gbg, slowFg: sl.fg, quietBg: qt.bg, quietGBg: qt.gbg, quietFg: qt.fg,
+      vGivens: [{ k: 'Bill', v: '$64', color: '#23252B' }, { k: 'Tip', v: '15%', color: '#23252B' }, { k: 'Find', v: 'the tip', color: 'rgba(35,37,43,.45)' }],
+      vAnswers: ['$6.40', '$9.60', '$8.40', '$12'].map((label, i) => ({ label, key: String(i + 1) })),
+      vHelp: mkHelp(false), tHelp: mkHelp(true),
+      tRows: TR.map(([val, how], i) => ({ val, how, n: 'Step ' + (i + 1), shown: i < tm, hidden: i >= tm, color: i === 2 ? '#2E7C46' : '#23252B', slot: i === tm ? 'Tap for the next line' : '', slotFg: i === tm ? 'rgba(35,37,43,.6)' : 'transparent', cursor: i === tm ? 'pointer' : 'default' })),
+      tmCount: Math.min(tm, 3) + ' of 3', tmNext: () => { this.setState(s => ({ tm: Math.min(3, (s.tm ?? 1) + 1) })); this.replayDec(); }, tmReset: () => { this.setState({ tm: 1 }); this.replayDec(); },
+      rRows: RR.map(([n, how, val], i) => ({ n, how, val, color: i === 2 ? '#2E7C46' : '#23252B', bg: rOn && i === r ? '#FBF6E4' : 'transparent' })),
+      rLines: RL.map((t, i) => ({ t: t + ' ', bg: rOn && i === r ? '#FFE9A8' : 'transparent', fg: rOn && i > r ? '#B9BBC1' : '#23252B' })),
+    };
+    const GROUNDS = { grey: '#F5F7F9', mist: '#D2DBE4' };
+    return {
+      ground: GROUNDS[this.props.ground ?? 'grey'] || GROUNDS.grey, sheet: '#fff',
+      spine, tokenDots, earnedLabel: '+$' + earned + ' today', earnedBig: '+$' + earned,
+      moveName: isDone ? 'Lesson done' : curMove[1], crumbShort: isDone ? 'Five of five' : isTeachView ? (reteach ? 'Going over it' : 'Teach first') : (q + 1) + ' of ' + nQ + (m === 0 ? ' · review' : m === 3 ? ' · mixed' : ''),
+      isQ, isTeachView, isDone, crumb, leftTitle, leftSub,
+      givens, fam: cur ? cur.fam : '', helpRows, helpTitle, helpBody, helpConfirm, confirmText, useLabel, tryFirst, useToken,
+      qText: cur ? cur.t : '', scaffold: cur && cur.sc ? cur.sc : '', scaffoldLvl: cur && cur.lvl ? cur.lvl : '',
+      qOp: hp === 'teach' && st.taught ? .45 : 1,
+      answers, act, fb, fbColor, btn, btnBg, btnFg,
+      showPay: checked && right, payLabel: '+$' + (st.lastPay ?? 0), payPills: st.lastPills ?? [],
+      ideaFacts, teachSteps,
+      teachKicker: reteach ? 'Not yet is fine' : 'Today\'s new idea',
+      teachTitle: reteach ? 'Build the percent from 10%.' : 'Any percent starts with 10%.',
+      teachLede: reteach ? 'Same steps as before. Find 10%, find the pieces you need, add them up.' : 'Finding 10% is one move. Every other percent is a few 10%s, 5%s and 1%s added together. Here is 15% of $48.',
+      teachFoot: reteach ? 'Next: 2 fresh questions. Prove it needs both clean.' : 'Guided practice next. Help is there and fades as you go.',
+      teachBtn: reteach ? '2 fresh ones →' : 'Try one →',
+      teachGo: () => reteach ? go(4, 0, { fresh: true }) : go(2, 0),
+      doneMoves, restart, ...X,
+    };
+  }
+}</script>
+</body>
+</html>

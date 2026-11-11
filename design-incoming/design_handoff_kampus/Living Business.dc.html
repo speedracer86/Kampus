@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E4E7EB;font-family:'Inter Tight',sans-serif;color:#23252B;-webkit-font-smoothing:antialiased}a{color:#2E7C46}a:hover{color:#23252B}</style>
+</helmet>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 1 · Living Business, grade 7–8 · Cookie Shop</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Replaces My Stand (<a href="My%20Stand.dc.html">6a</a>). The register opens after today's lesson. The day has three parts. Prep: set the markup, batch size and helper hours. Open day: three moments, each a real call with the math shown. Ledger: close the books. Regulars (reputation) drift with your calls but never drop below 10, and a low score starts a comeback week. The growth ladder runs Starter Kit → Market Cart → Cookie Shop → Franchise → Empire. Vacation mode is set by a grown-up. Playable; use the tweaks for the locked and vacation states.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+  <div id="12a" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">12a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Living Business desktop</span></div>
+    <div data-screen-label="12a Living Business desktop" style="width:1280px;min-height:820px;background:#F5F7F9;border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="font-size:21px;font-weight:900;letter-spacing:-.03em;flex:1;">Kampus</div>
+        <div style="display:flex;gap:4px;">
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Today</div>
+          <div style="padding:9px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14.5px;font-weight:700;">Business</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Grades</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Rewards</div>
+        </div>
+        <div style="flex:1;display:flex;justify-content:flex-end;"><div style="width:38px;height:38px;border-radius:999px;background:#F4BE93;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;">T</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Your business · day 34</div>
+          <div style="font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-.025em;">Talia's Cookie Shop</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;align-items:baseline;gap:10px;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="font-size:15px;font-weight:700;">Regulars</div><div style="font-size:13.5px;font-weight:500;line-height:1.4;color:rgba(35,37,43,.6);">{{ repNote }}</div></div>
+              <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;">{{ repNow }}</div>
+            </div>
+            <div style="height:8px;border-radius:999px;background:#fff;overflow:hidden;"><div style="height:100%;width:{{ repPct }};background:{{ repColor }};border-radius:999px;transition:width .4s;"></div></div>
+            <sc-if value="{{ comeback }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:18px;background:#fff;">
+                <div style="font-size:14px;font-weight:800;">Comeback week</div>
+                <div style="font-size:13.5px;font-weight:500;line-height:1.4;color:rgba(35,37,43,.65);">Three good days in a row and Regulars climb twice as fast.</div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="display:flex;flex-direction:column;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:8px;">Growth ladder</div>
+            <sc-for list="{{ ladder }}" as="l" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:14px;">
+                <div style="display:flex;flex-direction:column;align-items:center;">
+                  <span style="width:24px;height:24px;box-sizing:border-box;border-radius:999px;background:{{ l.dotBg }};border:{{ l.dotBorder }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ l.mark }}</span>
+                  <span style="flex:1;width:1.5px;min-height:10px;background:{{ l.line }};"></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;padding:1px 0 16px;">
+                  <div style="display:flex;align-items:baseline;gap:8px;"><span style="flex:1;font-size:17px;font-weight:700;color:{{ l.fg }};">{{ l.name }}</span><span style="font-size:12.5px;font-weight:700;color:rgba(35,37,43,.5);">{{ l.meta }}</span></div>
+                  <sc-if value="{{ l.isCur }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                      <sc-for list="{{ goals }}" as="g" hint-placeholder-count="3">
+                        <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;font-weight:600;"><span style="flex:1;color:rgba(35,37,43,.7);">{{ g.k }}</span><span style="font-variant-numeric:tabular-nums;color:{{ g.color }};">{{ g.v }}</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:stretch;gap:28px;padding:0 4px 22px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Bank</div>
+            <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;">{{ bankLabel }}</div>
+          </div>
+          <div style="width:1.5px;background:rgba(35,37,43,.14);"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Shop this week</div>
+            <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">+$186</div>
+          </div>
+          <div style="flex:1;display:flex;align-items:flex-end;justify-content:flex-end;gap:3px;">
+            <sc-for list="{{ phases }}" as="p" hint-placeholder-count="3"><div style="padding:9px 16px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13.5px;font-weight:700;">{{ p.label }}</div></sc-for>
+          </div>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:#fff;border-radius:28px;overflow:hidden;">
+          <sc-if value="{{ isClosed }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:14px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ closedKicker }}</div>
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;max-width:640px;text-wrap:pretty;">{{ closedTitle }}</div>
+              <div style="font-size:18px;line-height:1.5;color:rgba(35,37,43,.7);max-width:600px;text-wrap:pretty;">{{ closedBody }}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;background:#D9DE62;">
+              <div style="flex:1;font-size:16px;font-weight:600;">{{ closedFoot }}</div>
+              <sc-if value="{{ lockedByLesson }}" hint-placeholder-val="{{ false }}"><div onClick="{{ finishLesson }}" style="padding:14px 24px;border-radius:999px;background:#fff;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">Start today's lesson →</div></sc-if>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isPrep }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ prepRows }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:14px;padding:26px 32px;border-top:{{ r.rule }};">
+                  <div style="display:flex;align-items:baseline;gap:12px;">
+                    <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="font-size:17px;font-weight:700;">{{ r.name }}</div><div style="font-size:14px;font-weight:500;color:rgba(35,37,43,.6);">{{ r.sub }}</div></div>
+                    <div style="font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;">{{ r.math }}</div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
+                    <sc-for list="{{ r.opts }}" as="o" hint-placeholder-count="4">
+                      <div onClick="{{ o.pick }}" style="display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-radius:16px;background:{{ o.bg }};color:{{ o.fg }};cursor:pointer;transition:background .15s;">
+                        <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:28px;line-height:1;">{{ o.label }}</span>
+                        <span style="font-size:12.5px;font-weight:700;opacity:.7;">{{ o.sub }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+              <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #EEECE7;">
+                <sc-for list="{{ estimate }}" as="e" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:6px;padding:22px 32px;">
+                    <div style="font-size:13px;font-weight:700;color:rgba(35,37,43,.6);">{{ e.k }}</div>
+                    <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ e.color }};">{{ e.v }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 32px;background:#D9DE62;">
+              <div style="flex:1;font-size:15.5px;font-weight:600;line-height:1.4;">{{ tip }}</div>
+              <div onClick="{{ openDay }}" style="padding:14px 26px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">Open for the day →</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isDay }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:36px 40px 28px;display:flex;flex-direction:column;gap:22px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);flex:1;">{{ mKicker }}</div>
+                <div style="display:flex;gap:4px;width:120px;"><sc-for list="{{ mDots }}" as="d" hint-placeholder-count="3"><span style="flex:1;height:6px;border-radius:999px;background:{{ d }};"></span></sc-for></div>
+              </div>
+              <div style="font-size:36px;font-weight:600;line-height:1.2;letter-spacing:-.025em;text-wrap:pretty;max-width:700px;">{{ mTitle }}</div>
+              <div style="display:flex;flex-direction:column;gap:4px;padding:16px 20px;border-radius:18px;background:#F5F7F9;">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">The math</div>
+                <div style="font-size:18px;font-weight:500;line-height:1.45;font-variant-numeric:tabular-nums;">{{ mMath }}</div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ mOpts }}" as="o" hint-placeholder-count="2">
+                  <div onClick="{{ o.pick }}" style="display:flex;flex-direction:column;gap:8px;padding:20px 22px;border-radius:20px;background:{{ o.bg }};color:{{ o.fg }};border:{{ o.border }};cursor:pointer;transition:background .15s;">
+                    <div style="font-size:19px;font-weight:700;">{{ o.label }}</div>
+                    <div style="font-size:14.5px;font-weight:500;line-height:1.4;opacity:.75;">{{ o.effect }}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:{{ mFbColor }};">{{ mFb }}</div>
+              <div onClick="{{ mNext }}" style="padding:14px 28px;border-radius:999px;background:{{ mBtnBg }};color:{{ mBtnFg }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ mBtn }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isLedger }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:36px 40px 12px;display:flex;align-items:flex-end;gap:24px;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Ledger · day 34</div>
+                <div style="font-size:34px;font-weight:700;line-height:1.2;letter-spacing:-.025em;">{{ ledgerTitle }}</div>
+              </div>
+              <div style="font-weight:300;letter-spacing:-.05em;font-variant-numeric:tabular-nums;font-size:72px;line-height:1;color:{{ profitColor }};">{{ profitLabel }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;padding:12px 40px 24px;">
+              <sc-for list="{{ ledger }}" as="r" hint-placeholder-count="6">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) auto 120px;align-items:baseline;gap:20px;padding:14px 0;border-top:1px solid #EEECE7;">
+                  <div style="font-size:16px;font-weight:700;">{{ r.k }}</div>
+                  <div style="font-size:14px;font-weight:500;color:rgba(35,37,43,.6);font-variant-numeric:tabular-nums;">{{ r.math }}</div>
+                  <div style="text-align:right;font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:28px;line-height:1;color:{{ r.color }};">{{ r.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;background:#D9DE62;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+                <div style="font-size:16px;font-weight:700;">{{ bankLine }}</div>
+                <div style="font-size:14px;font-weight:500;">{{ lesson }}</div>
+              </div>
+              <div onClick="{{ again }}" style="padding:14px 22px;border-radius:999px;background:#fff;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">Plan tomorrow</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="12b" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">12b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Living Business phone · same state</span></div>
+    <div data-screen-label="12b Living Business phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+      <div style="padding:58px 20px 12px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:flex-end;gap:10px;">
+          <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Cookie Shop · day 34</div><div style="font-size:22px;font-weight:600;letter-spacing:-.02em;">{{ bankLabel }} <span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">in the Bank</span></div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;"><div style="font-size:11.5px;font-weight:700;color:rgba(35,37,43,.55);">Regulars</div><div style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:28px;line-height:1;">{{ repNow }}</div></div>
+        </div>
+        <div style="display:flex;gap:2px;padding:3px;border-radius:999px;background:#fff;">
+          <sc-for list="{{ phases }}" as="p" hint-placeholder-count="3"><div style="flex:1;height:36px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:13.5px;font-weight:700;">{{ p.label }}</div></sc-for>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 12px 20px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:12px;">
+        <sc-if value="{{ isClosed }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:28px;padding:24px 20px;display:flex;flex-direction:column;gap:10px;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ closedKicker }}</div>
+            <div style="font-size:26px;font-weight:600;line-height:1.2;letter-spacing:-.025em;text-wrap:pretty;">{{ closedTitle }}</div>
+            <div style="font-size:15px;line-height:1.45;color:rgba(35,37,43,.7);text-wrap:pretty;">{{ closedBody }}</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isPrep }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;">
+            <sc-for list="{{ prepRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:10px;padding:18px 20px;border-top:{{ r.rule }};">
+                <div style="display:flex;align-items:baseline;gap:8px;"><div style="flex:1;font-size:15.5px;font-weight:700;">{{ r.name }}</div><div style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;">{{ r.math }}</div></div>
+                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;">
+                  <sc-for list="{{ r.opts }}" as="o" hint-placeholder-count="4">
+                    <div onClick="{{ o.pick }}" style="height:48px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:{{ o.bg }};color:{{ o.fg }};font-weight:300;letter-spacing:-.03em;font-variant-numeric:tabular-nums;font-size:19px;cursor:pointer;">{{ o.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid #EEECE7;">
+              <sc-for list="{{ estimate }}" as="e" hint-placeholder-count="3">
+                <div style="display:flex;flex-direction:column;gap:4px;padding:14px 0 16px 20px;">
+                  <div style="font-size:11.5px;font-weight:700;color:rgba(35,37,43,.6);">{{ e.k }}</div>
+                  <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:26px;line-height:1;color:{{ e.color }};">{{ e.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isDay }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:28px;padding:22px 20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ mKicker }}</div>
+            <div style="font-size:22px;font-weight:600;line-height:1.25;letter-spacing:-.02em;text-wrap:pretty;">{{ mTitle }}</div>
+            <div style="padding:12px 14px;border-radius:16px;background:#F5F7F9;font-size:15px;font-weight:500;line-height:1.45;font-variant-numeric:tabular-nums;">{{ mMath }}</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <sc-for list="{{ mOpts }}" as="o" hint-placeholder-count="2">
+                <div onClick="{{ o.pick }}" style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:18px;background:{{ o.bg }};color:{{ o.fg }};border:{{ o.border }};cursor:pointer;">
+                  <div style="font-size:16px;font-weight:700;">{{ o.label }}</div>
+                  <div style="font-size:13px;font-weight:500;line-height:1.4;opacity:.75;">{{ o.effect }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:14px;font-weight:600;line-height:1.4;color:{{ mFbColor }};">{{ mFb }}</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isLedger }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:28px;padding:22px 20px;display:flex;flex-direction:column;gap:6px;">
+            <div style="display:flex;align-items:flex-end;gap:10px;padding-bottom:8px;">
+              <div style="flex:1;font-size:22px;font-weight:700;line-height:1.2;letter-spacing:-.02em;">{{ ledgerTitle }}</div>
+              <div style="font-weight:300;letter-spacing:-.05em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:{{ profitColor }};">{{ profitLabel }}</div>
+            </div>
+            <sc-for list="{{ ledger }}" as="r" hint-placeholder-count="6">
+              <div style="display:flex;align-items:baseline;gap:10px;padding:11px 0;border-top:1px solid #EEECE7;">
+                <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;"><div style="font-size:14.5px;font-weight:700;">{{ r.k }}</div><div style="font-size:12px;font-weight:500;color:rgba(35,37,43,.55);font-variant-numeric:tabular-nums;">{{ r.math }}</div></div>
+                <div style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:22px;line-height:1;color:{{ r.color }};">{{ r.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;padding:16px 18px;border-radius:22px;background:#D9DE62;">
+            <div style="font-size:15px;font-weight:700;">{{ bankLine }}</div>
+            <div style="font-size:13px;font-weight:500;line-height:1.4;">{{ lesson }}</div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="padding:14px 20px 34px;border-top:1.5px solid rgba(35,37,43,.12);">
+        <sc-if value="{{ lockedByLesson }}" hint-placeholder-val="{{ false }}"><div onClick="{{ finishLesson }}" style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#fff;font-size:15.5px;font-weight:700;cursor:pointer;">Start today's lesson →</div></sc-if>
+        <sc-if value="{{ isVacation }}" hint-placeholder-val="{{ false }}"><div style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#E6EAEE;color:rgba(35,37,43,.45);font-size:15.5px;font-weight:700;">On vacation</div></sc-if>
+        <sc-if value="{{ isPrep }}" hint-placeholder-val="{{ true }}"><div onClick="{{ openDay }}" style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;">Open for the day →</div></sc-if>
+        <sc-if value="{{ isDay }}" hint-placeholder-val="{{ false }}"><div onClick="{{ mNext }}" style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:{{ mBtnBg }};color:{{ mBtnFg }};font-size:15.5px;font-weight:700;cursor:pointer;">{{ mBtn }}</div></sc-if>
+        <sc-if value="{{ isLedger }}" hint-placeholder-val="{{ false }}"><div onClick="{{ again }}" style="height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;">Plan tomorrow</div></sc-if>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lessonDone&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;vacation&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;startRep&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:10,&quot;max&quot;:100,&quot;step&quot;:1,&quot;default&quot;:58,&quot;tsType&quot;:&quot;number&quot;}}">
+class Component extends DCLogic {
+  state = { phase: 'prep', markup: 1, dozens: 6, helper: 2, mi: 0, ch: [], rep: null, bank: 1240 };
+  renderVals() {
+    const st = this.state;
+    const money = v => (v < 0 ? '−$' : '$') + Math.abs(v).toFixed(2);
+    const lessonDone = st.lessonDone ?? (this.props.lessonDone ?? true);
+    const vacation = this.props.vacation ?? false;
+    const rep0 = st.rep ?? (this.props.startRep ?? 58);
+    const COST = 0.40, COST_UP = 0.46, WAGE = 12;
+    const price0 = Math.round(COST * (1 + st.markup) * 100) / 100;
+    const ch = st.ch;
+    const raise = ch[1] === 'b';
+    const price = raise ? Math.round(price0 * 1.1 * 100) / 100 : price0;
+    const made = st.dozens * 12;
+    const bulk = ch[0] === 'a' ? 24 : 0;
+    const free = ch[2] === 'a' ? 10 : 0;
+    const BASE = { 0.5: 110, 1: 85, 1.5: 60 };
+    const CAP = { 0: 70, 2: 100, 4: 140 };
+    const repF = 0.6 + rep0 / 125;
+    const demand = Math.round(BASE[st.markup] * repF * (raise ? 0.92 : 1));
+    const cap = CAP[st.helper];
+    const sellable = Math.max(0, made - bulk - free);
+    const sold = Math.min(sellable, demand, cap);
+    const ranOut = demand > Math.min(sellable, cap);
+    const leftovers = Math.max(0, sellable - sold);
+    const sales = sold * price, bulkRev = bulk * price0 * 0.75;
+    const ingredients = made * COST_UP, wages = st.helper * WAGE;
+    const profit = Math.round((sales + bulkRev - ingredients - wages) * 100) / 100;
+    const DELTA = [{ a: 3, b: 0 }, { a: 2, b: -2 }, { a: 6, b: -3 }];
+    const choiceDelta = ch.reduce((s, c, k) => s + (c ? DELTA[k][c] : 0), 0);
+    const dayDelta = choiceDelta + (ranOut ? -2 : 1) + (profit < 0 ? -1 : 0);
+    const repAfter = Math.max(10, Math.min(100, rep0 + dayDelta));
+    const phase = vacation ? 'closed' : !lessonDone ? 'closed' : st.phase;
+    const isClosed = phase === 'closed', isPrep = phase === 'prep', isDay = phase === 'day', isLedger = phase === 'ledger';
+    const repNow = isLedger ? repAfter : rep0;
+
+    const estDemand = Math.round(BASE[st.markup] * repF), estSold = Math.min(made, estDemand, cap);
+    const estProfit = estSold * price0 - made * COST - st.helper * WAGE;
+    const optRow = (key, vals, label, sub) => vals.map(v => ({ label: label(v), sub: sub(v), bg: st[key] === v ? '#23252B' : '#F5F7F9', fg: st[key] === v ? '#fff' : '#23252B', pick: () => this.setState({ [key]: v }) }));
+    const prepRows = [
+      { name: 'Markup', sub: 'Added on top of the 40¢ it costs to bake one.', math: '40¢ × (1 + ' + Math.round(st.markup * 100) + '%) = ' + money(price0), rule: 'none',
+        opts: optRow('markup', [0.5, 1, 1.5], v => Math.round(v * 100) + '%', v => money(Math.round(COST * (1 + v) * 100) / 100) + ' each').concat([]) },
+      { name: 'Batch', sub: 'The recipe takes 2 cups of flour per dozen.', math: st.dozens + ' dozen = ' + made + ' cookies · ' + st.dozens * 2 + ' cups flour', rule: '1px solid #EEECE7',
+        opts: optRow('dozens', [4, 6, 8, 10], v => String(v * 12), v => v + ' dozen') },
+      { name: 'Helper', sub: 'Serves more people at once. $12 an hour.', math: st.helper + ' h × $12 = ' + money(st.helper * WAGE), rule: '1px solid #EEECE7',
+        opts: optRow('helper', [0, 2, 4], v => v + ' h', v => 'serve up to ' + CAP[v]) },
+    ];
+    const estimate = [
+      { k: 'Likely buyers', v: String(estDemand), color: '#23252B' },
+      { k: 'You can serve', v: String(Math.min(made, cap)), color: '#23252B' },
+      { k: 'Est. profit', v: money(estProfit), color: estProfit >= 0 ? '#2E7C46' : '#C2463B' },
+    ];
+    const tip = estDemand > Math.min(made, cap) ? 'More people want cookies than you can serve. Bake more or add helper hours.' : made > estDemand + 12 ? 'You\'ll have leftovers. Smaller batch, or a lower markup to pull more buyers.' : 'Batch, helpers and buyers line up well.';
+
+    const M = [
+      { time: '10:30 am', title: 'The school office wants 24 cookies for a meeting, at 25% off.', math: '25% off ' + money(price0) + ' = ' + money(price0 * 0.75) + ' each · 24 × ' + money(price0 * 0.75) + ' = ' + money(24 * price0 * 0.75),
+        a: ['Take the order', 'Sure money now. Fewer cookies left for walk-ins. Regulars +3'], b: ['Pass on it', 'Keep all ' + made + ' for full price. No change'],
+        fa: 'Order packed. ' + money(24 * price0 * 0.75) + ' in, 24 cookies out.', fb: 'Passed. All cookies stay on the counter.' },
+      { time: '1:00 pm', title: 'Flour went up 15%. Each cookie now costs 46¢ to bake.', math: '40¢ × 1.15 = 46¢ · your price ' + money(price0) + ' → keep, or raise 10% to ' + money(Math.round(price0 * 1.1 * 100) / 100),
+        a: ['Keep the price', 'Smaller profit per cookie. Regulars like it: +2'], b: ['Raise it 10%', 'More per cookie, about 8% fewer buyers. Regulars −2'],
+        fa: 'Price holds. You eat the 6¢.', fb: 'New price on the board: ' + money(Math.round(price0 * 1.1 * 100) / 100) + '.' },
+      { time: '3:30 pm', title: 'A review calls your cookies "mid". Answer with a free cookie for the next 10 customers?', math: '10 × 46¢ = $4.60 in cost · no sales from those 10',
+        a: ['Give 10 away', 'Costs $4.60. Regulars +6'], b: ['Let it go', 'Nothing spent. Regulars −3'],
+        fa: 'Ten free cookies. Three people post about it.', fb: 'You let it slide. A few people read it.' },
+    ];
+    const mi = st.mi, cm = M[Math.min(mi, 2)], picked = ch[mi];
+    const mOpts = ['a', 'b'].map(k => ({ label: cm[k][0], effect: cm[k][1], bg: picked === k ? '#23252B' : '#F5F7F9', fg: picked === k ? '#fff' : '#23252B', border: '1.5px solid transparent',
+      pick: () => { const n = ch.slice(); n[mi] = k; this.setState({ ch: n }); } }));
+    const mNext = () => { if (!picked) return; if (mi < 2) this.setState({ mi: mi + 1 }); else this.setState({ phase: 'ledger' }); };
+
+    const ledger = [
+      { k: 'Walk-in sales', math: sold + ' × ' + money(price), v: money(sales), color: '#2E7C46' },
+      { k: 'Office order', math: bulk ? '24 × ' + money(price0 * 0.75) : 'passed', v: money(bulkRev), color: bulk ? '#2E7C46' : 'rgba(35,37,43,.4)' },
+      { k: 'Ingredients', math: made + ' × 46¢', v: money(-ingredients), color: '#C2463B' },
+      { k: 'Helper', math: st.helper + ' h × $12', v: money(-wages), color: st.helper ? '#C2463B' : 'rgba(35,37,43,.4)' },
+      { k: 'Leftovers', math: leftovers + ' cookies · sell tomorrow at half', v: String(leftovers), color: '#23252B' },
+      { k: 'Regulars', math: (ranOut ? 'some people left without cookies · ' : 'everyone got served · ') + 'your calls ' + (choiceDelta >= 0 ? '+' : '') + choiceDelta, v: (dayDelta >= 0 ? '+' : '') + dayDelta, color: dayDelta >= 0 ? '#2E7C46' : '#C2463B' },
+    ];
+    const kred = Math.max(0, Math.round(profit * 10));
+    const ladder = [['Starter Kit', 'grade 3–4', 'done'], ['Market Cart', 'grade 5–6', 'done'], ['Cookie Shop', 'now', 'cur'], ['Franchise', 'next', 'next'], ['Empire', 'later', 'locked']]
+      .map(([name, meta, s], k, arr) => ({ name, meta, isCur: s === 'cur', mark: s === 'done' ? '✓' : '',
+        dotBg: s === 'done' ? '#58B372' : s === 'cur' ? '#23252B' : 'transparent', dotBorder: s === 'done' || s === 'cur' ? 'none' : '1.5px solid rgba(35,37,43,.22)',
+        fg: s === 'locked' ? 'rgba(35,37,43,.45)' : '#23252B', line: k === arr.length - 1 ? 'transparent' : s === 'done' ? '#58B372' : 'rgba(35,37,43,.14)' }));
+    const goals = [
+      { k: 'Days open', v: '34 of 40', color: '#23252B' },
+      { k: 'Regulars 70+', v: repNow + ' of 70', color: repNow >= 70 ? '#2E7C46' : '#23252B' },
+      { k: 'Bank $2,000', v: '$' + (st.bank).toLocaleString() + ' of $2,000', color: '#23252B' },
+    ];
+    const PH = [['prep', 'Prep'], ['day', 'Open day'], ['ledger', 'Ledger']];
+    const phases = PH.map(([k, label]) => ({ label, bg: phase === k ? '#23252B' : 'transparent', fg: phase === k ? '#fff' : isClosed ? 'rgba(35,37,43,.4)' : '#23252B' }));
+    const comeback = rep0 < 35;
+    return {
+      bankLabel: '$' + st.bank.toLocaleString(), repNow: String(repNow), repPct: repNow + '%',
+      repColor: repNow < 35 ? '#E8C94F' : '#2E7C46',
+      repNote: comeback ? 'Low, not gone. It never drops below 10.' : 'Drifts with your calls. Never drops below 10.',
+      comeback, ladder, goals, phases,
+      isClosed, isPrep, isDay, isLedger, lockedByLesson: !vacation && !lessonDone, isVacation: vacation,
+      closedKicker: vacation ? 'Vacation mode' : 'Register closed',
+      closedTitle: vacation ? 'The shop is closed for a few days.' : 'Class first, then the register opens.',
+      closedBody: vacation ? 'A grown-up turned on vacation mode. Regulars hold at ' + rep0 + ' while you\'re away, and the ladder waits for you.' : 'Today\'s lesson is about percents, the same math as your markup. Finish it and the shop opens for the day.',
+      closedFoot: vacation ? 'Back when vacation mode is off.' : 'About 17 minutes.',
+      finishLesson: () => this.setState({ lessonDone: true }),
+      prepRows, estimate, tip, openDay: () => this.setState({ phase: 'day', mi: 0, ch: [] }),
+      mKicker: 'Moment ' + (mi + 1) + ' of 3 · ' + cm.time, mTitle: cm.title, mMath: cm.math, mOpts,
+      mDots: [0, 1, 2].map(k => k < mi ? '#58B372' : k === mi ? '#23252B' : '#E6EAEE'),
+      mFb: picked ? (picked === 'a' ? cm.fa : cm.fb) : 'Your call. No wrong answer, just trade-offs.', mFbColor: picked ? '#23252B' : 'rgba(35,37,43,.55)',
+      mBtn: mi < 2 ? 'Next moment →' : 'Close the books →', mBtnBg: picked ? '#23252B' : '#E6EAEE', mBtnFg: picked ? '#fff' : 'rgba(35,37,43,.45)', mNext,
+      ledger, profitLabel: money(profit), profitColor: profit >= 0 ? '#2E7C46' : '#C2463B',
+      ledgerTitle: profit > 40 ? 'Profit. W.' : profit >= 0 ? 'In the green.' : 'Lost money. Happens.',
+      bankLine: profit > 0 ? money(profit) + ' profit × 10 = +$' + kred + ' to your Bank' : 'Nothing to bank today. Regulars still count.',
+      lesson: ranOut ? 'People walked away without cookies. Demand was ' + demand + '; you could serve ' + Math.min(sellable, cap) + '.' : leftovers > 12 ? leftovers + ' left over. A smaller batch would have kept ' + money(leftovers * COST_UP) + ' in your pocket.' : 'Batch and buyers matched. Clean day.',
+      again: () => this.setState(s => ({ phase: 'prep', mi: 0, ch: [], rep: repAfter, bank: s.bank + kred })),
+    };
+  }
+}
+</script>
+</body>
+</html>

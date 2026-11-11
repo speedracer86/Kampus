@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E4E7EB;font-family:'Inter Tight',sans-serif;color:#23252B;-webkit-font-smoothing:antialiased}a{color:#2E7C46}a:hover{color:#23252B}</style>
+</helmet>
+<section style="padding:56px;display:flex;flex-direction:column;gap:20px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 9 · Rewards (locked)</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">A store receipt on the left (<a href="#9a">9a</a> desktop, <a href="#9c">9c</a> phone): earned, held, available, saving for. The sheet: paste a store link, store wishlist, at-home rewards, waiting on a grown-up. Money is paid for effort only, never for scores. Playable: ask for anything you can afford.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+  <div id="9a" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">9a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Receipt · stores and home on one sheet</span></div>
+    <div data-screen-label="9a Rewards receipt" style="width:1280px;background:#F5F7F9;border-radius:14px;overflow:hidden;padding-bottom:48px;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="font-size:21px;font-weight:900;letter-spacing:-.03em;flex:1;">Kampus</div>
+        <div style="display:flex;gap:4px;">
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Play</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">My Stand</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Shop</div>
+          <div style="padding:9px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14.5px;font-weight:700;">Rewards</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Grown-ups</div>
+        </div>
+        <div style="flex:1;display:flex;justify-content:flex-end;">
+          <div style="width:38px;height:38px;border-radius:999px;background:#F0AFCE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;">T</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;align-items:start;">
+        <div style="display:flex;flex-direction:column;">
+          <div style="background:#fff;padding:28px 26px 22px;display:flex;flex-direction:column;gap:14px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;line-height:1.45;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;">
+              <div style="font-size:15px;font-weight:700;letter-spacing:.14em;">KAMPUS BANK</div>
+              <div>Talia's money · receipt #0042</div>
+              <div style="color:rgba(35,37,43,.6);">Mon Oct 20 2026 · 4:12 PM</div>
+            </div>
+            <div style="border-top:1.5px dashed rgba(35,37,43,.3);"></div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.08em;">EARNED THIS WEEK</div>
+              <sc-for list="{{ ledgerIn }}" as="r" hint-placeholder-count="4">
+                <div style="display:flex;gap:10px;"><span style="color:rgba(35,37,43,.55);">{{ r.day }}</span><span style="flex:1;">{{ r.desc }}</span><span>{{ r.amt }}</span></div>
+              </sc-for>
+              <div style="display:flex;gap:10px;font-weight:700;padding-top:4px;"><span style="flex:1;">Subtotal</span><span>+$3.00</span></div>
+              <div style="display:flex;gap:10px;color:rgba(35,37,43,.6);"><span style="flex:1;">Weekly limit $5.00</span><span>$2.00 left</span></div>
+              <div style="color:rgba(35,37,43,.6);">Paid for effort. Never for scores.</div>
+            </div>
+            <div style="border-top:1.5px dashed rgba(35,37,43,.3);"></div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.08em;">HELD FOR ASKS</div>
+              <sc-if value="{{ noPend8 }}" hint-placeholder-val="{{ true }}"><div style="color:rgba(35,37,43,.6);">Nothing held</div></sc-if>
+              <sc-for list="{{ ledgerHeld }}" as="r" hint-placeholder-count="0">
+                <div style="display:flex;gap:10px;"><span style="flex:1;">{{ r.desc }}</span><span>{{ r.amt }}</span></div>
+              </sc-for>
+            </div>
+            <div style="border-top:1.5px dashed rgba(35,37,43,.3);"></div>
+            <div style="display:flex;align-items:baseline;gap:10px;"><span style="flex:1;font-size:13px;font-weight:700;letter-spacing:.08em;">AVAILABLE</span><span style="font-size:34px;font-weight:600;letter-spacing:-.02em;">{{ dollars8 }}</span></div>
+            <div style="display:flex;gap:10px;color:rgba(35,37,43,.6);"><span style="flex:1;">Total in the bank</span><span>$4.50</span></div>
+            <div style="border-top:1.5px dashed rgba(35,37,43,.3);"></div>
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.08em;">SAVING FOR</div>
+              <div>{{ goal8Name }}</div>
+              <div style="display:flex;gap:10px;"><span style="flex:1;letter-spacing:.05em;">{{ goalBar }}</span><span>{{ goal8Left }}</span></div>
+            </div>
+            <div style="text-align:center;color:rgba(35,37,43,.6);padding-top:6px;">Keep it up, Talia.</div>
+          </div>
+          <div style="height:10px;background:linear-gradient(135deg,#fff 7px,transparent 0) 0 0/14px 10px repeat-x,linear-gradient(225deg,#fff 7px,transparent 0) 0 0/14px 10px repeat-x;"></div>
+          <div style="display:flex;flex-direction:column;padding:28px 4px 0;">
+            <div style="display:flex;align-items:baseline;gap:8px;padding-bottom:4px;"><div style="flex:1;font-size:14px;font-weight:700;">How you earn</div><div style="font-size:12.5px;font-weight:600;color:rgba(35,37,43,.55);">For showing up, not scores</div></div>
+            <sc-for list="{{ earn }}" as="e" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                <div style="flex:1;font-size:15px;line-height:1.4;">{{ e.text }}</div>
+                <div style="font-size:15px;font-weight:700;white-space:nowrap;">{{ e.reward }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:28px;overflow:hidden;">
+          <div style="padding:32px 32px 22px;display:flex;flex-direction:column;gap:22px;">
+            <div style="font-size:28px;font-weight:600;line-height:1.25;letter-spacing:-.025em;color:rgba(35,37,43,.55);text-wrap:pretty;max-width:620px;">Real rewards, <span style="color:#23252B;">picked by you,</span> okayed by a grown-up.</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:8px 8px 8px 22px;border-radius:999px;background:#F5F7F9;">
+                <div style="flex:1;font-size:15px;color:rgba(35,37,43,.5);">Paste a link from Amazon, Target or any store</div>
+                <div style="padding:11px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;white-space:nowrap;cursor:pointer;">Add to wishlist</div>
+              </div>
+          </div>
+          <div style="padding:0 32px 12px;font-size:15px;font-weight:700;">From stores</div>
+            <sc-for list="{{ store8 }}" as="s" hint-placeholder-count="5">
+              <div style="display:grid;grid-template-columns:64px minmax(0,1fr) 170px 128px;align-items:center;gap:18px;padding:16px 32px;border-top:1px solid #EEECE7;">
+                <div style="width:64px;height:64px;border-radius:16px;background:#F5F7F9;"></div>
+                <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                  <div style="font-size:18px;font-weight:600;letter-spacing:-.015em;">{{ s.name }}</div>
+                  <div style="font-size:13.5px;color:rgba(35,37,43,.6);">{{ s.store }} · {{ s.price }}</div>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="height:6px;border-radius:999px;background:#EEF1F4;overflow:hidden;"><div style="height:100%;border-radius:999px;background:#2E7C46;width:{{ s.pct }};"></div></div>
+                  <div style="font-size:12.5px;font-weight:700;color:rgba(35,37,43,.6);">{{ s.left }}</div>
+                </div>
+                <div onClick="{{ s.act }}" style="padding:12px 18px;border-radius:999px;background:{{ s.btnBg }};color:{{ s.btnFg }};font-size:14px;font-weight:700;cursor:{{ s.cursor }};white-space:nowrap;">{{ s.btn }}</div>
+              </div>
+            </sc-for>
+          <div style="padding:24px 32px 12px;border-top:1px solid #EEECE7;font-size:15px;font-weight:700;">At home</div><sc-for list="{{ home8 }}" as="m" hint-placeholder-count="6">
+                <div style="display:flex;align-items:center;gap:18px;padding:16px 32px;border-top:1px solid #EEECE7;">
+                  <div style="width:52px;height:52px;flex:none;border-radius:999px;background-color:#F5F7F9;background-image:{{ m.blob }};background-size:40px 40px;background-repeat:no-repeat;background-position:center;"></div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0;">
+                    <div style="font-size:18px;font-weight:600;letter-spacing:-.015em;">{{ m.name }}</div>
+                    <div style="font-size:13.5px;color:rgba(35,37,43,.6);">{{ m.sub }}</div>
+                  </div>
+                  <div style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:28px;line-height:1;">{{ m.cost }}</div>
+                  <div onClick="{{ m.ask }}" style="min-width:128px;padding:12px 18px;box-sizing:border-box;border-radius:999px;background:{{ m.btnBg }};color:{{ m.btnFg }};font-size:14px;font-weight:700;cursor:{{ m.cursor }};white-space:nowrap;">{{ m.btn }}</div>
+                </div>
+              </sc-for>
+          <div style="display:flex;align-items:baseline;gap:12px;padding:24px 32px 12px;border-top:1px solid #EEECE7;">
+            <div style="font-size:15px;font-weight:700;flex:1;">Waiting on a grown-up</div>
+            <div style="font-size:13px;font-weight:600;color:#8A8578;">{{ pendSum8 }}</div>
+          </div>
+          <sc-if value="{{ noPend8 }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:6px 32px 26px;font-size:15px;color:rgba(35,37,43,.55);">Nothing pending. Ask for something above.</div>
+          </sc-if>
+          <sc-for list="{{ pend8 }}" as="p" hint-placeholder-count="0">
+            <div style="display:flex;align-items:center;gap:16px;padding:14px 32px;border-top:1px solid #EEECE7;background:#FBF6E4;">
+              <span style="width:10px;height:10px;border-radius:999px;background:#E8C94F;flex:none;"></span>
+              <div style="flex:1;font-size:16px;font-weight:600;">{{ p.name }}</div>
+              <div style="font-size:13.5px;font-weight:600;color:#8A6D1C;">{{ p.where }} · {{ p.cost }} held</div>
+              <div onClick="{{ p.cancel }}" style="padding:9px 14px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;cursor:pointer;" style-hover="background:#F5F7F9;">Cancel</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="9c" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">9c</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone · receipt · shares state with 9a</span></div>
+    <div data-screen-label="9c Rewards phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+      <div style="padding:58px 14px 0;display:flex;flex-direction:column;">
+        <div style="background:#fff;padding:18px 18px 14px;display:flex;flex-direction:column;gap:10px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:1.45;">
+          <div style="display:flex;align-items:baseline;gap:8px;"><span style="flex:1;font-size:13px;font-weight:700;letter-spacing:.14em;">KAMPUS BANK</span><span style="color:rgba(35,37,43,.6);">Oct 20 · #0042</span></div>
+          <div style="border-top:1.5px dashed rgba(35,37,43,.3);"></div>
+          <div style="display:flex;gap:10px;"><span style="flex:1;">Earned this week</span><span>+$3.00</span></div>
+          <div style="display:flex;gap:10px;color:rgba(35,37,43,.6);"><span style="flex:1;">Weekly limit $5.00</span><span>$2.00 left</span></div>
+          <div style="display:flex;gap:10px;"><span style="flex:1;">Held for asks</span><span>{{ heldAmt8 }}</span></div>
+          <div style="border-top:1.5px dashed rgba(35,37,43,.3);"></div>
+          <div style="display:flex;align-items:baseline;gap:10px;"><span style="flex:1;font-weight:700;letter-spacing:.08em;">AVAILABLE</span><span style="font-size:28px;font-weight:600;letter-spacing:-.02em;">{{ dollars8 }}</span></div>
+          <div style="display:flex;gap:10px;"><span style="flex:1;letter-spacing:.05em;">{{ goalBar }}</span><span>{{ goal8Left }}</span></div>
+        </div>
+        <div style="height:9px;background:linear-gradient(135deg,#fff 6px,transparent 0) 0 0/12px 9px repeat-x,linear-gradient(225deg,#fff 6px,transparent 0) 0 0/12px 9px repeat-x;"></div>
+      </div>
+      <div style="flex:1;margin-top:14px;background:#fff;border-radius:28px 28px 0 0;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="padding:18px 16px 12px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;border-radius:999px;background:#F5F7F9;">
+            <div style="flex:1;font-size:13px;color:rgba(35,37,43,.5);">Paste a store link</div>
+            <div style="padding:9px 14px;border-radius:999px;background:#23252B;color:#fff;font-size:12.5px;font-weight:700;">Add</div>
+          </div>
+        </div>
+        <div style="padding:2px 20px 8px;font-size:13.5px;font-weight:700;">From stores</div>
+        <sc-for list="{{ store8 }}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 20px;border-top:1px solid #EEECE7;">
+            <div style="width:44px;height:44px;flex:none;border-radius:12px;background:#F5F7F9;"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;">
+              <div style="font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ s.name }}</div>
+              <div style="font-size:12px;color:rgba(35,37,43,.6);">{{ s.price }} · {{ s.left }}</div>
+            </div>
+            <div onClick="{{ s.act }}" style="padding:10px 14px;border-radius:999px;background:{{ s.btnBg }};color:{{ s.btnFg }};font-size:12.5px;font-weight:700;cursor:{{ s.cursor }};white-space:nowrap;">{{ s.btn }}</div>
+          </div>
+        </sc-for>
+        <div style="padding:16px 20px 8px;border-top:1px solid #EEECE7;font-size:13.5px;font-weight:700;">At home</div>
+        <sc-for list="{{ home8 }}" as="m" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 20px;border-top:1px solid #EEECE7;">
+            <div style="width:40px;height:40px;flex:none;border-radius:999px;background-color:#F5F7F9;background-image:{{ m.blob }};background-size:30px 30px;background-repeat:no-repeat;background-position:center;"></div>
+            <div style="flex:1;font-size:14.5px;font-weight:600;min-width:0;">{{ m.name }}</div>
+            <div style="font-weight:300;letter-spacing:-.04em;font-size:20px;">{{ m.cost }}</div>
+            <div onClick="{{ m.ask }}" style="padding:10px 14px;border-radius:999px;background:{{ m.btnBg }};color:{{ m.btnFg }};font-size:12.5px;font-weight:700;cursor:{{ m.cursor }};white-space:nowrap;">{{ m.btnShort }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { pending: ['movie'], goal: 'sleep', tab8: 'stores', p8: [], goal8: 'lego' };
+  renderVals() {
+    const ink = '#23252B', BAL = 450, WEEK = 300, CAP = 500;
+    const usd = c => '$' + (c / 100).toFixed(2);
+    const MENU = [
+      ['screen', '30 min of screen time', 'Any day after math', 150, 'Laptop'],
+      ['movie', 'Pick the family movie', 'Friday or Saturday night', 200, 'Photography'],
+      ['late', 'Stay up 30 min later', 'Weekends only', 250, 'Vision'],
+      ['dinner', 'Pick what\'s for dinner', 'Within reason', 300, 'Eating'],
+      ['treat', 'Store trip', 'Pick something out', 500, 'Cash'],
+      ['sleep', 'Friend sleepover', 'Plan it with a grown-up', 500, 'Party'],
+    ];
+    const pend = this.state.pending;
+    const held = MENU.filter(m => pend.indexOf(m[0]) > -1).reduce((a, m) => a + m[3], 0);
+    const free = BAL - held;
+    const menu = MENU.map(([id, name, sub, cost, blob], i) => {
+      const isP = pend.indexOf(id) > -1, can = cost <= free;
+      return {
+        name, sub, cost: usd(cost), blob: 'url(blobs/' + blob + '.svg)', rule: i ? '1px solid #EEECE7' : 'none',
+        btn: isP ? 'Asked ✓' : can ? 'Ask for it' : 'Need ' + usd(cost - free) + ' more',
+        btnShort: isP ? 'Asked ✓' : can ? 'Ask' : '+' + usd(cost - free),
+        btnBg: isP ? '#FBF6E4' : can ? ink : '#F5F7F9', btnFg: isP ? '#8A6D1C' : can ? '#fff' : 'rgba(35,37,43,.45)',
+        cursor: can && !isP ? 'pointer' : 'default',
+        ask: () => { if (can && !isP) this.setState({ pending: pend.concat(id) }); },
+      };
+    });
+    const pending = MENU.filter(m => pend.indexOf(m[0]) > -1).map(m => ({ name: m[1], cost: usd(m[3]), cancel: () => this.setState({ pending: pend.filter(x => x !== m[0]) }) }));
+    const wk = Math.round(WEEK / CAP * 100);
+    const STORE = [
+      ['slime', 'Glow-in-the-dark slime kit', 'Amazon', 399],
+      ['rope', 'Speed jump rope', 'Target', 699],
+      ['book', 'Wings of Fire, Book 1', 'Amazon', 799],
+      ['sketch', 'Sketchbook and 24 markers', 'Walmart', 950],
+      ['lego', 'LEGO Classic creative box', 'Amazon', 1499],
+    ];
+    const p8 = this.state.p8, all = MENU.map(m => [m[0], m[1], 'At home', m[3]]).concat(STORE);
+    const held8 = all.filter(m => p8.indexOf(m[0]) > -1).reduce((a, m) => a + m[3], 0);
+    const free8 = BAL - held8;
+    const ask8 = id => () => this.setState({ p8: p8.concat(id) });
+    const store8 = STORE.map(([id, name, store, c]) => {
+      const isP = p8.indexOf(id) > -1, can = c <= free8, isG = this.state.goal8 === id;
+      const setGoal = () => this.setState({ goal8: id });
+      return {
+        name, store, price: usd(c), pct: Math.min(100, Math.round(free8 / c * 100)) + '%',
+        left: isP ? 'Asked' : can ? 'You have enough' : usd(c - free8) + ' to go',
+        btn: isP ? 'Asked ✓' : can ? 'Ask for it' : isG ? 'Saving ✓' : 'Save for it',
+        btnBg: isP ? '#FBF6E4' : can ? ink : isG ? '#E3F3E6' : '#F5F7F9',
+        btnFg: isP ? '#8A6D1C' : can ? '#fff' : isG ? '#2E7C46' : ink,
+        cursor: isP || (isG && !can) ? 'default' : 'pointer',
+        act: () => { if (isP) return; if (can) ask8(id)(); else setGoal(); },
+        setGoal, ring: isG ? '2px #23252B' : '1px #EEECE7',
+        askBtn: isP ? 'Asked ✓' : can ? 'Ask' : usd(c - free8) + ' to go',
+        askBg: isP ? '#FBF6E4' : can ? ink : '#F5F7F9', askFg: isP ? '#8A6D1C' : can ? '#fff' : 'rgba(35,37,43,.55)',
+        ask: e => { if (can && !isP) { e.stopPropagation(); ask8(id)(); } },
+      };
+    });
+    const home8 = MENU.map(([id, name, sub, cost, blob]) => {
+      const isP = p8.indexOf(id) > -1, can = cost <= free8;
+      return { name, sub, cost: usd(cost), blob: 'url(blobs/' + blob + '.svg)',
+        btn: isP ? 'Asked ✓' : can ? 'Ask for it' : 'Need ' + usd(cost - free8) + ' more',
+        btnBg: isP ? '#FBF6E4' : can ? ink : '#F5F7F9', btnFg: isP ? '#8A6D1C' : can ? '#fff' : 'rgba(35,37,43,.45)',
+        btnShort: isP ? 'Asked ✓' : can ? 'Ask' : '+' + usd(cost - free8),
+        cursor: can && !isP ? 'pointer' : 'default', ask: () => { if (can && !isP) ask8(id)(); } };
+    });
+    const pend8 = all.filter(m => p8.indexOf(m[0]) > -1).map(m => ({ name: m[1], where: m[2], cost: usd(m[3]), cancel: () => this.setState({ p8: p8.filter(x => x !== m[0]) }) }));
+    const g8 = STORE.find(m => m[0] === this.state.goal8);
+    const tab = this.state.tab8;
+    const IN = [['Mon', 'Oct 13', 'Lesson done', 50], ['Tue', 'Oct 14', 'Lesson done', 50], ['Wed', 'Oct 15', 'Took unit quiz', 100], ['Thu', 'Oct 16', 'Lesson done', 50], ['Fri', 'Oct 17', '5-day streak', 50]];
+    const ledgerIn = IN.map(r => ({ day: r[0], desc: r[2], amt: '+' + usd(r[3]) }));
+    const heldItems = all.filter(m => p8.indexOf(m[0]) > -1);
+    const ledgerHeld = heldItems.map(m => ({ desc: m[1], amt: '−' + usd(m[3]) }));
+    let run = 150;
+    const ledgerAll = [{ date: 'Oct 13', desc: 'Opening', amt: '', bal: usd(150), color: ink, bg: '#fff' }]
+      .concat(IN.map(r => { run += r[3]; return { date: r[1], desc: r[2], amt: '+' + usd(r[3]), bal: usd(run), color: '#2E7C46', bg: '#fff' }; }))
+      .concat(heldItems.map(m => { run -= m[3]; return { date: 'Oct 20', desc: 'Held: ' + m[1], amt: '−' + usd(m[3]), bal: usd(run), color: '#8A6D1C', bg: '#FBF6E4' }; }));
+    const gp = Math.min(10, Math.round(free8 / STORE.find(m => m[0] === this.state.goal8)[3] * 10));
+    const goalBar = '■'.repeat(gp) + '□'.repeat(10 - gp);
+    const goals = MENU.filter(m => m[3] > 200);
+    const g = MENU.find(m => m[0] === this.state.goal) || goals[0];
+    const gLeft = Math.max(0, g[3] - free);
+    const nextGoal = () => { const i = goals.indexOf(g); this.setState({ goal: goals[(i + 1) % goals.length][0] }); };
+    return {
+      dollars: usd(free), heldLine: held ? usd(held) + ' held for asks' : 'ready to spend',
+      weekEarned: usd(WEEK), wkPct: wk + '%',
+      dollars8: usd(free8), heldLine8: held8 ? usd(held8) + ' held for asks' : 'ready to spend',
+      store8, home8, pend8, ledgerIn, ledgerHeld, ledgerAll, goalBar, heldAmt8: held8 ? '−' + usd(held8) : '$0.00', noPend8: pend8.length === 0, pendSum8: held8 ? usd(held8) + ' held' : '',
+      isStores: tab === 'stores', isHome: tab === 'home',
+      tabStores: () => this.setState({ tab8: 'stores' }), tabHome: () => this.setState({ tab8: 'home' }),
+      tabSBg: tab === 'stores' ? ink : 'transparent', tabSFg: tab === 'stores' ? '#fff' : 'rgba(35,37,43,.7)',
+      tabHBg: tab === 'home' ? ink : 'transparent', tabHFg: tab === 'home' ? '#fff' : 'rgba(35,37,43,.7)',
+      goal8Name: g8[1], goal8Store: g8[2], goal8Cost: usd(g8[3]), goal8Pct: Math.min(100, Math.round(free8 / g8[3] * 100)) + '%',
+      goal8Left: g8[3] > free8 ? usd(g8[3] - free8) + ' to go' : 'You can ask for it',
+      pigY: String(280 + 156 * (1 - wk / 100)),
+      goalName: g[1], goalCost: usd(g[3]), goalPct: Math.min(100, Math.round(free / g[3] * 100)) + '%',
+      goalLeft: gLeft ? usd(gLeft) + ' to go' : 'You can ask for it', nextGoal,
+      earn: [
+        { text: 'Finish today\'s lesson', reward: '+$0.50' },
+        { text: 'Take a unit quiz', reward: '+$1.00' },
+        { text: 'Take the grade test', reward: '+$1.50' },
+        { text: 'Five-day streak', reward: '+$0.50' },
+      ],
+      menu, pending, noPending: pending.length === 0, pendingSum: pending.length ? usd(held) + ' held' : '',
+      history: [
+        { date: 'Oct 12', name: '30 min of screen time', cost: '$1.50' },
+        { date: 'Oct 5', name: 'Pick what\'s for dinner', cost: '$3' },
+        { date: 'Sep 28', name: 'Store trip', cost: '$5' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

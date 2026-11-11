@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E4E7EB;font-family:'Inter Tight',sans-serif;color:#23252B;-webkit-font-smoothing:antialiased}a{color:#2E7C46}a:hover{color:#23252B}</style>
+</helmet>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 6 · Question screen locked: <a href="#4d">4d</a> desktop, <a href="#4f">4f</a> phone</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Both keep the <a href="#4c">4c</a> breakdown. <a href="#4d">4d</a> makes help part of the same ruled list: four more rows under the givens, each opening in place. <a href="#4e">4e</a> moves the help buttons into the question sheet, under the answers, and the answer to the help opens on the left next to the givens.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+  <div id="4d" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">4d</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Help as rows</span></div>
+    <div data-screen-label="4d Question help rows" style="width:1280px;min-height:800px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:14px;">
+          <div style="display:flex;gap:6px;width:320px;"><sc-for list="{{ prog4 }}" as="p" hint-placeholder-count="6"><span style="flex:1;height:6px;border-radius:999px;background:{{ p }};"></span></sc-for></div>
+          <div style="font-size:14px;font-weight:700;">3 of 6</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;">
+            <span style="font-size:12.5px;font-weight:700;">Teach Tokens</span>
+            <div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+          </div>
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Untimed</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;">What you know</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">The problem, pulled apart.</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+          <div style="display:flex;flex-direction:column;">
+            <sc-for list="{{ givens }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                <div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);border-bottom:1.5px solid rgba(35,37,43,.12);">
+              <div style="flex:1;font-size:15px;font-weight:700;">Problem family</div>
+              <span style="padding:5px 11px;border-radius:999px;background:#23252B;color:#fff;font-size:12.5px;font-weight:700;">Percent of</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding:0 0 8px;">Need help</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+              <sc-for list="{{ helpRows }}" as="r" hint-placeholder-count="4">
+                <div onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:999px;background:{{ r.bg }};color:{{ r.fg }};cursor:pointer;">
+                  <span style="flex:1;font-size:14.5px;font-weight:700;">{{ r.label }}</span>
+                  <span style="font-size:12px;font-weight:700;color:{{ r.costFg }};">{{ r.cost }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ helpTitle }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:10px;background:#fff;border-radius:20px;padding:18px 20px;margin-top:8px;">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ helpTitle }}</div>
+                <sc-if value="{{ helpBody }}" hint-placeholder-val="{{ false }}"><div style="font-size:17px;font-weight:400;line-height:1.45;text-wrap:pretty;">{{ helpBody }}</div></sc-if>
+                <sc-if value="{{ helpConfirm }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="font-size:15px;font-weight:600;line-height:1.45;">{{ confirm4 }}</div>
+                    <div style="display:flex;gap:8px;">
+                      <div onClick="{{ pillTry }}" style="padding:10px 16px;border-radius:999px;background:#23252B;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">I'll try first</div>
+                      <div onClick="{{ pillUse }}" style="padding:10px 16px;border-radius:999px;border:1.5px solid #23252B;font-size:13.5px;font-weight:700;cursor:pointer;">{{ useLabel4 }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">The Market</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Price the dinner · percent of a number</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:{{ sheet }};border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:32px;opacity:{{ qOp4 }};transition:opacity .25s;">
+            <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">Dinner came to $48. You want to leave a 15% tip. How much is the tip?</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              <sc-for list="{{ ans4 }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;transition:background .15s;">
+                  <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span>
+                  <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;align-items:center;gap:16px;min-width:0;">
+              <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}"><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">{{ payout4 }}</div></sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:16px;font-weight:600;color:{{ fbColor4 }};">{{ fb4 }}</div>
+                <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ pills4 }}" as="p" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12px;font-weight:700;">{{ p.t }}</span></sc-for></div></sc-if>
+              </div>
+            </div>
+            <div onClick="{{ check4 }}" style="padding:14px 28px;border-radius:999px;background:{{ btnBg4 }};color:{{ btnFg4 }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ btn4 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="4f" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">4f</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone · help under the answers</span></div>
+    <div data-screen-label="4f Question phone" style="width:390px;height:844px;background:{{ ground }};border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+      <div style="padding:58px 20px 14px;display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer;flex:none;">✕</div>
+        <div style="flex:1;display:flex;gap:4px;"><sc-for list="{{ prog4 }}" as="p" hint-placeholder-count="6"><span style="flex:1;height:6px;border-radius:999px;background:{{ p }};"></span></sc-for></div>
+        <div style="display:flex;align-items:center;gap:4px;padding:10px 12px;border-radius:999px;background:#fff;flex:none;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 12px 24px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:14px;">
+        <div style="display:flex;flex-direction:column;gap:10px;padding:4px 8px 0;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12px;font-weight:700;">The Market</span>
+            <span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">3 of 6 · Untimed</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1.5px solid rgba(35,37,43,.12);border-bottom:1.5px solid rgba(35,37,43,.12);">
+            <sc-for list="{{ givens }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:6px;padding:12px 0;">
+                <div style="font-size:12px;font-weight:700;color:rgba(35,37,43,.6);">{{ g.k }}</div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:28px;line-height:1;color:{{ g.color }};">{{ g.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:{{ sheet }};border-radius:28px;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:24px 20px 20px;display:flex;flex-direction:column;gap:20px;opacity:{{ qOp4 }};transition:opacity .25s;">
+            <div style="font-size:24px;font-weight:600;line-height:1.22;letter-spacing:-.02em;text-wrap:pretty;">Dinner came to $48. You want to leave a 15% tip. How much is the tip?</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+              <sc-for list="{{ ans4 }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:10px;padding:14px;min-height:56px;box-sizing:border-box;border-radius:18px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;">
+                  <span style="width:24px;height:24px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ a.key }}</span>
+                  <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:26px;line-height:1;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;padding:16px 20px 20px;border-top:1px solid #EEECE7;">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Need help</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+              <sc-for list="{{ helpRows }}" as="r" hint-placeholder-count="4">
+                <div onClick="{{ r.pick }}" style="display:flex;align-items:center;gap:6px;padding:0 14px;height:44px;border-radius:999px;background:{{ r.sheetBg }};color:{{ r.fg }};cursor:pointer;">
+                  <span style="flex:1;font-size:14px;font-weight:700;white-space:nowrap;">{{ r.label }}</span>
+                  <span style="font-size:11.5px;font-weight:700;color:{{ r.costFg }};white-space:nowrap;">{{ r.cost }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ helpTitle }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:8px;background:#F2F4F6;border-radius:18px;padding:14px 16px;margin-top:4px;">
+                <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ helpTitle }}</div>
+                <sc-if value="{{ helpBody }}" hint-placeholder-val="{{ false }}"><div style="font-size:15.5px;font-weight:400;line-height:1.45;text-wrap:pretty;">{{ helpBody }}</div></sc-if>
+                <sc-if value="{{ helpConfirm }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="font-size:14.5px;font-weight:600;line-height:1.45;">{{ confirm4 }}</div>
+                    <div style="display:flex;gap:6px;">
+                      <div onClick="{{ pillTry }}" style="flex:1;height:44px;display:flex;align-items:center;padding:0 14px;border-radius:999px;background:#23252B;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">I'll try first</div>
+                      <div onClick="{{ pillUse }}" style="flex:1;height:44px;box-sizing:border-box;display:flex;align-items:center;padding:0 14px;border-radius:999px;border:1.5px solid #23252B;font-size:13.5px;font-weight:700;cursor:pointer;">{{ useLabel4 }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+      <div style="padding:14px 20px 34px;display:flex;flex-direction:column;gap:10px;border-top:1.5px solid rgba(35,37,43,.12);">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}"><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;color:#2E7C46;">{{ payout4 }}</div></sc-if>
+          <div style="flex:1;font-size:14.5px;font-weight:600;color:{{ fbColor4 }};">{{ fb4 }}</div>
+        </div>
+        <div onClick="{{ check4 }}" style="height:52px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:{{ btnBg4 }};color:{{ btnFg4 }};font-size:15.5px;font-weight:700;cursor:pointer;">{{ btn4 }}</div>
+      </div>
+    </div>
+  </div>
+  <div id="4e" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">4e</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Help in the sheet</span></div>
+    <div data-screen-label="4e Question help in sheet" style="width:1280px;min-height:800px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:14px;">
+          <div style="display:flex;gap:6px;width:320px;"><sc-for list="{{ prog4 }}" as="p" hint-placeholder-count="6"><span style="flex:1;height:6px;border-radius:999px;background:{{ p }};"></span></sc-for></div>
+          <div style="font-size:14px;font-weight:700;">3 of 6</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;">
+            <span style="font-size:12.5px;font-weight:700;">Teach Tokens</span>
+            <div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+          </div>
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Untimed</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;">What you know</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">The problem, pulled apart.</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:22px;padding:0 4px;">
+          <div style="display:flex;flex-direction:column;">
+            <sc-for list="{{ givens }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                <div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+              <div style="flex:1;font-size:15px;font-weight:700;">Problem family</div>
+              <span style="padding:5px 11px;border-radius:999px;background:#23252B;color:#fff;font-size:12.5px;font-weight:700;">Percent of</span>
+            </div>
+          </div>
+          <sc-if value="{{ helpTitle }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:10px;background:#fff;border-radius:20px;padding:18px 20px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ helpTitle }}</div>
+              <sc-if value="{{ helpBody }}" hint-placeholder-val="{{ false }}"><div style="font-size:17px;font-weight:400;line-height:1.45;text-wrap:pretty;">{{ helpBody }}</div></sc-if>
+              <sc-if value="{{ helpConfirm }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <div style="font-size:15px;font-weight:600;line-height:1.45;">{{ confirm4 }}</div>
+                  <div style="display:flex;gap:8px;">
+                    <div onClick="{{ pillTry }}" style="padding:10px 16px;border-radius:999px;background:#23252B;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;">I'll try first</div>
+                    <div onClick="{{ pillUse }}" style="padding:10px 16px;border-radius:999px;border:1.5px solid #23252B;font-size:13.5px;font-weight:700;cursor:pointer;">{{ useLabel4 }}</div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">The Market</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Price the dinner · percent of a number</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:{{ sheet }};border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 28px;display:flex;flex-direction:column;gap:32px;opacity:{{ qOp4 }};transition:opacity .25s;">
+            <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">Dinner came to $48. You want to leave a 15% tip. How much is the tip?</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              <sc-for list="{{ ans4 }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;transition:background .15s;">
+                  <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span>
+                  <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:0 40px 24px;">
+            <span style="font-size:14px;font-weight:700;color:rgba(35,37,43,.55);padding-right:4px;">Stuck?</span>
+            <sc-for list="{{ helpRows }}" as="p" hint-placeholder-count="4">
+              <div onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:{{ p.sheetBg }};color:{{ p.fg }};font-size:14px;font-weight:700;cursor:pointer;">
+                <span>{{ p.label }}</span>
+                <sc-if value="{{ p.isTeach }}" hint-placeholder-val="{{ false }}"><span style="display:flex;gap:3px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:7px;height:7px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px {{ p.ring }};"></span></sc-for></span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;align-items:center;gap:16px;min-width:0;">
+              <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}"><div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">{{ payout4 }}</div></sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:16px;font-weight:600;color:{{ fbColor4 }};">{{ fb4 }}</div>
+                <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ pills4 }}" as="p" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12px;font-weight:700;">{{ p.t }}</span></sc-for></div></sc-if>
+              </div>
+            </div>
+            <div onClick="{{ check4 }}" style="padding:14px 28px;border-radius:999px;background:{{ btnBg4 }};color:{{ btnFg4 }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ btn4 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 5 · Question screen, left side without cards</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Same sheet as <a href="#4a">4a</a>. <a href="#4b">4b</a> turns help into one ladder in the cheat-sheet style: Read it, Hint, Show me, Teach me, each revealed only after the one before, so help comes one small step at a time. <a href="#4c">4c</a> pulls the problem apart instead: the numbers you know, what to find, and which problem family it is, with help as a row of pills underneath. Both are playable.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+  <div id="4b" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">4b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Help ladder</span></div>
+    <div data-screen-label="4b Question help ladder" style="width:1280px;min-height:800px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:14px;">
+          <div style="display:flex;gap:6px;width:320px;">
+            <sc-for list="{{ prog4 }}" as="p" hint-placeholder-count="6"><span style="flex:1;height:6px;border-radius:999px;background:{{ p }};"></span></sc-for>
+          </div>
+          <div style="font-size:14px;font-weight:700;">3 of 6</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;">
+            <span style="font-size:12.5px;font-weight:700;">Teach Tokens</span>
+            <div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+          </div>
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Untimed</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;">Stuck? One step at a time.</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Each step gives a little more. Teach uses a token.</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;padding:4px 4px 0;">
+          <sc-for list="{{ ladder }}" as="c" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:14px;">
+              <div style="display:flex;flex-direction:column;align-items:center;">
+                <span style="width:24px;height:24px;box-sizing:border-box;border-radius:999px;background:{{ c.dotBg }};border:{{ c.dotBorder }};color:{{ c.dotFg }};display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ c.n }}</span>
+                <span style="flex:1;width:1.5px;min-height:14px;background:{{ c.line }};"></span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding:0 0 22px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="flex:1;font-size:20px;font-weight:700;letter-spacing:-.015em;color:{{ c.titleColor }};">{{ c.title }}</div>
+                  <sc-if value="{{ c.isTeach }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:8px;height:8px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div></sc-if>
+                  <span style="font-size:12.5px;font-weight:700;color:rgba(35,37,43,.55);">{{ c.meta }}</span>
+                </div>
+                <sc-if value="{{ c.shown }}" hint-placeholder-val="{{ false }}">
+                  <div style="font-size:17px;font-weight:400;line-height:1.45;text-wrap:pretty;">{{ c.body }}</div>
+                </sc-if>
+                <sc-if value="{{ c.isNext }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ c.reveal }}" style="align-self:flex-start;padding:10px 16px;border-radius:999px;background:{{ c.btnBg }};color:{{ c.btnFg }};font-size:13.5px;font-weight:700;cursor:pointer;">{{ c.btn }}</div>
+                </sc-if>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">The Market</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Price the dinner · percent of a number</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:{{ sheet }};border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:32px;opacity:{{ qOp4 }};transition:opacity .25s;">
+            <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">Dinner came to $48. You want to leave a 15% tip. How much is the tip?</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              <sc-for list="{{ ans4 }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;transition:background .15s;">
+                  <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span>
+                  <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;align-items:center;gap:16px;min-width:0;">
+              <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}">
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">{{ payout4 }}</div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:16px;font-weight:600;color:{{ fbColor4 }};">{{ fb4 }}</div>
+                <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ pills4 }}" as="p" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12px;font-weight:700;">{{ p.t }}</span></sc-for></div>
+                </sc-if>
+              </div>
+            </div>
+            <div onClick="{{ check4 }}" style="padding:14px 28px;border-radius:999px;background:{{ btnBg4 }};color:{{ btnFg4 }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ btn4 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="4c" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">4c</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">What you know</span></div>
+    <div data-screen-label="4c Question what you know" style="width:1280px;min-height:800px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:14px;">
+          <div style="display:flex;gap:6px;width:320px;">
+            <sc-for list="{{ prog4 }}" as="p" hint-placeholder-count="6"><span style="flex:1;height:6px;border-radius:999px;background:{{ p }};"></span></sc-for>
+          </div>
+          <div style="font-size:14px;font-weight:700;">3 of 6</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;">
+            <span style="font-size:12.5px;font-weight:700;">Teach Tokens</span>
+            <div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+          </div>
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Untimed</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;">What you know</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">The problem, pulled apart.</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:22px;padding:0 4px;">
+          <div style="display:flex;flex-direction:column;">
+            <sc-for list="{{ givens }}" as="g" hint-placeholder-count="3">
+              <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                <div style="flex:1;font-size:15px;font-weight:700;">{{ g.k }}</div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ g.color }};">{{ g.v }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:10px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+              <div style="flex:1;font-size:15px;font-weight:700;">Problem family</div>
+              <span style="padding:5px 11px;border-radius:999px;background:#23252B;color:#fff;font-size:12.5px;font-weight:700;">Percent of</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <sc-for list="{{ helpPills }}" as="p" hint-placeholder-count="4">
+                <div onClick="{{ p.pick }}" style="display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:14px;font-weight:700;cursor:pointer;">
+                  <span>{{ p.label }}</span>
+                  <sc-if value="{{ p.isTeach }}" hint-placeholder-val="{{ false }}"><span style="display:flex;gap:3px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:7px;height:7px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px {{ p.ring }};"></span></sc-for></span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <sc-if value="{{ helpBody }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:17px;font-weight:400;line-height:1.45;text-wrap:pretty;">{{ helpBody }}</div>
+            </sc-if>
+            <sc-if value="{{ helpConfirm }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="font-size:15px;font-weight:600;line-height:1.45;">{{ confirm4 }}</div>
+                <div style="display:flex;gap:8px;">
+                  <div onClick="{{ pillTry }}" style="padding:11px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">I'll try first</div>
+                  <div onClick="{{ pillUse }}" style="padding:11px 18px;border-radius:999px;border:1.5px solid #23252B;font-size:14px;font-weight:700;cursor:pointer;">{{ useLabel4 }}</div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">The Market</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Price the dinner · percent of a number</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:{{ sheet }};border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:32px;opacity:{{ qOp4 }};transition:opacity .25s;">
+            <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">Dinner came to $48. You want to leave a 15% tip. How much is the tip?</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              <sc-for list="{{ ans4 }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;transition:background .15s;">
+                  <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span>
+                  <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;align-items:center;gap:16px;min-width:0;">
+              <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}">
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">{{ payout4 }}</div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:16px;font-weight:600;color:{{ fbColor4 }};">{{ fb4 }}</div>
+                <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ pills4 }}" as="p" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12px;font-weight:700;">{{ p.t }}</span></sc-for></div>
+                </sc-if>
+              </div>
+            </div>
+            <div onClick="{{ check4 }}" style="padding:14px 28px;border-radius:999px;background:{{ btnBg4 }};color:{{ btnFg4 }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ btn4 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 4 · Question screen, help stack on the left</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Same grid as <a href="#3b">3b</a>. Help stack: Read it to me, Hint, Show me (free), Teach me (gold, uses one of 3 Teach Tokens at full pay; half pay once they're gone). Token dots sit on the Teach card and in the top bar. A correct answer shows the payout with its breakdown pills. Updated Oct 20 for brief v4.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+  <div id="4a" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">4a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Desktop · grade 7 · The Market · free practice</span></div>
+    <div data-screen-label="4a Question desktop" style="width:1280px;min-height:800px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:14px;">
+          <div style="display:flex;gap:6px;width:320px;">
+            <sc-for list="{{ prog4 }}" as="p" hint-placeholder-count="6"><span style="flex:1;height:6px;border-radius:999px;background:{{ p }};"></span></sc-for>
+          </div>
+          <div style="font-size:14px;font-weight:700;">3 of 6</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;">
+            <span style="font-size:12.5px;font-weight:700;">Teach Tokens</span>
+            <div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+          </div>
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Untimed</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;">Need a hand?</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Hints are free. Teach uses a token, full pay.</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;position:relative;display:flex;flex-direction:column;" style-after="content:'';position:absolute;left:0;right:0;bottom:0;height:48px;z-index:20;pointer-events:none;background:linear-gradient(to top, {{ ground }}, rgba(245,247,249,0));">
+          <sc-for list="{{ help4 }}" as="c" hint-placeholder-count="4">
+            <div onClick="{{ c.toggle }}" style="position:relative;z-index:{{ c.z }};margin-top:{{ c.mt }};background:{{ c.bg }};border-radius:{{ c.radius }};padding:{{ c.pad }};display:flex;flex-direction:column;gap:14px;cursor:pointer;box-shadow:{{ c.sh }};transition:padding .25s cubic-bezier(.32,.72,.33,1);">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="font-size:20px;font-weight:600;letter-spacing:-.02em;flex:1;">{{ c.title }}</div>
+                <sc-if value="{{ c.isTeach }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots4 }}" as="d" hint-placeholder-count="3"><span style="width:8px;height:8px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div></sc-if>
+                <div style="padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.55);font-size:12px;font-weight:700;">{{ c.meta }}</div>
+              </div>
+              <sc-if value="{{ c.showAudio }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:44px;height:44px;border-radius:999px;background:#23252B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;">▶</div>
+                  <div style="font-size:14px;font-weight:600;">Play the question · 0:08</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ c.showText }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:16px;font-weight:600;line-height:1.45;">15% is 10% plus 5%. Start with 10% of $48.</div>
+              </sc-if>
+              <sc-if value="{{ c.showBar }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div style="display:flex;height:40px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.65);">
+                    <div style="width:20%;background:#23252B;"></div>
+                    <div style="width:10%;background:#8A8578;"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;">
+                    <span>10% = $4.80</span><span>5% = half of that</span><span>$48</span>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ c.showConfirm }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  <div style="font-size:15px;font-weight:600;line-height:1.45;">{{ confirm4 }}</div>
+                  <div style="display:flex;gap:8px;">
+                    <div onClick="{{ tryFirst4 }}" style="padding:11px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;" style-hover="background:#3A3D45;">I'll try first</div>
+                    <div onClick="{{ teachAnyway4 }}" style="padding:11px 18px;border-radius:999px;border:1.5px solid #23252B;font-size:14px;font-weight:700;" style-hover="background:rgba(255,255,255,.4);">{{ useLabel4 }}</div>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ c.showTeach }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:15px;font-weight:600;line-height:1.4;">
+                  <div style="display:flex;gap:10px;"><span style="font-weight:800;">1</span><span>10% of $48: move the decimal one place. $4.80.</span></div>
+                  <div style="display:flex;gap:10px;"><span style="font-weight:800;">2</span><span>5% is half of 10%. Half of $4.80 is $2.40.</span></div>
+                  <div style="display:flex;gap:10px;"><span style="font-weight:800;">3</span><span>Add them together.</span></div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">The Market</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Price the dinner · percent of a number</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:{{ sheet }};border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:32px;opacity:{{ qOp4 }};transition:opacity .25s;">
+            <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">Dinner came to $48. You want to leave a 15% tip. How much is the tip?</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              <sc-for list="{{ ans4 }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;transition:background .15s;">
+                  <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span>
+                  <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;align-items:center;gap:16px;min-width:0;">
+              <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}">
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">{{ payout4 }}</div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:16px;font-weight:600;color:{{ fbColor4 }};">{{ fb4 }}</div>
+                <sc-if value="{{ showPay4 }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ pills4 }}" as="p" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12px;font-weight:700;">{{ p.t }}</span></sc-for></div>
+                </sc-if>
+              </div>
+            </div>
+            <div onClick="{{ check4 }}" style="padding:14px 28px;border-radius:999px;background:{{ btnBg4 }};color:{{ btnFg4 }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ btn4 }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+<section style="padding:24px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 3 · Home (locked)</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">One white sheet on a grey-blue ground. Missions show one world chip and a plain meta line. Updated Oct 20: today's lesson leads the sheet, missions become free practice with an opt-in Blitz pill per row, progress counts units, and the stand opens after the lesson.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+
+  <div id="3a" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">3a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone</span></div>
+    <div data-screen-label="3a Today phone" style="width:390px;height:844px;background:{{ ground }};border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+      <div style="padding:60px 28px 28px;display:flex;flex-direction:column;gap:18px;">
+        <div style="display:flex;align-items:baseline;gap:10px;">
+          <div style="font-size:40px;font-weight:800;letter-spacing:-.035em;line-height:1;flex:1;">Sun</div>
+          <div style="font-size:15px;font-weight:700;color:rgba(35,37,43,.55);">October 19</div>
+        </div>
+        <div style="font-size:22px;font-weight:600;line-height:1.38;letter-spacing:-.015em;color:rgba(35,37,43,.55);text-wrap:pretty;">Hey <span style="color:#23252B;">Talia.</span> One <span style="color:#23252B;">lesson</span> today, then <span style="color:#23252B;">the stand opens.</span> You're on <span style="color:#23252B;">unit 3 of 7.</span></div>
+      </div>
+      <div style="flex:1;background:{{ sheet }};border-radius:32px 32px 0 0;display:flex;flex-direction:column;padding:14px 0 0;overflow:hidden;">
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;padding:0 12px 14px;">
+          <sc-for list="{{ strip3 }}" as="d" hint-placeholder-count="7">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;border-radius:14px;background:{{ d.bg }};color:{{ d.fg }};">
+              <div style="font-size:10.5px;font-weight:700;opacity:.7;">{{ d.dow }}</div>
+              <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:22px;line-height:1;">{{ d.date }}</div>
+              <div style="display:flex;gap:2px;height:4px;"><sc-for list="{{ d.runs }}" as="r" hint-placeholder-count="1"><span style="width:4px;height:4px;border-radius:999px;background:{{ r.color }};"></span></sc-for></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-top:1px solid #EEECE7;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <div style="font-size:13px;font-weight:700;color:#8A8578;">Grade 7 · unit 3 of 7</div>
+            <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:56px;line-height:.95;">29%</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(7,14px);gap:5px;">
+            <sc-for list="{{ unitDots }}" as="c" hint-placeholder-count="7"><span style="width:14px;height:14px;border-radius:999px;background:{{ c }};"></span></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;padding:16px 24px 18px;border-top:1px solid #EEECE7;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Today's lesson</span>
+            <span style="font-size:12px;font-weight:600;color:#8A8578;">~20 min · no timer</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="flex:1;font-size:24px;font-weight:600;letter-spacing:-.025em;line-height:1.15;">What a discount does to a price</div>
+            <div style="width:64px;height:64px;flex:none;border-radius:999px;background:#23252B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;">Start</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;"><sc-for list="{{ moves }}" as="mv" hint-placeholder-count="5"><span style="height:5px;border-radius:999px;background:{{ mv.c }};"></span></sc-for></div>
+        </div>
+        <sc-for list="{{ missions }}" as="m" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="padding:3px 9px;border-radius:999px;background:{{ m.tint }};font-size:11px;font-weight:700;">{{ m.world }}</span>
+                <span style="font-size:12px;font-weight:600;color:#8A8578;">{{ m.meta3 }}</span>
+              </div>
+              <div style="font-size:18px;font-weight:600;letter-spacing:-.015em;line-height:1.2;color:{{ m.titleColor }};">{{ m.title }}</div>
+            </div>
+            <div style="width:52px;height:52px;border-radius:999px;background:{{ m.btnBg }};color:{{ m.btnFg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none;">{{ m.btn }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="position:absolute;left:10px;right:10px;bottom:10px;background:#23252B;border-radius:28px;padding:18px 24px 22px;display:flex;justify-content:space-between;white-space:nowrap;">
+        <span style="font-size:17px;font-weight:700;color:#fff;">Play</span>
+        <span style="font-size:17px;font-weight:600;color:rgba(255,255,255,.4);">My Stand</span>
+        <span style="font-size:17px;font-weight:600;color:rgba(255,255,255,.4);">Shop</span>
+        <span style="font-size:17px;font-weight:600;color:rgba(255,255,255,.4);">Rewards</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="3b" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">3b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Desktop · hover a passed grade, click a length chip</span></div>
+    <div data-screen-label="3b Today desktop" style="width:1280px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="font-size:21px;font-weight:900;letter-spacing:-.03em;flex:1;">Kampus</div>
+        <div style="display:flex;gap:4px;">
+          <div style="padding:9px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14.5px;font-weight:700;">Play</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">My Stand</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Shop</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Rewards</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Grown-ups</div>
+        </div>
+        <div style="flex:1;display:flex;justify-content:flex-end;">
+          <div style="width:38px;height:38px;border-radius:999px;background:#F0AFCE;color:#23252B;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;">T</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1 / span 2;display:grid;grid-template-rows:subgrid;row-gap:0;">
+          <div style="align-self: end; padding: 0 4px 22px; font-size: 28px; font-weight: 600; line-height: 1.32; letter-spacing: -.025em; color: rgba(35,37,43,.55)">Hi <span style="color:#23252B;">Talia</span>, one <span style="color:#23252B;">lesson</span> today, then <span style="color:#23252B;white-space:nowrap;">the stand opens.</span></div>
+          <div style="align-self:start;position:relative;display:flex;flex-direction:column;" style-after="content:'';position:absolute;left:0;right:0;bottom:0;height:48px;z-index:20;pointer-events:none;background:linear-gradient(to top, {{ ground }}, rgba(245,247,249,0));">
+            <sc-for list="{{ grades3 }}" as="g" hint-placeholder-count="6">
+              <div onClick="{{ g.onClick }}" onMouseEnter="{{ g.enter }}" onMouseLeave="{{ g.leave }}" style="position:relative;z-index:{{ g.z }};margin-top:{{ g.mt }};background:{{ g.bg }};color:{{ g.fg }};border:{{ g.border }};border-radius:{{ g.radius }};padding:{{ g.pad }};display:flex;align-items:center;gap:14px;cursor:{{ g.cursor }};box-shadow:{{ g.sh }};transition:padding .25s cubic-bezier(.32,.72,.33,1);">
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                  <div style="font-size:9.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;opacity:.7;">Grade</div>
+                  <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:.9;color:{{ g.numColor }};">{{ g.n }}</div>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                  <div style="font-size:13.5px;font-weight:800;">{{ g.label }}</div>
+                  <sc-if value="{{ g.isCurrent }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:3px;"><sc-for list="{{ g.dots }}" as="d" hint-placeholder-count="7"><span style="width:8px;height:8px;border-radius:999px;background:{{ d }};"></span></sc-for></div>
+                  </sc-if>
+                  <sc-if value="{{ g.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;gap:4px;">
+                      <span style="padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.65);font-size:12px;font-weight:800;">Test {{ g.score }}</span>
+                      <span style="padding:5px 10px;border-radius:999px;background:#23252B;color:#fff;font-size:12px;font-weight:800;">+{{ g.earned }}</span>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:contents;">
+          <div style="grid-column:2;grid-row:1;align-self:end;position:relative;display:flex;align-items:center;gap:32px;padding:0 4px 24px;">
+            <div style="flex:1;min-width:0;display:flex;align-items:stretch;gap:28px;">
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Bank</div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;">$1,240</div>
+              </div>
+              <div style="width:1.5px;background:rgba(35,37,43,.14);"></div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Kredits this week</div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:{{ weekColor }};">{{ weekDelta }}</div>
+              </div>
+            </div>
+            <div style="position:absolute;right:0;bottom:22px;display:flex;background:#fff;border-radius:999px;padding:3px;">
+              <sc-for list="{{ views3 }}" as="v" hint-placeholder-count="2">
+                <div onClick="{{ v.pick }}" style="padding:7px 16px;border-radius:999px;background:{{ v.bg }};color:{{ v.fg }};font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .2s;">{{ v.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:{{ sheet }};border-radius:28px;overflow:hidden;">
+          <sc-if value="{{ isToday3 }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:16px;">
+            <sc-for list="{{ strip3 }}" as="d" hint-placeholder-count="7">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0;border-radius:16px;background:{{ d.bg }};color:{{ d.fg }};">
+                <div style="font-size:12px;font-weight:700;opacity:.7;">{{ d.dow }}</div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:30px;line-height:1;">{{ d.date }}</div>
+                <div style="display:flex;gap:3px;height:5px;"><sc-for list="{{ d.runs }}" as="r" hint-placeholder-count="1"><span style="width:5px;height:5px;border-radius:999px;background:{{ r.color }};"></span></sc-for></div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:24px;padding:24px 32px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+              <div style="font-size:15px;font-weight:700;">Grade 7 · unit 3 of 7</div>
+              <div style="font-size:13.5px;font-weight:600;color:#8A8578;">38 of 130 lessons · grade test opens after unit 7</div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(7,18px);gap:6px;">
+              <sc-for list="{{ unitDots }}" as="c" hint-placeholder-count="7"><span style="width:18px;height:18px;border-radius:999px;background:{{ c }};"></span></sc-for>
+            </div>
+            <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:64px;line-height:.9;min-width:150px;text-align:right;">29%</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:28px;padding:30px 32px 30px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:14px;min-width:0;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Today's lesson</span>
+                <span style="padding:4px 10px;border-radius:999px;background:color-mix(in oklab, #F4BE93 35%, white);font-size:11.5px;font-weight:700;">The Market</span>
+                <span style="font-size:13px;font-weight:600;color:#8A8578;">~20 min · no timer</span>
+              </div>
+              <div style="font-size:34px;font-weight:600;line-height:1.12;letter-spacing:-.03em;text-wrap:pretty;">What a discount does to a price</div>
+              <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;max-width:560px;padding-top:4px;">
+                <sc-for list="{{ moves }}" as="mv" hint-placeholder-count="5">
+                  <div style="display:flex;flex-direction:column;gap:7px;">
+                    <span style="height:6px;border-radius:999px;background:{{ mv.c }};"></span>
+                    <span style="font-size:12.5px;font-weight:700;color:{{ mv.fg }};">{{ mv.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="width:96px;height:96px;flex:none;border-radius:999px;background:#23252B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer;transition:transform .25s cubic-bezier(.32,.72,.33,1);" style-hover="transform:scale(1.06);">Start</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:20px 32px 12px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><div style="font-size:15px;font-weight:700;">Free practice</div><div style="font-size:12.5px;font-weight:600;color:#8A8578;">3 Teach Tokens per run · Blitz is optional</div></div>
+            <div style="display:flex;gap:6px;">
+              <sc-for list="{{ lengths3 }}" as="l" hint-placeholder-count="3">
+                <div onClick="{{ l.pick }}" style="padding:7px 14px;border-radius:999px;background:{{ l.bg }};color:{{ l.fg }};font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ l.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+          <sc-for list="{{ missions }}" as="m" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:16px;padding:18px 32px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span style="padding:4px 10px;border-radius:999px;background:{{ m.tint }};font-size:11.5px;font-weight:700;">{{ m.world }}</span>
+                  <span style="font-size:13px;font-weight:600;color:#8A8578;">{{ m.meta3 }}</span>
+                </div>
+                <div style="font-size:20px;font-weight:600;letter-spacing:-.02em;color:{{ m.titleColor }};">{{ m.title }}</div>
+              </div>
+              <sc-if value="{{ m.canBlitz }}" hint-placeholder-val="{{ true }}"><div onClick="{{ m.toggleBlitz }}" style="padding:9px 14px;border-radius:999px;background:{{ m.blitzBg }};color:{{ m.blitzFg }};font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ m.blitzLabel }}</div></sc-if>
+              <div style="width:60px;height:60px;border-radius:999px;background:{{ m.btnBg }};color:{{ m.btnFg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none;cursor:pointer;transition:transform .25s cubic-bezier(.32,.72,.33,1);" style-hover="transform:scale(1.06);">{{ m.btn }}</div>
+            </div>
+          </sc-for>
+          </sc-if>
+          <sc-if value="{{ isWeek3 }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:18px;padding:24px 28px 28px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:32px;line-height:1;flex:1;">October 2026</div>
+                <div style="display:flex;gap:8px;">
+                  <span style="width:36px;height:36px;border-radius:999px;background:#23252B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;">←</span>
+                  <span style="width:36px;height:36px;border-radius:999px;background:#23252B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;">→</span>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;border-top:1px solid #EEECE7;padding-top:18px;">
+                <sc-for list="{{ week }}" as="day" hint-placeholder-count="7">
+                  <div style="display:flex;flex-direction:column;gap:8px;min-width:0;">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;padding-bottom:8px;">
+                      <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:40px;line-height:1;color:{{ day.numColor }};">{{ day.date }}</div>
+                      <div style="font-size:12.5px;font-weight:600;color:{{ day.dowColor }};">{{ day.dow }}</div>
+                    </div>
+                    <sc-for list="{{ day.runs }}" as="r" hint-placeholder-count="2">
+                      <div style="background:#F5F7F9;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:10px;min-height:{{ r.h }};justify-content:space-between;">
+                        <div style="font-size:12.5px;font-weight:700;line-height:1.25;">{{ r.title }}</div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">
+                          <span style="padding:3px 8px;border-radius:999px;background:{{ r.color }};font-size:10.5px;font-weight:700;">{{ r.world }}</span>
+                          <span style="font-size:11px;font-weight:800;color:#2E7C46;">{{ r.pay }}</span>
+                        </div>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ day.isToday }}" hint-placeholder-val="{{ false }}">
+                      <div style="background:#23252B;color:#fff;border-radius:14px;min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
+                        <span style="font-size:20px;line-height:1;">+</span>
+                        <span style="font-size:11px;font-weight:700;">Next run</span>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ day.empty }}" hint-placeholder-val="{{ false }}">
+                      <div style="border-radius:14px;min-height:72px;background:#F5F7F9;"></div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:center;gap:18px;padding:22px 32px;background:#D9DE62;cursor:pointer;" style-hover="background:#CFD452;">
+            <img src="blobs/Startup.svg" alt="" style="width:48px;height:48px;object-fit:contain;flex:none;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0;">
+              <div style="font-size:20px;font-weight:700;letter-spacing:-.02em;">Your lemonade stand</div>
+              <div style="font-size:13.5px;font-weight:600;color:rgba(35,37,43,.7);">Class first, then the register opens. Forecast 31°, sunny. Your regulars are waiting.</div>
+            </div>
+            <div style="padding:14px 22px;border-radius:999px;background:rgba(255,255,255,.55);color:rgba(35,37,43,.6);font-size:14.5px;font-weight:700;white-space:nowrap;">Opens after the lesson</div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;currentGrade&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:3,&quot;max&quot;:8,&quot;step&quot;:1,&quot;default&quot;:7,&quot;tsType&quot;:&quot;number&quot;},&quot;stack&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;overlap&quot;,&quot;separate&quot;],&quot;default&quot;:&quot;overlap&quot;,&quot;tsType&quot;:&quot;'overlap' | 'separate'&quot;},&quot;ground&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grey&quot;,&quot;slate&quot;,&quot;mist&quot;,&quot;sage&quot;],&quot;default&quot;:&quot;grey&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;weekDelta&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:356,&quot;min&quot;:-500,&quot;max&quot;:1000,&quot;tsType&quot;:&quot;number&quot;},&quot;sheet&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;white&quot;,&quot;cool&quot;,&quot;warm&quot;],&quot;default&quot;:&quot;white&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { open: null };
+  renderVals() {
+    const cur = Math.min(8, Math.max(3, this.props.currentGrade ?? 7));
+    const overlap = (this.props.stack ?? 'overlap') === 'overlap';
+    const PASS = ['#F0AFCE', '#F4BE93', '#5E9FE0', '#8F97DE', '#E8C94F'];
+    const meta = { 3: ['17/20', 'Sep 2024'], 4: ['18/20', 'Feb 2025'], 5: ['16/20', 'Aug 2025'], 6: ['19/20', 'Mar 2026'], 7: ['', ''] };
+    const progress = 6;
+    const mk = (n, i) => {
+      const passed = n < cur, isCurrent = n === cur, locked = n > cur;
+      const open = passed && this.state.open === n;
+      return {
+        n, z: i + 1, isCurrent, open,
+        mt: i === 0 ? '0px' : (overlap ? '-14px' : '6px'),
+        pad: overlap ? (open ? '26px 20px 22px' : '24px 20px 18px') : '16px 20px',
+        padS: overlap ? '20px 16px 14px' : '12px 16px',
+        bg: passed ? PASS[(n - 3) % PASS.length] : isCurrent ? '#23252B' : '#fff',
+        fg: isCurrent ? '#fff' : locked ? '#B5B0A4' : '#23252B',
+        numColor: isCurrent ? '#fff' : locked ? '#B5B0A4' : '#23252B',
+        border: locked ? '1.5px dashed #D8D4C9' : '1.5px solid transparent',
+        label: passed ? 'Passed' : isCurrent ? 'Now · unit 3 of 7' : n === cur + 1 ? 'Unlocks after the grade ' + cur + ' test' : 'Locked',
+        dots: Array.from({ length: 7 }, (_, k) => k < 2 ? '#D9DE62' : 'rgba(255,255,255,.22)'),
+        score: meta[n] ? meta[n][0] : '', when: meta[n] ? meta[n][1] : '',
+        cursor: passed ? 'pointer' : 'default',
+        onClick: passed ? () => this.setState(s => ({ open: s.open === n ? null : n })) : undefined,
+      };
+    };
+    const grades = [3, 4, 5, 6, 7, 8].map(mk);
+    const W = { 'The Kitchen': '#F0AFCE', 'The Market': '#F4BE93', 'Outside': '#5E9FE0', 'The Workshop': '#8F97DE' };
+    const run = (title, world, pay, tall) => ({ title, world, color: W[world], pay, h: tall ? '96px' : '64px' });
+    const days = [
+      ['13', 'Monday', 'M', [run('Split the pizza bill', 'The Kitchen', '+48', true), run('Bus fare math', 'Outside', '+31')]],
+      ['14', 'Tuesday', 'T', [run('Price the cookies', 'The Market', '+52')]],
+      ['15', 'Wednesday', 'W', []],
+      ['16', 'Thursday', 'T', [run('Balance the shelf', 'The Workshop', '+40', true), run('Quick 6', 'The Market', '+22')]],
+      ['17', 'Friday', 'F', [run('Road trip miles', 'Outside', '+61', true)]],
+      ['18', 'Saturday', 'S', []],
+      ['19', 'Sunday', 'S', [run('15% tip on dinner', 'The Market', '+102', true)]],
+    ];
+    const week = days.map(([date, dow, dowShort, runs], i) => {
+      const isToday = i === 6;
+      return {
+        date, dow, dowShort, runs, isToday, empty: !isToday && runs.length === 0,
+        numColor: isToday ? '#23252B' : '#5D5A52', dowColor: isToday ? '#23252B' : '#8A8578',
+        phoneBg: isToday ? '#23252B' : '#F4F3F0', phoneFg: isToday ? '#fff' : '#23252B',
+      };
+    });
+    const gradesDark = grades.map(g => {
+      const locked = g.n > cur;
+      return Object.assign({}, g, {
+        bg: g.isCurrent ? '#fff' : locked ? '#1B1C21' : g.bg,
+        fg: g.isCurrent ? '#23252B' : locked ? 'rgba(255,255,255,.4)' : '#23252B',
+        numColor: g.isCurrent ? '#23252B' : locked ? 'rgba(255,255,255,.4)' : '#23252B',
+        border: locked ? '1.5px dashed rgba(255,255,255,.22)' : '1.5px solid transparent',
+        dots: Array.from({ length: 10 }, (_, k) => k < progress ? '#58B372' : '#ECE9E1'),
+      });
+    });
+    const strip = days.map(([date, dow, dowShort, runs], i) => {
+      const t = i === 6;
+      return {
+        date, dow: dow.slice(0, 3).toLowerCase(), dowLong: dow.slice(0, 3).toLowerCase(), runs,
+        bg: t ? '#fff' : 'rgba(255,255,255,.5)', border: t ? '1.5px solid #23252B' : '1.5px solid transparent',
+        numColor: t ? '#23252B' : '#8A8578', dowColor: t ? '#23252B' : '#B5B0A4',
+      };
+    });
+    const readyDots = Array.from({ length: 10 }, (_, k) => k < progress ? '#2E7C46' : '#ECE9E1');
+    const len = this.state.len ?? 1, mode = this.state.mode ?? 'practice';
+    const LENS = [['Quick 6', 6], ['10', 10], ['20', 20]];
+    const lengths = LENS.map(([label], i) => ({
+      label, bg: i === len ? '#58B372' : '#EAF6EE', fg: i === len ? '#fff' : '#2E7C46',
+      pick: () => this.setState({ len: i }),
+    }));
+    const modes = [['practice', 'Untimed'], ['blitz', 'Blitz']].map(([k, label]) => ({
+      label, bg: mode === k ? '#fff' : 'transparent', fg: mode === k ? '#23252B' : 'rgba(255,255,255,.75)',
+      pick: () => this.setState({ mode: k }),
+    }));
+    const q = LENS[len][1], mult = mode === 'blitz' ? 1.5 : 1;
+    const tint = c => 'color-mix(in oklab, ' + c + ' 35%, white)';
+    const missions = [
+      { world: 'The Market', blob: 'blobs/Cash.svg', title: 'Price the lemonade for a 31° day', per: 9, len: '6 questions' },
+      { world: 'Outside', blob: 'blobs/Rain.svg', title: 'Will the bus beat the storm?', per: 8, len: '6 questions' },
+      { world: 'The Kitchen', blob: 'blobs/Ice_cream.svg', title: 'Halve the pancake recipe', per: 8, len: '6 questions', done: true },
+    ].map(m => Object.assign(m, {
+      tint: tint(W[m.world]), lenNow: q + ' questions', payNow: '~' + Math.round(m.per * q * mult) + ' Kredits',
+      blobUrl: 'url(' + m.blob + ')',
+      titleColor: m.done ? '#B5B0A4' : '#23252B', blobOp: m.done ? .4 : 1,
+      btn: m.done ? 'again' : 'play', btnBg: m.done ? '#F4F3F0' : '#23252B', btnFg: m.done ? '#8A8578' : '#fff',
+    }));
+    const quests = [
+      { title: 'Get 5 first tries', sub: '3 of 5 · +40 Kredits', cta: '3/5', bg: '#F4F3F0', fg: '#23252B' },
+      { title: 'Play a Outside run', sub: 'Done · +30 Kredits', cta: 'Claim', bg: '#D9DE62', fg: '#23252B' },
+    ];
+    const GROUNDS = { grey: '#F5F7F9', slate: '#A9B7C7', mist: '#D2DBE4', sage: '#C6D1C4' };
+    const ground = GROUNDS[this.props.ground ?? 'grey'] || GROUNDS.slate;
+    const EARN = { 3: '$148', 4: '$212', 5: '$265', 6: '$259' };
+    const PINKS = ['#C7B8F0', '#B3A0EA', '#9E87E2', '#8A6FD9'];
+    const LETTER = { 3: 'A−', 4: 'A', 5: 'B+', 6: 'A+' };
+    const grades3 = grades.map(g => {
+      const locked = g.n > cur;
+      return Object.assign({}, g, {
+        bg: locked ? '#E6EAEE' : g.isCurrent ? g.bg : PINKS[g.n - 3] || g.bg,
+        fg: locked ? 'rgba(35,37,43,.45)' : g.fg,
+        numColor: locked ? 'rgba(35,37,43,.45)' : g.numColor,
+        open: g.n < cur && (this.state.hover === g.n || this.state.open === g.n),
+        pad: (g.n < cur && (this.state.hover === g.n || this.state.open === g.n)) ? '36px 22px 34px' : (overlap ? '29px 22px 23px' : '20px 22px'),
+        earned: EARN[g.n] || '', letter: LETTER[g.n] || '', sh: ((first) => first ? 'inset 0 .75px 0 rgba(255,255,255,.55)' : 'inset 0 .75px 0 rgba(255,255,255,.55), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06)')(g.n === 3), radius: g.n === 8 ? '20px' : '20px 20px 0 0',
+        enter: g.n < cur ? () => this.setState({ hover: g.n }) : undefined,
+        leave: g.n < cur ? () => this.setState({ hover: null }) : undefined,
+        border: '1.5px solid transparent',
+        
+      });
+    });
+    const strip3 = days.map(([date, dow, , runs], i) => {
+      const t = i === 6;
+      return { date, dow: dow.slice(0, 3), runs, bg: t ? '#23252B' : 'transparent', fg: t ? '#fff' : '#23252B' };
+    });
+    const lengths3 = LENS.map(([label], i) => ({
+      label, bg: i === len ? '#23252B' : '#F1EFEA', fg: i === len ? '#fff' : '#23252B',
+      pick: () => this.setState({ len: i }),
+    }));
+    const blitzOn = this.state.blitzOn || {};
+    missions.forEach((m, i) => {
+      const on = !!blitzOn[i];
+      const pay = '~' + Math.round(m.per * q * (on ? 1.5 : 1)) + ' Kredits';
+      m.meta3 = m.done ? 'Done' : m.lenNow + ' · ' + pay + (on ? ' · ×1.5 under 8s' : '');
+      m.canBlitz = !m.done;
+      m.blitzLabel = on ? '⚡ Blitz on' : 'Blitz';
+      m.blitzBg = on ? '#23252B' : '#F5F7F9'; m.blitzFg = on ? '#fff' : '#23252B';
+      m.toggleBlitz = () => this.setState(s => ({ blitzOn: Object.assign({}, s.blitzOn, { [i]: !on }) }));
+    });
+    const moves = ['Warm-up', 'New idea', 'Guided', 'Mixed', 'Prove it'].map((label, i) => ({ label, c: i === 0 ? '#23252B' : '#E6EAEE', fg: i === 0 ? '#23252B' : 'rgba(35,37,43,.5)' }));
+    const unitDots = Array.from({ length: 7 }, (_, k) => k < 2 ? '#2E7C46' : k === 2 ? '#23252B' : '#E6EAEE');
+    const sheet = { white: '#fff', cool: '#EEF2F6', warm: '#F6F3EE' }[this.props.sheet ?? 'white'] || '#fff';
+    const view3 = this.state.view3 ?? 'today';
+    const views3 = [['today', 'Today'], ['week', 'Week']].map(([k, label]) => ({ label, bg: view3 === k ? '#23252B' : 'transparent', fg: view3 === k ? '#fff' : '#23252B', pick: () => this.setState({ view3: k }) }));
+    const wk = this.props.weekDelta ?? 356;
+    const weekDelta = (wk >= 0 ? '+$' : '−$') + Math.abs(wk).toLocaleString();
+    const weekColor = wk >= 0 ? '#2E7C46' : '#C2463B';
+    const st = this.state, h4 = st.h4 === undefined ? 'hint' : st.h4, teachOn = !!st.teachOn;
+    const tokens4 = st.tokens4 ?? 3, tokensLeft = tokens4;
+    const tokenDots4 = [0, 1, 2].map(i => i < tokens4 ? '#E8C94F' : 'transparent');
+    const help4 = [
+      ['read', 'Read it to me', 'free', '#FBE3CF'], ['hint', 'Hint', 'free', '#F8D2B2'],
+      ['show', 'Show me', 'free', '#F4BE93'], ['teach', 'Teach me', tokensLeft > 0 ? tokensLeft + ' left' : 'half pay', '#E8C94F'],
+    ].map(([k, title, meta, bg], i) => {
+      const open = h4 === k;
+      return {
+        title, meta, bg, isTeach: k === 'teach', z: i + 1, sh: k === 'teach' ? ((first) => first ? 'inset 0 .5px 0 rgba(255,255,255,.4)' : 'inset 0 .5px 0 rgba(255,255,255,.4), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06)')(false) : ((first) => first ? 'inset 0 .75px 0 rgba(255,255,255,.55)' : 'inset 0 .75px 0 rgba(255,255,255,.55), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06)')(i === 0), radius: i === 3 ? '20px' : '20px 20px 0 0', mt: i ? '-14px' : '0px', pad: open ? '24px 22px 34px' : '22px 22px 30px',
+        showAudio: open && k === 'read', showText: open && k === 'hint', showBar: open && k === 'show',
+        showConfirm: open && k === 'teach' && !teachOn, showTeach: open && k === 'teach' && teachOn,
+        toggle: () => this.setState({ h4: open ? null : k }),
+      };
+    });
+    const lad = st.lad ?? 0;
+    const LAD = [['Read it to me', 'free', 'Dinner came to forty-eight dollars. You want to leave a fifteen percent tip. How much is the tip?', 'Play it'],
+      ['Hint', 'free', '15% is 10% plus 5%. Start with 10% of $48.', 'Show a hint'],
+      ['Show me', 'free', '10% of $48 is $4.80. 5% is half of that.', 'Show me'],
+      ['Teach me', tokensLeft > 0 ? tokensLeft + ' left' : 'half pay', '1. 10% of $48: move the decimal one place. $4.80.  2. 5% is half: $2.40.  3. Add them.', tokensLeft > 0 ? 'Use a token' : 'Teach me anyway']];
+    const ladder = LAD.map(([title, meta, body, btn], i) => {
+      const shown = i < lad, isNext = i === lad, last = i === LAD.length - 1;
+      return { n: shown ? '✓' : String(i + 1), title, meta, body, shown, isNext, btn, isTeach: i === 3,
+        dotBg: shown ? '#58B372' : isNext ? '#fff' : 'transparent', dotFg: shown ? '#fff' : '#23252B',
+        dotBorder: shown ? '0' : isNext ? '2.5px solid #23252B' : '1.5px solid rgba(35,37,43,.22)',
+        line: last ? 'transparent' : shown ? '#58B372' : 'rgba(35,37,43,.22)',
+        titleColor: shown || isNext ? '#23252B' : 'rgba(35,37,43,.45)',
+        btnBg: i === 3 ? '#E8C94F' : '#23252B', btnFg: i === 3 ? '#23252B' : '#fff',
+        reveal: () => this.setState(s => i === 3 ? { lad: 4, teachOn: true, usedToken4: (s.tokens4 ?? 3) > 0, tokens4: Math.max(0, (s.tokens4 ?? 3) - 1) } : { lad: i + 1 }) };
+    });
+    const givens = [{ k: 'Dinner', v: '$48', color: '#23252B' }, { k: 'Tip', v: '15%', color: '#23252B' }, { k: 'Find', v: 'the tip', color: 'rgba(35,37,43,.45)' }];
+    const hp = st.hp ?? null;
+    const HP = [['read', 'Read it'], ['hint', 'Hint'], ['show', 'Show me'], ['teach', 'Teach me']];
+    const helpPills = HP.map(([k, label]) => ({ label, isTeach: k === 'teach', bg: hp === k ? '#23252B' : k === 'teach' ? '#E8C94F' : '#fff', fg: hp === k ? '#fff' : '#23252B', ring: hp === k ? '#fff' : '#23252B', pick: () => this.setState({ hp: hp === k ? null : k }) }));
+    const HB = { read: 'Playing the question · 0:08', hint: '15% is 10% plus 5%. Start with 10% of $48.', show: '10% of $48 is $4.80. 5% is half of that, $2.40.' };
+    const helpBody = hp === 'teach' ? (st.pillTaught ? '1. 10% of $48: move the decimal one place. $4.80.  2. 5% is half: $2.40.  3. Add them.' : '') : (hp ? HB[hp] : '');
+    const helpConfirm = hp === 'teach' && !st.pillTaught;
+    const helpRows = helpPills.map((p, i) => { const k = HP[i][0], on = hp === k; return { ...p, on, cost: k !== 'teach' ? 'Free' : tokensLeft > 0 ? '1 token' : 'Half pay', costFg: on ? 'rgba(255,255,255,.7)' : 'rgba(35,37,43,.6)', isFree: k !== 'teach', chev: on ? '−' : '+', weight: on ? 800 : 700, body: on ? helpBody : '', confirm: on && helpConfirm, rowBg: on ? '#fff' : 'transparent', sheetBg: on ? '#23252B' : k === 'teach' ? '#E8C94F' : '#EEF1F4' }; });
+    const helpTitle = hp ? HP.find(h => h[0] === hp)[1] : '';
+    const pillTry = () => this.setState({ hp: null });
+    const pillUse = () => this.setState(s => ({ pillTaught: true, teachOn: true, usedToken4: (s.tokens4 ?? 3) > 0, tokens4: Math.max(0, (s.tokens4 ?? 3) - 1) }));
+    const tryFirst4 = e => { e.stopPropagation(); this.setState({ h4: null }); };
+    const teachAnyway4 = e => { e.stopPropagation(); this.setState(s => ({ teachOn: true, usedToken4: (s.tokens4 ?? 3) > 0, tokens4: Math.max(0, (s.tokens4 ?? 3) - 1) })); };
+    const confirm4 = tokensLeft > 0 ? 'Spend a Teach Token? ' + tokensLeft + ' left this run. A token keeps full pay (~$20). Save them for the hard ones.' : 'No tokens left this run. Teach still works, at half pay (~$10).';
+    const useLabel4 = tokensLeft > 0 ? 'Use a token' : 'Teach me anyway';
+    const ANS = ['$4.80', '$6.00', '$7.20', '$9.60'], RIGHT = 2;
+    const sel = st.sel4 ?? null, checked = !!st.checked4, right = checked && sel === RIGHT;
+    const ans4 = ANS.map((label, i) => {
+      const isSel = sel === i;
+      return {
+        label, key: String(i + 1),
+        bg: checked ? (i === RIGHT ? '#EAF6EE' : isSel ? '#FBEDEC' : '#F5F7F9') : (isSel ? '#23252B' : '#F5F7F9'),
+        fg: !checked && isSel ? '#fff' : '#23252B',
+        keyBg: !checked && isSel ? 'rgba(255,255,255,.16)' : '#fff',
+        border: checked && i === RIGHT ? '1.5px solid #58B372' : checked && isSel ? '1.5px solid #E4766C' : '1.5px solid transparent',
+        pick: () => { if (!checked) this.setState({ sel4: i }); },
+      };
+    });
+    const tries = st.tries4 ?? 0, firstTry = tries === 0, halved = teachOn && !st.usedToken4;
+    const base = 10, streak = 1.5;
+    const pay = Math.ceil((base * streak + (firstTry ? 5 : 0)) * (halved ? .5 : 1));
+    const pills4 = [{ t: '×1.5 streak', bg: '#23252B', fg: '#fff' }]
+      .concat(firstTry ? [{ t: '+5 first try', bg: '#EAF6EE', fg: '#2E7C46' }] : [])
+      .concat(teachOn && st.usedToken4 ? [{ t: 'token used · full pay', bg: '#FBF6E4', fg: '#8A6D1C' }] : [])
+      .concat(halved ? [{ t: 'half pay · help', bg: '#FBF6E4', fg: '#8A6D1C' }] : []);
+    const payout4 = '+$' + pay, showPay4 = checked && right;
+    const fb4 = !checked ? (sel === null ? 'Pick one. No timer.' : 'Lock it in when you\'re ready.') : right ? 'Profit. W.' : 'Not yet. Here\'s the step: 10% is $4.80, then add half of that.';
+    const fbColor4 = !checked ? 'rgba(35,37,43,.55)' : right ? '#2E7C46' : '#C2463B';
+    const btn4 = !checked ? 'Check' : right ? 'Next →' : 'Try again';
+    const btnBg4 = sel === null ? '#E6EAEE' : '#23252B', btnFg4 = sel === null ? 'rgba(35,37,43,.45)' : '#fff';
+    const check4 = () => {
+      if (sel === null) return;
+      if (!checked) this.setState({ checked4: true });
+      else if (!right) this.setState(s => ({ checked4: false, sel4: null, tries4: (s.tries4 ?? 0) + 1 }));
+      else this.setState({ checked4: false, sel4: null, teachOn: false, usedToken4: false, tries4: 0, h4: 'hint', lad: 0, hp: null, pillTaught: false });
+    };
+    const prog4 = [0, 1, 2, 3, 4, 5].map(i => i < 2 ? '#58B372' : i === 2 ? '#23252B' : '#E6EAEE');
+    const qOp4 = teachOn && h4 === 'teach' ? .45 : 1;
+    return { helpRows, helpTitle, ladder, givens, helpPills, helpBody, helpConfirm, pillTry, pillUse, moves, confirm4, useLabel4, unitDots, tokens4, tokenDots4, payout4, pills4, showPay4, help4, tryFirst4, teachAnyway4, ans4, fb4, fbColor4, btn4, btnBg4, btnFg4, check4, prog4, qOp4, weekDelta, weekColor, views3, isToday3: view3 === 'today', isWeek3: view3 === 'week', sheet, grades, gradesPhone: grades, week, gradesDark, strip, readyDots, lengths, modes, missions, quests, ground, grades3, strip3, lengths3 };
+  }
+}
+</script>
+</body>
+</html>

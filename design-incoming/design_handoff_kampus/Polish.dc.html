@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&amp;family=IBM+Plex+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E4E7EB;font-family:'Inter Tight',sans-serif;color:#23252B;-webkit-font-smoothing:antialiased}a{color:#2E7C46}a:hover{color:#23252B}@keyframes kWave{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}@keyframes kShim{0%{background-position:-200px 0}100%{background-position:200px 0}}@keyframes kNote{0%{opacity:0;transform:translateY(-8px)}100%{opacity:1;transform:none}}</style>
+</helmet>
+<section style="padding:56px 56px 96px;display:flex;flex-direction:column;gap:28px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:900px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 1 · Polish round</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Five asks from the polish brief, built on §0 exactly as locked. 16 = teach-step layouts and voice · 17 = week plan · 18 = grade stack for a placed student · 19 = wishlist tiles · 20 = world names (proposal only). Every artboard is live: reveal rows, pick deals, tap the line, shade the bar, page through weeks, open earlier grades, replay the image fetch, swap name sets.</div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:4px;padding-top:24px;border-top:1.5px solid rgba(35,37,43,.14);max-width:1720px;">
+    <div style="font-size:20px;font-weight:700;letter-spacing:-.02em;">16 · The Teach Moment</div>
+    <div style="font-size:14px;line-height:1.5;color:#5D5A52;max-width:860px;">Four reusable step layouts that any of the ~70 skills fills from data: the worked walk, the face-off, the line &amp; the bar, and the takeaway. The five-move frame and the cheat-sheet column are unchanged. Every step gates Next until it's solved. 16m/16n show the band-a voice companion; all other artboards show band c.</div>
+  </div>
+  <sc-for list="{{ teach }}" as="r" hint-placeholder-count="3">
+    <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+      <div id="{{ r.did }}" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">{{ r.did }}</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">{{ r.label }} · desktop</span></div>
+        <div data-screen-label="{{ r.did }} {{ r.label }}" style="width:1280px;height:800px;background:#F5F7F9;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:24px 48px 0;display:flex;flex-direction:column;gap:16px;flex:none;">
+            <div style="display:flex;align-items:center;gap:14px;">
+              <span style="padding:9px 16px;border-radius:999px;background:#fff;font-size:14px;font-weight:700;">Exit</span>
+              <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">{{ r.meta }}</span>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:28px;">
+              <div style="flex:1;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;">
+                <sc-for list="{{ r.spine }}" as="m" hint-placeholder-count="5">
+                  <div style="display:flex;flex-direction:column;gap:6px;">
+                    <span style="font-size:13px;font-weight:800;color:{{ m.fg }};">{{ m.label }}</span>
+                    <div style="display:flex;gap:3px;"><sc-for list="{{ m.segs }}" as="g" hint-placeholder-count="4"><span style="flex:1;height:6px;border-radius:999px;background:{{ g }};"></span></sc-for></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <span style="padding:7px 13px;border-radius:999px;background:#EAF6EE;color:#2E7C46;font-size:13px;font-weight:700;">+$0.50 today</span>
+                <span style="padding:7px 13px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;display:flex;gap:6px;align-items:center;">Teach Tokens<span style="width:9px;height:9px;border-radius:999px;background:#E8C94F;"></span><span style="width:9px;height:9px;border-radius:999px;background:#E8C94F;"></span><span style="width:9px;height:9px;border-radius:999px;background:#E8C94F;"></span></span>
+                <span style="padding:7px 13px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;">Untimed</span>
+              </div>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:28px 48px 40px;">
+            <div style="display:flex;flex-direction:column;gap:18px;min-width:0;">
+              <sc-if value="{{ r.pill }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;"><span onClick="{{ r.speak }}" style="padding:9px 16px;border-radius:999px;background:#fff;font-size:14px;font-weight:700;cursor:pointer;display:flex;gap:8px;align-items:center;" style-hover="background:#EEF1F4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path></svg>Read it to me</span></div>
+              </sc-if>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Kampus Class · Notes</span>
+                <span style="display:flex;gap:4px;align-items:center;"><sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4"><span style="width:12px;height:12px;border-radius:3px;background:{{ c }};transition:background .3s;"></span></sc-for><span style="font-size:12px;font-weight:700;color:rgba(35,37,43,.55);margin-left:6px;">{{ r.notesLabel }}</span></span>
+              </div>
+              <div style="display:flex;flex-direction:column;">
+                <sc-for list="{{ r.steps }}" as="s" hint-placeholder-count="4">
+                  <div style="display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:14px;">
+                    <div style="display:flex;flex-direction:column;align-items:center;">
+                      <span style="width:24px;height:24px;box-sizing:border-box;border-radius:999px;background:{{ s.dotBg }};box-shadow:inset 0 0 0 {{ s.ring }};color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex:none;transition:background .3s;">{{ s.check }}</span>
+                      <span style="flex:1;width:1.5px;background:{{ s.lineBg }};min-height:18px;"></span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:6px;padding-bottom:18px;">
+                      <span style="font-size:20px;font-weight:700;letter-spacing:-.015em;line-height:24px;color:{{ s.fg }};">{{ s.title }}</span>
+                      <sc-if value="{{ s.showNote }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-size:17px;font-weight:400;line-height:1.4;background:{{ s.noteBg }};padding:{{ s.notePad }};border-radius:12px;animation:{{ s.anim }};text-wrap:pretty;">{{ s.note }}</span>
+                      </sc-if>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
+              <sc-if value="{{ r.bandA }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:18px;padding:22px 40px;border-bottom:1px solid #EEECE7;">
+                  <span onClick="{{ r.speak }}" style="width:64px;height:64px;border-radius:999px;background:#F4BE93;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;"><img src="blobs/Singing.svg" alt="" style="width:52px;height:52px;object-fit:contain;"></span>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                    <span style="font-size:18px;font-weight:700;">{{ voiceLine }}</span>
+                    <span style="font-size:14.5px;font-weight:500;color:rgba(35,37,43,.6);">I read every step out loud. Tap me to hear it again.</span>
+                  </div>
+                  {{ wave }}
+                  <div style="display:flex;gap:8px;">
+                    <span onClick="{{ r.speak }}" style="padding:10px 16px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Again</span>
+                    <span onClick="{{ speakSlow }}" style="padding:10px 16px;border-radius:999px;background:#F5F7F9;font-size:14px;font-weight:700;cursor:pointer;">Slower</span>
+                    <span onClick="{{ hush }}" style="padding:10px 16px;border-radius:999px;background:#F5F7F9;font-size:14px;font-weight:700;cursor:pointer;">Quiet</span>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="flex:1;min-height:0;padding:36px 40px 28px;display:flex;flex-direction:column;gap:22px;">
+                <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ r.kicker }}</div>
+                <div style="font-size:{{ r.promptSize }};font-weight:600;line-height:1.15;letter-spacing:-.025em;text-wrap:pretty;max-width:760px;">{{ r.prompt }}</div>
+
+                <sc-if value="{{ r.k.walk }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-direction:column;">
+                    <sc-for list="{{ r.rows }}" as="w" hint-placeholder-count="3">
+                      <div style="border-top:1px solid #EEECE7;">
+                        <sc-if value="{{ w.shown }}" hint-placeholder-val="{{ true }}">
+                          <div style="display:grid;grid-template-columns:170px minmax(0,1fr);align-items:center;gap:24px;padding:16px 0;animation:kNote .35s ease;">
+                            <span style="font-size:40px;font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;color:{{ w.fg }};">{{ w.value }}</span>
+                            <span style="font-size:17px;font-weight:600;color:{{ w.howFg }};">{{ w.how }}</span>
+                          </div>
+                        </sc-if>
+                        <sc-if value="{{ w.hidden }}" hint-placeholder-val="{{ false }}">
+                          <div onClick="{{ w.reveal }}" style="height:56px;margin:12px 0;border-radius:16px;background:{{ w.hidBg }};display:flex;align-items:center;padding:0 22px;cursor:{{ w.cursor }};font-size:15px;font-weight:700;color:rgba(35,37,43,.55);" style-hover="background:#EEF1F4;">{{ w.hint }}</div>
+                        </sc-if>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ r.k.face }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:grid;grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr);gap:16px;align-items:center;">
+                    <sc-for list="{{ faceCards }}" as="f" hint-placeholder-count="2">
+                      <sc-if value="{{ f.or }}" hint-placeholder-val="{{ false }}"><span style="width:48px;height:48px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;">or</span></sc-if>
+                      <sc-if value="{{ f.card }}" hint-placeholder-val="{{ true }}">
+                        <div onClick="{{ f.pick }}" style="border-radius:24px;background:{{ f.bg }};box-shadow:inset 0 0 0 2px {{ f.ring }};padding:28px 30px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-height:230px;box-sizing:border-box;transition:background .2s;" style-hover="box-shadow:inset 0 0 0 2px #23252B;">
+                          <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ f.kick }}</span>
+                          <span style="font-size:22px;font-weight:600;">{{ f.count }}</span>
+                          <span style="font-size:72px;font-weight:300;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;">{{ f.price }}</span>
+                          <div style="flex:1;"></div>
+                          <div style="display:flex;justify-content:space-between;align-items:center;min-height:34px;">
+                            <span style="font-size:20px;font-weight:600;color:{{ f.eachFg }};">{{ f.each }}</span>
+                            <sc-if value="{{ f.tag }}" hint-placeholder-val="{{ false }}"><span style="padding:7px 13px;border-radius:999px;background:{{ f.tagBg }};color:{{ f.tagFg }};font-size:13px;font-weight:700;">{{ f.tag }}</span></sc-if>
+                          </div>
+                        </div>
+                      </sc-if>
+                    </sc-for>
+                  </div>
+                  <div style="font-size:17px;font-weight:600;color:{{ faceMsgFg }};min-height:24px;">{{ faceMsg }}</div>
+                </sc-if>
+
+                <sc-if value="{{ r.k.line }}" hint-placeholder-val="{{ false }}">
+                  <div style="position:relative;padding:40px 0 8px;">
+                    <div style="position:absolute;left:0;right:0;top:86px;height:2px;background:#23252B;"></div>
+                    <sc-if value="{{ lineShowArc }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:56px;height:6px;border-radius:999px;background:#58B372;left:{{ lineArcL }};width:{{ lineArcW }};animation:kNote .4s ease;"></div><div style="position:absolute;top:22px;left:{{ lineArcL }};width:{{ lineArcW }};text-align:center;font-size:14px;font-weight:800;color:#2E7C46;">8 steps down</div></sc-if>
+                    <div style="display:grid;grid-template-columns:repeat(13,minmax(0,1fr));position:relative;">
+                      <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="13">
+                        <div onClick="{{ t.pick }}" style="display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;padding-top:22px;" style-hover="opacity:.7;">
+                          <span style="width:{{ t.size }};height:{{ t.size }};border-radius:999px;background:{{ t.bg }};box-shadow:inset 0 0 0 2px {{ t.ring }};display:flex;align-items:center;justify-content:center;transition:all .2s;"></span>
+                          <span style="font-size:17px;font-weight:{{ t.w }};font-variant-numeric:tabular-nums;color:{{ t.fg }};">{{ t.label }}</span>
+                          <span style="font-size:10.5px;font-weight:800;letter-spacing:.14em;color:#5E9FE0;min-height:14px;">{{ t.tag }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:baseline;gap:18px;border-top:1px solid #EEECE7;padding-top:18px;">
+                    <span style="font-size:40px;font-weight:300;letter-spacing:-.045em;color:{{ lineFg }};font-variant-numeric:tabular-nums;">{{ lineReadout }}</span>
+                    <span style="font-size:17px;font-weight:600;color:{{ lineMsgFg }};">{{ lineMsg }}</span>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ r.k.bar }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:5px;padding-top:8px;">
+                    <sc-for list="{{ barSegs }}" as="b" hint-placeholder-count="8">
+                      <div onClick="{{ b.tap }}" style="height:120px;border-radius:{{ b.r }};background:{{ b.bg }};cursor:pointer;transition:background .15s;display:flex;align-items:flex-end;padding:12px;box-sizing:border-box;font-size:13px;font-weight:700;color:{{ b.fg }};" style-hover="filter:brightness(.95);">{{ b.n }}</div>
+                    </sc-for>
+                  </div>
+                  <div style="display:flex;align-items:baseline;gap:18px;border-top:1px solid #EEECE7;padding-top:18px;">
+                    <span style="font-size:64px;font-weight:300;letter-spacing:-.045em;line-height:1;color:{{ barFg }};font-variant-numeric:tabular-nums;">{{ barFrac }}</span>
+                    <span style="font-size:17px;font-weight:600;color:{{ barMsgFg }};">{{ barMsg }}</span>
+                  </div>
+                </sc-if>
+              </div>
+
+              <sc-if value="{{ r.k.take }}" hint-placeholder-val="{{ false }}">
+                <div style="background:{{ takeBg }};padding:22px 40px;display:flex;align-items:center;gap:20px;transition:background .3s;">
+                  <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+                    <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#2E7C46;">{{ takeKick }}</span>
+                    <span style="font-size:22px;font-weight:600;letter-spacing:-.02em;">$6.00 ÷ 4 bars = $1.50 a bar</span>
+                  </div>
+                  <span onClick="{{ write }}" style="padding:13px 20px;border-radius:999px;background:{{ takeBtnBg }};color:{{ takeBtnFg }};font-size:15px;font-weight:700;cursor:pointer;">{{ takeBtn }}</span>
+                </div>
+              </sc-if>
+              <div style="display:flex;align-items:center;gap:16px;padding:18px 40px;border-top:1px solid #EEECE7;">
+                <span style="padding:10px 18px;border-radius:999px;background:#EEF1F4;color:rgba(35,37,43,.5);font-size:14.5px;font-weight:700;">Back</span>
+                <span style="flex:1;font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">{{ r.foot }}</span>
+                <span onClick="{{ r.resetFn }}" style="padding:11px 20px;border-radius:999px;background:{{ r.nextBg }};color:{{ r.nextFg }};font-size:14.5px;font-weight:700;cursor:pointer;">{{ r.nextLabel }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="{{ r.pid }}" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">{{ r.pid }}</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">{{ r.label }} · phone</span></div>
+        <div data-screen-label="{{ r.pid }} {{ r.label }} phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:20px 16px 0;display:flex;flex-direction:column;gap:12px;flex:none;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="padding:8px 14px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;">Exit</span>
+              <span style="flex:1;font-size:13px;font-weight:800;">New idea</span>
+              <span style="padding:7px 11px;border-radius:999px;background:#fff;display:flex;gap:5px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:#E8C94F;"></span><span style="width:8px;height:8px;border-radius:999px;background:#E8C94F;"></span><span style="width:8px;height:8px;border-radius:999px;background:#E8C94F;"></span></span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;">
+              <sc-for list="{{ r.spine }}" as="m" hint-placeholder-count="5"><div style="display:flex;gap:2px;"><sc-for list="{{ m.segs }}" as="g" hint-placeholder-count="4"><span style="flex:1;height:5px;border-radius:999px;background:{{ g }};"></span></sc-for></div></sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:2px 4px;">
+              <span style="display:flex;gap:3px;"><sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4"><span style="width:10px;height:10px;border-radius:3px;background:{{ c }};"></span></sc-for></span>
+              <span style="flex:1;min-width:0;font-size:13.5px;font-weight:500;color:rgba(35,37,43,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ r.lastNote }}</span>
+              <sc-if value="{{ r.pill }}" hint-placeholder-val="{{ true }}"><span onClick="{{ r.speak }}" style="padding:7px 12px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;cursor:pointer;flex:none;">Read it</span></sc-if>
+            </div>
+          </div>
+          <div style="flex:1;min-height:0;margin:12px 12px 0;background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;">
+            <sc-if value="{{ r.bandA }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid #EEECE7;">
+                <span onClick="{{ r.speak }}" style="width:52px;height:52px;border-radius:999px;background:#F4BE93;display:flex;align-items:center;justify-content:center;flex:none;"><img src="blobs/Singing.svg" alt="" style="width:42px;height:42px;object-fit:contain;"></span>
+                <span style="flex:1;font-size:15px;font-weight:700;line-height:1.3;">{{ voiceLine }}</span>
+                {{ waveSm }}
+                <span onClick="{{ r.speak }}" style="padding:9px 13px;border-radius:999px;background:#23252B;color:#fff;font-size:13px;font-weight:700;">Again</span>
+              </div>
+            </sc-if>
+            <div style="flex:1;min-height:0;padding:22px 20px;display:flex;flex-direction:column;gap:16px;">
+              <div style="font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ r.kickerSm }}</div>
+              <div style="font-size:{{ r.promptSizeSm }};font-weight:600;line-height:1.18;letter-spacing:-.02em;text-wrap:pretty;">{{ r.prompt }}</div>
+              <sc-if value="{{ r.k.walk }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;">
+                  <sc-for list="{{ r.rows }}" as="w" hint-placeholder-count="3">
+                    <div style="border-top:1px solid #EEECE7;">
+                      <sc-if value="{{ w.shown }}" hint-placeholder-val="{{ true }}">
+                        <div style="display:flex;flex-direction:column;gap:2px;padding:12px 0;animation:kNote .35s ease;">
+                          <span style="font-size:34px;font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;color:{{ w.fg }};">{{ w.value }}</span>
+                          <span style="font-size:15px;font-weight:600;color:{{ w.howFg }};">{{ w.how }}</span>
+                        </div>
+                      </sc-if>
+                      <sc-if value="{{ w.hidden }}" hint-placeholder-val="{{ false }}">
+                        <div onClick="{{ w.reveal }}" style="height:52px;margin:10px 0;border-radius:16px;background:{{ w.hidBg }};display:flex;align-items:center;padding:0 18px;font-size:14px;font-weight:700;color:rgba(35,37,43,.55);">{{ w.hint }}</div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.k.face }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <sc-for list="{{ faceCards }}" as="f" hint-placeholder-count="2">
+                    <sc-if value="{{ f.card }}" hint-placeholder-val="{{ true }}">
+                      <div onClick="{{ f.pick }}" style="border-radius:22px;background:{{ f.bg }};box-shadow:inset 0 0 0 2px {{ f.ring }};padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:4px 12px;cursor:pointer;">
+                        <span style="font-size:17px;font-weight:600;">{{ f.count }}</span>
+                        <sc-if value="{{ f.tag }}" hint-placeholder-val="{{ false }}"><span style="padding:6px 11px;border-radius:999px;background:{{ f.tagBg }};color:{{ f.tagFg }};font-size:12px;font-weight:700;justify-self:end;">{{ f.tag }}</span></sc-if>
+                        <sc-if value="{{ f.noTag }}" hint-placeholder-val="{{ true }}"><span></span></sc-if>
+                        <span style="font-size:52px;font-weight:300;letter-spacing:-.045em;line-height:1;">{{ f.price }}</span>
+                        <span style="font-size:16px;font-weight:600;color:{{ f.eachFg }};justify-self:end;">{{ f.each }}</span>
+                      </div>
+                    </sc-if>
+                  </sc-for>
+                  <div style="font-size:15px;font-weight:600;color:{{ faceMsgFg }};">{{ faceMsg }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.k.line }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:0;">
+                  <sc-for list="{{ ticksSm }}" as="t" hint-placeholder-count="9">
+                    <div onClick="{{ t.pick }}" style="display:grid;grid-template-columns:52px 26px minmax(0,1fr);align-items:center;height:40px;cursor:pointer;">
+                      <span style="font-size:16px;font-weight:{{ t.w }};font-variant-numeric:tabular-nums;color:{{ t.fg }};text-align:right;padding-right:10px;">{{ t.label }}</span>
+                      <span style="display:flex;justify-content:center;align-items:center;height:40px;background:linear-gradient(#23252B,#23252B) center/2px 100% no-repeat;"><span style="width:{{ t.size }};height:{{ t.size }};border-radius:999px;background:{{ t.bg }};box-shadow:inset 0 0 0 2px {{ t.ring }};"></span></span>
+                      <span style="font-size:11px;font-weight:800;letter-spacing:.14em;color:{{ t.tagFg }};padding-left:10px;">{{ t.tag }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="font-size:15px;font-weight:600;color:{{ lineMsgFg }};padding-top:10px;">{{ lineMsg }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.k.bar }}" hint-placeholder-val="{{ false }}">
+                <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;">
+                  <sc-for list="{{ barSegs }}" as="b" hint-placeholder-count="8"><div onClick="{{ b.tap }}" style="height:96px;border-radius:14px;background:{{ b.bg }};cursor:pointer;display:flex;align-items:flex-end;padding:10px;box-sizing:border-box;font-size:12px;font-weight:700;color:{{ b.fg }};">{{ b.n }}</div></sc-for>
+                </div>
+                <div style="display:flex;align-items:baseline;gap:12px;">
+                  <span style="font-size:52px;font-weight:300;letter-spacing:-.045em;line-height:1;color:{{ barFg }};">{{ barFrac }}</span>
+                  <span style="font-size:15px;font-weight:600;color:{{ barMsgFg }};">{{ barMsg }}</span>
+                </div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ r.k.take }}" hint-placeholder-val="{{ false }}">
+              <div style="background:{{ takeBg }};padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
+                <span style="font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#2E7C46;">{{ takeKick }}</span>
+                <span style="font-size:18px;font-weight:600;">$6.00 ÷ 4 bars = $1.50 a bar</span>
+                <span onClick="{{ write }}" style="align-self:flex-start;padding:11px 18px;border-radius:999px;background:{{ takeBtnBg }};color:{{ takeBtnFg }};font-size:14px;font-weight:700;cursor:pointer;">{{ takeBtn }}</span>
+              </div>
+            </sc-if>
+          </div>
+          <div style="padding:12px 12px 24px;flex:none;">
+            <div onClick="{{ r.resetFn }}" style="height:56px;border-radius:999px;background:{{ r.nextBg }};color:{{ r.nextFg }};display:flex;align-items:center;padding:0 24px;font-size:16px;font-weight:700;cursor:pointer;">{{ r.nextLabel }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-for>
+
+  <div style="display:flex;flex-direction:column;gap:4px;padding-top:24px;border-top:1.5px solid rgba(35,37,43,.14);max-width:1720px;">
+    <div style="font-size:20px;font-weight:700;letter-spacing:-.02em;">17 · Week view becomes the plan</div>
+    <div style="font-size:14px;line-height:1.5;color:#5D5A52;max-width:860px;">Past days are done cards (lesson, world chip, pay), today is the ink tile, the rest are upcoming. Inspection Day (unit quiz) is gold and the License (grade test) is the graduated purple. Use ←/→, or tap the License row under the calendar to jump to that week.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+    <div id="17a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">17a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Home · Week · desktop</span></div>
+      <div data-screen-label="17a Week plan" style="width:1280px;height:900px;background:#F5F7F9;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;height:66px;padding:0 40px;border-bottom:1.5px solid rgba(35,37,43,.12);flex:none;gap:20px;">
+          <div style="display:flex;align-items:center;gap:10px;width:260px;"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M5 3v19" stroke="#23252B" stroke-width="2.2" stroke-linecap="round"></path><path d="M6 4h12l-3.5 4L18 12H6z" fill="#EE8A55" stroke="#23252B" stroke-width="1.8" stroke-linejoin="round"></path></svg><span style="font-size:19px;font-weight:800;letter-spacing:-.02em;">Kampus</span></div>
+          <div style="flex:1;display:flex;justify-content:center;gap:4px;">
+            <span style="padding:9px 16px;border-radius:999px;background:#ECE9E1;font-size:14.5px;font-weight:700;display:flex;gap:8px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:#58B372;"></span>Play</span>
+            <span style="padding:9px 16px;font-size:14.5px;font-weight:600;display:flex;gap:8px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:#D9DE62;"></span>Business</span>
+            <span style="padding:9px 16px;font-size:14.5px;font-weight:600;display:flex;gap:8px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:#8F97DE;"></span>Shop</span>
+            <span style="padding:9px 16px;font-size:14.5px;font-weight:600;display:flex;gap:8px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:#E8C94F;"></span>Rewards</span>
+            <span style="padding:9px 16px;font-size:14.5px;font-weight:600;display:flex;gap:8px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:#B5B0A4;"></span>Grown-ups</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;width:260px;justify-content:flex-end;"><span style="padding:7px 13px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;">+$1.00 this week</span><span style="width:38px;height:38px;border-radius:999px;background:#F0AFCE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;">M</span></div>
+        </div>
+        <div style="flex:1;min-height:0;display:grid;grid-template-columns:340px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);column-gap:48px;row-gap:32px;padding:44px 48px 48px;">
+          <div style="display:flex;flex-direction:column;justify-content:flex-end;gap:10px;">
+            <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;color:rgba(35,37,43,.55);">Hi Maya, <span style="color:#23252B;">one lesson today</span>, then the stand opens.</div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:32px;">
+            <div style="display:flex;flex-direction:column;gap:10px;"><span style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Bank</span><span style="font-size:44px;font-weight:300;letter-spacing:-.045em;line-height:1;">$14.50</span></div>
+            <span style="width:1.5px;align-self:stretch;background:rgba(35,37,43,.14);"></span>
+            <div style="display:flex;flex-direction:column;gap:10px;"><span style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Kredits this week</span><span style="font-size:44px;font-weight:300;letter-spacing:-.045em;line-height:1;color:#2E7C46;">+$96</span></div>
+            <div style="flex:1;"></div>
+            <div style="display:flex;padding:4px;border-radius:999px;background:#fff;"><span style="padding:8px 14px;font-size:13px;font-weight:700;">Today</span><span style="padding:8px 14px;border-radius:999px;background:#23252B;color:#fff;font-size:13px;font-weight:700;">Week</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ stackPlaced.cards }}" as="c" hint-placeholder-count="4">
+                <div onClick="{{ c.tap }}" style="position:relative;margin-top:{{ c.mt }};border-radius:{{ c.radius }};background:{{ c.bg }};color:{{ c.fg }};padding:18px 20px 30px;box-shadow:{{ c.shadow }};cursor:{{ c.cursor }};display:flex;flex-direction:column;gap:10px;opacity:{{ c.op }};">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;">
+                    <span style="font-size:{{ c.numSize }};font-weight:300;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;">{{ c.num }}</span>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right;"><span style="font-size:13px;font-weight:700;">{{ c.label }}</span><span style="font-size:12px;font-weight:600;color:{{ c.subFg }};">{{ c.sub }}</span></div>
+                  </div>
+                  <sc-if value="{{ c.dots }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:5px;"><span style="width:9px;height:9px;border-radius:999px;background:#D9DE62;"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span></div></sc-if>
+                  <sc-if value="{{ c.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;animation:kNote .3s ease;">
+                      <sc-for list="{{ c.rows }}" as="x" hint-placeholder-count="3"><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(35,37,43,.12);"><span style="font-size:15px;font-weight:700;">Grade {{ x }}</span><span style="padding:6px 12px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Review</span></div></sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:13px;font-weight:700;color:rgba(35,37,43,.55);line-height:1.5;">unit 1 of 7 · 3 of 128 lessons · the License opens after unit 7</div>
+          </div>
+          <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
+            <div style="padding:28px 32px 0;display:flex;align-items:center;gap:14px;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ wk.label }}</span>
+                <span style="font-size:24px;font-weight:600;letter-spacing:-.02em;">{{ wk.range }}</span>
+              </div>
+              <span style="font-size:14px;font-weight:700;color:#2E7C46;">{{ wk.earned }}</span>
+              <span onClick="{{ prevWeek }}" style="width:38px;height:38px;border-radius:999px;background:{{ prevBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;cursor:pointer;">←</span>
+              <span onClick="{{ nextWeek }}" style="width:38px;height:38px;border-radius:999px;background:{{ nextBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;cursor:pointer;">→</span>
+            </div>
+            <div style="padding:20px 32px 24px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;">
+              <sc-for list="{{ wk.days }}" as="d" hint-placeholder-count="7">
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <span style="font-size:11px;font-weight:800;letter-spacing:.14em;color:rgba(35,37,43,.55);">{{ d.dow }}</span>
+                  <div style="height:236px;box-sizing:border-box;border-radius:16px;background:{{ d.bg }};color:{{ d.fg }};box-shadow:inset 0 0 0 {{ d.ring }};padding:12px 12px 14px;display:flex;flex-direction:column;gap:8px;">
+                    <span style="font-size:30px;font-weight:300;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;">{{ d.date }}</span>
+                    <sc-if value="{{ d.kick }}" hint-placeholder-val="{{ false }}"><span style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:{{ d.kickFg }};">{{ d.kick }}</span></sc-if>
+                    <sc-if value="{{ d.blob }}" hint-placeholder-val="{{ false }}"><img src="{{ d.blob }}" alt="" style="width:44px;height:44px;object-fit:contain;margin-left:-4px;"></sc-if>
+                    <span style="font-size:15px;font-weight:700;line-height:1.25;letter-spacing:-.01em;text-wrap:pretty;">{{ d.title }}</span>
+                    <sc-if value="{{ d.chip }}" hint-placeholder-val="{{ false }}"><span style="align-self:flex-start;padding:4px 8px;border-radius:999px;background:{{ d.chipBg }};font-size:11px;font-weight:700;display:flex;gap:5px;align-items:center;color:#23252B;"><span style="width:7px;height:7px;border-radius:999px;background:{{ d.dot }};"></span>{{ d.chip }}</span></sc-if>
+                    <div style="flex:1;"></div>
+                    <span style="font-size:12.5px;font-weight:700;color:{{ d.footFg }};line-height:1.3;">{{ d.foot }}</span>
+                    <sc-if value="{{ d.cta }}" hint-placeholder-val="{{ false }}"><span style="align-self:flex-start;padding:8px 13px;border-radius:999px;background:#fff;color:#23252B;font-size:13px;font-weight:700;">Start →</span></sc-if>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="padding:0 32px;display:flex;flex-direction:column;">
+              <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;">Coming up</span>
+              <sc-for list="{{ coming }}" as="c" hint-placeholder-count="2">
+                <div onClick="{{ c.go }}" style="display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 0;border-top:1px solid #EEECE7;cursor:pointer;" style-hover="opacity:.75;">
+                  <span style="width:44px;height:44px;border-radius:999px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center;"><img src="{{ c.blob }}" alt="" style="width:34px;height:34px;object-fit:contain;"></span>
+                  <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:16px;font-weight:700;">{{ c.title }}</span><span style="font-size:13.5px;font-weight:500;color:rgba(35,37,43,.6);">{{ c.sub }}</span></div>
+                  <span style="font-size:14px;font-weight:700;color:{{ c.whenFg }};">{{ c.when }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex:1;"></div>
+            <div style="background:#D9DE62;padding:18px 32px;display:flex;align-items:center;gap:16px;">
+              <img src="blobs/Startup.svg" alt="" style="width:44px;height:44px;object-fit:contain;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><span style="font-size:16px;font-weight:700;color:#4A4D1E;">Class first, then the register opens.</span><span style="font-size:13px;font-weight:600;color:#5B5E1F;">Starter Kit · 1 of 7</span></div>
+              <span style="padding:10px 16px;border-radius:999px;background:rgba(255,255,255,.55);font-size:14px;font-weight:700;color:#4A4D1E;">Opens after the lesson</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="17b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">17b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Home · Week · phone</span></div>
+      <div data-screen-label="17b Week plan phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;">
+        <div style="padding:22px 20px 0;display:flex;flex-direction:column;gap:14px;flex:none;">
+          <div style="display:flex;align-items:center;gap:10px;"><span style="flex:1;font-size:19px;font-weight:800;letter-spacing:-.02em;">Kampus</span><span style="display:flex;padding:3px;border-radius:999px;background:#fff;"><span style="padding:7px 12px;font-size:12.5px;font-weight:700;">Today</span><span style="padding:7px 12px;border-radius:999px;background:#23252B;color:#fff;font-size:12.5px;font-weight:700;">Week</span></span><span style="width:34px;height:34px;border-radius:999px;background:#F0AFCE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;">M</span></div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;"><span style="font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ wk.label }}</span><span style="font-size:20px;font-weight:600;letter-spacing:-.02em;">{{ wk.range }}</span></div>
+            <span onClick="{{ prevWeek }}" style="width:34px;height:34px;border-radius:999px;background:{{ prevBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;">←</span>
+            <span onClick="{{ nextWeek }}" style="width:34px;height:34px;border-radius:999px;background:{{ nextBg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;">→</span>
+          </div>
+        </div>
+        <div style="flex:1;min-height:0;margin:14px 12px 0;background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;padding:8px 0;">
+          <sc-for list="{{ wk.days }}" as="d" hint-placeholder-count="7">
+            <div style="display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:12px;align-items:center;margin:0 10px;padding:10px 10px;border-radius:16px;background:{{ d.rowBg }};color:{{ d.fg }};box-shadow:inset 0 0 0 {{ d.ring }};margin-bottom:4px;">
+              <div style="display:flex;flex-direction:column;"><span style="font-size:10px;font-weight:800;letter-spacing:.14em;opacity:.6;">{{ d.dow }}</span><span style="font-size:24px;font-weight:300;letter-spacing:-.045em;line-height:1.05;">{{ d.date }}</span></div>
+              <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                <sc-if value="{{ d.kick }}" hint-placeholder-val="{{ false }}"><span style="font-size:9.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:{{ d.kickFg }};">{{ d.kick }}</span></sc-if>
+                <span style="font-size:14.5px;font-weight:700;line-height:1.2;">{{ d.title }}</span>
+                <sc-if value="{{ d.chip }}" hint-placeholder-val="{{ false }}"><span style="font-size:11.5px;font-weight:600;display:flex;gap:5px;align-items:center;opacity:.8;"><span style="width:7px;height:7px;border-radius:999px;background:{{ d.dot }};"></span>{{ d.chip }}</span></sc-if>
+              </div>
+              <span style="font-size:12.5px;font-weight:700;color:{{ d.footFg }};text-align:right;max-width:92px;">{{ d.footSm }}</span>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:12px 12px 24px;flex:none;"><div onClick="{{ goLicense }}" style="height:56px;border-radius:999px;background:#fff;display:flex;align-items:center;gap:10px;padding:0 20px;font-size:14.5px;font-weight:700;cursor:pointer;"><span style="width:10px;height:10px;border-radius:999px;background:#6E4FCC;"></span><span style="flex:1;">The License · Dec 9</span><span style="color:rgba(35,37,43,.55);">34 lessons</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:4px;padding-top:24px;border-top:1.5px solid rgba(35,37,43,.14);max-width:1720px;">
+    <div style="font-size:20px;font-weight:700;letter-spacing:-.02em;">18 · The grade stack for a placed student</div>
+    <div style="font-size:14px;line-height:1.5;color:#5D5A52;max-width:860px;">Grades she placed past fold into one quiet card, "Earlier grades · review anytime", in the lightest purple. That tint means "yours" without claiming she passed a test. Tap it to open per-grade Review rows. Grades above say what earns them. Edge cases: a true grade-3 student has nothing below, and a grade-8 student ends at Graduation. 18a is the recommendation; the fourth column is the per-grade alternative.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+    <div id="18a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">18a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Stack states · desktop column (340px)</span></div>
+      <div data-screen-label="18a Grade stack states" style="width:1600px;height:760px;background:#F5F7F9;border-radius:14px;overflow:hidden;display:grid;grid-template-columns:repeat(4,340px);gap:48px;padding:44px 48px;box-sizing:border-box;">
+        <sc-for list="{{ stacks }}" as="st" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:4px;padding-bottom:8px;"><span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ st.kick }}</span><span style="font-size:20px;font-weight:600;letter-spacing:-.02em;">{{ st.title }}</span></div>
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ st.cards }}" as="c" hint-placeholder-count="4">
+                <div onClick="{{ c.tap }}" style="position:relative;margin-top:{{ c.mt }};border-radius:{{ c.radius }};background:{{ c.bg }};color:{{ c.fg }};padding:18px 20px 30px;box-shadow:{{ c.shadow }};cursor:{{ c.cursor }};display:flex;flex-direction:column;gap:10px;opacity:{{ c.op }};">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;">
+                    <span style="font-size:{{ c.numSize }};font-weight:300;letter-spacing:-.045em;line-height:1;font-variant-numeric:tabular-nums;">{{ c.num }}</span>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right;"><span style="font-size:13px;font-weight:700;">{{ c.label }}</span><span style="font-size:12px;font-weight:600;color:{{ c.subFg }};">{{ c.sub }}</span></div>
+                  </div>
+                  <sc-if value="{{ c.dots }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:5px;"><span style="width:9px;height:9px;border-radius:999px;background:#D9DE62;"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span><span style="width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.22);"></span></div></sc-if>
+                  <sc-if value="{{ c.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="display:flex;flex-direction:column;animation:kNote .3s ease;">
+                      <sc-for list="{{ c.rows }}" as="x" hint-placeholder-count="3"><div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid rgba(35,37,43,.12);"><span style="font-size:15px;font-weight:700;">Grade {{ x }}</span><span style="padding:6px 12px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Review</span></div></sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:13px;font-weight:700;color:rgba(35,37,43,.55);line-height:1.5;">{{ st.foot }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div id="18b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">18b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Stack · placed in grade 6 · phone</span></div>
+      <div data-screen-label="18b Grade stack phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;padding:22px 20px;box-sizing:border-box;gap:18px;">
+        <div style="display:flex;align-items:center;gap:10px;"><span style="flex:1;font-size:19px;font-weight:800;letter-spacing:-.02em;">Kampus</span><span style="width:34px;height:34px;border-radius:999px;background:#F0AFCE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;">M</span></div>
+        <div style="font-size:24px;font-weight:600;line-height:1.3;letter-spacing:-.025em;color:rgba(35,37,43,.55);">Hi Maya, <span style="color:#23252B;">one lesson today</span>, then the stand opens.</div>
+        <div style="display:flex;flex-direction:column;">
+          <sc-for list="{{ stackPlaced.cards }}" as="c" hint-placeholder-count="4">
+            <div onClick="{{ c.tap }}" style="margin-top:{{ c.mt }};border-radius:{{ c.radius }};background:{{ c.bg }};color:{{ c.fg }};padding:14px 18px 26px;box-shadow:{{ c.shadow }};display:flex;flex-direction:column;gap:8px;opacity:{{ c.op }};cursor:{{ c.cursor }};">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                <span style="font-size:32px;font-weight:300;letter-spacing:-.045em;line-height:1;">{{ c.num }}</span>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;text-align:right;"><span style="font-size:12.5px;font-weight:700;">{{ c.label }}</span><span style="font-size:11.5px;font-weight:600;color:{{ c.subFg }};">{{ c.sub }}</span></div>
+              </div>
+              <sc-if value="{{ c.open }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;"><sc-for list="{{ c.rows }}" as="x" hint-placeholder-count="3"><div style="display:flex;align-items:center;justify-content:space-between;min-height:44px;border-top:1px solid rgba(35,37,43,.12);"><span style="font-size:15px;font-weight:700;">Grade {{ x }}</span><span style="padding:7px 13px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Review</span></div></sc-for></div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-size:12.5px;font-weight:700;color:rgba(35,37,43,.55);">unit 1 of 7 · 3 of 128 lessons</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:4px;padding-top:24px;border-top:1.5px solid rgba(35,37,43,.14);max-width:1720px;">
+    <div style="font-size:20px;font-weight:700;letter-spacing:-.02em;">19 · Wishlist tiles that never look broken</div>
+    <div style="font-size:14px;line-height:1.5;color:#5D5A52;max-width:860px;">Four tile states: loading (a soft shimmer while the preview service fetches), loaded (the product photo), missed (a store-tinted initial with a category glyph) and link-only (nothing came back, so the tile shows the domain). Tap "Replay the fetch" to watch rows load and resolve.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+    <div id="19a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">19a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Rewards · From stores · desktop</span></div>
+      <div data-screen-label="19a Wishlist tiles" style="width:1280px;height:800px;background:#F5F7F9;border-radius:14px;overflow:hidden;display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:40px 48px;box-sizing:border-box;">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Tile anatomy</span>
+          <div style="font-size:28px;font-weight:600;line-height:1.2;letter-spacing:-.025em;">A miss reads as designed.</div>
+          <div style="display:flex;flex-direction:column;">
+            <div style="padding:12px 0;border-top:1.5px solid rgba(35,37,43,.14);display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">Tint</span><span style="font-size:14px;line-height:1.45;color:rgba(35,37,43,.6);">From the store's domain, hashed to one of six confetti colors mixed 24% into white. The same store always gets the same tint.</span></div>
+            <div style="padding:12px 0;border-top:1.5px solid rgba(35,37,43,.14);display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">Initial</span><span style="font-size:14px;line-height:1.45;color:rgba(35,37,43,.6);">The store's first letter, 28/600 in ink.</span></div>
+            <div style="padding:12px 0;border-top:1.5px solid rgba(35,37,43,.14);display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">Glyph</span><span style="font-size:14px;line-height:1.45;color:rgba(35,37,43,.6);">A 22px white disc in the bottom right holding the category icon (toy, book, art, game, sport, other).</span></div>
+            <div style="padding:12px 0;border-top:1.5px solid rgba(35,37,43,.14);display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">Loading</span><span style="font-size:14px;line-height:1.45;color:rgba(35,37,43,.6);">The tile and two text bars shimmer. After 4 seconds without an answer the row falls back.</span></div>
+          </div>
+          <div style="display:flex;"><span onClick="{{ replay }}" style="padding:11px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;">Replay the fetch</span></div>
+        </div>
+        <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;align-self:start;">
+          <div style="padding:30px 32px 6px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">From stores</div>
+          <sc-for list="{{ wish }}" as="w" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:64px minmax(0,1fr) 170px 128px;gap:18px;align-items:center;padding:16px 32px;border-bottom:1px solid #EEECE7;">
+              <div style="width:64px;height:64px;border-radius:16px;position:relative;overflow:hidden;background:{{ w.tileBg }};background-size:400px 100%;animation:{{ w.anim }};display:flex;align-items:center;justify-content:center;">
+                <sc-if value="{{ w.showInitial }}" hint-placeholder-val="{{ false }}"><span style="font-size:28px;font-weight:600;letter-spacing:-.03em;color:#23252B;">{{ w.initial }}</span></sc-if>
+                <sc-if value="{{ w.showLink }}" hint-placeholder-val="{{ false }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg></sc-if>
+                <sc-if value="{{ w.showPhoto }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:6px;border-radius:10px;background:repeating-linear-gradient(135deg,#EEF1F4 0 6px,#F5F7F9 6px 12px);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;letter-spacing:.1em;color:rgba(35,37,43,.45);">PHOTO</span></sc-if>
+                <sc-if value="{{ w.showGlyph }}" hint-placeholder-val="{{ false }}">
+                  <span style="position:absolute;right:5px;bottom:5px;width:22px;height:22px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;">
+                    <sc-if value="{{ w.gToy }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#23252B" stroke-width="2.2" stroke-linejoin="round"><rect x="3" y="11" width="8" height="8"></rect><rect x="13" y="11" width="8" height="8"></rect><rect x="8" y="3" width="8" height="8"></rect></svg></sc-if>
+                    <sc-if value="{{ w.gBook }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#23252B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"></path></svg></sc-if>
+                    <sc-if value="{{ w.gArt }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#23252B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5S14 15 15 15h2a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"></path></svg></sc-if>
+                  </span>
+                </sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <sc-if value="{{ w.loading }}" hint-placeholder-val="{{ false }}"><span style="height:16px;width:62%;border-radius:999px;background:linear-gradient(90deg,#EEF1F4 0,#F7F8FA 50%,#EEF1F4 100%);background-size:400px 100%;animation:kShim 1.2s linear infinite;"></span><span style="height:12px;width:38%;border-radius:999px;background:#EEF1F4;"></span></sc-if>
+                <sc-if value="{{ w.ready }}" hint-placeholder-val="{{ true }}"><span style="font-size:18px;font-weight:600;letter-spacing:-.01em;">{{ w.name }}</span><span style="font-size:13.5px;font-weight:500;color:rgba(35,37,43,.55);">{{ w.meta }}</span></sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="height:6px;border-radius:999px;background:#EEF1F4;overflow:hidden;display:flex;"><span style="width:{{ w.pct }};background:#2E7C46;border-radius:999px;"></span></span>
+                <span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">{{ w.toGo }}</span>
+              </div>
+              <span style="padding:11px 16px;border-radius:999px;background:{{ w.btnBg }};color:{{ w.btnFg }};font-size:14px;font-weight:700;">{{ w.btn }}</span>
+            </div>
+          </sc-for>
+          <div style="padding:16px 32px 22px;display:flex;gap:10px;flex-wrap:wrap;">
+            <sc-for list="{{ swatches }}" as="s" hint-placeholder-count="6"><span style="width:40px;height:40px;border-radius:12px;background:{{ s }};"></span></sc-for>
+            <span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);align-self:center;margin-left:6px;">Store tints: the confetti set at 24%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="19b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">19b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Rewards · From stores · phone</span></div>
+      <div data-screen-label="19b Wishlist phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;padding:22px 12px;box-sizing:border-box;gap:14px;">
+        <div style="padding:0 8px;font-size:24px;font-weight:600;letter-spacing:-.025em;line-height:1.25;">Real rewards, <span style="color:rgba(35,37,43,.5);">picked by you,</span> okayed by a grown-up.</div>
+        <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:20px 20px 4px;font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">From stores</div>
+          <sc-for list="{{ wish }}" as="w" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:56px minmax(0,1fr);gap:14px;align-items:center;padding:14px 20px;border-bottom:1px solid #EEECE7;">
+              <div style="width:56px;height:56px;border-radius:14px;position:relative;overflow:hidden;background:{{ w.tileBg }};background-size:400px 100%;animation:{{ w.anim }};display:flex;align-items:center;justify-content:center;">
+                <sc-if value="{{ w.showInitial }}" hint-placeholder-val="{{ false }}"><span style="font-size:24px;font-weight:600;color:#23252B;">{{ w.initial }}</span></sc-if>
+                <sc-if value="{{ w.showLink }}" hint-placeholder-val="{{ false }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#23252B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"></path><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"></path></svg></sc-if>
+                <sc-if value="{{ w.showPhoto }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;inset:5px;border-radius:9px;background:repeating-linear-gradient(135deg,#EEF1F4 0 6px,#F5F7F9 6px 12px);"></span></sc-if>
+                <sc-if value="{{ w.showGlyph }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;right:4px;bottom:4px;width:18px;height:18px;border-radius:999px;background:#fff;"></span></sc-if>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <sc-if value="{{ w.loading }}" hint-placeholder-val="{{ false }}"><span style="height:14px;width:70%;border-radius:999px;background:linear-gradient(90deg,#EEF1F4 0,#F7F8FA 50%,#EEF1F4 100%);background-size:400px 100%;animation:kShim 1.2s linear infinite;"></span><span style="height:11px;width:40%;border-radius:999px;background:#EEF1F4;"></span></sc-if>
+                <sc-if value="{{ w.ready }}" hint-placeholder-val="{{ true }}"><span style="font-size:16px;font-weight:600;">{{ w.name }}</span><span style="font-size:12.5px;font-weight:500;color:rgba(35,37,43,.55);">{{ w.meta }} · {{ w.toGo }}</span></sc-if>
+                <span style="height:5px;border-radius:999px;background:#EEF1F4;overflow:hidden;display:flex;"><span style="width:{{ w.pct }};background:#2E7C46;"></span></span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:4px;padding-top:24px;border-top:1.5px solid rgba(35,37,43,.14);max-width:1720px;">
+    <div style="font-size:20px;font-weight:700;letter-spacing:-.02em;">20 · World names (picked: The Kitchen · The Market · Outside · The Workshop)</div>
+    <div style="font-size:14px;line-height:1.5;color:#5D5A52;max-width:860px;">Rule: name the place in her life where the math shows up. Picked for grades 3–8: every name is a place she can stand in. None sounds like a kids' show to a 13-year-old, and none needs explaining to an 8-year-old. "The Market" reads older than "The Store" and covers deals, rates and the stand. "Outside" is a place, unlike "The Weather". The other sets stay here for comparison. The colors are unchanged, and the rename is applied across every file.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+    <div id="20a" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">20a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Name sets on Home · desktop</span></div>
+      <div data-screen-label="20a World names" style="width:1280px;height:800px;background:#F5F7F9;border-radius:14px;overflow:hidden;display:grid;grid-template-columns:420px minmax(0,1fr);column-gap:48px;padding:40px 48px;box-sizing:border-box;">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Name sets</span>
+          <div style="display:flex;flex-direction:column;">
+            <sc-for list="{{ nameSets }}" as="n" hint-placeholder-count="5">
+              <div onClick="{{ n.pick }}" style="padding:14px 16px;border-radius:20px;background:{{ n.bg }};display:flex;flex-direction:column;gap:10px;cursor:pointer;margin-bottom:6px;" style-hover="background:#fff;">
+                <div style="display:flex;align-items:center;gap:10px;"><span style="width:18px;height:18px;box-sizing:border-box;border-radius:999px;box-shadow:inset 0 0 0 {{ n.ring }};flex:none;"></span><span style="flex:1;font-size:15px;font-weight:700;">{{ n.title }}</span><span style="font-size:12px;font-weight:700;color:rgba(35,37,43,.5);">{{ n.tag }}</span></div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <sc-for list="{{ n.chips }}" as="c" hint-placeholder-count="4"><span style="padding:5px 11px;border-radius:999px;background:{{ c.bg }};font-size:13px;font-weight:700;display:flex;gap:6px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:{{ c.dot }};"></span>{{ c.name }}</span></sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;align-self:start;">
+          <div style="padding:28px 32px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid #EEECE7;">
+            <div style="display:flex;align-items:center;gap:10px;"><span style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Today's lesson</span><span style="padding:5px 11px;border-radius:999px;background:#F5F7F9;font-size:13px;font-weight:700;display:flex;gap:6px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:#F4BE93;"></span>{{ pickedSet.n1 }}</span><span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">~20 min · no timer</span></div>
+            <span style="font-size:34px;font-weight:600;letter-spacing:-.025em;">Unit rates</span>
+          </div>
+          <div style="padding:20px 32px 4px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Free practice</div>
+          <sc-for list="{{ pickedSet.rows }}" as="p" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:16px;padding:16px 32px;border-bottom:1px solid #EEECE7;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+                <span style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:#F5F7F9;font-size:13px;font-weight:700;display:flex;gap:6px;align-items:center;"><span style="width:8px;height:8px;border-radius:999px;background:{{ p.dot }};"></span>{{ p.name }}</span>
+                <span style="font-size:20px;font-weight:600;letter-spacing:-.015em;">{{ p.topic }}</span>
+              </div>
+              <span style="width:52px;height:52px;border-radius:999px;background:#23252B;display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="#fff"></path></svg></span>
+            </div>
+          </sc-for>
+          <div style="padding:16px 32px 22px;font-size:14px;font-weight:600;color:rgba(35,37,43,.6);">{{ pickedSet.why }}</div>
+        </div>
+      </div>
+    </div>
+    <div id="20b" style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">20b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">World tiles · phone</span></div>
+      <div data-screen-label="20b World names phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:36px;overflow:hidden;display:flex;flex-direction:column;padding:22px 12px;box-sizing:border-box;gap:14px;">
+        <div style="padding:0 8px;display:flex;flex-direction:column;gap:4px;"><span style="font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">{{ pickedSet.title }}</span><span style="font-size:24px;font-weight:600;letter-spacing:-.025em;">Where the math lives</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <sc-for list="{{ pickedSet.rows }}" as="p" hint-placeholder-count="4">
+            <div style="height:190px;border-radius:24px;background:{{ p.dot }};padding:16px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;">
+              <img src="{{ p.blob }}" alt="" style="width:64px;height:64px;object-fit:contain;margin-left:-4px;">
+              <div style="display:flex;flex-direction:column;gap:3px;"><span style="font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.15;">{{ p.name }}</span><span style="font-size:12.5px;font-weight:600;color:rgba(35,37,43,.7);">{{ p.short }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="background:#fff;border-radius:24px;padding:16px 18px;display:flex;flex-direction:column;gap:6px;"><span style="font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Read it as a 13-year-old</span><span style="font-size:15px;font-weight:600;line-height:1.4;">{{ pickedSet.why }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="data" style="display:flex;flex-direction:column;gap:16px;padding-top:24px;border-top:1.5px solid rgba(35,37,43,.14);max-width:1280px;">
+    <div style="font-size:20px;font-weight:700;letter-spacing:-.02em;">State &amp; data per screen</div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;">
+      <sc-for list="{{ dataNotes }}" as="d" hint-placeholder-count="4">
+        <div style="background:#fff;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:10px;">
+          <span style="font-size:15px;font-weight:700;">{{ d.title }}</span>
+          <span style="font-size:13.5px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">{{ d.body }}</span>
+          <pre style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:12px;line-height:1.55;background:#F5F7F9;border-radius:12px;padding:12px 14px;white-space:pre-wrap;">{{ d.code }}</pre>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { walkN: 1, face: null, line: null, bar: [true, false, false, false, false, false, false, false], written: false, playing: true, week: 0, open: true, loading: false, nameIdx: 4 };
+  componentWillUnmount() { clearTimeout(this.t); try { speechSynthesis.cancel(); } catch (e) {} }
+  speak(text, rate) {
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text); u.rate = rate || 1;
+      u.onend = () => this.setState({ playing: false });
+      this.setState({ playing: true }); speechSynthesis.speak(u);
+    } catch (e) { this.setState({ playing: true }); }
+  }
+  wave(sm) {
+    const h = React.createElement;
+    const on = this.state.playing;
+    return h('span', { style: { display: 'flex', gap: sm ? 3 : 4, alignItems: 'center', height: sm ? 22 : 30, flex: 'none' } },
+      [0, 1, 2, 3, 4].map(i => h('span', { key: i, style: { width: sm ? 3 : 4, height: '100%', borderRadius: 999, background: on ? '#23252B' : 'rgba(35,37,43,.25)', transformOrigin: 'center', transform: on ? undefined : 'scaleY(.3)', animation: on ? `kWave ${0.7 + i * 0.13}s ease-in-out ${i * 0.08}s infinite` : 'none' } })));
+  }
+  renderVals() {
+    const s = this.state, set = (o) => this.setState(o);
+    const ink = '#23252B', mut = 'rgba(35,37,43,.45)', green = '#58B372', red = '#E4766C';
+    const spine = (cur) => [['Warm-up', 4, 'done'], ['New idea', 4, 'cur'], ['Guided', 7], ['Mixed', 5], ['Prove it', 2]].map(([label, n, st], i) => ({
+      label, fg: i === 1 ? ink : mut,
+      segs: Array.from({ length: n }, (_, j) => st === 'done' ? green : st === 'cur' ? (j < cur ? green : j === cur ? ink : '#D9DEE4') : '#D9DEE4')
+    }));
+    const mkSteps = (titles, notes, cur, fresh) => titles.map((title, i) => {
+      const done = i < cur, isCur = i === cur, last = i === titles.length - 1;
+      return { title, note: notes[i], showNote: done && !!notes[i], fg: done || isCur ? ink : 'rgba(35,37,43,.4)',
+        dotBg: done ? green : '#fff', ring: done ? '0 transparent' : isCur ? '2px #23252B' : '1.5px rgba(35,37,43,.22)', check: done ? '✓' : '',
+        lineBg: last ? 'transparent' : done ? green : 'rgba(35,37,43,.14)',
+        noteBg: fresh === i ? '#EAF6EE' : 'transparent', notePad: fresh === i ? '8px 12px' : '0', anim: fresh === i ? 'kNote .45s ease' : 'none' };
+    });
+    const cellsOf = (n) => [0, 1, 2, 3].map(i => i < n ? green : '#E6EAEE');
+    const unitT = ['Big idea', 'Divide price by count', 'Compare per-ones', 'Try it'];
+    const unitN = ['One price for one thing makes any deal fair.', '$6.00 ÷ 4 bars = $1.50 a bar', 'Lower per-one price wins. $1.40 beats $1.50.', ''];
+    const lineT = ['Big idea', 'Drop below zero', 'Climb back up', 'Try it'];
+    const lineN = ['Below zero, numbers keep counting down.', '5° drop 8° → −3°', '', ''];
+    const barT = ['Big idea', 'Pieces of a whole', 'Same size, fewer pieces', 'Try it'];
+    const barN = ['The bottom number counts equal pieces.', '3 of 8 slices = 3/8', '', ''];
+
+    const walkDone = s.walkN >= 3, faceDone = s.face === 'b', lineDone = s.line === -3;
+    const shaded = s.bar.filter(Boolean).length, barDone = shaded === 3;
+    const nxt = (on, label) => ({ nextBg: on ? ink : '#E6EAEE', nextFg: on ? '#fff' : 'rgba(35,37,43,.45)', nextLabel: label });
+    const say = (t) => () => this.speak(t);
+    const walkPrompt = '4 granola bars cost $6.00. What does one bar cost?';
+    const base = { pill: true, bandA: false, promptSize: '34px', promptSizeSm: '24px', k: {} };
+    const teach = [
+      { ...base, did: '16a', pid: '16b', label: 'The worked walk', meta: 'Ratios & rates · unit 1 of 7', spine: spine(1), steps: mkSteps(unitT, unitN, 1), cells: cellsOf(1), notesLabel: '1 of 4', lastNote: unitN[0],
+        kicker: 'New idea · step 2 of 4 · tap to reveal each line', kickerSm: 'Step 2 of 4 · tap to reveal', prompt: walkPrompt, k: { walk: true }, speak: say(walkPrompt),
+        foot: walkDone ? 'Three lines. That is the whole move.' : `Line ${s.walkN} of 3 · tap the sheet for the next one`, resetFn: () => walkDone && set({ walkN: 1 }), ...nxt(walkDone, walkDone ? 'Next →' : 'Next') },
+      { ...base, did: '16c', pid: '16d', label: 'The face-off', meta: 'Ratios & rates · unit 1 of 7', spine: spine(2), steps: mkSteps(unitT, unitN, 2), cells: cellsOf(2), notesLabel: '2 of 4', lastNote: unitN[1],
+        kicker: 'New idea · step 3 of 4 · tap the better deal', kickerSm: 'Step 3 of 4 · tap one', prompt: 'Which deal wins?', k: { face: true }, speak: say('Which deal wins? 4 bars for 6 dollars, or 6 bars for 8 dollars 40?'),
+        foot: faceDone ? 'Solved. Your note is ready.' : 'Pick one. Wrong picks cost nothing.', resetFn: () => faceDone && set({ face: null }), ...nxt(faceDone, 'Next →') },
+      { ...base, did: '16e', pid: '16f', label: 'The line', meta: 'Negative numbers · unit 2 of 7', spine: spine(1), steps: mkSteps(lineT, lineN, 1), cells: cellsOf(1), notesLabel: '1 of 4', lastNote: lineN[0],
+        kicker: 'New idea · step 2 of 4 · tap where it lands', kickerSm: 'Step 2 of 4 · tap where it lands', prompt: "It's 5° at noon. By night it drops 8°. Where does it land?", promptSize: '32px', promptSizeSm: '22px', k: { line: true }, speak: say("It's 5 degrees at noon. By night it drops 8 degrees. Where does it land?"),
+        foot: lineDone ? 'Solved. 8 steps down from 5.' : 'Start is blue. Count the drop.', resetFn: () => lineDone && set({ line: null }), ...nxt(lineDone, 'Next →') },
+      { ...base, did: '16g', pid: '16h', label: 'The bar', meta: 'Fractions · unit 1 of 7', spine: spine(1), steps: mkSteps(barT, barN, 1), cells: cellsOf(1), notesLabel: '1 of 4', lastNote: barN[0],
+        kicker: 'New idea · step 2 of 4 · tap pieces to shade', kickerSm: 'Step 2 of 4 · tap to shade', prompt: 'A pizza is cut into 8 equal slices. You eat 3. Shade what you ate.', promptSize: '32px', promptSizeSm: '22px', k: { bar: true }, speak: say('A pizza is cut into 8 equal slices. You eat 3. Shade what you ate.'),
+        foot: barDone ? 'Solved. Three of eight.' : 'Tap a piece to shade it. Tap again to clear.', resetFn: () => barDone && set({ bar: [true, false, false, false, false, false, false, false] }), ...nxt(barDone, 'Next →') },
+      { ...base, did: '16k', pid: '16l', label: 'The takeaway', meta: 'Ratios & rates · unit 1 of 7', spine: spine(s.written ? 2 : 1), steps: mkSteps(unitT, unitN, s.written ? 2 : 1, s.written ? 1 : -1), cells: cellsOf(s.written ? 2 : 1), notesLabel: s.written ? '2 of 4' : '1 of 4', lastNote: s.written ? unitN[1] : unitN[0],
+        kicker: 'New idea · step 2 of 4 · solved', kickerSm: 'Step 2 of 4 · solved', prompt: walkPrompt, k: { walk: true, take: true, takeAll: true }, speak: say(walkPrompt),
+        foot: s.written ? 'Two of four notes. Your page is filling up.' : 'Write it down to keep it.', resetFn: () => s.written && set({ written: false }), ...nxt(s.written, s.written ? 'Next →' : 'Next') },
+      { ...base, did: '16m', pid: '16n', label: 'Voice · band a (grades 3–4)', meta: 'Ratios & rates · unit 1 of 7', pill: false, bandA: true, promptSize: '40px', promptSizeSm: '26px', spine: spine(1), steps: mkSteps(unitT, unitN, 1), cells: cellsOf(1), notesLabel: '1 of 4', lastNote: unitN[0],
+        kicker: 'New idea · step 2 of 4', kickerSm: 'Step 2 of 4', prompt: walkPrompt, k: { walk: true }, speak: say('4 granola bars cost 6 dollars. What does one bar cost? Tap for the first line.'),
+        foot: walkDone ? 'Three lines. That is the whole move.' : `Line ${s.walkN} of 3`, resetFn: () => walkDone && set({ walkN: 1 }), ...nxt(walkDone, 'Next →') }
+    ];
+    // the takeaway artboard shows the walk fully revealed
+    const walkData = [
+      { value: '$6.00', how: 'The price for all 4 bars' },
+      { value: '÷ 4', how: 'Split it into 4 equal shares' },
+      { value: '$1.50', how: 'One bar. That is the for-one price.', result: true }
+    ];
+    const walkRowsFor = (n) => walkData.map((w, i) => ({ ...w, shown: i < n, hidden: i >= n, fg: w.result ? '#2E7C46' : ink, howFg: w.result ? '#2E7C46' : ink,
+      hint: i === n ? 'Tap for the next line' : '', hidBg: i === n ? '#F5F7F9' : '#FAFBFC', cursor: i === n ? 'pointer' : 'default',
+      reveal: () => i === n && set({ walkN: n + 1 }) }));
+    const walkRows = walkRowsFor(s.walkN);
+    teach.forEach(r => { r.rows = r.k.takeAll ? walkRowsFor(3) : walkRows; });
+
+    const faceCards = [
+      { id: 'a', kick: 'Deal A', count: '4 bars', price: '$6.00', each: '$1.50 each' },
+      { or: true },
+      { id: 'b', kick: 'Deal B', count: '6 bars', price: '$8.40', each: '$1.40 each' }
+    ].map(f => {
+      if (f.or) return { or: true, card: false };
+      const picked = s.face === f.id, revealed = !!s.face, win = f.id === 'b';
+      const tag = picked ? (win ? 'Better buy ✓' : 'Not yet') : (revealed && win && s.face === 'a' ? '' : '');
+      return { ...f, card: true, or: false, pick: () => set({ face: f.id }),
+        bg: picked ? (win ? '#EAF6EE' : '#FBEDEC') : '#F5F7F9', ring: picked ? (win ? green : red) : 'transparent',
+        each: revealed ? f.each : 'Tap to check', eachFg: revealed ? (win ? '#2E7C46' : ink) : 'rgba(35,37,43,.45)',
+        tag, noTag: !tag, tagBg: win ? '#fff' : '#fff', tagFg: win ? '#2E7C46' : '#C2463B' };
+    });
+    const faceMsg = s.face === 'b' ? '$1.40 is less than $1.50, so 6 for $8.40 wins by 10¢ a bar.' : s.face === 'a' ? 'Not yet. Here is the step: divide each price by its count, then compare.' : '';
+    const faceMsgFg = s.face === 'b' ? '#2E7C46' : '#C2463B';
+
+    const nums = Array.from({ length: 13 }, (_, i) => i - 6);
+    const tickOf = (n) => {
+      const start = n === 5, picked = s.line === n, right = picked && n === -3;
+      return { n, label: n + '°', w: n === 0 ? 800 : 600, fg: n === 0 ? ink : 'rgba(35,37,43,.7)', tag: start ? 'START' : right ? 'HERE' : '', tagFg: start ? '#5E9FE0' : '#2E7C46',
+        size: start || picked ? '26px' : '14px',
+        bg: start ? '#5E9FE0' : picked ? (right ? green : red) : '#fff', ring: start || picked ? 'transparent' : ink,
+        pick: () => !start && set({ line: n }) };
+    };
+    const ticks = nums.map(tickOf);
+    const ticksSm = nums.filter(n => n >= -4 && n <= 6).reverse().map(tickOf);
+    const col = (n) => (n + 6 + 0.5) / 13 * 100;
+    const lineMsg = s.line == null ? 'Tap the tick where the temperature ends up.' : lineDone ? 'Past zero and 3 more. Below zero counts down.' : 'Not yet. Here is the step: count 8 ticks down from 5.';
+
+    const barCol = shaded < 3 ? ink : shaded === 3 ? green : red;
+    const barSegs = s.bar.map((on, i) => ({ n: i + 1, bg: on ? barCol : '#EEF1F4', fg: on ? '#fff' : 'rgba(35,37,43,.4)', r: i === 0 ? '18px 6px 6px 18px' : i === 7 ? '6px 18px 18px 6px' : '6px',
+      tap: () => set({ bar: s.bar.map((v, j) => j === i ? !v : v) }) }));
+    const barMsg = shaded < 3 ? `${3 - shaded} more to go.` : shaded === 3 ? 'Exactly. 3 out of 8 equal pieces.' : 'Too many. You ate 3.';
+
+    const weeks = [
+      { label: 'This week', range: 'Oct 19 – 25', earned: '+$1.00 so far', days: [
+        { dow: 'MON', date: '19', st: 'done', title: 'Ratios as tables', w: 1, pay: '+$0.50' },
+        { dow: 'TUE', date: '20', st: 'done', title: 'Fractions to percents', w: 0, pay: '+$0.50' },
+        { dow: 'WED', date: '21', st: 'today', title: 'Unit rates', w: 1 },
+        { dow: 'THU', date: '22', st: 'up', title: 'Better buys', w: 1 },
+        { dow: 'FRI', date: '23', st: 'quiz', title: 'Unit 1 quiz' },
+        { dow: 'SAT', date: '24', st: 'rest' }, { dow: 'SUN', date: '25', st: 'rest' }] },
+      { label: 'Next week', range: 'Oct 26 – Nov 1', earned: '', days: [
+        { dow: 'MON', date: '26', st: 'up', title: 'Percent of a number', w: 1 },
+        { dow: 'TUE', date: '27', st: 'up', title: 'Below zero', w: 2 },
+        { dow: 'WED', date: '28', st: 'up', title: 'Discounts', w: 1 },
+        { dow: 'THU', date: '29', st: 'up', title: 'Adding integers', w: 2 },
+        { dow: 'FRI', date: '30', st: 'up', title: 'Tax and tips', w: 1 },
+        { dow: 'SAT', date: '31', st: 'rest' }, { dow: 'SUN', date: '1', st: 'rest' }] },
+      { label: 'License week', range: 'Dec 7 – 13', earned: '', days: [
+        { dow: 'MON', date: '7', st: 'up', title: 'Review: equations', w: 3 },
+        { dow: 'TUE', date: '8', st: 'up', title: 'Review: everything', w: 0 },
+        { dow: 'WED', date: '9', st: 'test', title: 'Grade 6 test' },
+        { dow: 'THU', date: '10', st: 'up', title: 'Free practice', w: null },
+        { dow: 'FRI', date: '11', st: 'up', title: 'Free practice', w: null },
+        { dow: 'SAT', date: '12', st: 'rest' }, { dow: 'SUN', date: '13', st: 'rest' }] }
+    ];
+    const W = [['The Kitchen', '#F0AFCE'], ['The Market', '#F4BE93'], ['Outside', '#5E9FE0'], ['The Workshop', '#8F97DE']];
+    const cell = (d) => {
+      const w = d.w != null ? W[d.w] : null;
+      const b = { ...d, chip: w ? w[0] : '', dot: w ? w[1] : '', chipBg: '#fff', kick: '', kickFg: mut, blob: '', cta: false, ring: '0 transparent', fg: ink, footFg: mut, foot: '', footSm: '' };
+      if (d.st === 'done') return { ...b, bg: '#F5F7F9', rowBg: '#F5F7F9', foot: '✓ ' + d.pay, footSm: d.pay, footFg: '#2E7C46' };
+      if (d.st === 'today') return { ...b, bg: ink, rowBg: ink, fg: '#fff', kick: 'Today', kickFg: '#D9DE62', chipBg: 'rgba(255,255,255,.92)', cta: true, foot: '~20 min', footSm: 'Start →', footFg: '#fff' };
+      if (d.st === 'up') return { ...b, bg: '#fff', rowBg: '#fff', ring: '1.5px rgba(35,37,43,.12)', chipBg: '#F5F7F9', title: d.title, foot: 'Lesson', footSm: '' };
+      if (d.st === 'quiz') return { ...b, bg: '#FBF6E4', rowBg: '#FBF6E4', kick: 'Inspection Day', kickFg: '#8A6D1C', blob: 'blobs/Security.svg', foot: '10 questions · $1.00 for taking it', footSm: '$1.00', footFg: '#8A6D1C' };
+      if (d.st === 'test') return { ...b, bg: '#6E4FCC', rowBg: '#6E4FCC', fg: '#fff', kick: 'The License', kickFg: '#fff', blob: 'blobs/Winner.svg', foot: '20 questions · $1.50 for taking it', footSm: '$1.50', footFg: '#fff' };
+      return { ...b, bg: 'transparent', rowBg: 'transparent', ring: '1.5px rgba(35,37,43,.08)', title: 'Rest day', fg: 'rgba(35,37,43,.45)', foot: 'Stand still opens', footSm: '' };
+    };
+    const wkRaw = weeks[s.week];
+    const wk = { ...wkRaw, days: wkRaw.days.map(cell) };
+    const coming = [
+      { title: 'Inspection Day · Unit 1 quiz', sub: '7 unit questions + 3 review. Solid, Shaky or Not yet. Retake anytime.', when: 'Fri Oct 23', whenFg: '#8A6D1C', bg: '#FBF6E4', blob: 'blobs/Security.svg', go: () => set({ week: 0 }) },
+      { title: 'The License · Grade 6 test', sub: '20 questions. Pass and the Grade 6 district gets built.', when: 'Dec 9 · 34 lessons', whenFg: '#6E4FCC', bg: '#EDE8FA', blob: 'blobs/Winner.svg', go: () => set({ week: 2 }) }
+    ];
+
+    const P = ['#C7B8F0', '#B3A0EA', '#9E87E2', '#8A6FD9'];
+    const edge = 'inset 0 .75px 0 rgba(255,255,255,.55), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06)';
+    const mkStack = (list) => list.map((c, i) => ({ mt: i === 0 ? '0' : '-14px', radius: i === list.length - 1 ? '20px' : '20px 20px 0 0', shadow: i === 0 ? 'inset 0 .75px 0 rgba(255,255,255,.55)' : edge,
+      cursor: c.tap ? 'pointer' : 'default', numSize: '44px', dots: false, open: false, rows: [], op: 1, subFg: 'rgba(35,37,43,.55)', ...c }));
+    const earlier = (range, rows) => ({ num: range, label: 'Earlier grades', sub: s.open ? 'Close' : 'Review anytime', bg: '#DCD2F6', fg: ink, subFg: '#5B3FB0', tap: () => set({ open: !s.open }), open: s.open, rows });
+    const cur = (n) => ({ num: String(n), label: 'Unit 1 of 7', sub: 'You are here', bg: ink, fg: '#fff', subFg: 'rgba(255,255,255,.6)', dots: true });
+    const above = (n, sub, extra) => ({ num: String(n), label: 'Locked', sub, bg: '#E6EAEE', fg: 'rgba(35,37,43,.45)', subFg: 'rgba(35,37,43,.55)', ...extra });
+    const stackPlaced = { cards: mkStack([earlier('3–5', [3, 4, 5]), cur(6), above(7, 'After the Grade 6 License'), above(8, 'After the Grade 7 License', { op: .6 })]) };
+    const stacks = [
+      { kick: 'Recommended', title: 'Placed in grade 6', cards: stackPlaced.cards, foot: 'unit 1 of 7 · 3 of 128 lessons · the License opens after unit 7' },
+      { kick: 'Edge case', title: 'A true grade-3 student', cards: mkStack([cur(3), above(4, 'After the Grade 3 License'), above('5–8', 'One License at a time', { op: .6 })]), foot: 'Nothing below. The stack starts with her.' },
+      { kick: 'Edge case', title: 'A grade-8 student', cards: mkStack([earlier('3–7', [3, 4, 5, 6, 7]), cur(8), { num: 'Grad', numSize: '34px', label: 'Graduation', sub: 'After the Grade 8 License', bg: '#E6EAEE', fg: 'rgba(35,37,43,.45)', subFg: '#6E4FCC' }]), foot: 'Graduation is the last card. Passing turns it #6E4FCC.' },
+      { kick: 'Alternative', title: 'Per-grade review cards', cards: mkStack([3, 4, 5].map((n, i) => ({ num: String(n), label: 'Placed past', sub: 'Review →', bg: ['#E9E3FA', '#E2DAF8', '#DCD2F6'][i], fg: ink, subFg: '#5B3FB0' })).concat([cur(6), above(7, 'After the Grade 6 License')])), foot: 'Same tint, one card per grade. Taller, and it repeats one message three times.' }
+    ];
+
+    const tints = ['#8F97DE', '#F4BE93', '#7CBF8B', '#F0AFCE', '#5E9FE0', '#D9DE62'];
+    const mix = (c) => `color-mix(in oklab, ${c} 24%, white)`;
+    const wishRaw = [
+      { name: 'Lego Speed Champions', meta: 'Amazon · $24.00', initial: 'A', tint: 1, g: 'toy', state: 'miss', pct: '60%', toGo: '$9.50 to go', btn: 'Save for it' },
+      { name: 'Sticker book', meta: 'Target · $6.00', initial: 'T', tint: 3, g: 'book', state: 'miss', pct: '100%', toGo: 'You have enough', btn: 'Ask for it', ink: true },
+      { name: 'Watercolor set', meta: 'Michaels · $12.00', initial: 'M', tint: 2, g: 'art', state: 'hit', pct: '100%', toGo: 'You have enough', btn: 'Ask for it', ink: true },
+      { name: 'Something from etsy.com', meta: 'Add a name and price', initial: '', tint: 0, g: '', state: 'link', pct: '0%', toGo: 'Price not set', btn: 'Add details' }
+    ];
+    const wish = wishRaw.map(w => {
+      const L = s.loading, miss = !L && w.state === 'miss', link = !L && w.state === 'link', hit = !L && w.state === 'hit';
+      return { ...w, loading: L, ready: !L, showInitial: miss, showGlyph: miss, showLink: link, showPhoto: hit,
+        gToy: w.g === 'toy', gBook: w.g === 'book', gArt: w.g === 'art',
+        tileBg: L ? 'linear-gradient(90deg,#EEF1F4 0,#F7F8FA 50%,#EEF1F4 100%)' : miss ? mix(tints[w.tint]) : link ? '#EEF1F4' : '#fff',
+        anim: L ? 'kShim 1.2s linear infinite' : 'none', pct: L ? '0%' : w.pct,
+        btnBg: w.ink ? ink : '#F5F7F9', btnFg: w.ink ? '#fff' : ink };
+    });
+
+    const sets = [
+      { title: 'Before', tag: 'retired', names: ['Fraction Factory', 'Trade Tycoon', 'Weather Station', 'Equation Lab'], why: 'Describes the math. Fine for a 13-year-old, but an 8-year-old has never been to a factory or a lab.' },
+      { title: 'Places she knows', tag: 'brief', names: ['The Kitchen', 'The Store', 'The Weather', 'The Workshop'], why: 'Real places, words she already uses. "The Weather" is the one name that is a thing, not a place.' },
+      { title: "The stand's point of view", tag: 'brief', names: ['The Recipe', 'The Register', 'The Weather', 'The Fix-It Desk'], why: 'Ties every world to the business. Reads well with the stand, but less so when she does fractions without it.' },
+      { title: 'Plain and bold', tag: 'brief', names: ['Slices', 'Money', 'Weather', 'Puzzles'], why: 'Short and confident. "Puzzles" undersells equations, and none of these names is a place.' },
+      { title: 'Places, tightened', tag: 'picked ✓', names: ['The Kitchen', 'The Market', 'Outside', 'The Workshop'], why: 'Every name is somewhere she can stand. "Outside" is where it drops below zero, and "The Market" covers deals and rates without sounding young.' }
+    ];
+    const blobs = ['blobs/Ice_cream.svg', 'blobs/Cash.svg', 'blobs/Rain.svg', 'blobs/Learning.svg'];
+    const topics = ['fractions ↔ decimals & percents', 'ratios, percents & proportions', 'negative numbers (below zero!)', 'one & two-step equations'];
+    const shorts = ['fractions · decimals', 'ratios · rates · money', 'negatives · temperature', 'equations'];
+    const nameSets = sets.map((n, i) => ({ ...n, pick: () => set({ nameIdx: i }), bg: s.nameIdx === i ? '#fff' : 'transparent', ring: s.nameIdx === i ? '6px #23252B' : '1.5px rgba(35,37,43,.3)',
+      chips: n.names.map((name, j) => ({ name, dot: W[j][1], bg: s.nameIdx === i ? '#F5F7F9' : '#fff' })) }));
+    const ps = sets[s.nameIdx];
+    const pickedSet = { title: ps.title, why: ps.why, n1: ps.names[1], rows: ps.names.map((name, j) => ({ name, dot: W[j][1], topic: topics[j], short: shorts[j], blob: blobs[j] })) };
+
+    const dataNotes = [
+      { title: 'Teach step (16)', body: 'A lesson\'s New idea is 3–5 steps. Each step picks a layout and carries one note for the cheat sheet. Next stays disabled until solved is true. Wrong attempts are free and show the hint as "Not yet. Here is the step: …".',
+        code: "TeachStep = {\n  layout: 'walk' | 'faceoff' | 'line' | 'bar',\n  prompt: string, speak?: string,\n  walk?:    { rows: [{ value, how, result? }] },\n  faceoff?: { cards: [{ label, count, price, each }], answer: idx, why },\n  line?:    { min, max, start, delta, answer, unit: '°' },\n  bar?:     { parts, target, context },\n  hint: string,\n  takeaway: string   // written to the cheat sheet\n}\nLessonState += { stepIdx, solved[], notes[] }" },
+      { title: 'Takeaway + voice (16k, 16m)', body: 'Solving a step opens the green band. "Write it down" pushes the takeaway into notes[], fills one cell on the Notes counter and tints the new line #EAF6EE for one beat. Voice mode comes from the grade band. Band a auto-reads each step on open. Band b shows the companion disc only. Band c is the pill.',
+        code: "voice = band === 'a' ? 'companion'\n      : band === 'b' ? 'disc' : 'pill'\ncompanion: autoRead on step open,\n  controls Again · Slower (rate .8) · Quiet\n  (Quiet mutes for the session, not forever)" },
+      { title: 'Week plan (17)', body: 'Built from the 128-day sequence and the calendar. Weekends and days the grown-up marks off are rest days. Quiz days and the License come from the unit structure, not the date.',
+        code: "WeekDay = {\n  date, dow,\n  kind: 'lesson' | 'quiz' | 'test' | 'rest',\n  status: 'done' | 'today' | 'upcoming',\n  lessonId?, title?, worldId?,\n  earnedCents?   // done days only\n}\nWeek = { start, days: WeekDay[7], earnedCents }\ncomingUp = next quiz + the License (lessonsToGo)" },
+      { title: 'Grade stack (18)', body: 'The state of each grade comes from placement and test history. "Placed" and "passed" are separate states: placed-past grades never show test chips or the purple ramp.',
+        code: "GradeState =\n  'placed'   // below placement, no test taken → Earlier grades\n | 'passed'  // test passed → purple ramp + hover chips\n | 'current' | 'locked' | 'graduation'\nlocked.hint = `After the Grade ${n-1} License`\nfold: contiguous 'placed' grades → one card\n      4+ contiguous locked grades → one card" },
+      { title: 'Wishlist tile (19)', body: 'The preview service fills image, title and price. The tile renders from whatever has arrived.',
+        code: "WishItem = { url, domain, store, title?, priceCents?,\n  imageUrl?, category?, fetch: 'pending'|'ok'|'miss' }\ntile = pending ? 'loading'\n     : imageUrl ? 'photo'\n     : store ? 'initial'   // tint = hash(domain) % 6\n     : 'link'\npending > 4s → resolve as miss" },
+      { title: 'World names (20)', body: 'Proposal only. The renaming is a string table keyed by worldId, so whichever set the owner picks ships as one change.',
+        code: "worlds = {\n  fractions:  { color: '#F0AFCE', name },\n  ratios:     { color: '#F4BE93', name },\n  integers:   { color: '#5E9FE0', name },\n  equations:  { color: '#8F97DE', name }\n}" }
+    ];
+
+    return {
+      teach, walkRows: walkRows, faceCards, faceMsg, faceMsgFg,
+      ticks, ticksSm, lineShowArc: lineDone, lineArcL: col(-3) + '%', lineArcW: (col(5) - col(-3)) + '%',
+      lineReadout: s.line == null ? '5° − 8° = ?' : lineDone ? '5° − 8° = −3°' : `${s.line}°?`, lineFg: lineDone ? '#2E7C46' : s.line == null ? ink : '#C2463B', lineMsg, lineMsgFg: lineDone ? '#2E7C46' : s.line == null ? 'rgba(35,37,43,.6)' : '#C2463B',
+      barSegs, barFrac: `${shaded}/8`, barFg: shaded === 3 ? '#2E7C46' : shaded > 3 ? '#C2463B' : ink, barMsg, barMsgFg: shaded === 3 ? '#2E7C46' : shaded > 3 ? '#C2463B' : 'rgba(35,37,43,.6)',
+      takeBg: s.written ? '#F5F7F9' : '#EAF6EE', takeKick: s.written ? 'Saved to your notes · 2 of 4' : 'For your notes', takeBtn: s.written ? 'Written ✓' : 'Write it down', takeBtnBg: s.written ? '#EAF6EE' : ink, takeBtnFg: s.written ? '#2E7C46' : '#fff',
+      write: () => set({ written: !s.written }),
+      voiceLine: s.playing ? 'Reading it to you…' : 'Want to hear it again?', wave: this.wave(false), waveSm: this.wave(true),
+      speakSlow: () => this.speak('4 granola bars cost 6 dollars. What does one bar cost?', .8), hush: () => { try { speechSynthesis.cancel(); } catch (e) {} set({ playing: false }); },
+      wk, coming, prevBg: s.week > 0 ? ink : '#D9DEE4', nextBg: s.week < 2 ? ink : '#D9DEE4',
+      prevWeek: () => set({ week: Math.max(0, s.week - 1) }), nextWeek: () => set({ week: Math.min(2, s.week + 1) }), goLicense: () => set({ week: 2 }),
+      stackPlaced, stacks,
+      wish, swatches: tints.map(mix), replay: () => { set({ loading: true }); clearTimeout(this.t); this.t = setTimeout(() => this.setState({ loading: false }), 1800); },
+      nameSets, pickedSet, dataNotes
+    };
+  }
+}
+</script>
+</body>
+</html>

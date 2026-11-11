@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E4E7EB;font-family:'Inter Tight',sans-serif;color:#23252B;-webkit-font-smoothing:antialiased}a{color:#2E7C46}a:hover{color:#23252B}</style>
+</helmet>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 6 · Grade page (locked)</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Report card on the left (<a href="#6e">6e</a> desktop, <a href="#6g">6g</a> phone): each world gets Solid / Shaky / Not yet, never a percentage or letter. Skills and run history on the sheet. Click 7 or 6 at the top to switch grades.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+
+  <div id="6e" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">6e</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Report card</span></div>
+    <div data-screen-label="6e Grade page report card" style="width:1280px;background:#F5F7F9;border-radius:14px;overflow:hidden;padding-bottom:48px;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="font-size:21px;font-weight:900;letter-spacing:-.03em;flex:1;">Kampus</div>
+        <div style="display:flex;gap:4px;">
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Play</div>
+          <div style="padding:9px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14.5px;font-weight:700;">Grades</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">My Stand</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Shop</div>
+          <div style="padding:9px 18px;border-radius:999px;font-size:14.5px;font-weight:700;color:rgba(35,37,43,.7);">Rewards</div>
+        </div>
+        <div style="flex:1;display:flex;justify-content:flex-end;">
+          <div style="width:38px;height:38px;border-radius:999px;background:#F0AFCE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;">T</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;align-items:flex-end;gap:16px;">
+          <div style="font-weight:300;letter-spacing:-.06em;font-variant-numeric:tabular-nums;font-size:120px;line-height:.8;">{{ gp.n }}</div>
+          <div style="display:flex;flex-direction:column;gap:6px;padding-bottom:4px;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Grade</div>
+            <span style="align-self:flex-start;padding:5px 11px;border-radius:999px;background:{{ gp.statusBg }};color:{{ gp.statusFg }};font-size:12.5px;font-weight:700;">{{ gp.status }}</span>
+          </div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;background:#fff;padding:26px 24px 24px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:2px;">
+            <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Kampus School</div>
+            <div style="font-size:24px;font-weight:600;letter-spacing:-.02em;">Report card</div>
+            <div style="font-size:13.5px;font-weight:600;color:rgba(35,37,43,.6);">{{ gp.rc.term }}</div>
+          </div>
+          <div style="border-top:2px solid #23252B;"></div>
+          <div style="display:flex;flex-direction:column;">
+            <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:6px;"><span>World</span><span>So far</span></div>
+            <sc-for list="{{ gp.rc.worlds }}" as="w" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid #EEECE7;">
+                <span style="width:10px;height:10px;border-radius:999px;background:{{ w.color }};flex:none;"></span>
+                <div style="flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;"><span style="font-size:15px;font-weight:600;">{{ w.name }}</span><span style="font-size:12.5px;color:rgba(35,37,43,.55);">{{ w.skill }}</span></div>
+                <span style="padding:4px 10px;border-radius:999px;background:{{ w.vBg }};color:{{ w.vFg }};font-size:12px;font-weight:700;white-space:nowrap;">{{ w.verdict }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="border-top:2px solid #23252B;"></div>
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;row-gap:8px;font-size:14.5px;font-variant-numeric:tabular-nums;">
+            <sc-for list="{{ gp.rc.facts }}" as="f" hint-placeholder-count="3">
+              <span style="font-weight:600;">{{ f.k }}</span><span style="text-align:right;font-weight:700;color:{{ f.color }};">{{ f.v }}</span>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;padding:14px 16px;background:#F5F7F9;border-radius:14px;">
+            <div style="font-size:12px;font-weight:700;color:rgba(35,37,43,.55);">Note</div>
+            <div style="font-size:15px;line-height:1.45;text-wrap:pretty;">{{ gp.rc.note }}</div>
+          </div>
+          <div style="padding:13px 20px;border-radius:999px;background:{{ gp.rc.ctaBg }};color:{{ gp.rc.ctaFg }};font-size:14px;font-weight:700;cursor:pointer;">{{ gp.rc.cta }}</div>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:6px;padding:0 4px 22px;">
+          <span style="font-size:14px;font-weight:700;margin-right:8px;">All grades</span>
+          <sc-for list="{{ gradePicker }}" as="g" hint-placeholder-count="6">
+            <div onClick="{{ g.pick }}" style="width:44px;height:44px;border-radius:999px;background:{{ g.bg }};color:{{ g.fg }};display:flex;align-items:center;justify-content:center;font-weight:300;letter-spacing:-.03em;font-variant-numeric:tabular-nums;font-size:22px;cursor:{{ g.cursor }};">{{ g.n }}</div>
+          </sc-for>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:#fff;border-radius:28px;overflow:hidden;">
+          <div style="display:flex;align-items:baseline;gap:12px;padding:24px 32px 14px;">
+            <div style="font-size:15px;font-weight:700;flex:1;">Skills</div>
+            <div style="font-size:13px;font-weight:600;color:#8A8578;">{{ gp.skillSum }}</div>
+          </div>
+          <sc-for list="{{ gp.skills }}" as="s" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 240px 56px;align-items:center;gap:20px;padding:14px 32px;border-top:1px solid #EEECE7;">
+              <div style="display:flex;flex-direction:column;gap:2px;min-width:0;"><div style="font-size:16px;font-weight:600;">{{ s.name }}</div><div style="font-size:12.5px;font-weight:600;color:#8A8578;">{{ s.sub }}</div></div>
+              <div style="height:8px;border-radius:999px;background:#EEF1F4;overflow:hidden;"><div style="height:8px;border-radius:999px;width:{{ s.w }};background:{{ s.color }};"></div></div>
+              <div style="font-size:13.5px;font-weight:700;text-align:right;color:{{ s.numColor }};">{{ s.label }}</div>
+            </div>
+          </sc-for>
+          <div style="display:flex;align-items:baseline;gap:12px;padding:28px 32px 14px;border-top:1px solid #EEECE7;">
+            <div style="font-size:15px;font-weight:700;flex:1;">Run history</div>
+            <div style="font-size:13px;font-weight:600;color:#8A8578;">{{ gp.runSum }}</div>
+          </div>
+          <sc-for list="{{ gp.runs }}" as="r" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:72px minmax(0,1fr) 130px 60px 64px;align-items:center;gap:16px;padding:13px 32px;border-top:1px solid #EEECE7;">
+              <span style="font-size:13px;font-weight:700;color:#8A8578;">{{ r.date }}</span>
+              <span style="font-size:15px;font-weight:600;">{{ r.title }}</span>
+              <span style="justify-self:start;padding:3px 9px;border-radius:999px;background:{{ r.tint }};font-size:11.5px;font-weight:700;">{{ r.world }}</span>
+              <span style="font-size:13.5px;font-weight:700;">{{ r.score }}</span>
+              <span style="font-size:13.5px;font-weight:800;color:#2E7C46;text-align:right;">{{ r.pay }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="6g" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">6g</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone · report card · follows the 6e switch</span></div>
+    <div data-screen-label="6g Grade page phone report card" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+      <div style="padding:58px 22px 16px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="padding:8px 14px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;">←</span>
+          <div style="flex:1;"></div>
+          <sc-for list="{{ gradePicker }}" as="g" hint-placeholder-count="6">
+            <div onClick="{{ g.pick }}" style="width:34px;height:34px;border-radius:999px;background:{{ g.bg }};color:{{ g.fg }};display:flex;align-items:center;justify-content:center;font-weight:300;font-size:17px;cursor:{{ g.cursor }};">{{ g.n }}</div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:12px;">
+          <div style="font-weight:300;letter-spacing:-.06em;font-variant-numeric:tabular-nums;font-size:72px;line-height:.8;">{{ gp.n }}</div>
+          <span style="padding:5px 11px;border-radius:999px;background:{{ gp.statusBg }};color:{{ gp.statusFg }};font-size:12px;font-weight:700;margin-bottom:2px;">{{ gp.status }}</span>
+        </div>
+      </div>
+      <div style="margin:0 14px;background:#fff;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px;">
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <div style="flex:1;font-size:18px;font-weight:600;letter-spacing:-.015em;">Report card</div>
+          <div style="font-size:12px;font-weight:600;color:rgba(35,37,43,.6);">{{ gp.rc.term }}</div>
+        </div>
+        <div style="border-top:2px solid #23252B;"></div>
+        <sc-for list="{{ gp.rc.worlds }}" as="w" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid #EEECE7;">
+            <span style="width:9px;height:9px;border-radius:999px;background:{{ w.color }};flex:none;"></span>
+            <span style="flex:1;font-size:14px;font-weight:600;">{{ w.name }}</span>
+            <span style="padding:3px 9px;border-radius:999px;background:{{ w.vBg }};color:{{ w.vFg }};font-size:11.5px;font-weight:700;">{{ w.verdict }}</span>
+          </div>
+        </sc-for>
+        <div style="border-top:2px solid #23252B;"></div>
+        <div style="font-size:13.5px;line-height:1.4;text-wrap:pretty;">{{ gp.rc.note }}</div>
+      </div>
+      <div style="flex:1;margin-top:14px;background:#fff;border-radius:28px 28px 0 0;overflow:hidden;">
+        <div style="padding:18px 22px 8px;font-size:14px;font-weight:700;">Skills · {{ gp.skillSum }}</div>
+        <sc-for list="{{ gp.skills }}" as="s" hint-placeholder-count="6">
+          <div style="display:flex;flex-direction:column;gap:7px;padding:10px 22px;border-top:1px solid #EEECE7;">
+            <div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-size:14.5px;font-weight:600;">{{ s.name }}</span><span style="font-size:12.5px;font-weight:700;color:{{ s.numColor }};">{{ s.label }}</span></div>
+            <div style="height:6px;border-radius:999px;background:#EEF1F4;overflow:hidden;"><div style="height:6px;border-radius:999px;width:{{ s.w }};background:{{ s.color }};"></div></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</section>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 5 · Mission flow (locked)</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">Built on the locked 3b/4a style. <a href="#5a">5a</a> is one playable mission: a five-step lesson (big idea with read-aloud, tap-to-shade bar, split the bill, spot the mistake, try-it check), six questions with the help stack, then results.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+
+  <div id="5a" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">5a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Desktop · mission flow · playable</span></div>
+    <div data-screen-label="5a Mission desktop" style="width:1280px;min-height:820px;background:#F5F7F9;border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div onClick="{{ restart }}" style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:18px;">
+          <sc-for list="{{ phases }}" as="p" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:13px;font-weight:700;color:{{ p.labelColor }};">{{ p.label }}</span>
+              <div style="display:flex;gap:4px;">
+                <sc-for list="{{ p.segs }}" as="s" hint-placeholder-count="3"><span style="width:{{ p.segW }};height:6px;border-radius:999px;background:{{ s }};"></span></sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;background:#fff;">
+            <span style="font-size:12.5px;font-weight:700;">Teach Tokens</span>
+            <div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots }}" as="d" hint-placeholder-count="3"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div>
+          </div>
+          <div style="padding:8px 14px;border-radius:999px;background:{{ modeBg }};color:{{ modeFg }};font-size:12.5px;font-weight:700;">{{ modeLabel }}</div>
+        </div>
+      </div>
+
+      <sc-if value="{{ isLesson }}" hint-placeholder-val="{{ true }}">
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Kampus Class · 2–3 min</div>
+          <div style="font-size:28px;font-weight:600;line-height:1.25;letter-spacing:-.025em;">Tipping with percents</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:14px;padding:4px 4px 0;">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;">
+            <div style="font-size:15px;font-weight:700;">Cheat sheet</div>
+            <div style="font-size:12.5px;font-weight:600;color:rgba(35,37,43,.55);">{{ notesCount }}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;">
+            <sc-for list="{{ notes }}" as="c" hint-placeholder-count="5">
+              <div onClick="{{ c.go }}" style="display:grid;grid-template-columns:24px minmax(0,1fr);column-gap:14px;cursor:{{ c.cursor }};">
+                <div style="display:flex;flex-direction:column;align-items:center;">
+                  <span style="width:24px;height:24px;box-sizing:border-box;border-radius:999px;background:{{ c.dotBg }};border:{{ c.dotBorder }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex:none;">{{ c.mark }}</span>
+                  <span style="flex:1;width:1.5px;min-height:14px;background:{{ c.lineColor }};"></span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;padding:0 0 22px;">
+                  <div style="font-size:20px;font-weight:700;letter-spacing:-.015em;color:{{ c.titleColor }};">{{ c.title }}</div>
+                  <sc-if value="{{ c.note }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:17px;font-weight:400;line-height:1.4;color:#23252B;text-wrap:pretty;">{{ c.note }}</div>
+                  </sc-if>
+                  <sc-if value="{{ c.isNow }}" hint-placeholder-val="{{ false }}">
+                    <div style="font-size:16px;font-weight:400;line-height:1.4;color:rgba(35,37,43,.55);">Solve this step to add a note.</div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">Trade Tycoon</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Percent of a number</span>
+          <div style="flex:1;"></div>
+          <div onClick="{{ readStep }}" style="display:flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;border-radius:999px;background:#fff;cursor:pointer;" style-hover="background:#E6EAEE;">
+            <span style="width:32px;height:32px;border-radius:999px;background:#23252B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;">{{ readIcon }}</span>
+            <span style="font-size:13.5px;font-weight:700;">{{ readLabel }}</span>
+          </div>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:#fff;border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 36px;min-height:380px;box-sizing:border-box;display:flex;flex-direction:column;gap:28px;">
+            <sc-if value="{{ step0 }}" hint-placeholder-val="{{ true }}">
+              <div style="font-size:36px;font-weight:600;line-height:1.2;letter-spacing:-.025em;max-width:640px;text-wrap:pretty;">A percent means “out of 100.” To find <span style="background:#FBE3CF;padding:0 6px;border-radius:8px;">10%</span> of anything, move the decimal one place left.</div>
+              <div style="display:flex;align-items:center;gap:24px;">
+                <div style="display:flex;flex-direction:column;gap:6px;"><span style="font-size:12.5px;font-weight:700;color:#8A8578;">Dinner</span><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:72px;line-height:1;">$48.00</span></div>
+                <span style="font-size:28px;color:#8A8578;">→</span>
+                <div style="display:flex;flex-direction:column;gap:6px;"><span style="font-size:12.5px;font-weight:700;color:#8A8578;">10%</span><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:72px;line-height:1;color:#2E7C46;">$4.80</span></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ step1 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:36px;font-weight:600;line-height:1.2;letter-spacing:-.025em;max-width:640px;text-wrap:pretty;">Tap the bar to shade 15% of the $48 bill.</div>
+              <div style="display:flex;flex-direction:column;gap:12px;">
+                <div style="display:grid;grid-template-columns:repeat(20,minmax(0,1fr));gap:3px;">
+                  <sc-for list="{{ bar }}" as="b" hint-placeholder-count="20">
+                    <div onClick="{{ b.pick }}" style="height:72px;border-radius:8px;background:{{ b.bg }};cursor:pointer;transition:background .15s;" style-hover="opacity:.85;"></div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:#8A8578;"><span>0%</span><span>50%</span><span>100% = $48</span></div>
+              </div>
+              <div style="display:flex;align-items:baseline;gap:16px;">
+                <span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:64px;line-height:1;color:{{ shadeColor }};">{{ shadeVal }}</span>
+                <span style="font-size:16px;font-weight:600;color:{{ shadeColor }};">{{ shadeNote }}</span>
+              </div>
+            </sc-if>
+            <sc-if value="{{ step2 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:36px;font-weight:600;line-height:1.2;letter-spacing:-.025em;max-width:640px;text-wrap:pretty;">{{ splitPrompt }}</div>
+              <sc-if value="{{ notSplit }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ doSplit }}" style="align-self:flex-start;display:flex;align-items:center;gap:18px;padding:26px 30px;border-radius:20px;background:#EAF6EE;border:1.5px dashed transparent;cursor:pointer;" style-hover="background:#DDF0E3;">
+                  <span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:64px;line-height:1;color:#2E7C46;">$48</span>
+                  <span style="padding:10px 16px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;">Split into 10 →</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ isSplit }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;">
+                  <sc-for list="{{ piles }}" as="p" hint-placeholder-count="10">
+                    <div onClick="{{ p.pick }}" style="width:{{ p.size }};height:{{ p.size }};border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;cursor:pointer;transition:background .15s,transform .15s;" style-hover="transform:scale(1.05);">{{ p.label }}</div>
+                  </sc-for>
+                </div>
+                <div style="display:flex;align-items:center;gap:16px;">
+                  <span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:56px;line-height:1;color:{{ splitColor }};">{{ splitVal }}</span>
+                  <span style="font-size:16px;font-weight:600;color:{{ splitColor }};flex:1;">{{ splitNote }}</span>
+                  <sc-if value="{{ canHalve }}" hint-placeholder-val="{{ false }}">
+                    <div onClick="{{ doHalve }}" style="padding:12px 20px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;">Cut a pile in half</div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ step3 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:36px;font-weight:600;line-height:1.2;letter-spacing:-.025em;max-width:640px;text-wrap:pretty;">Sam worked out 15% of $48. One line is wrong. Tap it.</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <sc-for list="{{ samLines }}" as="l" hint-placeholder-count="3">
+                  <div onClick="{{ l.pick }}" style="display:flex;align-items:center;gap:16px;padding:18px 22px;border-radius:20px;background:{{ l.bg }};border:{{ l.border }};cursor:pointer;">
+                    <span style="width:28px;height:28px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ l.n }}</span>
+                    <span style="font-size:22px;font-weight:600;letter-spacing:-.015em;font-variant-numeric:tabular-nums;flex:1;">{{ l.text }}</span>
+                    <span style="font-size:13px;font-weight:700;color:{{ l.tagColor }};">{{ l.tag }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="font-size:16px;font-weight:600;color:{{ samColor }};">{{ samNote }}</div>
+            </sc-if>
+            <sc-if value="{{ step4 }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:36px;font-weight:600;line-height:1.2;letter-spacing:-.025em;max-width:640px;">Your turn. What's 10% of $60?</div>
+              <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ tryAns }}" as="a" hint-placeholder-count="4">
+                  <div onClick="{{ a.pick }}" style="padding:22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</div>
+                </sc-for>
+              </div>
+              <div style="font-size:16px;font-weight:600;color:{{ tryColor }};">{{ tryNote }}</div>
+            </sc-if>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div onClick="{{ back }}" style="padding:14px 22px;border-radius:999px;background:#F5F7F9;font-size:15px;font-weight:700;cursor:pointer;opacity:{{ backOp }};" style-hover="background:#E6EAEE;">← Back</div>
+            <div style="flex:1;"></div>
+            <sc-if value="{{ showBlitzPick }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:13.5px;font-weight:600;color:rgba(35,37,43,.6);">{{ blitzNote }}</span>
+                <div style="display:flex;background:#F5F7F9;border-radius:999px;padding:3px;">
+                  <sc-for list="{{ modePick }}" as="m" hint-placeholder-count="2">
+                    <div onClick="{{ m.pick }}" style="padding:9px 16px;border-radius:999px;background:{{ m.bg }};color:{{ m.fg }};font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ m.label }}</div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <div onClick="{{ next }}" style="padding:14px 28px;border-radius:999px;background:{{ nextBg }};color:{{ nextFg }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ nextLabel }}</div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isQuiz }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.25;letter-spacing:-.025em;">Need a hand?</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Hints are free. Teach uses a token, full pay.</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;">
+          <sc-for list="{{ help }}" as="c" hint-placeholder-count="4">
+            <div onClick="{{ c.toggle }}" style="position:relative;z-index:{{ c.z }};margin-top:{{ c.mt }};background:{{ c.bg }};border-radius:{{ c.radius }};padding:{{ c.pad }};display:flex;flex-direction:column;gap:12px;cursor:pointer;box-shadow:{{ c.sh }};transition:padding .25s cubic-bezier(.32,.72,.33,1);">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="font-size:20px;font-weight:600;letter-spacing:-.02em;flex:1;">{{ c.title }}</div>
+                <sc-if value="{{ c.isTeach }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:4px;"><sc-for list="{{ tokenDots }}" as="d" hint-placeholder-count="3"><span style="width:8px;height:8px;border-radius:999px;background:{{ d }};box-shadow:inset 0 0 0 1.5px #23252B;"></span></sc-for></div></sc-if>
+                <div style="padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.55);font-size:12px;font-weight:700;">{{ c.meta }}</div>
+              </div>
+              <sc-if value="{{ c.body }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:15.5px;font-weight:600;line-height:1.45;">{{ c.body }}</div>
+              </sc-if>
+              <sc-if value="{{ c.confirm }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                  <div style="font-size:15px;font-weight:600;line-height:1.45;">{{ confirmText }}</div>
+                  <div style="display:flex;gap:8px;">
+                    <div onClick="{{ tryFirst }}" style="padding:11px 18px;border-radius:999px;background:#23252B;color:#fff;font-size:14px;font-weight:700;" style-hover="background:#3A3D45;">I'll try first</div>
+                    <div onClick="{{ teachAnyway }}" style="padding:11px 18px;border-radius:999px;border:1.5px solid #23252B;font-size:14px;font-weight:700;" style-hover="background:rgba(255,255,255,.4);">{{ useLabel }}</div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">Trade Tycoon</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">{{ qTag }}</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:#fff;border-radius:28px;overflow:hidden;">
+          <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:32px;min-height:340px;box-sizing:border-box;opacity:{{ qOp }};transition:opacity .25s;">
+            <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">{{ qText }}</div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+              <sc-for list="{{ ans }}" as="a" hint-placeholder-count="4">
+                <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};border:{{ a.border }};cursor:pointer;transition:background .15s;">
+                  <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;">{{ a.key }}</span>
+                  <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;display:flex;align-items:center;gap:16px;min-width:0;">
+              <sc-if value="{{ showPay }}" hint-placeholder-val="{{ false }}">
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:44px;line-height:1;color:#2E7C46;">{{ payout }}</div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <div style="font-size:16px;font-weight:600;color:{{ fbColor }};">{{ fb }}</div>
+                <sc-if value="{{ showPay }}" hint-placeholder-val="{{ false }}">
+                  <div style="display:flex;flex-wrap:wrap;gap:4px;"><sc-for list="{{ pills }}" as="p" hint-placeholder-count="2"><span style="padding:4px 10px;border-radius:999px;background:{{ p.bg }};color:{{ p.fg }};font-size:12px;font-weight:700;">{{ p.t }}</span></sc-for></div>
+                </sc-if>
+              </div>
+            </div>
+            <div onClick="{{ check }}" style="padding:14px 28px;border-radius:999px;background:{{ chkBg }};color:{{ chkFg }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ chkLabel }}</div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Mission complete</div>
+          <div style="font-size:40px;font-weight:700;line-height:1.1;letter-spacing:-.03em;">{{ headline }}</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;">
+          <sc-for list="{{ resultBands }}" as="c" hint-placeholder-count="3">
+            <div style="position:relative;z-index:{{ c.z }};margin-top:{{ c.mt }};background:{{ c.bg }};color:{{ c.fg }};border-radius:{{ c.radius }};padding:24px 22px 32px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;box-shadow:{{ c.sh }};">
+              <div style="font-size:14px;font-weight:700;opacity:.8;">{{ c.label }}</div>
+              <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:48px;line-height:.9;">{{ c.value }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:#F4BE93;font-size:12.5px;font-weight:700;">Trade Tycoon</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">Tipping with percents · 6 questions</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:#fff;border-radius:28px;overflow:hidden;">
+          <sc-for list="{{ resultRows }}" as="r" hint-placeholder-count="6">
+            <div style="display:flex;align-items:center;gap:16px;padding:16px 32px;border-top:{{ r.rule }};">
+              <span style="width:32px;height:32px;border-radius:999px;background:{{ r.dotBg }};color:{{ r.dotFg }};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex:none;">{{ r.mark }}</span>
+              <div style="flex:1;min-width:0;font-size:16px;font-weight:600;line-height:1.3;">{{ r.text }}</div>
+              <span style="font-size:13px;font-weight:700;color:#8A8578;white-space:nowrap;">{{ r.note }}</span>
+              <span style="font-size:14px;font-weight:800;color:#2E7C46;min-width:44px;text-align:right;">{{ r.pay }}</span>
+            </div>
+          </sc-for>
+          <div style="display:flex;align-items:center;gap:10px;padding:20px 32px;border-top:1px solid #EEECE7;">
+            <div style="flex:1;font-size:15px;font-weight:600;color:rgba(35,37,43,.6);">{{ resultNote }}</div>
+            <div onClick="{{ restart }}" style="padding:14px 22px;border-radius:999px;background:#F5F7F9;font-size:15px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">Run it back</div>
+            <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;" style-hover="background:#3A3D45;">Back to Today →</div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div id="5b" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">5b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Phone · lesson, question, results</span></div>
+    <div style="display:flex;gap:32px;">
+      <div data-screen-label="5b Lesson phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+        <div style="padding:58px 22px 16px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="padding:8px 14px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;">✕</span>
+            <div style="flex:1;display:flex;gap:4px;"><span style="flex:1;height:5px;border-radius:999px;background:#58B372;"></span><span style="flex:1;height:5px;border-radius:999px;background:#23252B;"></span><span style="flex:1;height:5px;border-radius:999px;background:#E6EAEE;"></span><span style="flex:1;height:5px;border-radius:999px;background:#E6EAEE;"></span><span style="flex:1;height:5px;border-radius:999px;background:#E6EAEE;"></span></div>
+            <span style="font-size:12.5px;font-weight:700;">Step 2 of 5</span>
+          </div>
+          <div style="font-size:24px;font-weight:600;line-height:1.25;letter-spacing:-.02em;">Tipping with percents</div>
+        </div>
+        <div style="flex:1;background:#fff;border-radius:32px 32px 0 0;padding:26px 22px;display:flex;flex-direction:column;gap:22px;">
+          <div style="display:flex;align-items:center;gap:10px;"><span style="width:36px;height:36px;border-radius:999px;background:#23252B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;">▶</span><span style="font-size:13.5px;font-weight:700;">Read it to me</span></div>
+          <div style="font-size:26px;font-weight:600;line-height:1.22;letter-spacing:-.02em;">Tap the bar to shade 15% of the $48 bill.</div>
+          <div style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;">
+            <sc-for list="{{ phoneBar }}" as="c" hint-placeholder-count="20"><div style="height:44px;border-radius:6px;background:{{ c }};"></div></sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:56px;line-height:1;color:#2E7C46;">$7.20</span><span style="font-size:14px;font-weight:600;color:#2E7C46;">That's it. 10% + 5% = $7.20</span></div>
+          <div style="flex:1;"></div>
+          <div style="display:flex;gap:8px;"><div style="padding:16px 20px;border-radius:999px;background:#F5F7F9;font-size:15px;font-weight:700;">←</div><div style="flex:1;padding:16px 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;">Next step</div></div>
+        </div>
+      </div>
+      <div data-screen-label="5b Question phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+        <div style="padding:58px 22px 16px;display:flex;flex-direction:column;gap:14px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="padding:8px 14px;border-radius:999px;background:#fff;font-size:13px;font-weight:700;">✕</span>
+            <div style="flex:1;display:flex;gap:4px;"><span style="flex:1;height:5px;border-radius:999px;background:#58B372;"></span><span style="flex:1;height:5px;border-radius:999px;background:#23252B;"></span><span style="flex:1;height:5px;border-radius:999px;background:#E6EAEE;"></span><span style="flex:1;height:5px;border-radius:999px;background:#E6EAEE;"></span><span style="flex:1;height:5px;border-radius:999px;background:#E6EAEE;"></span><span style="flex:1;height:5px;border-radius:999px;background:#E6EAEE;"></span></div>
+            <span style="font-size:12.5px;font-weight:700;">2 of 6</span>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:32px 32px 0 0;padding:26px 22px 20px;display:flex;flex-direction:column;gap:20px;">
+          <span style="align-self:flex-start;padding:4px 10px;border-radius:999px;background:#F4BE93;font-size:11.5px;font-weight:700;">Trade Tycoon</span>
+          <div style="font-size:26px;font-weight:600;line-height:1.22;letter-spacing:-.02em;">A $35 shirt is 20% off. What's the sale price?</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="padding:18px;border-radius:18px;background:#F5F7F9;font-weight:300;letter-spacing:-.04em;font-size:28px;">$7</div>
+            <div style="padding:18px;border-radius:18px;background:#23252B;color:#fff;font-weight:300;letter-spacing:-.04em;font-size:28px;">$28</div>
+            <div style="padding:18px;border-radius:18px;background:#F5F7F9;font-weight:300;letter-spacing:-.04em;font-size:28px;">$30</div>
+            <div style="padding:18px;border-radius:18px;background:#F5F7F9;font-weight:300;letter-spacing:-.04em;font-size:28px;">$33</div>
+          </div>
+          <div style="padding:16px 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;">Check</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;padding:12px 10px 0;">
+          <div style="background:#FBE3CF;border-radius:20px 20px 0 0;padding:18px 18px 28px;display:flex;align-items:center;box-shadow:inset 0 .75px 0 rgba(255,255,255,.55);"><span style="flex:1;font-size:17px;font-weight:600;">Read it to me</span><span style="padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.55);font-size:11px;font-weight:700;">free</span></div>
+          <div style="margin-top:-14px;background:#F8D2B2;border-radius:20px 20px 0 0;padding:18px 18px 28px;display:flex;align-items:center;box-shadow:inset 0 .75px 0 rgba(255,255,255,.55), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06);"><span style="flex:1;font-size:17px;font-weight:600;">Hint</span><span style="padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.55);font-size:11px;font-weight:700;">free</span></div>
+          <div style="margin-top:-14px;background:#F4BE93;border-radius:20px 20px 0 0;padding:18px 18px 28px;display:flex;align-items:center;box-shadow:inset 0 .75px 0 rgba(255,255,255,.55), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06);"><span style="flex:1;font-size:17px;font-weight:600;">Show me</span><span style="padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.55);font-size:11px;font-weight:700;">free</span></div>
+          <div style="margin-top:-14px;flex:1;background:#E8C94F;border-radius:20px 20px 0 0;padding:18px 18px 28px;display:flex;align-items:flex-start;box-shadow:inset 0 .5px 0 rgba(255,255,255,.4), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06);"><span style="flex:1;font-size:17px;font-weight:600;">Teach me</span><span style="padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.55);font-size:11px;font-weight:700;">costs half</span></div>
+        </div>
+      </div>
+      <div data-screen-label="5b Results phone" style="width:390px;height:844px;background:#F5F7F9;border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+        <div style="padding:64px 24px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:rgba(35,37,43,.55);">Mission complete</div>
+          <div style="font-size:36px;font-weight:700;line-height:1.1;letter-spacing:-.03em;">Profit. W.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;padding:0 10px;">
+          <div style="background:#EAF6EE;color:#2E7C46;border-radius:20px 20px 0 0;padding:20px 18px 30px;display:flex;justify-content:space-between;align-items:flex-end;box-shadow:inset 0 .75px 0 rgba(255,255,255,.55);"><span style="font-size:13.5px;font-weight:700;">Kredits earned</span><span style="font-weight:300;letter-spacing:-.045em;font-size:44px;line-height:.9;">+$49</span></div>
+          <div style="margin-top:-14px;background:#B3A0EA;border-radius:20px 20px 0 0;padding:20px 18px 30px;display:flex;justify-content:space-between;align-items:flex-end;box-shadow:inset 0 .75px 0 rgba(255,255,255,.55), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06);"><span style="font-size:13.5px;font-weight:700;">First tries</span><span style="font-weight:300;letter-spacing:-.045em;font-size:44px;line-height:.9;">5 / 6</span></div>
+          <div style="margin-top:-14px;background:#23252B;color:#fff;border-radius:20px;padding:20px 18px 22px;display:flex;justify-content:space-between;align-items:flex-end;box-shadow:0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06);"><span style="font-size:13.5px;font-weight:700;">Grade 7 test</span><span style="font-weight:300;letter-spacing:-.045em;font-size:44px;line-height:.9;">7 / 10</span></div>
+        </div>
+        <div style="flex:1;"></div>
+        <div style="background:#fff;border-radius:32px 32px 0 0;padding:20px 22px 34px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.6);">Fixed 1 from earlier. Comeback counts.</div>
+          <div style="padding:16px 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;">Back to Today →</div>
+          <div style="padding:16px 22px;border-radius:999px;background:#F5F7F9;font-size:15px;font-weight:700;">Run it back</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { phase: 'lesson', step: 0, shade: 0, trySel: null, tryChecked: false, q: 0, sel: null, checked: false, help: null, teachOn: false, firstTry: [], tries: [], used: [], gpGrade: 7, reading: false };
+  speak(text) {
+    try {
+      const s = window.speechSynthesis; if (!s) return;
+      if (this.state.reading) { s.cancel(); this.setState({ reading: false }); return; }
+      const u = new SpeechSynthesisUtterance(text); u.rate = .95;
+      u.onend = () => this.setState({ reading: false });
+      s.speak(u); this.setState({ reading: true });
+    } catch (e) {}
+  }
+  componentWillUnmount() { try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {} }
+  renderVals() {
+    const st = this.state;
+    const ink = '#23252B', ground = '#F5F7F9';
+    const SH = first => first ? 'inset 0 .75px 0 rgba(255,255,255,.55)' : 'inset 0 .75px 0 rgba(255,255,255,.55), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06)';
+    const stack = (arr, extra) => arr.map((c, i) => Object.assign({ z: i + 1, mt: i ? '-14px' : '0px', radius: i === arr.length - 1 ? '20px' : '20px 20px 0 0', sh: SH(i === 0) }, c, extra ? extra(c, i) : {}));
+    const QS = [
+      { t: 'Dinner came to $48. You want to leave a 15% tip. How much is the tip?', tag: 'Tip on a bill', a: ['$4.80', '$6.00', '$7.20', '$9.60'], r: 2, hint: '15% is 10% plus 5%. Start with 10% of $48.', show: 'Picture $48 as 20 blocks of $2.40. Shade 3 of them.', teach: '10% of $48 is $4.80. Half of that is $2.40. $4.80 + $2.40 = $7.20.' },
+      { t: 'A $35 shirt is 20% off. What\'s the sale price?', tag: 'Discounts', a: ['$7', '$28', '$30', '$33'], r: 1, hint: 'Find 20% first, then take it away from $35.', show: 'Split $35 into 5 equal parts. Each part is 20%.', teach: '20% of $35 is $7. $35 − $7 = $28.' },
+      { t: 'Lemonade is $1.25 a cup. You raise the price 20%. What\'s the new price?', tag: 'Percent change', a: ['$1.45', '$1.50', '$1.75', '$2.50'], r: 1, hint: '10% of $1.25 is about 12.5¢. Double it.', show: 'Old price plus a 20% slice on top.', teach: '20% of $1.25 is $0.25. $1.25 + $0.25 = $1.50.' },
+      { t: 'You sold 30 of 120 cups by noon. What percent is that?', tag: 'Part of a whole', a: ['20%', '25%', '30%', '40%'], r: 1, hint: 'Simplify 30 out of 120 first.', show: '120 cups split into 4 equal groups of 30.', teach: '30 ÷ 120 = 1/4. One quarter is 25%.' },
+      { t: 'Sales tax is 8% on a $25 order. How much is the tax?', tag: 'Tax', a: ['$0.80', '$2.00', '$2.50', '$8.00'], r: 1, hint: '1% of $25 is 25¢. You need 8 of those.', show: '8 stacks of 25¢.', teach: '1% of $25 = $0.25. × 8 = $2.00.' },
+      { t: 'A price went from $40 to $50. What\'s the percent increase?', tag: 'Percent change', a: ['10%', '20%', '25%', '50%'], r: 2, hint: 'How much did it go up? Compare that to the old price.', show: 'The $10 jump next to the $40 start.', teach: 'Up $10. $10 ÷ $40 = 1/4 = 25%.' },
+    ];
+    const isLesson = st.phase === 'lesson', isQuiz = st.phase === 'quiz', isResults = st.phase === 'results';
+    const seg = (n, done, cur) => Array.from({ length: n }, (_, i) => i < done ? '#58B372' : i === cur ? ink : '#E6EAEE');
+    const lessonDone = isLesson ? st.step : 5, quizDone = isQuiz ? st.q : isResults ? 6 : 0;
+    const phases = [
+      { label: 'Lesson', segs: seg(5, lessonDone, isLesson ? st.step : -1), segW: '22px', labelColor: isLesson ? ink : 'rgba(35,37,43,.45)' },
+      { label: 'Questions', segs: seg(6, quizDone, isQuiz ? st.q : -1), segW: '22px', labelColor: isQuiz ? ink : 'rgba(35,37,43,.45)' },
+      { label: 'Results', segs: [isResults ? ink : '#E6EAEE'], segW: '28px', labelColor: isResults ? ink : 'rgba(35,37,43,.45)' },
+    ];
+    // lesson
+    const STEPS = [
+      ['The big idea', '10% = move the decimal', 'A percent means out of 100. 10% of anything: move the decimal one place left.', 'A percent means out of 100. To find 10 percent of anything, move the decimal one place left. 48 dollars becomes 4 dollars 80.'],
+      ['Shade it', 'tap the bar', 'Tap blocks to shade 15% of $48. Each block is 5%.', 'Tap the bar to shade 15 percent of the 48 dollar bill. Each block is 5 percent.'],
+      ['Split the bill', 'tap the piles', 'Break $48 into 10 equal piles. Each pile is 10%. Then build 15%.', 'Split the 48 dollar bill into 10 equal piles. Each pile is 10 percent. Now collect 15 percent.'],
+      ['Spot the mistake', 'find the bug', 'Sam made one slip. Find the line that breaks.', 'Sam worked out 15 percent of 48 dollars. One line is wrong. Tap it.'],
+      ['Try it', 'one quick check', 'One question before the mission. No Kredits on the line.', 'Your turn. What is 10 percent of 60 dollars?'],
+    ];
+    const PEACH = ['#FDEBDD', '#FBE3CF', '#F8D2B2', '#F6C8A3', '#F4BE93'];
+    const tryOk = st.tryChecked && st.trySel === 1;
+    const stepDone = i => i < st.step || (i === 4 && tryOk);
+    const NOTES = ['10% → move the decimal one place left. $48 → $4.80', '5% is half of 10%. 15% is three 5% blocks.', '15% = one 10% pile + half a pile = $7.20', 'Check your 5%: it\'s half of 10%, not a tenth of it.', '10% of $60 = $6. You\'ve got it.'];
+    const doneCount = [0, 1, 2, 3, 4].filter(i => !isLesson || stepDone(i)).length;
+    const notes = STEPS.map(([title], i) => {
+      const done = !isLesson || stepDone(i), now = isLesson && st.step === i && !done, last = i === STEPS.length - 1;
+      return { title: 'Step ' + (i + 1) + ' · ' + title, note: done ? NOTES[i] : '', isNow: now,
+        mark: done ? '✓' : '', dotBg: done ? '#58B372' : now ? '#fff' : 'transparent',
+        dotBorder: done ? '1.5px solid #58B372' : now ? '2px solid #23252B' : '1.5px solid rgba(35,37,43,.22)',
+        lineColor: last ? 'transparent' : done ? '#58B372' : 'rgba(35,37,43,.14)',
+        titleColor: now || done ? '#23252B' : 'rgba(35,37,43,.4)',
+        cursor: done || now ? 'pointer' : 'default', go: () => { if (done || now) this.setState({ step: i }); } };
+    });
+    const notesCount = doneCount + ' of 5';
+    // split the bill
+    const picked = st.picked || [], halved = !!st.halved, isSplit = !!st.split;
+    const pileIds = halved ? ['0','1','2','3','4','5','6','7','8','h1','h2'] : ['0','1','2','3','4','5','6','7','8','9'];
+    const pileVal = id => id[0] === 'h' ? 2.4 : 4.8;
+    const splitSum = picked.reduce((a, id) => a + pileVal(id), 0);
+    const splitRight = Math.abs(splitSum - 7.2) < .001;
+    const piles = pileIds.map(id => {
+      const on = picked.indexOf(id) > -1, half = id[0] === 'h';
+      return { size: half ? '60px' : '84px', label: half ? '$2.40' : '$4.80',
+        bg: on ? (splitRight ? '#58B372' : splitSum > 7.2 ? '#E4766C' : '#23252B') : (half ? '#F8D2B2' : '#EAF6EE'),
+        fg: on ? '#fff' : '#23252B',
+        pick: () => this.setState({ picked: on ? picked.filter(x => x !== id) : picked.concat(id) }) };
+    });
+    const splitPrompt = !isSplit ? 'Here\'s the whole $48 bill. Split it into 10 equal piles.' : halved ? 'Now collect 15%: one full pile plus a half.' : 'Each pile is 10%. 15% is a pile and a half. Cut one pile in half.';
+    const splitVal = '$' + splitSum.toFixed(2);
+    const splitColor = splitRight ? '#2E7C46' : splitSum > 7.2 ? '#C2463B' : '#23252B';
+    const splitNote = splitRight ? 'That\'s 15%. One pile + half a pile.' : splitSum > 7.2 ? 'Too much. Tap a pile to put it back.' : picked.length ? 'Keep collecting.' : (halved ? 'Tap piles to collect them.' : 'Tap piles to collect, or cut one first.');
+    const doSplit = () => this.setState({ split: true });
+    const doHalve = () => this.setState({ halved: true, picked: picked.filter(x => x !== '9') });
+    // spot the mistake
+    const SAM = [['10% of $48 = $4.80', false], ['5% of $48 = $0.48', true], ['15% = $4.80 + $0.48 = $5.28', false]];
+    const samSel = st.samSel ?? null, samOk = samSel === 1;
+    const samLines = SAM.map(([text, bad], i) => {
+      const sel = samSel === i;
+      return { n: String(i + 1), text, tag: sel ? (bad ? 'Found it' : 'Checks out') : '', tagColor: bad ? '#2E7C46' : '#C2463B',
+        bg: sel ? (bad ? '#EAF6EE' : '#FBEDEC') : '#F5F7F9', border: sel ? (bad ? '1.5px solid #58B372' : '1.5px solid #E4766C') : '1.5px solid transparent',
+        pick: () => this.setState({ samSel: i }) };
+    });
+    const samNote = samSel === null ? 'Read each line. Which one breaks?' : samOk ? '5% is half of 10%, so it\'s $2.40, not $0.48. That makes 15% = $7.20.' : samSel === 2 ? 'The adding is right. The bug is earlier.' : 'That line checks out. Look again.';
+    const samColor = samSel === null ? 'rgba(35,37,43,.55)' : samOk ? '#2E7C46' : '#C2463B';
+    const steps = stack(STEPS.map(([title, meta, blurb], i) => {
+      const active = isLesson && st.step === i;
+      return { n: String(i + 1), title, meta: stepDone(i) ? '✓ done' : meta, blurb, active, bg: PEACH[i], pad: active ? '24px 22px 34px' : '22px 22px 30px', go: () => this.setState({ step: i }) };
+    }));
+    const shadeN = st.shade, pct = shadeN * 5, val = (48 * pct / 100);
+    const bar = Array.from({ length: 20 }, (_, i) => ({ bg: i < shadeN ? (shadeN === 3 ? '#58B372' : shadeN > 3 ? '#E4766C' : ink) : (i < 2 ? '#FBE3CF' : '#F5F7F9'), pick: () => this.setState({ shade: shadeN === i + 1 ? i : i + 1 }) }));
+    const shadeVal = pct + '% = $' + val.toFixed(2);
+    const shadeNote = shadeN === 3 ? 'That\'s it. 10% + 5% = $7.20' : shadeN === 0 ? 'The first two blocks are 10%.' : shadeN < 3 ? 'Keep going.' : 'Too far. Tap a block to go back.';
+    const shadeColor = shadeN === 3 ? '#2E7C46' : shadeN > 3 ? '#C2463B' : ink;
+    const TRY = ['$0.60', '$6', '$16', '$60'];
+    const tryAns = TRY.map((label, i) => {
+      const sel = st.trySel === i, c = st.tryChecked;
+      return { label, bg: c ? (i === 1 ? '#EAF6EE' : sel ? '#FBEDEC' : ground) : sel ? ink : ground, fg: !c && sel ? '#fff' : ink, border: c && i === 1 ? '1.5px solid #58B372' : c && sel ? '1.5px solid #E4766C' : '1.5px solid transparent', pick: () => this.setState({ trySel: i, tryChecked: false }) };
+    });
+    const tryNote = !st.tryChecked ? (st.trySel === null ? 'Pick one.' : 'Tap Check.') : tryOk ? 'Bet. You\'re ready.' : 'Not yet. Move the decimal one place left in $60.00.';
+    const tryColor = !st.tryChecked ? 'rgba(35,37,43,.55)' : tryOk ? '#2E7C46' : '#C2463B';
+    let nextLabel = 'Next step', nextOk = true;
+    if (st.step === 1) nextOk = shadeN === 3;
+    if (st.step === 2) nextOk = splitRight;
+    if (st.step === 3) nextOk = samOk;
+    if (st.step === 4) { if (tryOk) nextLabel = 'Start the mission →'; else { nextLabel = 'Check'; nextOk = st.trySel !== null; } }
+    const next = () => {
+      if (!nextOk) return;
+      if (st.step < 4) this.setState({ step: st.step + 1 });
+      else if (!tryOk) this.setState({ tryChecked: true });
+      else this.setState({ phase: 'quiz', q: 0, sel: null, checked: false, help: null, teachOn: false, firstTry: [], tries: [], used: [], tokens: 3, streak: 0, tokenQ: [] });
+    };
+    const blitz = !!st.blitz;
+    const tokens = st.tokens ?? 3;
+    const tokenDots = [0, 1, 2].map(i => i < tokens ? '#E8C94F' : 'transparent');
+    const showBlitzPick = isLesson && st.step === 4 && tryOk;
+    const modePick = [['untimed', 'Untimed'], ['blitz', '⚡ Blitz']].map(([k, label]) => {
+      const on = (k === 'blitz') === blitz;
+      return { label, bg: on ? ink : 'transparent', fg: on ? '#fff' : ink, pick: () => this.setState({ blitz: k === 'blitz' }) };
+    });
+    const blitzNote = blitz ? '×1.5 for answers under 8s' : 'Blitz is optional';
+    const modeLabel = blitz ? '⚡ Blitz · ×1.5 under 8s' : 'Untimed';
+    const modeBg = blitz ? ink : '#fff', modeFg = blitz ? '#fff' : ink;
+    const back = () => { if (st.step > 0) this.setState({ step: st.step - 1 }); };
+    const readStep = () => this.speak(isLesson ? STEPS[st.step][3] : '');
+    // quiz
+    const Q = QS[Math.min(st.q, 5)];
+    const helpOpen = st.help;
+    const help = stack([['read', 'Read it to me', 'free', '#FBE3CF'], ['hint', 'Hint', 'free', '#F8D2B2'], ['show', 'Show me', 'free', '#F4BE93'], ['teach', 'Teach me', tokens > 0 ? tokens + ' left' : 'half pay', '#E8C94F']].map(([k, title, meta, bg]) => {
+      const open = helpOpen === k;
+      let body = '';
+      if (open && k === 'hint') body = Q.hint;
+      if (open && k === 'show') body = Q.show;
+      if (open && k === 'read') body = st.reading ? 'Reading…  tap to stop' : 'Tap to hear it again';
+      if (open && k === 'teach' && st.teachOn) body = Q.teach;
+      return { title, meta, bg, body, isTeach: k === 'teach', confirm: open && k === 'teach' && !st.teachOn, pad: open ? '24px 22px 34px' : '22px 22px 30px', k,
+        toggle: () => { if (k === 'read') this.speak(Q.t); this.setState({ help: open && k !== 'read' ? null : k, used: st.used.concat(k === 'teach' && st.teachOn ? ['teach'] : []) }); } };
+    }), c => c.k === 'teach' ? { sh: 'inset 0 .5px 0 rgba(255,255,255,.4), 0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06)' } : {});
+    const tryFirst = e => { e.stopPropagation(); this.setState({ help: null }); };
+    const usedToken = (st.tokenQ || [])[st.q] === true;
+    const teachAnyway = e => {
+      e.stopPropagation();
+      const tq = (st.tokenQ || []).slice(); tq[st.q] = tokens > 0;
+      this.setState({ teachOn: true, tokens: Math.max(0, tokens - 1), tokenQ: tq });
+    };
+    const confirmText = tokens > 0 ? 'Spend a Teach Token? ' + tokens + ' left this run. A token keeps full pay. Save them for the hard ones.' : 'No tokens left this run. Teach still works, at half pay.';
+    const useLabel = tokens > 0 ? 'Use a token' : 'Teach me anyway';
+    const right = st.checked && st.sel === Q.r;
+    const ans = Q.a.map((label, i) => {
+      const sel = st.sel === i, c = st.checked;
+      return { label, key: String(i + 1),
+        bg: c ? (i === Q.r ? '#EAF6EE' : sel ? '#FBEDEC' : ground) : sel ? ink : ground,
+        fg: !c && sel ? '#fff' : ink, keyBg: !c && sel ? 'rgba(255,255,255,.16)' : '#fff',
+        border: c && i === Q.r ? '1.5px solid #58B372' : c && sel ? '1.5px solid #E4766C' : '1.5px solid transparent',
+        pick: () => { if (!st.checked) this.setState({ sel: i }); } };
+    });
+    const isFirst = !(st.tries[st.q] > 0) || (st.checked && st.tries[st.q] === 1);
+    const streakN = st.checked && right ? (st.streak || 0) : (st.streak || 0) + 1;
+    const sMult = streakN >= 10 ? 3 : streakN >= 6 ? 2 : streakN >= 3 ? 1.5 : 1;
+    const halfPay = st.teachOn && !usedToken;
+    const pay = Math.ceil((6 * sMult * (blitz ? 1.5 : 1) + (isFirst ? 5 : 0)) * (halfPay ? .5 : 1));
+    const pills = [].concat(sMult > 1 ? [{ t: '×' + sMult + ' streak', bg: ink, fg: '#fff' }] : [])
+      .concat(blitz ? [{ t: '×1.5 blitz', bg: ink, fg: '#fff' }] : [])
+      .concat(isFirst ? [{ t: '+5 first try', bg: '#EAF6EE', fg: '#2E7C46' }] : [])
+      .concat(st.teachOn && usedToken ? [{ t: 'token used · full pay', bg: '#FBF6E4', fg: '#8A6D1C' }] : [])
+      .concat(halfPay ? [{ t: 'half pay · help', bg: '#FBF6E4', fg: '#8A6D1C' }] : []);
+    const showPay = right, payout = '+$' + pay;
+    const fb = !st.checked ? (st.sel === null ? 'Pick one. No timer.' : 'Lock it in when you\'re ready.') : right ? 'Profit. W.' : 'Not yet. Here\'s the step: ' + Q.hint;
+    const fbColor = !st.checked ? 'rgba(35,37,43,.55)' : right ? '#2E7C46' : '#C2463B';
+    const chkLabel = !st.checked ? 'Check' : right ? (st.q === 5 ? 'See results →' : 'Next →') : 'Try again';
+    const chkBg = st.sel === null ? '#E6EAEE' : ink, chkFg = st.sel === null ? 'rgba(35,37,43,.45)' : '#fff';
+    const check = () => {
+      if (st.sel === null) return;
+      if (!st.checked) {
+        const tries = st.tries.slice(); tries[st.q] = (tries[st.q] || 0) + 1;
+        const ok = st.sel === Q.r, ft = st.firstTry.slice();
+        if (ft[st.q] === undefined) ft[st.q] = ok && !st.teachOn;
+        const paid = (st.paid || []).slice(); if (ok) paid[st.q] = pay;
+        this.setState({ checked: true, tries, firstTry: ft, paid, streak: ok ? (st.streak || 0) + 1 : 0 });
+      } else if (!right) this.setState({ checked: false, sel: null });
+      else if (st.q === 5) this.setState({ phase: 'results', checked: false, sel: null });
+      else this.setState({ q: st.q + 1, checked: false, sel: null, help: null, teachOn: false });
+    };
+    const qOp = st.teachOn && helpOpen === 'teach' ? .45 : 1;
+    // results
+    const ft = st.firstTry, paid = st.paid || [];
+    const firstCount = ft.filter(Boolean).length;
+    const earned = paid.reduce((a, b) => a + (b || 0), 0);
+    const fixed = QS.filter((_, i) => ft[i] === false).length;
+    const headline = firstCount === 6 ? 'Clean run. No help.' : firstCount >= 4 ? 'Profit. W.' : 'Comeback. Respect.';
+    const resultBands = stack([
+      { label: 'Kredits earned', value: '+$' + earned, bg: '#EAF6EE', fg: '#2E7C46' },
+      { label: 'First tries', value: firstCount + ' / 6', bg: '#B3A0EA', fg: ink },
+      { label: 'Teach Tokens used', value: (3 - (st.tokens ?? 3)) + ' / 3', bg: ink, fg: '#fff' },
+    ], (c, i) => i === 2 ? { sh: '0 -.5px 0 rgba(35,37,43,.10), 0 -6px 16px rgba(35,37,43,.06)' } : {});
+    const resultRows = QS.map((q, i) => {
+      const ok = ft[i];
+      return { text: q.t, note: ok ? 'first try' : ft[i] === false ? 'fixed it' : '—', pay: paid[i] ? '+$' + paid[i] : '', mark: ok ? '✓' : '↺', dotBg: ok ? '#EAF6EE' : '#FBF3E4', dotFg: ok ? '#2E7C46' : '#A8862A', rule: i ? '1px solid #EEECE7' : 'none' };
+    });
+    const resultNote = fixed ? 'Fixed ' + fixed + ' from earlier. Comeback counts.' : 'All first tries. Thinking is free.';
+    const restart = () => { try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (e) {} this.setState({ phase: 'lesson', tokens: 3, streak: 0, tokenQ: [], blitz: false, step: 0, shade: 0, split: false, halved: false, picked: [], samSel: null, trySel: null, tryChecked: false, q: 0, sel: null, checked: false, help: null, teachOn: false, firstTry: [], tries: [], used: [], paid: [], reading: false }); };
+    const phoneBar = Array.from({ length: 20 }, (_, i) => i < 3 ? '#58B372' : '#F5F7F9');
+    // grade page
+    const W = { Kitchen: '#F0AFCE', Store: '#F4BE93', Trip: '#5E9FE0', Build: '#8F97DE', 'Fraction Factory': '#F0AFCE', 'Trade Tycoon': '#F4BE93', 'Weather Station': '#5E9FE0', 'Equation Lab': '#8F97DE' };
+    const WN = { Kitchen: 'Fraction Factory', Store: 'Trade Tycoon', Trip: 'Weather Station', Build: 'Equation Lab' };
+    const tint = c => 'color-mix(in oklab, ' + c + ' 35%, white)';
+    const g = st.gpGrade, cur = g === 7;
+    const SK7 = [['Ratios & rates', 'Unit price, speed, recipes', 8], ['Percent', 'Tips, tax, discounts, change', 6], ['Expressions', 'Write and simplify', 4], ['Equations', 'One- and two-step', 3], ['Area & volume', 'Rooms, boxes, gardens', 2], ['Probability', 'Chance and fair games', 0]];
+    const SK6 = [['Ratios', 'Compare and scale', 10], ['Fractions & decimals', 'Divide and convert', 10], ['Negative numbers', 'Temperatures, bank balance', 10], ['Expressions', 'Variables and order', 10], ['Area', 'Triangles and polygons', 10], ['Statistics', 'Mean, median, range', 10]];
+    const skills = (cur ? SK7 : SK6).map(([name, sub, n]) => ({ name, sub, w: (n * 10) + '%', label: n + '/10', color: n === 10 ? '#58B372' : ink, numColor: n === 0 ? '#8A8578' : ink }));
+    const RUN7 = [['Oct 19', '15% tip on dinner', 'Store', '6/6', '+$102'], ['Oct 17', 'Road trip miles', 'Trip', '5/6', '+$61'], ['Oct 16', 'Balance the shelf', 'Build', '5/6', '+$40'], ['Oct 14', 'Price the cookies', 'Store', '6/6', '+$52'], ['Oct 13', 'Split the pizza bill', 'Kitchen', '4/6', '+$48']];
+    const RUN6 = [['Mar 12', 'Grade 6 test', 'Build', '19/20', '+$60'], ['Mar 10', 'Below-zero mornings', 'Trip', '6/6', '+$34'], ['Mar 8', 'Average the scores', 'Build', '5/6', '+$29'], ['Mar 5', 'Scale the recipe', 'Kitchen', '6/6', '+$31'], ['Mar 2', 'Bank balance', 'Store', '6/6', '+$33']];
+    const runs = (cur ? RUN7 : RUN6).map(([date, title, world, score, pay]) => ({ date, title, world: WN[world] || world, score, pay, tint: tint(W[world]) }));
+    const worlds = ['Ice_cream', 'Cash', 'Rain', 'Learning'].map(n => ({ url: 'url(blobs/' + n + '.svg)' }));
+    const P = ['#DCD2F6', '#C7B8F0', '#B3A0EA', '#9E87E2'];
+    const bandsRaw = cur ? [
+      { label: 'Test readiness', chip: '6 of 10 runs', chipBg: 'rgba(255,255,255,.6)', value: '60%', cta: 'Take the test · 4 runs to go', ctaBg: 'rgba(35,37,43,.12)', ctaFg: 'rgba(35,37,43,.5)' },
+      { label: 'Kredits earned so far', value: '$356' },
+      { label: 'Worlds unlocked', chip: '4 of 4', chipBg: 'rgba(255,255,255,.6)', worlds },
+      { label: 'Trophy', trophy: 'Pass the grade 7 test to earn the certificate.', trophyOp: .35 },
+    ] : [
+      { label: 'Grade 6 test', chip: 'Mar 12, 2026', chipBg: 'rgba(255,255,255,.6)', value: '19 / 20' },
+      { label: 'Final grade', chip: '$259 earned', chipBg: 'rgba(255,255,255,.6)', value: 'A+' },
+      { label: 'Worlds unlocked', chip: '4 of 4', chipBg: 'rgba(255,255,255,.6)', worlds },
+      { label: 'Trophy', trophy: 'Grade 6 certificate. Passed with 19 of 20.', trophyOp: 1, cta: 'View certificate', ctaBg: ink, ctaFg: '#fff' },
+    ];
+    const bands = stack(bandsRaw.map((b, i) => Object.assign({ bg: P[i], fg: ink, chip: '', worlds: null, trophy: '', cta: '', value: '' }, b)));
+    const bandsPhone = stack((cur ? [{ label: 'Test readiness', value: '60%' }, { label: 'Kredits so far', value: '$356' }] : [{ label: 'Grade 6 test', value: '19/20' }, { label: 'Final grade', value: 'A+' }]).map((b, i) => Object.assign({ bg: P[i + 1], fg: ink }, b)));
+    const gp = {
+      n: String(g), status: cur ? 'In progress' : 'Passed', statusBg: cur ? ink : '#EAF6EE', statusFg: cur ? '#fff' : '#2E7C46',
+      bands, bandsPhone, skills, runs,
+      skillSum: cur ? '23 of 60 skill runs' : 'All 60 skill runs',
+      runSum: cur ? '7 runs this week' : '41 runs total',
+    };
+    const WL = [['Kitchen', 'Fraction Factory', 'Fractions and decimals'], ['Store', 'Trade Tycoon', 'Ratios and percents'], ['Trip', 'Weather Station', 'Negative numbers'], ['Build', 'Equation Lab', 'Expressions and equations']];
+    const V = { solid: ['Solid', '#EAF6EE', '#2E7C46'], shaky: ['Shaky', '#FBF6E4', '#8A6D1C'], notyet: ['Not yet', '#EEF1F4', 'rgba(35,37,43,.6)'] };
+    const VER = cur ? ['solid', 'solid', 'shaky', 'notyet'] : ['solid', 'solid', 'solid', 'solid'];
+    gp.rc = {
+      term: cur ? 'Talia · Grade 7 · Fall 2026' : 'Talia · Grade 6 · Spring 2026',
+      worlds: WL.map((w, i) => ({ name: w[1], skill: w[2], color: W[w[0]], verdict: V[VER[i]][0], vBg: V[VER[i]][1], vFg: V[VER[i]][2] })),
+      facts: cur
+        ? [{ k: 'Lessons done', v: '38 of 130', color: ink }, { k: 'Unit quizzes', v: '2 of 7', color: ink }, { k: 'Kredits earned', v: '$356', color: '#2E7C46' }]
+        : [{ k: 'Grade 6 test', v: '19 / 20', color: ink }, { k: 'Every area covered', v: 'Yes', color: '#2E7C46' }, { k: 'Kredits earned', v: '$259', color: '#2E7C46' }],
+      note: cur ? 'Percents are solid. Negative numbers come back in warm-ups this week. Equations start next unit.' : 'Passed on Mar 12, 2026. A new district went up on your campus.',
+      cta: cur ? 'Grade test opens after unit 7' : 'View certificate',
+      ctaBg: cur ? '#E6EAEE' : ink, ctaFg: cur ? 'rgba(35,37,43,.45)' : '#fff',
+    };
+    const done = { dotBg: '#58B372', dotBorder: '0', mark: '✓', lineColor: '#58B372', titleColor: ink, noteColor: 'rgba(35,37,43,.6)' };
+    const now = { dotBg: '#fff', dotBorder: '2.5px solid #23252B', mark: '', lineColor: 'rgba(35,37,43,.22)', titleColor: ink, noteColor: ink };
+    const todo = { dotBg: 'transparent', dotBorder: '1.5px solid rgba(35,37,43,.22)', mark: '', lineColor: 'rgba(35,37,43,.22)', titleColor: 'rgba(35,37,43,.45)', noteColor: 'rgba(35,37,43,.45)' };
+    const bar10 = n => Array.from({ length: 10 }, (_, i) => i < n ? ink : '#E6EAEE');
+    const step = (s, o) => Object.assign({ bar: null, cta: '' }, s, o);
+    gp.pathTitle = cur ? 'Road to grade 8' : 'Grade 6, done';
+    gp.pathCount = cur ? '2 of 5' : '5 of 5';
+    gp.path = cur ? [
+      step(done, { title: 'Started grade 7', note: 'Sep 2, 2026' }),
+      step(done, { title: 'Unlocked all 4 worlds', note: 'Fraction Factory, Trade Tycoon, Weather Station, Equation Lab' }),
+      step(now, { title: 'Get test ready', note: '6 of 10 sharp runs. 4 to go.', bar: bar10(6) }),
+      step(todo, { title: 'Take the grade 7 test', note: '20 questions, 16 to pass. Failing costs nothing.', cta: 'Take the test', ctaBg: '#E6EAEE', ctaFg: 'rgba(35,37,43,.45)' }),
+      step(Object.assign({}, todo, { lineColor: 'transparent' }), { title: 'Certificate + $1.50', note: 'Grade 8 opens up.' }),
+    ] : [
+      step(done, { title: 'Started grade 6', note: 'Jan 6, 2026' }),
+      step(done, { title: 'Unlocked all 4 worlds', note: 'Fraction Factory, Trade Tycoon, Weather Station, Equation Lab' }),
+      step(done, { title: 'Got test ready', note: '10 of 10 sharp runs', bar: bar10(10).map(() => '#58B372') }),
+      step(done, { title: 'Passed the test', note: '19 of 20 on Mar 12. Final grade A+.' }),
+      step(Object.assign({}, done, { lineColor: 'transparent' }), { title: 'Certificate earned', note: '$259 in Kredits this grade.', cta: 'View certificate', ctaBg: ink, ctaFg: '#fff' }),
+    ];
+    const PURPLE = { 3: '#C7B8F0', 4: '#B3A0EA', 5: '#9E87E2', 6: '#8A6FD9' };
+    const gradePicker = [3, 4, 5, 6, 7, 8].map(n => {
+      const sel = n === g, locked = n > 7;
+      return { n: String(n), bg: sel ? ink : locked ? '#E6EAEE' : n === 7 ? '#fff' : PURPLE[n], fg: sel ? '#fff' : locked ? 'rgba(35,37,43,.4)' : ink, cursor: locked ? 'default' : 'pointer', pick: () => { if (!locked) this.setState({ gpGrade: n }); } };
+    });
+    return {
+      phases, isLesson, isQuiz, isResults, restart,
+      tokenDots, showBlitzPick, modePick, blitzNote, modeLabel, modeBg, modeFg, confirmText, useLabel, pills, showPay, payout,
+      steps, notes, notesCount, step0: st.step === 0, step1: st.step === 1, step2: st.step === 2, step3: st.step === 3, step4: st.step === 4,
+      splitPrompt, notSplit: !isSplit, isSplit, piles, splitVal, splitColor, splitNote, canHalve: isSplit && !halved, doSplit, doHalve,
+      samLines, samNote, samColor,
+      bar, shadeVal, shadeNote, shadeColor, tryAns, tryNote, tryColor,
+      next, back, nextLabel, nextBg: nextOk ? ink : '#E6EAEE', nextFg: nextOk ? '#fff' : 'rgba(35,37,43,.45)', backOp: st.step > 0 ? 1 : .4,
+      readStep, readIcon: st.reading ? '■' : '▶', readLabel: st.reading ? 'Stop' : 'Read it to me',
+      help, tryFirst, teachAnyway, ans, fb, fbColor, chkLabel, chkBg, chkFg, check, qOp, qText: Q.t, qTag: Q.tag + ' · question ' + (st.q + 1) + ' of 6',
+      headline, resultBands, resultRows, resultNote, phoneBar,
+      gp, gradePicker,
+    };
+  }
+}
+</script>
+</body>
+</html>

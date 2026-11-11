@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>body{margin:0;background:#E4E7EB;font-family:'Inter Tight',sans-serif;color:#23252B;-webkit-font-smoothing:antialiased}a{color:#2E7C46}a:hover{color:#23252B}</style>
+</helmet>
+<section style="padding:56px 56px 24px;display:flex;flex-direction:column;gap:20px;">
+  <div style="display:flex;flex-direction:column;gap:6px;max-width:820px;">
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;">Turn 1 · Grade test</div>
+    <div style="font-size:15px;line-height:1.5;color:#5D5A52;text-wrap:pretty;">20 questions, 2 from each of the 10 grade 7 clusters. You pass with 16 right and no cluster fully missed, and the campus builds the Grade 7 district. If you don't pass yet, you get a 2 to 3 unit repair plan, never a fail screen. Taking it pays $1.50. Use the tweak to open on the passed or repair result with example answers.</div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px;align-items:flex-start;">
+  <div id="10a" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">10a</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Grade test desktop</span></div>
+    <div data-screen-label="10a Grade test desktop" style="width:1280px;min-height:800px;background:{{ ground }};border-radius:14px;overflow:hidden;padding-bottom:48px;box-sizing:border-box;">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px 48px;border-bottom:1.5px solid rgba(35,37,43,.12);">
+        <div style="padding:9px 18px;border-radius:999px;background:#fff;font-size:14.5px;font-weight:700;cursor:pointer;" style-hover="background:#E6EAEE;">← Exit</div>
+        <div style="flex:1;display:flex;justify-content:center;align-items:center;gap:14px;">
+          <div style="display:flex;gap:3px;width:400px;"><sc-for list="{{ prog }}" as="p" hint-placeholder-count="20"><span style="flex:1;height:6px;border-radius:999px;background:{{ p }};"></span></sc-for></div>
+          <div style="font-size:14px;font-weight:700;">{{ progLabel }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Grade test · $1.50 for taking it</div>
+          <div style="padding:8px 14px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">Untimed</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:340px minmax(0,1fr);column-gap:48px;padding:36px 48px 0;">
+        <div style="grid-column:1;grid-row:1;align-self:end;padding:0 4px 22px;display:flex;flex-direction:column;gap:6px;">
+          <div style="font-size:28px;font-weight:600;line-height:1.32;letter-spacing:-.025em;">{{ leftTitle }}</div>
+          <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">{{ leftSub }}</div>
+        </div>
+        <div style="grid-column:1;grid-row:2;align-self:start;display:flex;flex-direction:column;gap:28px;padding:0 4px;">
+          <sc-if value="{{ isIntro }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ rules }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                  <div style="flex:1;font-size:15px;font-weight:700;">{{ r.k }}</div>
+                  <div style="font-size:15px;font-weight:600;color:rgba(35,37,43,.65);text-align:right;">{{ r.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isQ }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Questions</div>
+              <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;">
+                <sc-for list="{{ map }}" as="c" hint-placeholder-count="20">
+                  <div onClick="{{ c.pick }}" style="height:44px;box-sizing:border-box;border-radius:14px;background:{{ c.bg }};color:{{ c.fg }};border:{{ c.border }};display:flex;align-items:center;justify-content:center;font-size:14.5px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer;">{{ c.n }}</div>
+                </sc-for>
+              </div>
+              <div style="font-size:13.5px;font-weight:600;color:rgba(35,37,43,.55);">{{ answeredLabel }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Help</div>
+              <div onClick="{{ toggleRead }}" style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:999px;background:{{ readBg }};color:{{ readFg }};cursor:pointer;">
+                <span style="flex:1;font-size:14.5px;font-weight:700;">Read it</span>
+                <span style="font-size:12px;font-weight:700;opacity:.65;">Free</span>
+              </div>
+              <sc-if value="{{ reading }}" hint-placeholder-val="{{ false }}"><div style="background:#fff;border-radius:20px;padding:16px 20px;font-size:16px;line-height:1.45;">Playing the question · 0:07</div></sc-if>
+              <div style="font-size:14px;font-weight:500;line-height:1.45;color:rgba(35,37,43,.6);text-wrap:pretty;">Take a break whenever you like. Your answers are saved.</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ checks }}" as="c" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);">
+                  <span style="width:22px;height:22px;border-radius:999px;background:{{ c.bg }};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex:none;">{{ c.mark }}</span>
+                  <div style="flex:1;font-size:15px;font-weight:700;">{{ c.k }}</div>
+                  <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.6);">{{ c.v }}</div>
+                </div>
+              </sc-for>
+              <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0;border-top:1.5px solid rgba(35,37,43,.12);border-bottom:1.5px solid rgba(35,37,43,.12);">
+                <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">For taking it</span><span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">A grown-up approves it.</span></div>
+                <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:36px;line-height:1;color:#2E7C46;">$1.50</div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+        <div style="grid-column:2;grid-row:1;align-self:end;display:flex;align-items:center;gap:10px;padding:0 4px 22px;">
+          <span style="padding:5px 11px;border-radius:999px;background:{{ worldBg }};font-size:12.5px;font-weight:700;">{{ worldName }}</span>
+          <span style="font-size:14px;font-weight:600;color:rgba(35,37,43,.55);">{{ crumb }}</span>
+        </div>
+        <div style="grid-column:2;grid-row:2;align-self:start;background:#fff;border-radius:28px;overflow:hidden;">
+          <sc-if value="{{ isIntro }}" hint-placeholder-val="{{ true }}">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:18px;">
+              <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">Grade test</div>
+              <div style="font-size:48px;font-weight:600;line-height:1.1;letter-spacing:-.03em;max-width:680px;text-wrap:pretty;">Grade 7</div>
+              <div style="font-size:18px;font-weight:400;line-height:1.5;color:rgba(35,37,43,.75);max-width:620px;text-wrap:pretty;">Covers everything your state expects for grade 7. Two questions from each part of the year. Pass and your campus builds the Grade 7 district.</div>
+            </div>
+            <div style="display:flex;flex-direction:column;padding:0 40px 28px;">
+              <sc-for list="{{ clusterList }}" as="c" hint-placeholder-count="10">
+                <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1.5px solid #EEECE7;">
+                  <span style="width:10px;height:10px;border-radius:999px;background:{{ c.color }};flex:none;"></span>
+                  <div style="flex:1;font-size:16px;font-weight:600;">{{ c.name }}</div>
+                  <div style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">{{ c.world }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">About 25 minutes. No timer.</div>
+              <div onClick="{{ start }}" style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">Start the test →</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isQ }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 40px 32px;display:flex;flex-direction:column;gap:32px;">
+              <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:680px;">{{ qText }}</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+                <sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+                  <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:14px;padding:20px 22px;border-radius:20px;background:{{ a.bg }};color:{{ a.fg }};cursor:pointer;transition:background .15s;">
+                    <span style="width:28px;height:28px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;flex:none;">{{ a.key }}</span>
+                    <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;">{{ a.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">{{ qFoot }}</div>
+              <div onClick="{{ back }}" style="padding:14px 22px;border-radius:999px;border:1.5px solid #23252B;font-size:15px;font-weight:700;cursor:pointer;opacity:{{ backOp }};">← Back</div>
+              <div onClick="{{ next }}" style="padding:14px 28px;border-radius:999px;background:{{ nextBg }};color:{{ nextFg }};font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ nextLabel }}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:40px 40px 28px;display:flex;flex-direction:column;gap:24px;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:{{ kickerColor }};">{{ kicker }}</div>
+                <div style="font-size:40px;font-weight:600;line-height:1.18;letter-spacing:-.025em;text-wrap:pretty;max-width:700px;">{{ headline }}</div>
+              </div>
+              <sc-if value="{{ passed }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:14px;padding:26px 28px;border-radius:22px;background:#23252B;color:#fff;">
+                  <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.6);">Your campus</div>
+                  <div style="font-size:28px;font-weight:600;letter-spacing:-.02em;">The Grade 7 district is built.</div>
+                  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;">
+                    <sc-for list="{{ district }}" as="d" hint-placeholder-count="4">
+                      <div style="display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;background:rgba(255,255,255,.08);">
+                        <span style="width:12px;height:12px;border-radius:999px;background:{{ d.color }};"></span>
+                        <div style="font-size:15px;font-weight:700;">{{ d.build }}</div>
+                        <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,.6);">{{ d.world }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ repair }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;">
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);padding-bottom:8px;">Repair plan · {{ planLen }}</div>
+                  <sc-for list="{{ plan }}" as="p" hint-placeholder-count="3">
+                    <div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:16px;padding:16px 0;border-top:1.5px solid #EEECE7;">
+                      <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:36px;line-height:1;">{{ p.n }}</div>
+                      <div style="display:flex;flex-direction:column;gap:3px;min-width:0;">
+                        <div style="font-size:18px;font-weight:700;">{{ p.unit }}</div>
+                        <div style="font-size:14px;font-weight:500;color:rgba(35,37,43,.6);">{{ p.why }}</div>
+                      </div>
+                      <span style="padding:5px 11px;border-radius:999px;background:{{ p.color }};font-size:12.5px;font-weight:700;">{{ p.world }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(35,37,43,.55);">By cluster</div>
+                <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;">
+                  <sc-for list="{{ clusters }}" as="c" hint-placeholder-count="10">
+                    <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:16px;background:{{ c.bg }};min-height:92px;box-sizing:border-box;">
+                      <div style="flex:1;font-size:13.5px;font-weight:700;line-height:1.3;">{{ c.name }}</div>
+                      <div style="display:flex;gap:4px;"><sc-for list="{{ c.dots }}" as="d" hint-placeholder-count="2"><span style="width:12px;height:12px;border-radius:999px;background:{{ d }};"></span></sc-for></div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;padding:20px 40px;border-top:1px solid #EEECE7;">
+              <div style="flex:1;font-size:16px;font-weight:600;color:rgba(35,37,43,.55);">{{ resultsFoot }}</div>
+              <div onClick="{{ retake }}" style="padding:14px 22px;border-radius:999px;border:1.5px solid #23252B;font-size:15px;font-weight:700;cursor:pointer;">{{ retakeLabel }}</div>
+              <div style="padding:14px 28px;border-radius:999px;background:#23252B;color:#fff;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;">{{ resultsCta }}</div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="10b" style="display:flex;flex-direction:column;gap:10px;">
+    <div style="display:flex;gap:8px;align-items:center;"><span style="background:#23252B;color:#fff;font-size:12px;font-weight:800;padding:4px 10px;border-radius:999px;">10b</span><span style="font-size:13px;font-weight:700;color:#5D5A52;">Grade test phone · same state</span></div>
+    <div data-screen-label="10b Grade test phone" style="width:390px;height:844px;background:{{ ground }};border-radius:48px;overflow:hidden;position:relative;display:flex;flex-direction:column;box-shadow:0 0 0 10px #2E3036,0 30px 60px rgba(0,0,0,.2);">
+      <div style="padding:56px 20px 12px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer;flex:none;">✕</div>
+          <div style="flex:1;font-size:15px;font-weight:800;">Grade 7 test</div>
+          <div style="padding:10px 12px;border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;">{{ progLabel }}</div>
+        </div>
+        <div style="display:flex;gap:2px;"><sc-for list="{{ prog }}" as="p" hint-placeholder-count="20"><span style="flex:1;height:5px;border-radius:999px;background:{{ p }};"></span></sc-for></div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:0 12px 20px;display:grid;align-content:start;grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;gap:14px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:0 8px;">
+          <span style="padding:5px 11px;border-radius:999px;background:{{ worldBg }};font-size:12px;font-weight:700;">{{ worldName }}</span>
+          <span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">{{ crumbShort }}</span>
+        </div>
+        <sc-if value="{{ isIntro }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border-radius:28px;padding:24px 20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:32px;font-weight:600;line-height:1.1;letter-spacing:-.03em;">Grade 7</div>
+            <div style="font-size:15.5px;line-height:1.45;color:rgba(35,37,43,.75);text-wrap:pretty;">Covers everything your state expects for grade 7. Pass and your campus builds the Grade 7 district.</div>
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ rules }}" as="r" hint-placeholder-count="5">
+                <div style="display:flex;align-items:baseline;gap:10px;padding:12px 0;border-top:1.5px solid #EEECE7;">
+                  <div style="flex:1;font-size:14px;font-weight:700;">{{ r.k }}</div>
+                  <div style="font-size:14px;font-weight:600;color:rgba(35,37,43,.65);text-align:right;">{{ r.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isQ }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;">
+            <div style="padding:24px 20px 20px;display:flex;flex-direction:column;gap:18px;">
+              <div style="font-size:24px;font-weight:600;line-height:1.22;letter-spacing:-.02em;text-wrap:pretty;">{{ qText }}</div>
+              <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+                <sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+                  <div onClick="{{ a.pick }}" style="display:flex;align-items:center;gap:10px;padding:14px;min-height:56px;box-sizing:border-box;border-radius:18px;background:{{ a.bg }};color:{{ a.fg }};cursor:pointer;">
+                    <span style="width:24px;height:24px;border-radius:999px;background:{{ a.keyBg }};display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none;">{{ a.key }}</span>
+                    <span style="font-weight:300;letter-spacing:-.04em;font-variant-numeric:tabular-nums;font-size:22px;line-height:1.05;">{{ a.label }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:14px 20px 18px;border-top:1px solid #EEECE7;">
+              <div onClick="{{ toggleRead }}" style="display:flex;align-items:center;gap:6px;padding:0 14px;height:44px;border-radius:999px;background:{{ readBgPhone }};color:{{ readFg }};cursor:pointer;">
+                <span style="font-size:14px;font-weight:700;">Read it</span><span style="font-size:11.5px;font-weight:700;opacity:.65;">Free</span>
+              </div>
+              <div style="flex:1;font-size:12.5px;font-weight:600;line-height:1.35;color:rgba(35,37,43,.55);">{{ readNote }}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:4px;padding:0 8px;">
+            <sc-for list="{{ map }}" as="c" hint-placeholder-count="20">
+              <div onClick="{{ c.pick }}" style="height:30px;box-sizing:border-box;border-radius:9px;background:{{ c.bg }};color:{{ c.fg }};border:{{ c.border }};display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;cursor:pointer;">{{ c.n }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border-radius:28px;padding:24px 20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:{{ kickerColor }};">{{ kicker }}</div>
+            <div style="font-size:26px;font-weight:600;line-height:1.2;letter-spacing:-.025em;text-wrap:pretty;">{{ headline }}</div>
+            <sc-if value="{{ passed }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:20px;background:#23252B;color:#fff;">
+                <div style="font-size:18px;font-weight:600;">The Grade 7 district is built.</div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+                  <sc-for list="{{ district }}" as="d" hint-placeholder-count="4">
+                    <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.08);">
+                      <span style="width:10px;height:10px;border-radius:999px;background:{{ d.color }};flex:none;"></span>
+                      <span style="font-size:13.5px;font-weight:700;">{{ d.build }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ repair }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;">
+                <sc-for list="{{ plan }}" as="p" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1.5px solid #EEECE7;">
+                    <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:28px;line-height:1;width:22px;">{{ p.n }}</div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;">
+                      <div style="font-size:15.5px;font-weight:700;">{{ p.unit }}</div>
+                      <div style="font-size:12.5px;font-weight:600;color:rgba(35,37,43,.55);">{{ p.world }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+              <sc-for list="{{ clusters }}" as="c" hint-placeholder-count="10">
+                <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:{{ c.bg }};">
+                  <div style="flex:1;font-size:12.5px;font-weight:700;line-height:1.25;">{{ c.short }}</div>
+                  <div style="display:flex;gap:3px;"><sc-for list="{{ c.dots }}" as="d" hint-placeholder-count="2"><span style="width:9px;height:9px;border-radius:999px;background:{{ d }};"></span></sc-for></div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:12px;padding:14px 0 0;border-top:1.5px solid #EEECE7;">
+              <div style="flex:1;display:flex;flex-direction:column;gap:3px;"><span style="font-size:15px;font-weight:700;">For taking it</span><span style="font-size:13px;font-weight:600;color:rgba(35,37,43,.55);">A grown-up approves it.</span></div>
+              <div style="font-weight:300;letter-spacing:-.045em;font-variant-numeric:tabular-nums;font-size:34px;line-height:1;color:#2E7C46;">$1.50</div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="padding:14px 20px 34px;display:flex;gap:8px;border-top:1.5px solid rgba(35,37,43,.12);">
+        <sc-if value="{{ isIntro }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ start }}" style="flex:1;height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;">Start the test →</div>
+        </sc-if>
+        <sc-if value="{{ isQ }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ back }}" style="height:52px;box-sizing:border-box;display:flex;align-items:center;padding:0 18px;border-radius:999px;border:1.5px solid #23252B;font-size:15px;font-weight:700;cursor:pointer;opacity:{{ backOp }};">←</div>
+          <div onClick="{{ next }}" style="flex:1;height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:{{ nextBg }};color:{{ nextFg }};font-size:15.5px;font-weight:700;cursor:pointer;">{{ nextLabel }}</div>
+        </sc-if>
+        <sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ retake }}" style="height:52px;box-sizing:border-box;display:flex;align-items:center;padding:0 18px;border-radius:999px;border:1.5px solid #23252B;font-size:15px;font-weight:700;cursor:pointer;">{{ retakeShort }}</div>
+          <div style="flex:1;height:52px;display:flex;align-items:center;padding:0 22px;border-radius:999px;background:#23252B;color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;">{{ resultsCtaShort }}</div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  </div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startAt&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;intro&quot;,&quot;question&quot;,&quot;passed&quot;,&quot;repair&quot;],&quot;default&quot;:&quot;intro&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;ground&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grey&quot;,&quot;mist&quot;],&quot;default&quot;:&quot;grey&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = {};
+  renderVals() {
+    const st = this.state;
+    const W = { tt: ['The Market', '#F4BE93'], ws: ['Outside', '#5E9FE0'], el: ['The Workshop', '#8F97DE'], ff: ['The Kitchen', '#F0AFCE'] };
+    const C = [
+      ['Ratios and rates', 'Ratios', 'tt', 'Unit rates'], ['Percents', 'Percents', 'tt', 'Price the dinner'], ['Proportional relationships', 'Proportions', 'tt', 'Same rate, any size'],
+      ['Adding and subtracting integers', 'Integers + −', 'ws', 'Below zero'], ['Multiplying and dividing integers', 'Integers × ÷', 'ws', 'Sign rules'],
+      ['Expressions', 'Expressions', 'el', 'Like terms'], ['Equations', 'Equations', 'el', 'Two-step equations'], ['Inequalities', 'Inequalities', 'el', 'Greater than, less than'],
+      ['Area and circles', 'Geometry', 'ff', 'Area and circles'], ['Probability and stats', 'Prob. & stats', 'ws', 'Chance of rain'],
+    ];
+    const Q = [
+      ['3 pens cost $4.50. What does 1 pen cost?', ['$1.25', '$1.50', '$1.75', '$13.50'], 1, 0],
+      ['A car goes 150 miles on 5 gallons. How many miles per gallon?', ['25', '30', '35', '750'], 1, 0],
+      ['What is 15% of $120?', ['$12', '$15', '$18', '$20'], 2, 1],
+      ['A $40 game is 25% off. What is the sale price?', ['$10', '$25', '$30', '$35'], 2, 1],
+      ['y = 4x. What is y when x = 7?', ['11', '28', '32', '47'], 1, 2],
+      ['5 notebooks cost $15. At the same rate, what do 8 cost?', ['$18', '$21', '$24', '$40'], 2, 2],
+      ['It was −6°C. It rose 9 degrees. What is it now?', ['−15°C', '−3°C', '3°C', '15°C'], 2, 3],
+      ['−4 − (−10) = ?', ['−14', '−6', '6', '14'], 2, 3],
+      ['−3 × 8 = ?', ['−24', '−11', '11', '24'], 0, 4],
+      ['−36 ÷ −4 = ?', ['−9', '−8', '8', '9'], 3, 4],
+      ['Simplify 3x + 5x − 2.', ['6x', '8x − 2', '8x + 2', '15x − 2'], 1, 5],
+      ['Which is equal to 4(x + 3)?', ['4x + 3', '4x + 7', '4x + 12', 'x + 12'], 2, 5],
+      ['Solve 2x + 5 = 17.', ['x = 6', 'x = 11', 'x = 8.5', 'x = 24'], 0, 6],
+      ['Solve x ÷ 3 − 4 = 2.', ['x = 2', 'x = 6', 'x = 18', 'x = −6'], 2, 6],
+      ['Solve x + 7 > 12.', ['x > 5', 'x < 5', 'x > 19', 'x = 5'], 0, 7],
+      ['Solve −2x ≤ 8.', ['x ≤ −4', 'x ≥ −4', 'x ≤ 4', 'x ≥ 4'], 1, 7],
+      ['A triangle has base 10 and height 6. What is its area?', ['16', '30', '60', '36'], 1, 8],
+      ['A circle has radius 5. About how long is its circumference? Use π ≈ 3.14.', ['15.7', '31.4', '78.5', '25'], 1, 8],
+      ['It rained on 6 of the last 20 days. What is the chance of rain as a percent?', ['6%', '20%', '30%', '60%'], 2, 9],
+      ['Highs this week: 12, 15, 9, 15, 14. What is the median?', ['9', '13', '14', '15'], 2, 9],
+    ];
+    const N = Q.length;
+    const right = Q.reduce((o, q, k) => (o[k] = q[2], o), {});
+    const wrongAt = (o, ks) => { const a = { ...o }; ks.forEach(k => a[k] = (o[k] + 1) % 4); return a; };
+    const DEMO = { pass: wrongAt(right, [3, 9, 15]), repair: wrongAt(right, [12, 13, 7, 15, 17]) };
+    const startAt = this.props.startAt ?? 'intro';
+    const view = st.view ?? (startAt === 'passed' || startAt === 'repair' ? 'results' : startAt === 'question' ? 'q' : 'intro');
+    const ans = st.ans ?? (view === 'results' ? (startAt === 'passed' ? DEMO.pass : DEMO.repair) : {});
+    const i = st.i ?? 0;
+    const isIntro = view === 'intro', isQ = view === 'q', isResults = view === 'results';
+    const nAns = Object.keys(ans).length;
+    const cur = Q[i];
+    const prog = Q.map((_, k) => isResults ? '#23252B' : isQ && k === i ? '#23252B' : ans[k] !== undefined ? '#8E96A3' : '#D9DEE4');
+    const map = Q.map((_, k) => {
+      const on = isQ && k === i, done = ans[k] !== undefined;
+      return { n: String(k + 1), bg: done ? '#23252B' : '#fff', fg: done ? '#fff' : '#23252B', border: on ? '2px solid #23252B' : '2px solid transparent', pick: () => this.setState({ view: 'q', i: k, ans, reading: false }) };
+    });
+    const sel = ans[i];
+    const answers = isQ ? cur[1].map((label, k) => ({ label, key: String(k + 1), bg: sel === k ? '#23252B' : '#F5F7F9', fg: sel === k ? '#fff' : '#23252B', keyBg: sel === k ? 'rgba(255,255,255,.16)' : '#fff', pick: () => this.setState({ ans: { ...ans, [i]: k } }) })) : [];
+    const last = i === N - 1, allIn = nAns === N;
+    const next = () => {
+      if (sel === undefined) return;
+      if (!last) this.setState({ i: i + 1, reading: false, ans });
+      else if (allIn) this.setState({ view: 'results', ans });
+      else this.setState({ i: Q.findIndex((_, k) => ans[k] === undefined), ans });
+    };
+    const back = () => { if (i > 0) this.setState({ i: i - 1, reading: false, ans }); };
+
+    const score = Q.filter((q, k) => ans[k] === q[2]).length;
+    const per = C.map((_, c) => Q.map((q, k) => [q, k]).filter(([q]) => q[3] === c).map(([q, k]) => ans[k] === q[2]));
+    const missedAll = per.map(r => r.every(x => !x));
+    const passed = isResults && score >= 16 && !missedAll.some(Boolean);
+    const repair = isResults && !passed;
+    const clusters = C.map(([name, short], c) => ({ name, short, dots: per[c].map(x => x ? '#58B372' : '#E4766C'), bg: missedAll[c] ? '#FBEDEC' : per[c].every(Boolean) ? '#F5F7F9' : '#FBF6E4' }));
+    const weakIdx = C.map((_, c) => c).sort((a, b) => per[a].filter(Boolean).length - per[b].filter(Boolean).length).filter(c => !per[c].every(Boolean));
+    const planIdx = weakIdx.slice(0, Math.max(2, Math.min(3, weakIdx.length)));
+    const plan = planIdx.map((c, n) => ({ n: String(n + 1), unit: C[c][3], world: W[C[c][2]][0], color: W[C[c][2]][1], why: missedAll[c] ? C[c][0] + ': both questions missed' : C[c][0] + ': one of two missed' }));
+    const checks = [
+      { k: '16 or more right', v: score >= 16 ? 'Yes' : 'Not yet', mark: score >= 16 ? '✓' : '·', bg: score >= 16 ? '#58B372' : '#C9CED6' },
+      { k: 'Every cluster has one right', v: missedAll.some(Boolean) ? 'Not yet' : 'Yes', mark: missedAll.some(Boolean) ? '·' : '✓', bg: missedAll.some(Boolean) ? '#C9CED6' : '#58B372' },
+    ];
+    const district = [['tt', 'Market Street'], ['ws', 'Weather tower'], ['el', 'Lab annex'], ['ff', 'Shape works']].map(([w, build]) => ({ build, world: W[w][0], color: W[w][1] }));
+    const retake = () => this.setState({ view: 'q', i: 0, ans: {}, reading: false });
+    const reading = !!st.reading;
+    const w = isQ ? W[C[cur[3]][2]] : ['Grade 7', '#fff'];
+    const GROUNDS = { grey: '#F5F7F9', mist: '#D2DBE4' };
+    return {
+      ground: GROUNDS[this.props.ground ?? 'grey'] || GROUNDS.grey,
+      isIntro, isQ, isResults, passed, repair, prog,
+      progLabel: isQ ? (i + 1) + ' of 20' : isResults ? 'Handed in' : '20 questions',
+      leftTitle: isIntro ? 'Test day' : isQ ? 'Your answers' : passed ? 'Passed' : 'Not yet',
+      leftSub: isIntro ? 'Here\'s how it works.' : isQ ? 'Jump to any question. Change answers anytime.' : 'What it takes to pass.',
+      worldName: w[0], worldBg: w[1],
+      crumb: isIntro ? 'Grade test' : isQ ? C[cur[3]][0] + ' · question ' + (i + 1) + ' of 20' : 'Grade test · results',
+      crumbShort: isIntro ? 'Grade test' : isQ ? C[cur[3]][1] : 'Results',
+      rules: [{ k: 'Questions', v: '20 · 2 per cluster' }, { k: 'To pass', v: '16 right, every cluster scored' }, { k: 'Timer', v: 'None' }, { k: 'Help', v: 'Read it only' }, { k: 'Reward', v: '$1.50 for taking it' }],
+      clusterList: C.map(([name, , wk]) => ({ name, world: W[wk][0], color: W[wk][1] })),
+      start: () => this.setState({ view: 'q', i: 0, ans: {} }),
+      map, answeredLabel: nAns + ' of 20 answered',
+      toggleRead: () => this.setState({ reading: !reading }), reading,
+      readBg: reading ? '#23252B' : '#fff', readBgPhone: reading ? '#23252B' : '#EEF1F4', readFg: reading ? '#fff' : '#23252B',
+      readNote: reading ? 'Playing · 0:07' : 'Answers save as you go.',
+      qText: isQ ? cur[0] : '', answers,
+      qFoot: sel === undefined ? 'Pick one. Nothing is marked until you hand it in.' : last ? (allIn ? 'All 20 answered.' : (N - nAns) + ' still blank.') : 'Saved.',
+      back, backOp: i > 0 ? 1 : .35, next,
+      nextLabel: last ? (allIn ? 'Hand it in' : 'Go to blank') : 'Next →',
+      nextBg: sel === undefined ? '#E6EAEE' : '#23252B', nextFg: sel === undefined ? 'rgba(35,37,43,.45)' : '#fff',
+      checks, clusters, plan, planLen: plan.length + ' units', district,
+      kicker: passed ? 'Grade 7 · passed' : 'Grade 7 · repair plan', kickerColor: passed ? '#2E7C46' : 'rgba(35,37,43,.55)',
+      headline: passed ? 'Grade 7 is done. Your campus just got bigger.' : 'Close. ' + plan.length + ' short units, then take it again.',
+      resultsFoot: passed ? 'Grade 8 placement starts whenever you\'re ready.' : 'The plan replaces your next lessons. Retake anytime.',
+      retakeLabel: passed ? 'See answers' : 'Retake now', retakeShort: passed ? 'Answers' : 'Retake',
+      resultsCta: passed ? 'Visit the district →' : 'Start the plan →', resultsCtaShort: passed ? 'Visit the district →' : 'Start the plan →',
+      retake: passed ? () => {} : retake,
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -6,7 +6,15 @@ illos/
 .DS_Store
 apps/web/public/
 CLAUDE.local.md
-design-incoming/
+# Scratch for whatever Claude Design returns — EXCEPT the packet itself, which
+# is the BINDING SPEC: §0 and its amendments are cited as authority by the
+# components and by docs/, and a spec that lives only in somebody's scratch
+# folder cannot be diffed, reviewed, or blamed when a screen and its drawing
+# disagree. The contents are excluded rather than the folder, because git will
+# not descend into an excluded directory and a re-include inside one never
+# applies.
+design-incoming/*
+!design-incoming/design_handoff_kampus/
 
 # Secrets. The ElevenLabs key for the voice pass lives in .env (docs/VOICE_PASS.md).
 # Never commit it: a key in git history is leaked even after it is deleted.
