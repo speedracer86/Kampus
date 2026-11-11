@@ -1307,3 +1307,27 @@ It returns whatever it last read when the wait runs out, so the check that
 follows fails on the REAL value rather than on a timeout — the waiting makes it
 honest, not lenient. Four ledger sites converted, plus the business check that
 actually failed. Two consecutive full runs, 304/304 each.
+
+### A button that did nothing, found by re-reading the doc (Nov 2026)
+
+The counter's "Hear Ava" shipped emitting a `hear_customer` event that NOTHING
+handled. A control that does nothing is the same lie as a reader on a screen
+with nothing to read — the argument made an hour earlier for keeping the voice
+bar off the Teach me sheet. It reads the line through `useSpokenLine` now, so it
+ducks against the audio bus like every other voice in the product, honours
+Quiet, and the ▶/❚❚ glyph reports whether she is ACTUALLY speaking rather than
+guessing. It still never gates: the sale is unaffected either way.
+
+Found by discharging a standing instruction rather than by a failure —
+re-reading `VOICE_PASS.md` against the code after §0c. That pass also found §2
+and §3 still describing the Again/Slower/Quiet controls §0c deleted, and code
+comments cite "§2" as the live authority on the gating law, so a stale §2
+actively misleads. Marked superseded, pointing at the current section.
+
+**And a race it exposed in a spec I wrote.** After the wrong answer, the
+business spec clicked "Next customer" without waiting for the footer to
+re-render — so sometimes it clicked NOTHING, and the check reported "a question
+costs her the sale": a true sentence about a button that was never pressed.
+Intermittent at two runs in three, and only surfaced because an unrelated change
+shifted the timing by half a second. It waits for the button now. Two
+consecutive full runs, 306/306 each.

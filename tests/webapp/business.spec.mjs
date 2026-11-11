@@ -2,7 +2,7 @@
 
    Part of the end-to-end suite — run it through `npm run test:webapp`, which builds
    apps/web first and shares one static host and one browser across every spec. */
-import { answerMoment, clickText, ledger, open, openMoment, text, workTheLine } from './harness.mjs';
+import { answerMoment, clickText, ledger, open, openMoment, spoken, text, workTheLine } from './harness.mjs';
 
 export default async function run(check) {
   /* ---------- 3. the business day is playable end to end ---------- */
@@ -101,6 +101,22 @@ export default async function run(check) {
         await page.evaluate(() => ![...document.querySelectorAll('button')]
           .some(b => /^Serve |^Next customer|Serve the rest/.test(b.innerText.trim()))));
       // The question IS the screen now, not a card under twenty-six rows.
+      /* "Hear Ava" shipped emitting an event nothing handled — a button that
+         did nothing, which is the same lie as a reader on a screen with
+         nothing to read. It has to actually speak, through the one reader, and
+         it may not gate: the sale is unaffected either way. */
+      const saidBefore = spoken.length;
+      const hasHear = await page.evaluate(() => {
+        const b = document.querySelector('[data-hear]');
+        if (!b) return false;
+        b.click();
+        return true;
+      });
+      for (let i = 0; i < 40 && spoken.length === saidBefore; i++) await page.waitForTimeout(100);
+      check('the counter offers to say the customer out loud', hasHear);
+      check('and tapping it really speaks, rather than firing into nothing',
+        spoken.length > saidBefore, `${spoken.length - saidBefore} utterance(s)`);
+
       check('the question is the biggest thing on the counter', await page.evaluate((q) => {
         const el = [...document.querySelectorAll('div')]
           .find(d => d.children.length === 0 && d.innerText.trim().startsWith(q.slice(0, 20)));
@@ -121,8 +137,23 @@ export default async function run(check) {
         /Here.s the (working|sum)/.test(t) && t.includes(m.ans),
         t.match(/Here.s the [^\n]*/)?.[0] || t.slice(0, 80).replace(/\n/g, ' '));
 
-      await page.evaluate(() => [...document.querySelectorAll('button')]
-        .find(b => /Next customer|^Serve /.test(b.innerText.trim()))?.click());
+      /* WAIT FOR THE BUTTON, THEN CLICK IT. This clicked whatever was there the
+         instant the wrong answer landed, so when the footer had not re-rendered
+         yet it clicked NOTHING and the customer was never served — and the
+         check that followed reported "a question costs her the sale", which is
+         a true sentence about a button that was never pressed. Intermittent,
+         and exposed by an unrelated change shifting the timing by half a
+         second. */
+      for (let i = 0; i < 60; i++) {
+        const hit = await page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find(x => /Next customer|^Serve /.test(x.innerText.trim()));
+          if (b) { b.click(); return true; }
+          return false;
+        });
+        if (hit) break;
+        await page.waitForTimeout(100);
+      }
       /* WAIT FOR THE WRITE, NOT FOR THE CLOCK. A fixed 350ms passed alone and
          failed in the full run, where eight specs drive eight browsers: the
          store had not been written when the check read it, so "the customer is

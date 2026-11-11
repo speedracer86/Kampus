@@ -79,10 +79,13 @@ step:
   spotlights a faceoff card (outline pulse); `prompt`/`takeaway`/`pick`
   highlight what they name. Reuse each layout's existing transitions — a cue is
   a trigger, not a new renderer.
-- Controls stay the three that exist: **Again** replays the step's lines;
-  **Slower** sets `audio.playbackRate = 0.8` (pitch is preserved by default in
-  modern browsers) — one rate for voice AND cue pacing, they are one thing;
-  **Quiet** stops playback.
+- Controls — **superseded by §0c, below.** This read "the three that exist:
+  Again, Slower, Quiet". §0c replaced all of it with ONE voice bar at the top of
+  every sheet that reads: **Again is gone as a button** (the reader disc replays
+  the line), **Slower** is one rate for voice and cue pacing alike, and **Quiet**
+  is the sound setting rather than a per-screen toggle. The bar is specified in
+  "§0c — the voice bar" at the end of this file; this bullet stays only so that
+  a reader who finds the old names in an old commit knows where they went.
 - **Fallback**: any step without clips (offline, or a tranche not yet authored)
   keeps today's behavior — speechSynthesis on `step.speak || step.prompt`.
 - **The ducking law (APD)**: while a clip plays, nothing else may emit sound,
@@ -98,7 +101,8 @@ step:
 - Unit (ui or engine): manifest shape ↔ SPEAK shape (every authored line has a
   clip entry after generation; no orphan clips).
 - Webapp spec: on a grade-6 day-1 lesson (eqFrac — tranche 1), the teach step
-  renders the speak lines, the voice row offers Again/Slower/Quiet, an
+  renders the speak lines, **the voice bar offers a reader disc, Slower and
+  Quiet** (§0c; it offered Again/Slower/Quiet when this was written), an
   `<audio>`/playback element exists when the manifest covers the step, and
   **Next's gating is unchanged with audio present**. Can't assert sound in CI;
   assert the wiring.

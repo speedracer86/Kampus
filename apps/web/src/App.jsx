@@ -571,7 +571,8 @@ export function App() {
     return <Shell {...shellProps('business')}>
       {/* The Grown-ups sound toggle, honoured. Reduced motion is read from the
           device inside the juice module and needs no setting to find. */}
-      <BusinessScreen data={businessData(state)} blobDir={BLOB_DIR} muted={state.settings?.sound === false}
+      <BusinessScreen data={{ ...businessData(state), voice: VOICE, voiceMode: voiceMode(state.grade) }}
+        blobDir={BLOB_DIR} muted={state.settings?.sound === false}
         onEvent={(type, payload) => {
           if (type === 'start_lesson') {
             const { day } = currentDay(state);

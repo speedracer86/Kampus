@@ -12,6 +12,7 @@ import { color, radius, font, numeral, money, signed } from './tokens.js';
 import { Button, Kicker, Chip, Blob } from './primitives.jsx';
 import { useWidth } from './util.jsx';
 import { CountUp, playRegister, useReducedMotion } from './juice.jsx';
+import { useSpokenLine, rateFor } from './say-it-show-it.jsx';
 
 const bBase = { fontFamily: font.family, boxSizing: 'border-box' };
 /* Supply prices live in cents (45¢ a lemon). money() rounds to whole dollars, which
@@ -287,7 +288,7 @@ function OrderChips({ chips }) {
 }
 
 export function Counter({ customer, moment, receipt, bizName, date, at = 0, of = 0, served = 0,
-  takings = 0, lastPaid = null, onAnswer, onServe, onHear, speaking = false,
+  takings = 0, lastPaid = null, onAnswer, onServe, voice, mode = 'c', muted = false,
   blobDir = '/blobs/', phone }) {
   const [picked, setPicked] = React.useState(null);
   React.useEffect(() => { setPicked(null); }, [customer, moment]);
@@ -301,6 +302,19 @@ export function Counter({ customer, moment, receipt, bizName, date, at = 0, of =
   const plain = (t) => String(t ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
   const said = plain(q?.q) || customerLine(customer, receipt);
   const answered = picked !== null;
+
+  /* HEAR THEM, through the one reader. The first cut emitted a `hear_customer`
+     event that nothing handled — a button that did nothing, which is the same
+     lie as a reader on a screen with nothing to read. It goes through
+     `useSpokenLine` instead, so it ducks against the audio bus like every other
+     voice in the product, honours Quiet, and reports whether she is actually
+     speaking so the glyph is the truth rather than a guess.
+
+     And it never gates: nothing below waits on it, the sale included. */
+  const heard = useSpokenLine({ text: said, speech: said, muted,
+    rate: rateFor(mode, voice?.rate) });
+  React.useEffect(() => () => heard.stop(), [customer]);   // eslint-disable-line react-hooks/exhaustive-deps
+  const speaking = heard.speaking;
 
   /* The receipt line this customer depends on. A question about price marks the
      cup price; a swap marks what is on the shelf. One at a time. */
@@ -390,7 +404,7 @@ export function Counter({ customer, moment, receipt, bizName, date, at = 0, of =
             {customer?.isRegular ? 'Regular' : 'New face'}</div>
         </div>
         {/* Hear it. Nothing waits on it. */}
-        {onHear && <button data-hear onClick={() => onHear(said)} style={{ ...bBase, border: 'none', cursor: 'pointer',
+        {!muted && <button data-hear onClick={() => heard.play()} style={{ ...bBase, border: 'none', cursor: 'pointer',
           display: 'inline-flex', alignItems: 'center', gap: 9, flex: 'none',
           background: color.fill, borderRadius: radius.full, padding: '6px 14px 6px 6px',
           fontSize: 13.5, fontWeight: 700 }}>
@@ -624,7 +638,7 @@ export function BusinessScreen({ data, blobDir = '/blobs/', muted = false, onEve
             at={d.counter?.at || 0} of={d.counter?.of || 0} served={d.counter?.served || 0}
             takings={d.takings || 0} lastPaid={d.lastPaid ?? null}
             blobDir={blobDir} phone={phone}
-            onHear={(line) => onEvent('hear_customer', { line })}
+            voice={d.voice} mode={d.voiceMode || 'c'} muted={muted}
             onAnswer={(right) => onEvent('moment_answer', { right, skill: cur?.moment?.skill })}
             /* One button moves the line, whichever kind of customer it is: a
                question is CLOSED by serving them, never by a second tap. */
