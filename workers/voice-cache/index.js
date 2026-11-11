@@ -26,6 +26,23 @@
  */
 
 const MAX_CHARS = 200;
+/* THE DAILY CEILING, in characters minted (cache hits cost nothing and are not
+   counted). This endpoint is PUBLIC and mints a paid ElevenLabs call for every
+   string it has not seen before, so the cache alone protects only repeats — a
+   loop feeding it novel text would spend the credit balance and the cache would
+   never once be hit. The cap is what stands between a public URL and the bill.
+
+   Sized for pilot-scale legitimate use. A kid meets roughly forty novel lines a
+   day across a lesson, free practice and the stand; question text runs about
+   eighty characters, so a working kid costs on the order of 3,000 characters a
+   day. 20,000 is six or seven kids at full tilt — comfortably past a pilot —
+   while bounding the worst day to something a monthly allowance survives.
+
+   Raise it with a plain Worker var, no code change:
+       npx wrangler deploy --var DAILY_CHAR_CAP:50000
+   or set it in wrangler.toml. Spend is counted per UTC day in KV under
+   `spend:YYYY-MM-DD`, which is also what the cap reads. */
+const DEFAULT_DAILY_CHAR_CAP = 20000;
 const MODEL = 'eleven_flash_v2_5';
 /* A QUERY parameter, not a body field. Sent in the body ElevenLabs ignores it
    and bills the account default back at twice the size — which is exactly how a
@@ -93,19 +110,47 @@ function foldToWords(text, alignment) {
   return words.length === plain.length ? words : null;
 }
 
+const spendKey = () => `spend:${new Date().toISOString().slice(0, 10)}`;
+const capOf = (env) => Number(env.DAILY_CHAR_CAP) || DEFAULT_DAILY_CHAR_CAP;
+
 /** One day's spend, counted so it can be read without reading logs. */
 async function recordSpend(env, chars) {
   if (!env.VOICE_KV) return;
-  const day = new Date().toISOString().slice(0, 10);
   try {
-    const now = Number(await env.VOICE_KV.get(`spend:${day}`)) || 0;
-    await env.VOICE_KV.put(`spend:${day}`, String(now + chars), { expirationTtl: 60 * 60 * 24 * 40 });
+    const now = Number(await env.VOICE_KV.get(spendKey())) || 0;
+    await env.VOICE_KV.put(spendKey(), String(now + chars), { expirationTtl: 60 * 60 * 24 * 40 });
   } catch { /* never let accounting break playback */ }
+}
+
+/**
+ * Would minting this line pass today's ceiling?
+ *
+ * WITHOUT KV THERE IS NO CAP, AND THAT IS REFUSED. A counter that cannot be
+ * read cannot bound anything, and "we could not check, so we spent it" is how
+ * an uncapped endpoint explains itself afterwards. No namespace bound means no
+ * minting — the client falls back to the browser voice, which is the same thing
+ * that happens before this Worker is deployed at all.
+ *
+ * The read-then-mint window means a burst of simultaneous misses can cross the
+ * line together. That is a backstop against runaway, not a ledger: it bounds
+ * the day to roughly the cap, not exactly it.
+ */
+async function withinCap(env, chars) {
+  if (!env.VOICE_KV) return { ok: false, why: 'no spend counter bound' };
+  let spent = 0;
+  try {
+    spent = Number(await env.VOICE_KV.get(spendKey())) || 0;
+  } catch {
+    return { ok: false, why: 'spend counter unreadable' };
+  }
+  const cap = capOf(env);
+  if (spent + chars > cap) return { ok: false, why: `daily cap reached (${spent}/${cap})` };
+  return { ok: true };
 }
 
 /* Exported for tests: the fold and the normalisation are where the subtle bugs
    live, and neither needs the network. */
-export { normalize, foldToWords, sha256 };
+export { normalize, foldToWords, sha256, withinCap, capOf, DEFAULT_DAILY_CHAR_CAP };
 
 export default {
   async fetch(request, env, ctx) {
@@ -134,6 +179,13 @@ export default {
     if (wantsTimes) return noClip('no timings for this line');
 
     if (!env.ELEVENLABS_API_KEY || !voice) return noClip('not configured', 503);
+
+    /* Only a MISS can spend, so the cap is checked here and not above: a cache
+       hit costs nothing and must keep working long after the day's ceiling is
+       reached. Over the line returns "no clip" like every other refusal — the
+       kid gets the browser voice and the lesson does not notice. */
+    const budget = await withinCap(env, text.length);
+    if (!budget.ok) return noClip(budget.why, 429);
 
     /* One call, with character timestamps so the sweep can be exact. The audio
        comes back base64 inside the JSON on this endpoint, not as a body. */

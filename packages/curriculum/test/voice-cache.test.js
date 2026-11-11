@@ -6,7 +6,8 @@
    and the guards that keep a question screen from becoming a free text-to-speech
    endpoint. The ElevenLabs call itself is not exercised; see the README. */
 import { describe, it, expect } from 'vitest';
-import worker, { normalize, foldToWords, sha256 } from '../../../workers/voice-cache/index.js';
+import worker, { normalize, foldToWords, sha256, withinCap, capOf, DEFAULT_DAILY_CHAR_CAP }
+  from '../../../workers/voice-cache/index.js';
 
 const bucket = (seed = {}) => {
   const store = new Map(Object.entries(seed));
@@ -117,5 +118,69 @@ describe('the guards', () => {
     const res = await worker.fetch(new Request('https://v/', { method: 'OPTIONS' }), {}, { waitUntil: () => {} });
     expect(res.status).toBe(200);
     expect(res.headers.get('access-control-allow-origin')).toBe('*');
+  });
+});
+
+/* THE DAILY CAP.
+
+   This endpoint is public and mints a paid ElevenLabs call for every string it
+   has not seen before, so the cache protects repeats and the cap protects the
+   credit balance. Everything here is about money leaving the account, which is
+   the one kind of bug that cannot be rolled back. */
+const kv = (spent, { broken = false } = {}) => ({
+  get: async () => { if (broken) throw new Error('kv down'); return spent === null ? null : String(spent); },
+  put: async () => {},
+});
+
+describe('the daily spend cap', () => {
+  it('lets an ordinary day through', async () => {
+    expect(await withinCap({ VOICE_KV: kv(0) }, 80)).toEqual({ ok: true });
+    expect(await withinCap({ VOICE_KV: kv(null) }, 80)).toEqual({ ok: true });   // first line of the day
+  });
+
+  it('refuses the line that would cross the ceiling, not the one that reaches it', async () => {
+    const cap = DEFAULT_DAILY_CHAR_CAP;
+    expect(await withinCap({ VOICE_KV: kv(cap - 80) }, 80)).toEqual({ ok: true });
+    expect((await withinCap({ VOICE_KV: kv(cap - 79) }, 80)).ok).toBe(false);
+  });
+
+  /* A counter that cannot be read cannot bound anything, and "we could not
+     check, so we spent it" is how an uncapped endpoint explains itself
+     afterwards. Both of these must refuse. */
+  it('refuses to mint when there is no counter to bound it', async () => {
+    expect((await withinCap({}, 80)).ok).toBe(false);
+    expect((await withinCap({ VOICE_KV: kv(0, { broken: true }) }, 80)).ok).toBe(false);
+  });
+
+  it('takes its ceiling from the environment, so raising it needs no code change', () => {
+    expect(capOf({})).toBe(DEFAULT_DAILY_CHAR_CAP);
+    expect(capOf({ DAILY_CHAR_CAP: '50000' })).toBe(50000);
+    expect(capOf({ DAILY_CHAR_CAP: 'nonsense' })).toBe(DEFAULT_DAILY_CHAR_CAP);
+  });
+
+  it('never lets the cap reach a kid: over the line is "no clip", not an error', async () => {
+    const res = await call('A brand new sentence.', {
+      VOICE_KV: kv(DEFAULT_DAILY_CHAR_CAP), ELEVENLABS_API_KEY: 'k', ELEVENLABS_VOICE_ID: 'v',
+    });
+    expect(res.status).toBe(429);
+    expect((await res.json()).ok).toBe(false);
+  });
+
+  /* THE CACHE OUTLIVES THE CAP. A hit costs nothing, so a day that has spent
+     its ceiling must still serve every clip it has already paid for — or the
+     cap would silence the voice for the rest of the day over lines that are
+     free. */
+  it('serves a cached clip long after the ceiling is reached', async () => {
+    const voice = 'v';
+    const key = await sha256(`${voice}|Already paid for.`);
+    const seeded = bucket({ [`clips/${key}.mp3`]: 'MP3' });
+    const res = await worker.fetch(
+      new Request(`https://v/?text=${encodeURIComponent('Already paid for.')}`),
+      { VOICE_BUCKET: seeded, VOICE_KV: kv(DEFAULT_DAILY_CHAR_CAP * 10),
+        ELEVENLABS_API_KEY: 'k', ELEVENLABS_VOICE_ID: voice },
+      { waitUntil: () => {} },
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-voice-cache')).toBe('hit');
   });
 });

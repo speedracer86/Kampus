@@ -6,8 +6,8 @@ compatibility_date = "2026-10-01"
 # workers/preview:
 #
 #   cd workers/voice-cache
-#   npx wrangler r2 bucket create kampus-voice
-#   npx wrangler kv namespace create VOICE_KV
+#   npx wrangler r2 bucket create kampus-voice      (needs R2 enabled on the account)
+#   npx wrangler kv namespace create VOICE_KV        (done: id below)
 #   npx wrangler secret put ELEVENLABS_API_KEY
 #   npx wrangler secret put ELEVENLABS_VOICE_ID
 #   npx wrangler deploy
@@ -21,10 +21,21 @@ compatibility_date = "2026-10-01"
 binding = "VOICE_BUCKET"
 bucket_name = "kampus-voice"
 
-# Daily character spend, so the bill can be read without reading logs.
-# [[kv_namespaces]]
-# binding = "VOICE_KV"
-# id = "<paste the id wrangler prints>"
+# Daily character spend — and the CAP that reads it. This endpoint is public and
+# mints a paid ElevenLabs call for every string it has not seen before, so the
+# cache protects repeats and this protects the credit balance. Without the
+# namespace the Worker refuses to mint at all: a counter that cannot be read
+# cannot bound anything.
+[[kv_namespaces]]
+binding = "VOICE_KV"
+id = "4552f71440d043379f478ecad2fb2209"
+
+[vars]
+# Characters minted per UTC day. Cache hits cost nothing and are not counted.
+# ~80 characters a line, ~40 novel lines a kid a day => ~3,000 a working kid,
+# so this is six or seven kids at full tilt. Raise it here, or per deploy with
+# `--var DAILY_CHAR_CAP:50000`.
+DAILY_CHAR_CAP = "20000"
 
 [observability]
 enabled = true
