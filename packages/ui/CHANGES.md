@@ -1210,3 +1210,49 @@ failure, which is a sustained outage and not a blip.
 So: ask DNS first, and fail in a second with the reason. A mirror outage now
 says so in one line and costs nothing; a genuinely missing dependency still
 breaks the build.
+
+### Teach me takes the sheet (§0c 25a, Nov 2026)
+
+It used to open as a box under the help grid, in the 340px left column — the
+working for a question set in a third of the width of the question, beside a
+question that stayed the biggest thing on screen. If she has asked to be taught,
+the teaching is the screen.
+
+So the sheet's body is replaced: a kicker that says what it cost ("Teach me ·
+token used, full pay"), the question restated small because she is still
+answering it, the stage where the bank authored one, and the walk a line at a
+time. The lines still to come are SLOTS rather than nothing, so she can count
+them — "three more" is a different feeling from an unknown number of taps.
+
+**A miss may not take the sheet.** A miss opens the walk free (no punitive
+mechanics; it has already cost her the streak), but 25a is about ASKING. If a
+miss swapped the sheet, "Not yet. Here's the step" and the answers would vanish
+behind working she never requested — the correction disappearing at the moment
+she needs it. The takeover is for an asked teach only; a miss keeps the question
+with the walk beside it, as before.
+
+**No voice bar here.** 25a draws none, the screen does not read, and a reader
+with nothing to read is a control that lies. The voice comes back with the
+question, which the spec checks on the way out.
+
+`TeachReveal` is deleted — keeping a second, subtly different walk is exactly
+how the five voice chromes happened.
+
+**A guard of mine that the mutation caught.** "A miss keeps the question" was
+written as `!/Not yet/.test(text) || (rows && answers)`, and the mutation that
+lets the sheet eat the miss ALSO removes the "Not yet" bar — so it passed by
+destroying the evidence it looked for. Both facts are required now, with no
+escape hatch: the walk opened AND the question is still there. A run that never
+produced a miss fails too, which is correct — a spec that cannot reach what it
+claims to test has not tested it.
+
+**And the same spec, fixed twice.** "A miss opens the worked steps by itself"
+failed in the full run and passed alone, twice. The first fix replaced its fixed
+sleeps with proper waits but left the assumption underneath: "not marked within
+2500ms, so it must have been right" — which under eight concurrent browsers is
+just a slow page, so the driver went and clicked an answer on a question that
+had already been answered. It waits for the screen to RESOLVE now, either way,
+and reads which way it went; a miss marks, a hit moves the question on, and
+neither is inferred from elapsed time. It also carries a new check — "a miss was
+actually reached" — so a driver that cannot produce one fails loudly instead of
+quietly testing nothing. Two consecutive full runs, 291/291 each.

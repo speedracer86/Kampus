@@ -9,6 +9,7 @@ import { color, type, radius, font, numeral } from './tokens.js';
 import { Kicker, Button } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
 import { useSpokenLine, rateFor, whenVoiceQuiet, VoiceBar, SLOWER_RATE } from './say-it-show-it.jsx';
+import { TeachStage } from './teach-layouts.jsx';
 // (no illustration here any more: the reader's disc lives in the voice bar)
 
 const qBase = { fontFamily: font.family, boxSizing: 'border-box' };
@@ -274,33 +275,82 @@ export function teachRow(line) {
   return { how: text };
 }
 
-/** Teach me, one beat at a time: each row arrives on its own tap, as the walk does. */
-function TeachReveal({ steps = [], phone }) {
-  const [shown, setShown] = React.useState(1);
+
+/* TEACH ME TAKES THE SHEET (§0c 25a).
+
+   It used to open as a box under the help grid, in the 340px left column — the
+   working for a question set in a third of the width of the question, while the
+   question itself stayed the biggest thing on screen. If she has asked to be
+   taught, the teaching is the screen.
+
+   So the sheet's body is replaced: the kicker says what it cost, the question
+   is restated small because she still needs it, the stage shows the move, and
+   the walk builds a line at a time. The unrevealed lines are SLOTS rather than
+   nothing, so she can see how many there are — "three more" is a different
+   feeling from an unknown number of taps.
+
+   No voice bar here: the Teach me screen does not read (25a draws none), and a
+   reader with nothing to read is a control that lies. The voice comes back with
+   the question.
+
+   Nothing in here gates. "Back to the question" is live from the first paint. */
+function TeachSheet({ question, tokensLeft, teachFree, onBack, phone, compact = false }) {
+  const steps = question.teachSteps || [];
   const rows = steps.map(teachRow);
-  return <div>
-    {rows.slice(0, shown).map((r, i) => {
-      const isResult = i === rows.length - 1;
-      const tone = isResult ? color.greenDeep : color.ink;
-      return <div key={i} data-teach-row={i} style={{ display: 'flex', alignItems: 'baseline',
-        gap: phone ? 12 : 18, padding: '12px 0',
-        borderBottom: i < rows.length - 1 ? `1px solid ${color.rule}` : 'none' }}>
-        {r.value !== undefined && <span data-teach-value
-          style={{ ...numeral(phone ? 24 : 30), flex: 'none', color: tone }}>{rich(r.value)}</span>}
-        <span style={{ fontSize: phone ? 15.5 : 16.5, lineHeight: 1.45, fontWeight: r.value ? 600 : 500,
-          color: isResult ? tone : color.muted }}>{rich(r.how)}</span>
-      </div>;
-    })}
-    {shown < rows.length && <button onClick={() => setShown(n => n + 1)} style={{ ...qBase, display: 'block',
-      width: '100%', textAlign: 'left', border: 'none', cursor: 'pointer', height: 48,
-      borderRadius: radius.lg, background: color.track, color: color.muted,
-      fontSize: 14, fontWeight: 600, padding: '0 16px', marginTop: 10 }}>
-      Tap for the next line · {shown} of {rows.length}</button>}
-  </div>;
+  const [shown, setShown] = React.useState(1);
+  React.useEffect(() => { setShown(1); }, [question.text]);
+  const cost = teachFree ? 'free on a new idea' : tokensLeft > 0 ? 'token used, full pay' : 'no token, half pay';
+
+  return <>
+    <div style={{ padding: compact ? 0 : (phone ? '20px 16px' : '32px 40px') }}>
+      {!compact && <>
+        <Kicker style={{ marginBottom: 10 }}>Teach me · {cost}</Kicker>
+        {/* The question, restated small: she is still answering it. */}
+        <div style={{ fontSize: phone ? 19 : 24, fontWeight: 600, lineHeight: 1.3, textWrap: 'pretty' }}>
+          {!!question.ask && <>{rich(question.ask)} </>}{rich(question.text)}</div>
+      </>}
+
+      {/* The move, where the bank authored one. */}
+      {question.stage && <TeachStage stage={question.stage} index={shown - 1} of={rows.length} phone={phone} />}
+
+      <div style={{ marginTop: 18 }}>
+        {rows.map((r, i) => {
+          if (i >= shown) {
+            // A slot, not a gap: she can see how much is still coming.
+            const next = i === shown;
+            return <button key={i} data-teach-slot onClick={next ? () => setShown(n => n + 1) : undefined}
+              style={{ ...qBase, display: 'block', width: '100%', textAlign: 'left', border: 'none',
+                cursor: next ? 'pointer' : 'default', height: 56, borderRadius: 16,
+                background: color.fill, color: color.muted, fontSize: 14, fontWeight: 600,
+                padding: '0 16px', marginTop: 10 }}>
+              {next ? 'Tap for the next line' : ''}</button>;
+          }
+          const isResult = i === rows.length - 1;
+          const tone = isResult ? color.greenDeep : color.ink;
+          return <div key={i} data-teach-row={i} style={{ display: 'grid',
+            gridTemplateColumns: phone ? '92px 1fr' : '150px 1fr', alignItems: 'baseline',
+            gap: phone ? 12 : 18, padding: '12px 0',
+            borderBottom: i < rows.length - 1 ? `1px solid ${color.rule}` : 'none' }}>
+            <span data-teach-value style={{ ...numeral(phone ? 28 : 40), color: tone }}>
+              {r.value !== undefined ? rich(r.value) : ''}</span>
+            <span style={{ fontSize: phone ? 15.5 : 17, lineHeight: 1.45, fontWeight: 600,
+              color: isResult ? tone : color.muted }}>{rich(r.how)}</span>
+          </div>;
+        })}
+      </div>
+    </div>
+
+    {!compact && <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+      padding: phone ? '16px' : '20px 40px', borderTop: `1px solid ${color.rule}` }}>
+      <span style={{ flex: 1, minWidth: 120, fontSize: 16, fontWeight: 600, color: color.muted }}>
+        {Math.min(shown, rows.length)} of {rows.length}</span>
+      <Button variant="ink" onClick={onBack}>Back to the question →</Button>
+    </div>}
+  </>;
 }
 
 /** Whatever help the kid opened, in a box under the grid. Teach shows the token gate first. */
-function HelpBox({ open, question, teachConfirm, tokensLeft, teachFree, onTeachConfirm, phone }) {
+function HelpBox({ open, question, teachConfirm, tokensLeft, teachFree, onTeachConfirm, phone, missed = false }) {
   if (!open) return null;
   const box = { ...qBase, background: phone ? '#F2F4F6' : color.surface, borderRadius: radius.lg, padding: phone ? 16 : 20, marginTop: 12 };
   if (open === 'teach' && teachConfirm) return <div style={{ ...box, background: color.held }}>
@@ -320,11 +370,19 @@ function HelpBox({ open, question, teachConfirm, tokensLeft, teachFree, onTeachC
     : open === 'show' ? question.show
       : open === 'teach' ? null
         : question.text;
+  /* Teach me takes the SHEET when she asked for it (§0c 25a). The one case
+     that still belongs beside the question is the walk a MISS opened, because
+     there the question and its correction are what she is looking at. */
+  if (open === 'teach') {
+    if (!missed || !(question.teachSteps || []).length) return null;
+    return <div style={box}>
+      <Kicker style={{ marginBottom: 8 }}>{HELP_LABEL[open]}</Kicker>
+      <TeachSheet compact question={question} phone={phone} />
+    </div>;
+  }
   return <div style={box}>
     <Kicker style={{ marginBottom: 8 }}>{HELP_LABEL[open]}</Kicker>
-    {open === 'teach'
-      ? <TeachReveal key={question.text} steps={question.teachSteps || []} phone={phone} />
-      : <div style={{ fontSize: 16, lineHeight: 1.5 }}>{rich(body)}</div>}
+    <div style={{ fontSize: 16, lineHeight: 1.5 }}>{rich(body)}</div>
   </div>;
 }
 
@@ -460,6 +518,16 @@ export function Question({
     onPointerCancel: () => setPressed(null),
   });
 
+  /* TEACHING TAKES THE SHEET (§0c 25a). Not the prompt and the answers with a
+     box of working beside them: if she asked to be taught, the teaching is the
+     screen, and the voice bar goes with the question it belonged to. */
+  /* Only when she ASKED. A miss opens the walk too (no punitive mechanics —
+     the miss already cost her the streak), but then the correction and the
+     answers are the thing she needs to see: taking the sheet would hide "Not
+     yet. Here's the step" behind the working she did not request. */
+  const teaching = help === 'teach' && !teachConfirm && !feedback
+    && (question.teachSteps || []).length > 0;
+
   const givens = question.givens || [];
   const hasLeftColumn = givens.length > 0 || !!question.family || helpIds.length > 0;
   const knowCol = <>
@@ -479,7 +547,7 @@ export function Question({
     <Kicker style={{ margin: phone ? '18px 0 8px' : '26px 0 10px' }}>Need help</Kicker>
     <HelpGrid ids={helpIds} open={help} onPick={chooseHelp} tokensLeft={tokensLeft} teachFree={teachFree} phone={phone} />
     <HelpBox open={help} question={question} teachConfirm={teachConfirm} tokensLeft={tokensLeft}
-      teachFree={teachFree} onTeachConfirm={onTeachConfirm} phone={phone} />
+      teachFree={teachFree} onTeachConfirm={onTeachConfirm} phone={phone} missed={!!feedback} />
   </>;
 
   /* THE VOICE BAR IS THE SHEET'S FIRST ROW (§0c).
@@ -581,13 +649,18 @@ export function Question({
             <div style={{ fontSize: 12.5, fontWeight: 700, color: color.muted }}>{g.k}</div>
             <div style={{ ...numeral(26), marginTop: 2 }}>{g.v}</div></div>)}</div>}
         <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
-          {voiceBar}
-          <div style={{ padding: '20px 16px' }}>
-            {prompt}{scaffold}{answers}{helpCol}{!snag && wrongBar}
-            {!snag && feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
-            {checkBar}
-          </div>
-          {footerRow}
+          {teaching
+            ? <TeachSheet question={question} tokensLeft={tokensLeft} teachFree={teachFree}
+              phone onBack={() => chooseHelp('teach')} />
+            : <>
+              {voiceBar}
+              <div style={{ padding: '20px 16px' }}>
+                {prompt}{scaffold}{answers}{helpCol}{!snag && wrongBar}
+                {!snag && feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
+                {checkBar}
+              </div>
+              {footerRow}
+            </>}
         </div>
       </>
       /* The left column only exists when it holds something. A Snag has no
@@ -601,13 +674,18 @@ export function Question({
             the spine, the disc and the chosen-answer ring; a coloured lid on the
             sheet made the voice bar look like a second header. */}
         <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
-          {voiceBar}
-          <div style={{ padding: '32px 40px' }}>
-            {prompt}{scaffold}{answers}{!snag && wrongBar}
-            {!snag && feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
-              <PayoutLine payout={payout} /></div>}
-          </div>
-          {footerRow}
+          {teaching
+            ? <TeachSheet question={question} tokensLeft={tokensLeft} teachFree={teachFree}
+              onBack={() => chooseHelp('teach')} />
+            : <>
+              {voiceBar}
+              <div style={{ padding: '32px 40px' }}>
+                {prompt}{scaffold}{answers}{!snag && wrongBar}
+                {!snag && feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
+                  <PayoutLine payout={payout} /></div>}
+              </div>
+              {footerRow}
+            </>}
         </div>
       </div>}
   </div>;

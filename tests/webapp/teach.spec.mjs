@@ -32,22 +32,22 @@ export default async function run(check) {
         /[A-Za-z]{3,}/.test(heading), JSON.stringify(heading.slice(0, 60)));
 
       /* Answer wrongly on purpose. Which option is wrong is not knowable from
-         the page, so this takes one and tries again on the next question if it
-         happened to be right.
+         the page, so this takes one and tries the next question if it happened
+         to be right.
 
-         WAITED FOR, NOT SLEPT THROUGH. The fixed 500/1500/600ms version passed alone
-         and failed in the full run, where eight specs drive eight browsers at
-         once: the page had not reached the next question when the second click
-         landed, so it hit an already-answered one and nothing opened. The check
-         then reported "a miss opens nothing", which is a true sentence about a
-         screen that was never missed on. */
-      const missOnce = () => page.evaluate((last) => {
-        const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
-        if (opts.length < 2) return false;
-        opts[last ? opts.length - 1 : 0].click();
-        return true;
-      }, false);
-      const until = async (fn, ms = 6000, every = 100) => {
+         TWICE THIS HAS FAILED IN THE FULL RUN AND PASSED ALONE, and both times
+         the cause was the driver deciding something from the CLOCK. First it
+         slept fixed amounts. Then it waited properly but kept the assumption
+         underneath: "not marked within 2500ms, so it must have been right" —
+         which under eight concurrent browsers is simply a slow page, and the
+         driver would go and click an answer on a question that had already been
+         answered. The check then reported "a miss opens nothing", a true
+         sentence about a screen that was never missed on.
+
+         So it waits for the screen to RESOLVE, either way, and reads which way
+         it went: a miss marks, a hit moves the question on. Neither outcome is
+         inferred from elapsed time. */
+      const until = async (fn, ms = 9000, every = 100) => {
         for (let i = 0; i < Math.ceil(ms / every); i++) {
           if (await fn()) return true;
           await page.waitForTimeout(every);
@@ -55,26 +55,27 @@ export default async function run(check) {
         return false;
       };
       const marked = () => page.evaluate(() => /Not yet|Try again/i.test(document.body.innerText));
-      const fresh = (was) => page.evaluate((prev) => {
-        const h = document.querySelector('h2')?.innerText || '';
-        return h !== prev && /[A-Za-z]{3,}/.test(h) &&
-          [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim())).length >= 2;
-      }, was);
+      const headNow = () => page.evaluate(() => document.querySelector('h2')?.innerText || '');
+      const pickable = () => page.evaluate(() =>
+        [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim())).length >= 2);
 
-      let missed = await missOnce();
-      let t = '';
-      if (missed && !(await until(marked, 2500))) {
-        // That one happened to be right. Wait for the NEXT question to arrive —
-        // by its heading changing, not by the clock — and miss that one.
-        const was = await page.evaluate(() => document.querySelector('h2')?.innerText || '');
-        await until(() => fresh(was), 8000);
-        await page.evaluate(() => {
+      let hitAMiss = false;
+      for (let attempt = 0; attempt < 4 && !hitAMiss; attempt++) {
+        if (!(await until(pickable, 9000))) break;
+        const was = await headNow();
+        const clicked = await page.evaluate((last) => {
           const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
-          opts[opts.length - 1]?.click();
-        });
-        await until(marked, 4000);
+          if (opts.length < 2) return false;
+          opts[last ? opts.length - 1 : 0].click();
+          return true;
+        }, attempt % 2 === 1);
+        if (!clicked) break;
+        // Resolve EITHER WAY before deciding anything.
+        await until(async () => (await marked()) || (await headNow()) !== was, 9000);
+        hitAMiss = await marked();
       }
-      t = await text(page);
+      check('a miss was actually reached', hitAMiss, `after 4 tries`);
+      let t = await text(page);
 
       // The walk itself, not the "Not yet" bar — that appears either way and
       // would have passed against a product that opened nothing.
@@ -171,6 +172,108 @@ export default async function run(check) {
     t = await text(page);
     check('the Try it stays last and still gates the mission',
       /STEP 3 OF 3/i.test(t) && t.includes('Start the mission'), t.slice(0, 90).replace(/\n/g, ' '));
+    await page.close();
+  }
+
+  /* ---------- Teach me takes the sheet (§0c 25a) ---------- */
+  {
+    const page = await open({ grade: 6, name: 'Talia', kredits: 400,
+      days: { '2026-01-02': 1 }, lastTopic: 'frac' }, '#home');
+    await page.waitForTimeout(700);
+    const started = await page.evaluate(() => {
+      const play = [...document.querySelectorAll('button')]
+        .find(b => /^Play /.test(b.getAttribute('aria-label') || ''));
+      if (play) { play.click(); return true; }
+      return false;
+    });
+    await page.waitForTimeout(900);
+
+    const look = () => page.evaluate(() => ({
+      text: document.body.innerText,
+      rows: document.querySelectorAll('[data-teach-row]').length,
+      slots: document.querySelectorAll('[data-teach-slot]').length,
+      answers: [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim())).length,
+      bars: document.querySelectorAll('[data-voice-bar]').length,
+      back: [...document.querySelectorAll('button')].some(b => /Back to the question/.test(b.innerText)),
+    }));
+
+    const before = await look();
+    check('a question surface was reached', started && before.answers >= 2, JSON.stringify(before.answers));
+
+    const opened = await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => /^Teach me/.test(x.innerText.trim()));
+      if (!b) return false;
+      b.click(); return true;
+    });
+    await page.waitForTimeout(250);
+    // The token gate comes first; take it.
+    await page.evaluate(() => [...document.querySelectorAll('button')]
+      .find(b => /Use a token|Teach me anyway/.test(b.innerText))?.click());
+    await page.waitForTimeout(350);
+
+    const during = await look();
+    check('Teach me was offered and opened', opened, JSON.stringify(opened));
+    /* §0c 25a: the TEACHING is the screen. The working for a question set in a
+       third of the width, beside a question that stayed the biggest thing on
+       screen, is what this replaced. */
+    check('the teaching takes the sheet, and the answers step aside',
+      during.rows > 0 && during.answers === 0, JSON.stringify(during));
+    check('the lines still to come are slots she can count, not an unknown',
+      during.slots > 0 && /Tap for the next line/.test(during.text), JSON.stringify(during.slots));
+    // The kicker renders uppercase, so the check reads it that way.
+    check('and it says what it cost her', /teach me · (token used|no token|free)/i.test(during.text),
+      during.text.match(/[Tt][Ee][Aa][Cc][Hh] [Mm][Ee] · [^\n]*/)?.[0] || '');
+    /* No voice bar here: 25a draws none, and a reader with nothing to read is a
+       control that lies. The voice comes back with the question. */
+    check('no reader is offered on a screen that does not read', during.bars === 0,
+      String(during.bars));
+    check('the way back to the question is live from the first paint', during.back);
+
+    await page.evaluate(() => [...document.querySelectorAll('button')]
+      .find(b => /Back to the question/.test(b.innerText))?.click());
+    await page.waitForTimeout(300);
+    const after = await look();
+    check('and it gives the question back, voice and all',
+      after.answers >= 2 && after.bars === 1 && after.rows === 0, JSON.stringify(after));
+    await page.close();
+  }
+
+  /* ---------- a miss keeps the question (§0c 25a, the other way) ---------- */
+  {
+    const page = await open({ grade: 6, name: 'Talia', kredits: 400,
+      days: { '2026-01-02': 1 }, lastTopic: 'frac' }, '#home');
+    await page.waitForTimeout(700);
+    await page.evaluate(() => [...document.querySelectorAll('button')]
+      .find(b => /^Play /.test(b.getAttribute('aria-label') || ''))?.click());
+    await page.waitForTimeout(900);
+    // Miss on purpose, then try the next question if that one was right.
+    for (let i = 0; i < 3; i++) {
+      await page.evaluate((n) => {
+        const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+        opts[n % 2 === 0 ? 0 : opts.length - 1]?.click();
+      }, i);
+      await page.waitForTimeout(500);
+      if (await page.evaluate(() => /Not yet/i.test(document.body.innerText))) break;
+      await page.waitForTimeout(900);
+    }
+    const t = await page.evaluate(() => ({
+      text: document.body.innerText,
+      rows: document.querySelectorAll('[data-teach-row]').length,
+      answers: [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim())).length,
+    }));
+    /* The miss opens the walk free, and it may NOT take the sheet: hiding "Not
+       yet. Here's the step" behind working she did not ask for is the correction
+       disappearing at the moment she needs it.
+
+       NO ESCAPE HATCH. The first version read `!/Not yet/.test(text) || ...`,
+       so a sheet takeover that swallowed the "Not yet" bar made the check pass
+       by destroying the evidence it looked for — the mutation proved it. Both
+       facts are now required: the walk opened, AND the question is still there.
+       A run that never produced a miss fails too, which is correct: a spec that
+       cannot reach what it claims to test has not tested it. */
+    check('a miss opens the walk without taking the question away',
+      t.rows > 0 && t.answers >= 2,
+      JSON.stringify({ rows: t.rows, answers: t.answers, notYet: /Not yet/i.test(t.text) }));
     await page.close();
   }
 
