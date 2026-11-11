@@ -141,10 +141,32 @@ export const receiptBlock = (t) => {
 };
 
 /** The ledger, as stored. */
-export const ledger = (page) => page.evaluate(() => {
-  const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
-  return (s.ledger || []).map(r => ({ id: r.id, cents: r.cents, status: r.status, reason: r.reason, label: r.label }));
-});
+/* The ledger as the store holds it.
+
+   WITH A PREDICATE, IT WAITS FOR THE WRITE. Reading the store a fixed number of
+   milliseconds after a click is the shape that has failed three times in one
+   session — alone it passes, and under eight concurrent browsers the write has
+   simply not landed, so the check reports the OLD value as though the action
+   had not worked. Any read that asserts a change the preceding click caused
+   should say what it is waiting for:
+
+       const rows = await ledger(page, r => r.find(x => x.id === 'e2')?.status === 'approved');
+
+   It still returns whatever it last read when the wait runs out, so the check
+   that follows fails on the real value rather than on a timeout. */
+export const ledger = async (page, until = null, ms = 6000) => {
+  const read = () => page.evaluate(() => {
+    const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+    return (s.ledger || []).map(r => ({ id: r.id, cents: r.cents, status: r.status, reason: r.reason, label: r.label }));
+  });
+  let rows = await read();
+  if (!until) return rows;
+  for (let i = 0; i < Math.ceil(ms / 100) && !until(rows); i++) {
+    await page.waitForTimeout(100);
+    rows = await read();
+  }
+  return rows;
+};
 
 /** Click Approve / Hold / Undo on the row for a named earning.
 

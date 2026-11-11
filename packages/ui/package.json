@@ -2,7 +2,7 @@
   "name": "@kampus/ui",
   "version": "1.0.0",
   "type": "module",
-  "description": "Kampus component library from the design handoff \u2014 zero-dependency React (plain JSX), inline-styled from tokens.js. Do not restyle; see README.",
+  "description": "Kampus component library from the design handoff — zero-dependency React (plain JSX), inline-styled from tokens.js. Do not restyle; see README.",
   "main": "./src/primitives.jsx",
   "exports": {
     "./tokens": "./src/tokens.js",
@@ -23,6 +23,7 @@
     "./onboarding": "./src/onboarding.jsx",
     "./teach-layouts": "./src/teach-layouts.jsx",
     "./placement": "./src/placement.jsx",
+    "./field": "./src/field.jsx",
     "./report": "./src/report.jsx",
     "./juice": "./src/juice.jsx",
     "./audio-bus": "./src/audio-bus.jsx",

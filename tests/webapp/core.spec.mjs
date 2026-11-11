@@ -217,4 +217,96 @@ export default async function run(check) {
     }
     await page.close();
   }
+  /* ---------- the field mission (§0f 44a/44b) ----------
+
+     One a week, optional, built from numbers somebody actually went and got.
+     The two things that can quietly rot here are the two this checks hardest:
+     that it is OPTIONAL in fact and not just in copy, and that it pays for
+     DOING it rather than for getting it right. */
+  {
+    const page = await open({ grade: 7, name: 'Talia', kredits: 400 }, '#field');
+    await page.waitForTimeout(700);
+
+    const look = () => page.evaluate(() => ({
+      text: document.body.innerText,
+      steps: [...document.querySelectorAll('[data-field-step]')].map(e => e.dataset.state),
+      inputs: [...document.querySelectorAll('[data-field-input]')].map(e => e.dataset.fieldInput),
+      numbers: [...document.querySelectorAll('[data-field-number]')].map(e => e.innerText.replace(/\n/g, ' ')),
+      make: (() => {
+        const b = [...document.querySelectorAll('button')].find(x => /Make my question/.test(x.innerText));
+        return b ? { there: true, disabled: b.disabled } : { there: false };
+      })(),
+      answers: [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim())).length,
+    }));
+
+    const one = await look();
+    check('the field mission opens on its first step', one.steps.join(',') === 'now,todo',
+      JSON.stringify(one.steps));
+    check('it asks for a handful of real numbers, not a form',
+      one.inputs.length >= 2 && one.inputs.length <= 3, JSON.stringify(one.inputs));
+    /* OPTIONAL IN FACT. Not "you can skip" buried somewhere: the way out is on
+       the screen, and the copy says a week without one is a normal week. */
+    check('skipping is offered on the screen, not hidden',
+      /Skip this week/.test(one.text) && /A week without one is a normal week/.test(one.text));
+    check('and it says it pays for doing it', /Pays the same as a lesson, for doing it/.test(one.text));
+    /* A question cannot be built from a blank — and that is a statement about
+       the DATA, so nothing scolds her for it. */
+    check('it will not build a question from nothing', one.make.there && one.make.disabled === true,
+      JSON.stringify(one.make));
+    check('and nothing on the first step scolds',
+      !/must|required|you need to|invalid/i.test(one.text),
+      one.text.match(/must|required|invalid/i)?.[0] || 'clean');
+
+    // Her numbers, typed the way a grown-up would.
+    const vals = { };
+    for (const k of one.inputs) vals[k] = String(3 + one.inputs.indexOf(k) * 2);
+    await page.evaluate((v) => {
+      for (const [k, val] of Object.entries(v)) {
+        const el = document.querySelector(`[data-field-input="${k}"]`);
+        const d = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value');
+        d.set.call(el, val);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }, vals);
+    await page.waitForTimeout(250);
+    const filled = await look();
+    check('with the numbers in, the question can be built', filled.make.disabled === false);
+
+    await clickText(page, 'Make my question');
+    await page.waitForTimeout(600);
+    const two = await look();
+    check('the second step arrives with the first one done',
+      two.steps.join(',') === 'done,now', JSON.stringify(two.steps));
+    /* BUILT FROM HER NUMBERS. A question that did not contain them would be a
+       worksheet with her name on it — the whole point is that she went and got
+       these. */
+    const missing = Object.values(vals).filter(v => !two.text.includes(v));
+    check('the question is built from the numbers she brought back',
+      two.answers >= 2 && missing.length === 0,
+      JSON.stringify({ answers: two.answers, missing }));
+    check('and her numbers stay on screen while she answers',
+      two.numbers.length === one.inputs.length, JSON.stringify(two.numbers));
+    check('nothing anywhere counts down', !/\b\d+:\d\d\b|seconds left|time left/i.test(two.text),
+      two.text.match(/\b\d+:\d\d\b|seconds left/i)?.[0] || 'untimed');
+
+    /* PAID FOR DOING IT, NEVER FOR GETTING IT RIGHT. Answered WRONG on purpose:
+       the earning has to be written all the same, at the field rate, or the
+       feature has quietly become a test. */
+    const before = await ledger(page);
+    await page.evaluate(() => {
+      const opts = [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim()));
+      opts[opts.length - 1]?.click();
+    });
+    await page.waitForTimeout(700);
+    const after = await ledger(page);
+    const added = (after || []).filter(r => !(before || []).some(b => b.id === r.id));
+    check('doing the mission pays, whatever the answer was',
+      added.length === 1 && added[0].reason === 'field',
+      JSON.stringify(added.map(r => ({ reason: r.reason, cents: r.cents, status: r.status }))));
+    check('at the field rate, pending a grown-up like every other earning',
+      added[0]?.cents === 50 && added[0]?.status === 'pending',
+      JSON.stringify(added[0] || null));
+    await page.close();
+  }
+
 }

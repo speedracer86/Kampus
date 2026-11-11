@@ -144,8 +144,7 @@ export default async function run(check) {
 
     // Approving the one that fits.
     check('Approve is offered on the row that fits', await rowAction(page, 'Daily lesson', 'Approve'));
-    await page.waitForTimeout(400);
-    let rows = await ledger(page);
+    let rows = await ledger(page, r => r.find(x => x.id === 'e2')?.status === 'approved');
     check('approving marks exactly that row approved, at its full rate',
       rows.find(r => r.id === 'e2')?.status === 'approved' && rows.find(r => r.id === 'e2')?.cents === 50,
       JSON.stringify(rows.find(r => r.id === 'e2')));
@@ -154,15 +153,13 @@ export default async function run(check) {
 
     // Hold, then undo: §0 says a decision is never destructive.
     await rowAction(page, 'Inspection Day', 'Hold');
-    await page.waitForTimeout(350);
-    rows = await ledger(page);
+    rows = await ledger(page, r => r.find(x => x.id === 'e3')?.status === 'deferred');
     check('Hold defers rather than deletes', rows.find(r => r.id === 'e3')?.status === 'deferred',
       JSON.stringify(rows.find(r => r.id === 'e3')));
     check('nothing left the ledger', rows.length === 3, `${rows.length} rows`);
 
     check('Undo is offered on the row that was just held', await rowAction(page, 'Inspection Day', 'Undo'));
-    await page.waitForTimeout(350);
-    rows = await ledger(page);
+    rows = await ledger(page, r => r.find(x => x.id === 'e3')?.status === 'pending');
     check('Undo puts it back in the queue', rows.find(r => r.id === 'e3')?.status === 'pending',
       JSON.stringify(rows.find(r => r.id === 'e3')));
     check('undoing one row leaves the others alone',
@@ -170,8 +167,7 @@ export default async function run(check) {
 
     // Approve all must stop cleanly at the cap, not blow through it.
     await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Approve all/.test(b.innerText))?.click());
-    await page.waitForTimeout(450);
-    rows = await ledger(page);
+    rows = await ledger(page, r => r.some(x => x.id === 'e1' && x.status === 'approved'));
     const approved = rows.filter(r => r.status === 'approved').reduce((n, r) => n + r.cents, 0);
     check('"Approve all" stops at the cap instead of passing it', approved <= 500, `$${(approved / 100).toFixed(2)} approved`);
     check('the over-cap row is still waiting, not silently dropped',

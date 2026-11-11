@@ -10,7 +10,8 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   startPlacement, nextProbe, recordProbe, placementDone, placementProgress, placementResult, placementQuestion,
   placementTopics,
   weekPlan, weekHeader, comingUp, weekOffsetFor,
-  approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk, RATES } from '@kampus/engine';
+  approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk, RATES,
+  weeklyAssignment, buildFieldQuestion, FIELD_PAY_REASON } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
 import { Shell } from '@kampus/ui/app';
 import { HomeStack } from '@kampus/ui/home-stack';
@@ -27,6 +28,7 @@ import { capabilities, lemonCount } from '@kampus/engine';
 import { PinGate } from '@kampus/ui/pin-gate';
 import { ParentSetup, StudentFirstRun, Doorway } from '@kampus/ui/onboarding';
 import { PlacementIntro, PlacementRunner, PlacementResult } from '@kampus/ui/placement';
+import { FieldMission } from '@kampus/ui/field';
 import { buildDayLesson, currentDay, yearProgress, todayCard, quizPlanFor, bizCtx, worldForUnit } from './year.js';
 import { pilotReport } from './report.js';
 import { unitById, lessonsFor, YEAR } from '@kampus/curriculum';
@@ -255,6 +257,10 @@ export function App() {
     return () => { offAuth(); stop(); };
   }, []);
   const [studentId, setStudentId] = useState(() => loadFamily().students[0]?.id || DEFAULT_STUDENT_ID);
+  // The field mission's two steps: the numbers she brought back, then the
+  // question built from them. Cleared when the mission is done or skipped.
+  const [fieldValues, setFieldValues] = useState({});
+  const [fieldQ, setFieldQ] = useState(null);
   const [state, setState] = useState(() => load(studentId));
   /* One reading of the sound setting, for every screen that can make a noise.
      It was written inline at each call site, and the three new question
@@ -281,7 +287,7 @@ export function App() {
   // repro). Home remains the default; the hash is read once, not watched.
   const [screen, setScreen] = useState(() => {
     const h = typeof location !== 'undefined' ? location.hash.slice(1) : '';
-    if (['lesson', 'quiz', 'test', 'rewards', 'parents', 'business', 'placement'].includes(h)) return h;
+    if (['lesson', 'quiz', 'test', 'rewards', 'parents', 'business', 'placement', 'field'].includes(h)) return h;
     // A paper in progress outranks Home: she was in the middle of it.
     const open = load(loadFamily().students[0]?.id || DEFAULT_STUDENT_ID).openPaper;
     if (open?.kind) return open.kind;
@@ -521,6 +527,44 @@ export function App() {
         }
         setPlacement({ machine, question: placementQuestion(nextProbe(machine)) });
       }} />;
+  }
+
+  /* THE FIELD MISSION (§0f 44a/44b). One a week, optional, and the engine
+     chooses which so it cannot change under her. Two steps: the numbers she
+     brought back, then the one question built from them. */
+  if (screen === 'field') {
+    const band = state.grade <= 4 ? 'a' : state.grade <= 6 ? 'b' : 'c';
+    const assignment = weeklyAssignment(band, weekKey());
+    const built = fieldQ;
+    return <Shell {...shellProps('field')}><FieldMission
+      assignment={assignment} values={fieldValues} question={built}
+      voice={VOICE} mode={voiceMode(state.grade)} muted={muted}
+      onRate={setVoiceRate} onMuted={setMuted} blobDir={BLOB_DIR}
+      onChange={(k, v) => setFieldValues(f => ({ ...f, [k]: v }))}
+      onMake={() => {
+        const q = buildFieldQuestion(assignment, fieldValues);
+        if (!q) return;
+        setFieldQ(q);
+        append(studentId, { type: 'field_start', payload: { assignment: assignment.id } });
+      }}
+      onSkip={() => { append(studentId, { type: 'field_skip', payload: {} }); setScreen('home'); }}
+      onAnswer={(i) => {
+        /* Paid for DOING it, exactly like a lesson, and never for getting it
+           right — so the answer is recorded and the pay is not conditional on
+           it. The engine owns the rate; this only says which reason it is. */
+        append(studentId, { type: 'field_done',
+          payload: { assignment: assignment.id, right: i === built.correct } });
+        update(st => {
+          // Through `award`, like every other earning: it owns the row's shape,
+          // its id, its label and the week it belongs to. A hand-rolled row here
+          // would be a second definition of what an earning IS.
+          st.ledger = award(st.ledger || [], {
+            reason: FIELD_PAY_REASON, day: dayName(), week: weekKey() }).rows;
+          return st;
+        });
+        append(studentId, { type: 'earn', payload: { reason: FIELD_PAY_REASON, cents: RATES[FIELD_PAY_REASON] } });
+        setFieldQ(null); setFieldValues({}); setScreen('home');
+      }} /></Shell>;
   }
 
   if (screen === 'business') {

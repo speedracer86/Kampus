@@ -1256,3 +1256,54 @@ and reads which way it went; a miss marks, a hit moves the question on, and
 neither is inferred from elapsed time. It also carries a new check — "a miss was
 actually reached" — so a driver that cannot produce one fails loudly instead of
 quietly testing nothing. Two consecutive full runs, 291/291 each.
+
+### The field mission (§0f 44a/44b, Nov 2026)
+
+A grown-up or the kid brings back two or three real numbers from the world, and
+ONE question is built from them. The restraint is the feature: the engine's menu
+asks for the fewest numbers that make the maths real, never more than three,
+because friction is this feature's enemy — a mission nobody can be bothered to
+start teaches nothing. Two steps, shown on the left so the end is in sight from
+the first screen.
+
+`packages/engine/src/field.js` was already complete — the banded menu, the
+deterministic weekly choice, and `buildFieldQuestion` returning exactly the shape
+`Question` consumes. The contract was there to read; what was missing was the
+screen.
+
+Two laws it inherits, both checked rather than asserted in copy:
+
+- **Optional in fact.** The way out is on the screen, and the copy says a week
+  without one is a normal week. No streak, no catch-up, no badge.
+- **Paid for DOING it, never for getting it right.** The spec answers WRONG on
+  purpose and requires the earning to be written anyway, at the field rate,
+  pending like every other. Making the app pay only for a right answer fails it.
+
+The pay goes through `award`, like every other earning. The first cut
+hand-rolled a ledger row — a second definition of what an earning IS, which is
+exactly the thing not to add.
+
+**Not built: the Shop (45a).** There is no shop screen in this app and that is
+deliberate ("a menu item that does nothing teaches the kid the menu lies" —
+AUDIT B1). 45a redraws the LEGACY app's grid of framed cards into a list; making
+it real here means building the screen and the purchase wiring, which is a
+feature rather than a redraw.
+
+### Specs that read the store too early
+
+Three times in one session a check failed in the full run and passed alone, and
+every time the cause was the same shape: click something, sleep a fixed number
+of milliseconds, read the store, assert what changed. Under eight concurrent
+browsers the write has not landed, so the check reads the OLD value and reports
+that the action did not work — a true statement about a store that had simply
+not been written yet.
+
+A sweep found fourteen sites of that shape. `ledger(page)` now takes a predicate
+and waits for it:
+
+    const rows = await ledger(page, r => r.find(x => x.id === 'e2')?.status === 'approved');
+
+It returns whatever it last read when the wait runs out, so the check that
+follows fails on the REAL value rather than on a timeout — the waiting makes it
+honest, not lenient. Four ledger sites converted, plus the business check that
+actually failed. Two consecutive full runs, 304/304 each.

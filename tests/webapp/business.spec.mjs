@@ -123,7 +123,17 @@ export default async function run(check) {
 
       await page.evaluate(() => [...document.querySelectorAll('button')]
         .find(b => /Next customer|^Serve /.test(b.innerText.trim()))?.click());
-      await page.waitForTimeout(350);
+      /* WAIT FOR THE WRITE, NOT FOR THE CLOCK. A fixed 350ms passed alone and
+         failed in the full run, where eight specs drive eight browsers: the
+         store had not been written when the check read it, so "the customer is
+         served either way" reported a sale that had simply not landed yet. */
+      for (let i = 0; i < 60; i++) {
+        if (await page.evaluate(() => {
+          const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+          return (s.dayQueue || []).some(c => c.momentDone);
+        })) break;
+        await page.waitForTimeout(100);
+      }
       const after = await page.evaluate(() => {
         const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
         return { kredits: s.kredits, biz: JSON.stringify(s.biz || null) };
