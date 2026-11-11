@@ -232,7 +232,18 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
 
 
   const hudOp = focusMode && st.feedback !== 'correct' ? 0 : 1;
-  const dim = st.teachOpen || st.teachConfirm ? 0.45 : 1;
+  /* NO DIM WHILE TEACHING (§0c). This was `teachOpen || teachConfirm ? 0.45 : 1`
+     and it washed the whole Question — the §0c SHEET TAKEOVER included — to
+     ghost grey, because the takeover replaces the sheet's content and the dim
+     wraps the sheet. Dimming the question to put the teaching forward made
+     sense when the teaching was a gold strip ABOVE an untouched question; now
+     the teaching IS the sheet, so the rule dimmed the thing it was meant to
+     favour. The owner read the result as "no new design, screen greys out".
+
+     The teaching is distinguished by being a surface, not by everything else
+     going pale — and 45% is a readability cost on a screen built for kids who
+     find reading the hard part. §0 line 321 is marked superseded to match. */
+  const dim = 1;
   const modeUI = { numline: NumberLine, fraction: FractionPieces, money: MoneyCounter, thermo: Thermometer }[q.mode];
   const isRightFree = (v) => q.mode === 'numline' ? v === q.vis.end : q.mode === 'fraction' ? v === q.vis.target : v === q.vis.target;
   const chipStyle = kind => ({
@@ -289,7 +300,13 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
             ? { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: true, tokensLeft: s.tokensLeft - 1 }
             : { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: false }); }}>
             {st.tokensLeft > 0 ? 'Use a token' : 'Teach me anyway'}</Button></div></div>}
-      {st.teachOpen && <div style={{ width: '100%', marginBottom: 18 }}><TeachPanel steps={q.teach} onClose={() => set(s => ({ ...s, teachOpen: false }))} /></div>}
+      {/* ONE TEACHING SURFACE. On a choice question the §0c takeover inside
+          <Question> IS the teaching, so this pre-§0c strip must never mount
+          beside it — the same disease as the double walk on a miss, which was
+          fixed for the miss path and left alive on the token-gated one. The
+          strip belongs only to the free-input modes, which have no sheet to
+          take over. */}
+      {st.teachOpen && !isChoice && <div style={{ width: '100%', marginBottom: 18 }}><TeachPanel steps={q.teach} onClose={() => set(s => ({ ...s, teachOpen: false }))} /></div>}
       <div style={{ width: '100%', opacity: dim, transition: 'opacity .3s' }}>
         {q.mode === 'choice' || !q.mode
           ? <Question question={asQuestion(q)} context="mission" tokensLeft={st.tokensLeft}
@@ -301,9 +318,12 @@ export function QuizRound({ questions, grade = 4, tier = 1, gearBonus = 0, world
             onHelp={(next, { needsConfirm } = {}) => set(s => ({ ...s, helpOpen: next, teachConfirm: next === 'teach' && !!needsConfirm }))}
             onTeachConfirm={(use) => { if (!use) return set(s => ({ ...s, helpOpen: null, teachConfirm: false }));
               onEvent('teach_open', { token: st.tokensLeft > 0 });
+              /* teachOpen stays FALSE on a choice question: the takeover is the
+                 teaching, and a flag that says a second panel is open would be
+                 a lie the next render acts on. */
               set(s => s.tokensLeft > 0
-                ? { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: true, tokensLeft: s.tokensLeft - 1 }
-                : { ...s, teachConfirm: false, teachOpen: true, helpUsed: true, tokenUsed: false }); }}
+                ? { ...s, teachConfirm: false, teachOpen: false, helpUsed: true, tokenUsed: true, tokensLeft: s.tokensLeft - 1 }
+                : { ...s, teachConfirm: false, teachOpen: false, helpUsed: true, tokenUsed: false }); }}
             onNext={() => set(advance)} onEvent={onEvent} />
           : React.createElement(modeUI, { vis: q.vis, feedback: st.feedback, picked: st.picked, onPick: (v) => answer(v, isRightFree(v)) })}</div>
       {!isChoice && st.feedback === 'wrong' && <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: color.redTint, border: `1px solid ${color.red}`, borderRadius: radius.md, padding: '12px 16px', marginTop: 18, width: '100%' }}>

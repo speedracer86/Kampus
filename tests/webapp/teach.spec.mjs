@@ -238,6 +238,109 @@ export default async function run(check) {
     await page.close();
   }
 
+  /* ---------- Teach me, end to end on the practice surface (§0c 25a) ----------
+
+     The owner's repro: grade 7, free practice, a choice question, Teach me ->
+     Use a token. Three things were wrong and all three are checked here,
+     because each was invisible to every check that existed.
+
+     This drives the BUILT BUNDLE the way a kid does — tap the pill, answer the
+     gate, read the working — rather than mounting a component with props. Two
+     of the three defects only exist when the real state machine runs: the old
+     strip mounting beside the takeover needs `teachOpen` set by the real
+     confirm handler, and the dim needs the real wrapper around the real sheet. */
+  {
+    const page = await open({ grade: 7, name: 'Talia', kredits: 400,
+      days: { '2026-01-02': 1 }, lastTopic: 'frac' }, '#home');
+    await page.waitForTimeout(700);
+    const started = await page.evaluate(() => {
+      const play = [...document.querySelectorAll('button')]
+        .find(b => /^Play /.test(b.getAttribute('aria-label') || ''));
+      if (play) { play.click(); return true; }
+      return false;
+    });
+    await page.waitForTimeout(900);
+    check('free practice opens on a question', started
+      && await page.evaluate(() => [...document.querySelectorAll('button')]
+        .filter(b => /^\d\n/.test(b.innerText.trim())).length >= 2));
+
+    const opened = await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')].find(x => /^Teach me/.test(x.innerText.trim()));
+      if (b) { b.click(); return true; }
+      return false;
+    });
+    await page.waitForTimeout(400);
+    check('Teach me is offered on the practice surface', opened);
+
+    /* THE GATE IS THE TAKEOVER'S FIRST STATE, not a gold box in the left
+       column: the decision and what it buys are one journey in one place. */
+    const gate = await page.evaluate(() => {
+      const t = document.body.innerText;
+      /* The DEEPEST element carrying the sentence — not a leaf, because the
+         sentence is split across <strong> ("Spend a Teach Token? <strong>3
+         left</strong> this run"), so no leaf holds the whole of it. */
+      const asks = [...document.querySelectorAll('*')]
+        .filter(e => /Spend a Teach Token|This one is free|Tokens are spent/.test(e.innerText || ''));
+      const ask = asks[asks.length - 1];
+      let sheet = ask, depth = 0;
+      while (sheet && depth < 12 && !/^28px|28px$/.test(getComputedStyle(sheet).borderTopLeftRadius)) {
+        sheet = sheet.parentElement; depth += 1;
+      }
+      return {
+        asked: !!ask,
+        inSheet: !!sheet,
+        answers: [...document.querySelectorAll('button')].filter(b => /^\d\n/.test(b.innerText.trim())).length,
+        tryFirst: [...document.querySelectorAll('button')].some(b => /try first/i.test(b.innerText)),
+        useToken: [...document.querySelectorAll('button')].some(b => /Use a token|Teach me anyway|Show me/i.test(b.innerText)),
+      };
+    });
+    check('the token gate opens in the sheet, where the teaching will be',
+      gate.asked && gate.inSheet && gate.answers === 0, JSON.stringify(gate));
+    check('and offers both ways out', gate.tryFirst && gate.useToken, JSON.stringify(gate));
+
+    await page.evaluate(() => [...document.querySelectorAll('button')]
+      .find(b => /Use a token|Teach me anyway|^Show me$/.test(b.innerText.trim()))?.click());
+    for (let i = 0; i < 50; i++) {
+      if (await page.evaluate(() => [...document.querySelectorAll('button')]
+        .some(b => /Back to the question/.test(b.innerText)))) break;
+      await page.waitForTimeout(100);
+    }
+
+    const after = await page.evaluate(() => {
+      const back = [...document.querySelectorAll('button')].find(b => /Back to the question/.test(b.innerText));
+      /* Every ancestor of the takeover, so a dim applied ANYWHERE above it is
+         caught — the one that caused this sat two components up, on a wrapper
+         that knew nothing about what it was dimming. */
+      const chain = [];
+      let n = back;
+      while (n && n !== document.documentElement) {
+        const o = getComputedStyle(n).opacity;
+        if (Number(o) < 1) chain.push({ tag: n.tagName, opacity: o });
+        n = n.parentElement;
+      }
+      return {
+        back: !!back,
+        gotItClose: /Got it, close/.test(document.body.innerText),
+        nextStep: /Next step/.test(document.body.innerText),
+        rows: document.querySelectorAll('[data-teach-row]').length,
+        dimmed: chain,
+      };
+    });
+
+    /* ONE TEACHING SURFACE. The pre-§0c gold strip mounted beside the takeover
+       on the token-gated path — the same disease as the double walk on a miss,
+       fixed there and left alive here. */
+    check('exactly one teaching surface after the token is spent',
+      after.back && !after.gotItClose && !after.nextStep, JSON.stringify(after));
+    check('and it is the takeover, with the working in it', after.rows > 0, String(after.rows));
+    /* NOTHING ABOVE THE TAKEOVER IS DIMMED. The 45% wash was written when the
+       teaching was a strip above an untouched question; now the teaching IS the
+       sheet, so it greyed out the thing it was meant to favour. */
+    check('no ancestor of the teaching is dimmed', after.dimmed.length === 0,
+      JSON.stringify(after.dimmed));
+    await page.close();
+  }
+
   /* ---------- a miss keeps the question (§0c 25a, the other way) ---------- */
   {
     const page = await open({ grade: 6, name: 'Talia', kredits: 400,

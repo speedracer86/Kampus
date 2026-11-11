@@ -294,12 +294,42 @@ export function teachRow(line) {
    the question.
 
    Nothing in here gates. "Back to the question" is live from the first paint. */
-function TeachSheet({ question, tokensLeft, teachFree, onBack, phone, compact = false }) {
+function TeachSheet({ question, tokensLeft, teachFree, onBack, phone, compact = false,
+  confirm = false, onConfirm }) {
   const steps = question.teachSteps || [];
   const rows = steps.map(teachRow);
   const [shown, setShown] = React.useState(1);
   React.useEffect(() => { setShown(1); }, [question.text]);
   const cost = teachFree ? 'free on a new idea' : tokensLeft > 0 ? 'token used, full pay' : 'no token, half pay';
+
+  /* THE TOKEN GATE IS THE TAKEOVER'S FIRST STATE (§0c).
+
+     It used to open as a gold box in the 340px left column, so the decision
+     happened in one place and the teaching it bought appeared in another — and
+     with the old dim, the question greyed out behind a confirm she had not
+     accepted yet. The whole Teach me journey happens in the sheet now: ask
+     here, answer here, read the working here, and leave by the same door. */
+  if (confirm) return <>
+    <div style={{ padding: phone ? '20px 16px' : '32px 40px' }}>
+      <Kicker style={{ marginBottom: 10 }}>Teach me</Kicker>
+      <div style={{ fontSize: phone ? 19 : 24, fontWeight: 600, lineHeight: 1.35, textWrap: 'pretty' }}>
+        {teachFree
+          ? <>This one is <strong>free</strong> — it is a new idea, and the first look at a new idea never costs.</>
+          : tokensLeft > 0
+            ? <>Spend a Teach Token? <strong>{tokensLeft} left</strong> this run. A token keeps full pay — save them for the hard ones.</>
+            : <>Tokens are spent. Teach still works, and this one pays <strong>half</strong>.</>}</div>
+    </div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+      padding: phone ? '16px' : '20px 40px', borderTop: `1px solid ${color.rule}` }}>
+      <span style={{ flex: 1, minWidth: 140, fontSize: 16, fontWeight: 600, color: color.muted }}>
+        Thinking first is free.</span>
+      {/* Trying first is the INK button: the cheaper choice is the one the
+          screen leans on, and nothing here is disabled either way. */}
+      <Button variant="ink" onClick={() => onConfirm?.(false)}>I&rsquo;ll try first</Button>
+      <Button variant="outline" onClick={() => onConfirm?.(true)}>
+        {teachFree ? 'Show me' : tokensLeft > 0 ? 'Use a token' : 'Teach me anyway'}</Button>
+    </div>
+  </>;
 
   return <>
     <div style={{ padding: compact ? 0 : (phone ? '20px 16px' : '32px 40px') }}>
@@ -353,19 +383,8 @@ function TeachSheet({ question, tokensLeft, teachFree, onBack, phone, compact = 
 function HelpBox({ open, question, teachConfirm, tokensLeft, teachFree, onTeachConfirm, phone, missed = false }) {
   if (!open) return null;
   const box = { ...qBase, background: phone ? '#F2F4F6' : color.surface, borderRadius: radius.lg, padding: phone ? 16 : 20, marginTop: 12 };
-  if (open === 'teach' && teachConfirm) return <div style={{ ...box, background: color.held }}>
-    <Kicker style={{ color: color.goldDeep, marginBottom: 8 }}>Teach me</Kicker>
-    <div style={{ fontSize: 16, lineHeight: 1.45, marginBottom: 14 }}>
-      {tokensLeft > 0
-        ? <>Spend a Teach Token? <strong>{tokensLeft} left</strong> this run. A token keeps full pay. Save them for the hard ones.</>
-        : <>No tokens left. Teach still works — this one pays <strong>half</strong>.</>}
-    </div>
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-      <Button variant="ink" size="sm" onClick={() => onTeachConfirm(false)}>I'll try first</Button>
-      <Button variant="outline" size="sm" onClick={() => onTeachConfirm(true)}>
-        {tokensLeft > 0 ? 'Use a token' : 'Teach me anyway'}</Button>
-    </div>
-  </div>;
+  // The token gate moved into the sheet as the takeover's first state (§0c).
+  if (open === 'teach' && teachConfirm) return null;
   const body = open === 'hint' ? question.hint
     : open === 'show' ? question.show
       : open === 'teach' ? null
@@ -525,7 +544,10 @@ export function Question({
      the miss already cost her the streak), but then the correction and the
      answers are the thing she needs to see: taking the sheet would hide "Not
      yet. Here's the step" behind the working she did not request. */
-  const teaching = help === 'teach' && !teachConfirm && !feedback
+  /* The takeover covers the GATE as well as the walk (§0c): the decision and
+     what it buys are one journey in one place. A miss still keeps the question
+     — see HelpBox — because there the correction is what she needs to see. */
+  const teaching = help === 'teach' && !feedback
     && (question.teachSteps || []).length > 0;
 
   const givens = question.givens || [];
@@ -651,7 +673,8 @@ export function Question({
         <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
           {teaching
             ? <TeachSheet question={question} tokensLeft={tokensLeft} teachFree={teachFree}
-              phone onBack={() => chooseHelp('teach')} />
+              phone onBack={() => chooseHelp('teach')}
+              confirm={teachConfirm} onConfirm={onTeachConfirm} />
             : <>
               {voiceBar}
               <div style={{ padding: '20px 16px' }}>
@@ -676,7 +699,8 @@ export function Question({
         <div style={{ background: color.surface, borderRadius: radius.sheet, padding: 0, overflow: 'hidden' }}>
           {teaching
             ? <TeachSheet question={question} tokensLeft={tokensLeft} teachFree={teachFree}
-              onBack={() => chooseHelp('teach')} />
+              onBack={() => chooseHelp('teach')}
+              confirm={teachConfirm} onConfirm={onTeachConfirm} />
             : <>
               {voiceBar}
               <div style={{ padding: '32px 40px' }}>

@@ -170,11 +170,29 @@ export default async function run(check) {
         return { kredits: s.kredits, biz: JSON.stringify(s.biz || null) };
       });
       check('getting it wrong costs her nothing', after.kredits === before.kredits && after.biz === before.biz);
+      /* "A question never costs her the sale" means the question changes NOTHING
+         about the outcome — not that the outcome is always a sale. The stand
+         can be out of stock by the time this customer reaches the counter (the
+         seed seats ten cups against a line past twenty), and then she is sold
+         out for want of lemons, which the question did not cause.
+
+         Demanding 'served' made this fail roughly one run in three, and an
+         earlier fix waited longer for the write — treating the symptom. What is
+         actually invariant is that she is RESOLVED, and resolved the way STOCK
+         dictates. A failure prints both, so it diagnoses itself. */
+      const sale = await page.evaluate(() => {
+        const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
+        const q = s.dayQueue || [];
+        const i = q.findIndex(c => c.momentDone);
+        if (i < 0) return { resolved: false };
+        const servedBefore = q.slice(0, i).filter(c => c.status === 'served').length;
+        return { resolved: true, index: i, status: q[i].status,
+          servable: s.dayServable ?? q.length, servedBefore,
+          stockAllowed: servedBefore < (s.dayServable ?? q.length) };
+      });
       check('the customer is served either way — a question never costs her the sale',
-        await page.evaluate(() => {
-          const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
-          return (s.dayQueue || []).some(c => c.momentDone && c.status === 'served');
-        }));
+        sale.resolved && (sale.stockAllowed ? sale.status === 'served' : sale.status === 'soldout'),
+        JSON.stringify(sale));
 
       // Finish the day and close the books.
       await workTheLine(page);
