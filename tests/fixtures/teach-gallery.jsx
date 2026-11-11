@@ -7,7 +7,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { REFERENCE_STEPS } from '@kampus/curriculum';
-import { TEACH_LAYOUTS } from '@kampus/ui/teach-layouts';
+import { TEACH_LAYOUTS, TeachStage } from '@kampus/ui/teach-layouts';
 import { ReteachView } from '@kampus/ui/lesson';
 import { rich, plainSpeech } from '@kampus/ui/question';
 import { sweepPlan, wordAt, rateFor, SLOWER_RATE } from '@kampus/ui/say-it-show-it';
@@ -213,6 +213,29 @@ function PlacementPanels({ phone }) {
   </>;
 }
 
+/* THE WORKED ANIMATION STAGE (§0c), one panel per move.
+
+   These numbers are the FIXTURE's, not the bank's: §0c draws the stage for one
+   money walk, and authoring stage data for a skill is the bank owner's job. The
+   component is what is under test here — that each move lands, that the readout
+   waits for it, and that Watch again plays it again. */
+const STAGES = [
+  { kind: 'hop', from: '$64.00', to: '$6.40', line: 'The point hops one place left.',
+    readout: '$64.00 × 10% = $6.40' },
+  { kind: 'split', from: '$6.40', to: '$3.20', line: 'One bar opens into two halves.',
+    readout: 'Half of $6.40 = $3.20' },
+  { kind: 'join', from: '$6.40', to: '$9.60', line: 'The two close up into one.',
+    readout: '$6.40 + $3.20 = $9.60' },
+];
+
+function StagePanels({ phone }) {
+  return <>
+    {STAGES.map((st, i) => <section key={st.kind} data-stage={st.kind} style={{ marginBottom: 24 }}>
+      <TeachStage stage={st} index={i} of={STAGES.length} phone={phone} />
+    </section>)}
+  </>;
+}
+
 function Gallery() {
   const phone = window.innerWidth < 860;
   return <div style={{ background: color.ground, minHeight: '100vh', padding: phone ? 16 : 40,
@@ -220,6 +243,7 @@ function Gallery() {
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       {PANELS.map(p => <Panel key={p.layout} {...p} phone={phone} />)}
       <ReteachPanels phone={phone} />
+      <StagePanels phone={phone} />
       <PlacementPanels phone={phone} />
       <RichCases />
     </div>

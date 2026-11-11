@@ -1152,3 +1152,51 @@ the maths would otherwise look exactly like a day that had none.
 Mutation-checked: putting the bank back on the counter, offering a button that
 serves past an open question, and marking every dot current each fail their own
 check.
+
+### The worked animation stage (§0c, Nov 2026)
+
+A teach row says what happened to a number. The stage SHOWS it happening — once,
+to one number, with the arithmetic visible as a move rather than as a result.
+Three moves cover the money walk §0c draws:
+
+- **hop** — the decimal point travels one place over .6s on the spring, an ink
+  arc with an arrowhead drawing above it; the point turns green and the spare
+  trailing zero fades. `$64.00` becomes `$6.40`. The money mark is not a digit
+  and does not move.
+- **split** — one 240px bar opens into two halves, and the half she is not using
+  greys to `#E6EAEE` rather than vanishing: it is still hers, she just is not
+  spending it.
+- **join** — two bars close the gap between them and turn green.
+
+Three laws, each with a check that fails without it:
+
+- **Nothing waits on it.** The stage is never on the path to solving a step:
+  Next does not consult it, the row it illustrates is already revealed, and a
+  step with no `stage` renders exactly as it did before stages existed.
+- **One move at a time, on one number** — the stage follows the newest revealed
+  row, so there is never a second thing moving for the eye to choose between.
+- **Reduced motion HOLDS instead of moving**: the move shown already made, the
+  readout already there, and no transitions left running. The mutation that
+  turns this off is caught by 7 live transitions and a readout at opacity 0.
+
+The readout arrives WITH the landing rather than before it, because the number
+is the consequence of what she just watched.
+
+**The data is the bank's.** A step carries `stage` and the component draws it;
+nothing in the component invents numbers for a skill. The three worked examples
+live in the test fixture — authoring stage data per skill is bank work, the same
+split Task 1 made for `TeachStep`. §0c says as much: "Other skills need their own
+stage. Not drawn yet."
+
+**Still outstanding from §0c**: the Teach-me sheet takeover (25a) — moving Teach
+me out of the help box into the sheet, with the question at 24/600 and the walk
+rows under the stage. That is a structural change to where Teach me lives rather
+than a wiring job, so it is left whole rather than half-done.
+
+### CI: a DNS blip is not a failing commit
+
+`playwright install-deps` fetches apt packages and cannot be cached the way the
+browser binary above it is. Two runs of a green commit failed on "Temporary
+failure resolving archive.ubuntu.com" in one afternoon — which is the kind of
+red that teaches people to ignore red. Three attempts, then fail for real: a
+genuinely missing dependency still breaks the build.

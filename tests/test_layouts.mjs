@@ -333,6 +333,89 @@ try {
     await page.close();
   }
 
+  /* ---------- the worked animation stage (§0c) ---------- */
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+    page.on('pageerror', e => errors.push(String(e)));
+    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(900);          // long enough for every move to land
+
+    const read = (kind) => page.evaluate((k) => {
+      const sec = document.querySelector(`section[data-stage="${k}"]`);
+      if (!sec) return null;
+      const svg = sec.querySelector('svg');
+      const texts = [...svg.querySelectorAll('text')]
+        .map(t => ({ ch: t.textContent, x: Number(t.getAttribute('x')), op: Number(getComputedStyle(t).opacity) }));
+      const circle = svg.querySelector('circle');
+      const rects = [...svg.querySelectorAll('rect')]
+        .map(r => ({ x: Number(r.getAttribute('x')), w: Number(r.getAttribute('width')),
+          fill: getComputedStyle(r).fill }));
+      const readout = [...sec.querySelectorAll('div')]
+        .find(d => d.children.length === 0 && /=/.test(d.innerText));
+      return { landed: svg.dataset.landed, texts, rects, label: svg.getAttribute('aria-label'),
+        dot: circle ? { cx: Number(circle.getAttribute('cx')), fill: getComputedStyle(circle).fill } : null,
+        readout: readout ? { text: readout.innerText, op: Number(getComputedStyle(readout).opacity) } : null,
+        watch: !!sec.querySelector('[data-watch]') };
+    }, kind);
+
+    const hop = await read('hop');
+    check('the decimal hop lands', hop?.landed === 'yes', JSON.stringify(hop?.landed));
+    /* The move IS the point travelling: it has to end up left of where it was,
+       between different digits, or the animation showed nothing happening. */
+    const digits = (hop?.texts || []).filter(t => /\d/.test(t.ch));
+    const leftOfDot = digits.filter(t => t.x < (hop?.dot?.cx ?? 0)).length;
+    check('the point ends up one place left, not where it started',
+      leftOfDot === 1 && digits.length >= 3, `${leftOfDot} digit(s) left of the point`);
+    /* "$64.00 x 10%" is "$6.40", not "$6.400": the spare zero goes. */
+    check('the spare trailing zero is dropped, not left behind',
+      digits.filter(t => t.op === 0).length === 1,
+      digits.map(t => `${t.ch}:${t.op}`).join(' '));
+    check('and the money mark is not treated as a digit that moves',
+      (hop?.texts || []).some(t => t.ch === '$' && t.x === 0));
+
+    const split = await read('split');
+    check('the split opens one bar into two', (split?.rects || []).length === 2
+      && split.rects[1].x > split.rects[0].x + split.rects[0].w, JSON.stringify(split?.rects));
+    check('and the half she is not using greys out, rather than vanishing',
+      split?.rects?.[1].fill === 'rgb(230, 234, 238)', split?.rects?.[1].fill);
+
+    const join = await read('join');
+    check('the join closes the gap and turns the bar green',
+      join?.rects?.every(r => r.fill === 'rgb(46, 124, 70)')
+      && join.rects[1].x <= join.rects[0].w, JSON.stringify(join?.rects));
+
+    /* The readout is the CONSEQUENCE of the move, so it may not be there before
+       it. Checked after the landing, when it must be. */
+    for (const k of ['hop', 'split', 'join']) {
+      const st = await read(k);
+      check(`${k}: the readout arrives with the landing`, st?.readout?.op === 1,
+        JSON.stringify(st?.readout));
+      check(`${k}: it offers to play it again`, st?.watch === true);
+      // A screen reader gets the move as a sentence, not as a box of shapes.
+      check(`${k}: the move says what it is`, /becomes/.test(st?.label || ''), st?.label);
+    }
+
+    /* NOTHING WAITS ON IT, and reduced motion HOLDS rather than crawling: the
+       move is shown finished, with the readout already there. */
+    const still = await browser.newPage({ viewport: { width: 1280, height: 1000 } });
+    await still.emulateMedia({ reducedMotion: 'reduce' });
+    await still.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
+    await still.waitForTimeout(250);
+    const held = await still.evaluate(() => {
+      const sec = document.querySelector('section[data-stage="hop"]');
+      const svg = sec.querySelector('svg');
+      const readout = [...sec.querySelectorAll('div')]
+        .find(d => d.children.length === 0 && /=/.test(d.innerText));
+      const moving = [...sec.querySelectorAll('*')]
+        .filter(el => (getComputedStyle(el).transition || '').match(/\b0?\.\d+s|\b[1-9]\d*s/)).length;
+      return { landed: svg.dataset.landed, readout: readout ? Number(getComputedStyle(readout).opacity) : null, moving };
+    });
+    check('reduced motion shows the move already made, with no transitions left',
+      held?.landed === 'yes' && held?.readout === 1 && held?.moving === 0, JSON.stringify(held));
+    await still.close();
+    await page.close();
+  }
+
   /* ---------- the placement check (§0e) ---------- */
   {
     const page = await browser.newPage();

@@ -14,7 +14,7 @@ import { Button, Kicker, Blob } from './primitives.jsx';
 import { useWidth, speak } from './util.jsx';
 import { Question, rich, richWords, plainSpeech } from './question.jsx';
 import { INTERACTIVES } from './interactives.jsx';
-import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, voiceMode } from './teach-layouts.jsx';
+import { TEACH_LAYOUTS, TakeawayBand, NotesCounter, voiceMode, TeachStage } from './teach-layouts.jsx';
 import { CountUp, Confetti, useReducedMotion } from './juice.jsx';
 import { useScript, clipsFor, clipMetaFor, useSpokenLine, SweptLine, rateFor, whenVoiceQuiet, VoiceBar, SLOWER_RATE } from './say-it-show-it.jsx';
 
@@ -221,6 +221,12 @@ export function TeachSteps({ teach, grade = 6, worldColor, blobDir = '/blobs/', 
       background: cue.name === 'prompt' ? (color.goldTint || '#FBF3E4') : 'transparent',
       borderRadius: radius.sm, transition: 'background .3s',
       boxShadow: cue.name === 'prompt' ? '0 0 0 8px ' + (color.goldTint || '#FBF3E4') : 'none' }}>{step?.prompt}</h2>
+    {/* THE WORKED ANIMATION (§0c). It illustrates the step's own number and sits
+        between the prompt and the work, because it is what the prompt just said
+        happening. Drawn only where the bank authored one: a step without `stage`
+        renders exactly as it did before stages existed, and NOTHING on the path
+        to solving the step consults it. */}
+    {step?.stage && <TeachStage stage={step.stage} index={at} of={steps.length} phone={phone} />}
     {/* Keyed by step identity, not left to React's reconciler: two walks in a row
         are the same component type, and an un-keyed layout keeps the previous
         step's reveal state — the next walk arrives pre-revealed and self-solved,
@@ -466,6 +472,8 @@ export function ReteachView({ teach, onContinue, label = 'Try one →', phone,
         boxShadow: litTitle ? `0 0 0 8px ${held}` : 'none' }}>{teach.title}</h2>
     {teach.lede && <p style={{ fontSize: 18, lineHeight: 1.5, color: color.muted, margin: '0 0 24px' }}>{teach.lede}</p>}
     {voiced.script}
+    {/* Same stage, same rule: the bank authors it or there isn't one. */}
+    {teach.stage && <TeachStage stage={teach.stage} index={0} phone={phone} />}
     <div style={{ borderTop: `1px solid ${color.rule}` }}>
       {(teach.rows || []).map((r, i, all) => <div key={i} data-reteach-row={i + 1}
         data-lit={i === litRow ? 'yes' : 'no'} style={{ display: 'flex', alignItems: 'baseline', gap: 18,

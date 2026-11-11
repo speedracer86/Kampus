@@ -55,7 +55,18 @@ jobs:
         run: npx playwright install chromium
 
       - name: Install Chromium (system packages)
-        run: npx playwright install-deps chromium
+        # The browser binary is cached above; these are apt packages and cannot
+        # be. A DNS blip on the runner ("Temporary failure resolving
+        # archive.ubuntu.com") failed a whole green commit twice in one
+        # afternoon, which is the kind of red that teaches people to ignore red.
+        # Three tries, then fail for real — a genuinely missing dep still fails.
+        run: |
+          for i in 1 2 3; do
+            npx playwright install-deps chromium && exit 0
+            echo "apt attempt $i failed; retrying in 20s"
+            sleep 20
+          done
+          exit 1
       - name: E2E against the built bundle
         run: node tests/test_webapp.mjs
 

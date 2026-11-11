@@ -10,8 +10,9 @@
 
    Every layout follows the same two ADHD rules as the rest of the product: a wrong
    pick reveals the hint and lets her carry on, and nothing is timed. */
-import { color, radius, font, numeral, world } from './tokens.js';
+import { color, radius, font, numeral, world, spring } from './tokens.js';
 import { Button, Kicker } from './primitives.jsx';
+import { useReducedMotion } from './juice.jsx';
 
 const tBase = { fontFamily: font.family, boxSizing: 'border-box' };
 
@@ -269,3 +270,148 @@ export function NotesCounter({ count = 0, total = 4 }) {
 }
 
 /* --------------------------------------------------------------- voice ----- */
+
+
+/* THE WORKED ANIMATION STAGE (§0c).
+
+   A teach row says what happened to a number. The stage SHOWS it happening —
+   once, to one number, with the arithmetic visible as a move rather than as a
+   result. Three moves cover the money walk §0c draws:
+
+     hop   — x10 or /10: the decimal point travels one place and the spare zero goes
+     split — half: one bar opens into two, and one half greys out
+     join  — add: two bars close the gap between them and become one
+
+   RULES THIS KEEPS, all of them standing laws rather than style:
+
+     - NOTHING WAITS ON IT. The stage is never on the path to solving a step.
+       Next does not consult it, the row it illustrates is already revealed, and
+       a stage that fails to render leaves a teach panel that works exactly as it
+       did before stages existed.
+     - ONE ANIMATION AT A TIME, on one number. The stage follows the newest
+       revealed row, so there is never a second thing moving for the eye to
+       choose between — the whole point of "one visual act".
+     - REDUCED MOTION HOLDS INSTEAD OF MOVING. The move is shown in its finished
+       state, with the readout already there. A kid who asked the device not to
+       animate gets the answer, not a crawl.
+
+   The DATA is the bank's, not this file's: a step carries `stage` and the
+   component draws it. Nothing here invents numbers for a skill. */
+const STAGE_W = 372, STAGE_H = 102;
+
+/** Where the decimal point sits in "$64.00" — index among the digit cells. */
+const dotIndexOf = (s) => {
+  const digits = String(s).replace(/[^\d.]/g, '');
+  const at = digits.indexOf('.');
+  return at < 0 ? digits.length : at;
+};
+const digitsOf = (s) => String(s).replace(/[^\d]/g, '');
+
+function HopAnimation({ from, to, playing, reduced }) {
+  const d = digitsOf(from);
+  const before = dotIndexOf(from), after = dotIndexOf(to);
+  const CELL = 44, GAP = 16, PRE = 26;
+  /* Digits sit in fixed cells; the POINT lives in a gap between two of them, and
+     every digit after the gap is pushed right by it. So the move is one number:
+     where the gap is. The currency mark is not a digit and never moves. */
+  const landed = reduced || playing === 'done';
+  const dotAt = landed ? after : before;
+  const xOf = (i, at) => PRE + i * CELL + (i >= at ? GAP : 0);
+  const dotX = PRE + dotAt * CELL + GAP / 2;
+  const fromX = PRE + before * CELL + GAP / 2;
+  const toX = PRE + after * CELL + GAP / 2;
+  // The spare trailing zero goes only when the point moved LEFT past it.
+  const dropIndex = after < before ? d.length - 1 : -1;
+  const mark = (String(from).match(/^[^\d]+/) || [''])[0].trim();
+
+  return <svg width={STAGE_W} height={STAGE_H} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} role="img"
+    aria-label={`${from} becomes ${to}`} data-anim="hop" data-landed={landed ? 'yes' : 'no'}>
+    <defs><marker id="hopHead" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+      <path d="M0,0 L7,3.5 L0,7 z" fill={color.ink} /></marker></defs>
+    {/* The arc the point travels, drawn above it with an arrowhead. */}
+    <path d={`M ${fromX} 30 Q ${(fromX + toX) / 2} 4 ${toX} 30`}
+      fill="none" stroke={color.ink} strokeWidth="2" markerEnd="url(#hopHead)"
+      style={{ strokeDasharray: 220, strokeDashoffset: landed ? 0 : 220,
+        transition: reduced ? 'none' : `stroke-dashoffset .6s ${spring}` }} />
+    {!!mark && <text x="0" y="88" fontSize="46" fontWeight="300" fill={color.ink}
+      fontFamily="'Inter Tight', sans-serif">{mark}</text>}
+    {d.split('').map((ch, i) => <text key={i} x={xOf(i, dotAt)} y={88}
+      fontSize="72" fontWeight="300" letterSpacing="-.045em" fill={color.ink}
+      fontFamily="'Inter Tight', sans-serif"
+      style={{ opacity: landed && i === dropIndex ? 0 : 1,
+        transition: reduced ? 'none' : `x .6s ${spring}, opacity .4s ease .5s` }}>{ch}</text>)}
+    {/* The point itself: the 12px dot in the gap, and the thing that moves. */}
+    <circle r="6" cy="82" cx={dotX} fill={landed ? color.greenDeep : color.ink}
+      style={{ transition: reduced ? 'none' : `cx .6s ${spring}, fill .3s ease .45s` }} />
+  </svg>;
+}
+
+function BarsAnimation({ kind, from, to, playing, reduced }) {
+  const landed = reduced || playing === 'done';
+  const H = 72, GAP = 12, FULL = 240, HALF = 120;
+  const split = kind === 'split';
+  // split: one bar opens into two. join: two bars close into one.
+  const open = split ? landed : !landed;
+  const label = (t) => ({ fontSize: 15, fontWeight: 700, fill: '#fff',
+    fontFamily: "'Inter Tight', sans-serif" });
+  const ease = reduced ? 'none' : `all .6s ${spring}`;
+  const leftW = split ? HALF : FULL / 2;
+  return <svg width={STAGE_W} height={STAGE_H} viewBox={`0 0 ${STAGE_W} ${STAGE_H}`} role="img"
+    aria-label={`${from} becomes ${to}`} data-anim={kind} data-landed={landed ? 'yes' : 'no'}>
+    <rect x="0" y="15" width={split ? HALF : (landed ? FULL : HALF * 2)} height={H} rx="8"
+      fill={!split && landed ? color.greenDeep : color.ink} style={{ transition: ease }} />
+    <rect x={open ? HALF + GAP : HALF} y="15" width={HALF} height={H} rx="8"
+      fill={split && landed ? color.locked : (!split && landed ? color.greenDeep : color.ink)}
+      style={{ transition: ease, opacity: !split && landed ? 0 : 1 }} />
+    <text x="14" y="60" {...label()} style={{ transition: ease }}>
+      {landed ? (split ? to : to) : from}</text>
+    {split && <text x={(open ? HALF + GAP : HALF) + 14} y="60" {...label()}
+      fill={landed ? color.mutedDeep : '#fff'} style={{ transition: ease }}>{landed ? to : ''}</text>}
+  </svg>;
+}
+
+export function TeachStage({ stage, index = 0, of = 0, phone, onWatch }) {
+  const reduced = useReducedMotion();
+  const [playing, setPlaying] = React.useState('idle');
+  const [nonce, setNonce] = React.useState(0);
+
+  /* One play per number shown. The stage follows the newest revealed row, so
+     arriving at a row IS the cue — she does not have to ask for the first run. */
+  React.useEffect(() => {
+    if (!stage) return undefined;
+    setPlaying('idle');
+    const t = setTimeout(() => setPlaying('done'), reduced ? 0 : 120);
+    return () => clearTimeout(t);
+  }, [stage, nonce, reduced]);
+
+  if (!stage) return null;
+  const Anim = stage.kind === 'hop' ? HopAnimation : BarsAnimation;
+
+  const watch = <button data-watch onClick={() => { setNonce(n => n + 1); onWatch?.(); }}
+    style={{ ...tBase, border: 'none', cursor: 'pointer', background: color.surface,
+      borderRadius: radius.full, height: phone ? 44 : 40, padding: '0 16px',
+      fontSize: 13.5, fontWeight: 700, alignSelf: 'flex-start' }}>Watch again</button>;
+
+  const words = <div style={{ minWidth: 0 }}>
+    <Kicker style={{ marginBottom: 8 }}>Step {index + 1}{of ? ` of ${of}` : ''} · watch</Kicker>
+    <div style={{ fontSize: 17, fontWeight: 600, lineHeight: 1.45 }}>{stage.line}</div>
+    {/* The readout arrives WHEN THE MOVE LANDS, not with it: the number is the
+        consequence of what she just watched, so it may not be there first. */}
+    {!!stage.readout && <div style={{ fontSize: 15, fontWeight: 600, color: color.greenDeep, marginTop: 8,
+      opacity: playing === 'done' ? 1 : 0,
+      transition: reduced ? 'none' : 'opacity .3s ease .55s' }}>{stage.readout}</div>}
+  </div>;
+
+  return <div data-teach-stage style={{ ...tBase, background: color.fill, borderRadius: radius.lg,
+    padding: phone ? '18px 18px' : '20px 28px', margin: '18px 0',
+    display: phone ? 'block' : 'grid', gridTemplateColumns: 'auto 1fr', gap: 32, alignItems: 'center' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10,
+      transform: phone ? 'scale(.8)' : 'none', transformOrigin: 'left top',
+      marginBottom: phone ? -14 : 0 }}>
+      <Anim key={`${stage.kind}-${nonce}`} kind={stage.kind} from={stage.from} to={stage.to}
+        playing={playing} reduced={reduced} />
+      {watch}
+    </div>
+    <div style={{ marginTop: phone ? 16 : 0 }}>{words}</div>
+  </div>;
+}
