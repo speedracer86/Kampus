@@ -212,6 +212,286 @@ export function MomentCard({ moment, customer, onAnswer, onDone, blobDir = '/blo
   </div>;
 }
 
+
+/* THE COUNTER — open day, one customer at a time (§0f 43a/43b).
+
+   What stood here was a LIST: served/missed/left counters, the whole queue as
+   rows, and "Serve next" / "Serve the rest" underneath. The day was a thing she
+   processed. The counter is the day as she would actually live it — one person
+   in front of her, the receipt beside her, and the maths being the job rather
+   than a quiz laid over the top of it.
+
+   Open day shows ONLY the counter. No reputation, no regulars, no bank, no
+   phase tabs, no served/missed counts and no queue: those belong to prep and to
+   the ledger, and on the counter they are five things competing with the one
+   person waiting to be served.
+
+   Rules kept from the code that was here: a customer's question pays nothing
+   extra, takes one tap, NEVER blocks the sale, and the customer is always served
+   at the right price. No Skip, no Try again, no bonus. */
+
+const mono = { fontFamily: font.mono };
+const cents = (n) => `$${(Math.round(n) / 100).toFixed(2)}`;
+
+/** The one-cup receipt: the whole economics of her stand on one slip. */
+function Receipt({ receipt, name, date, mark, phone }) {
+  const r = receipt || {};
+  const row = (label, value, opts = {}) => <div key={label}
+    data-receipt-line={opts.key || label}
+    style={{ ...bBase, ...mono, display: 'flex', justifyContent: 'space-between', gap: 12,
+      fontSize: 13, lineHeight: 1.45, fontWeight: opts.bold ? 700 : 400,
+      // One marker set at a time: the line THIS customer depends on.
+      background: opts.lit ? color.goldHold : 'transparent', borderRadius: 4,
+      padding: opts.lit ? '1px 4px' : '1px 0', margin: opts.lit ? '0 -4px' : 0 }}>
+    <span>{label}</span><span>{value}</span></div>;
+
+  const head = (t) => <div style={{ ...bBase, ...mono, fontSize: 11, fontWeight: 700,
+    letterSpacing: '.1em', marginTop: 14, marginBottom: 4 }}>{t}</div>;
+  const rule = <div style={{ borderTop: `1.5px dashed rgba(35,37,43,.3)`, margin: '10px 0' }} />;
+
+  return <div data-receipt style={{ ...bBase, background: color.surface, padding: phone ? '20px 18px 4px' : '24px 22px 6px',
+    filter: 'drop-shadow(0 1px 1px rgba(35,37,43,.05)) drop-shadow(0 8px 14px rgba(35,37,43,.07))',
+    /* Square corners and a torn foot: it is a paper slip, not another card. */
+    clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), 95% 100%, 90% calc(100% - 10px), 85% 100%, 80% calc(100% - 10px), 75% 100%, 70% calc(100% - 10px), 65% 100%, 60% calc(100% - 10px), 55% 100%, 50% calc(100% - 10px), 45% 100%, 40% calc(100% - 10px), 35% 100%, 30% calc(100% - 10px), 25% 100%, 20% calc(100% - 10px), 15% 100%, 10% calc(100% - 10px), 5% 100%, 0 calc(100% - 10px))',
+    paddingBottom: 22 }}>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ ...mono, fontSize: 15, fontWeight: 700, letterSpacing: '.06em' }}>{(name || '').toUpperCase()}</div>
+      <div style={{ ...mono, fontSize: 12, marginTop: 3 }}>One cup · today’s prices</div>
+      <div style={{ ...mono, fontSize: 12, color: color.muted, marginTop: 2 }}>{date}</div>
+    </div>
+    {rule}
+    {head('SELLS FOR')}
+    {row('1 cup of lemonade', cents(r.sells || 0), { key: 'sells', lit: mark === 'sells' })}
+    {rule}
+    {head('COSTS TO MAKE')}
+    {(r.lines || []).map(l => row(l.label, cents(l.cents), { key: l.key, lit: mark === l.key }))}
+    {row('Subtotal', cents(r.subtotal || 0), { key: 'subtotal', bold: true })}
+    {rule}
+    {head('YOU KEEP')}
+    <div style={{ ...mono, fontSize: 34, fontWeight: 600, lineHeight: 1.1 }}>{cents(r.keep || 0)}</div>
+    <div style={{ ...mono, fontSize: 12, color: color.muted }}>Per cup, at full price.</div>
+    {rule}
+    {head('ON YOUR SHELF')}
+    {(r.shelf || []).map(sh => row(sh.label, String(sh.n), { key: sh.key, lit: mark === sh.key }))}
+  </div>;
+}
+
+/* The numbers in what a customer said, repeated as pills so she does not have to
+   hold them in her head while she works (§0f attention rules). */
+function OrderChips({ chips }) {
+  if (!chips?.length) return null;
+  return <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 14 }}>
+    {chips.map((c, i) => <span key={i} data-order-chip style={{ ...bBase, background: color.fill,
+      borderRadius: radius.full, padding: '7px 13px', fontSize: 15, fontWeight: 700 }}>{c}</span>)}
+  </div>;
+}
+
+export function Counter({ customer, moment, receipt, bizName, date, at = 0, of = 0, served = 0,
+  takings = 0, lastPaid = null, onAnswer, onServe, onHear, speaking = false,
+  blobDir = '/blobs/', phone }) {
+  const [picked, setPicked] = React.useState(null);
+  React.useEffect(() => { setPicked(null); }, [customer, moment]);
+
+  const q = moment || null;
+  const choices = React.useMemo(() => (q
+    ? [String(q.ans), ...(q.wrongs || []).map(String)]
+      .sort((a, b) => (a.length + a.charCodeAt(0)) - (b.length + b.charCodeAt(0)))
+    : []), [q]);
+  const right = picked !== null && choices[picked] === String(q?.ans);
+  const plain = (t) => String(t ?? '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  const said = plain(q?.q) || customerLine(customer, receipt);
+  const answered = picked !== null;
+
+  /* The receipt line this customer depends on. A question about price marks the
+     cup price; a swap marks what is on the shelf. One at a time. */
+  const mark = q ? (/\b(lemon|sugar|cup|swap|trade)\b/i.test(said) && !/price|each|%|off/i.test(said)
+    ? 'lemons' : 'sells') : 'sells';
+
+  /* §0f draws four PRICE keys, because the counter it imagines always asks
+     "what does this customer pay?". The bank's business moments are not all
+     that shape — some are judgements ("still profitable?") whose answers are
+     sentences — and a sentence set in 34px/300 display numerals is unreadable
+     and looks like a bug. So the key takes the shape of its own answer: a
+     number gets the numerals, prose gets prose, and a row of two or three does
+     not stretch to fill four columns. */
+  const priceish = choices.length > 0 && choices.every(c => /^[$(-]?\s*[\d.,/]+\s*%?$/.test(c));
+  const keys = q
+    ? <div style={{ display: 'grid', gap: 10, marginTop: 14,
+      gridTemplateColumns: phone
+        ? (priceish ? '1fr 1fr' : '1fr')
+        : `repeat(${Math.min(choices.length, priceish ? 4 : 3)}, 1fr)` }}>
+      {choices.map((c, i) => {
+        const isPick = picked === i, win = isPick && right, lose = isPick && !right;
+        const isAns = answered && c === String(q.ans);
+        return <button key={c} data-price-key data-shape={priceish ? 'price' : 'words'} onClick={() => {
+          if (picked !== null) return;
+          setPicked(i);
+          // Pays nothing extra, and never blocks the sale.
+          onAnswer?.(c === String(q.ans));
+        }} style={{ ...bBase, border: 'none', cursor: picked === null ? 'pointer' : 'default',
+          borderRadius: radius.lg, padding: phone ? '16px 14px' : '18px 18px', textAlign: 'left',
+          background: win || (isAns && !isPick) ? color.greenTint : lose ? color.redTint : color.fill,
+          color: win || (isAns && !isPick) ? color.greenDeep : lose ? color.loss : color.ink,
+          ...(priceish
+            ? numeral(phone ? 28 : 34)
+            : { fontSize: phone ? 16 : 17, fontWeight: 600, lineHeight: 1.4 }) }}>{c}</button>;
+      })}
+    </div>
+    : null;
+
+  /* A wrong pick shows the sum, it does not take the sale away. */
+  /* The sum, as ruled rows. §0f draws every step as "label ... value", which is
+     true of the steps that CONTAIN a sum ("6 cups x $2.00 = $12.00") and false
+     of the ones that are a sentence ("Compare to cost $1.01: margin is $0.49 —
+     deal."). A sentence forced into two columns leaves an empty numeral slot
+     where the answer should be, so a step with no `=` takes the whole row. */
+  const sum = answered && !right && (q?.steps || []).length
+    ? <div style={{ borderTop: `1px solid ${color.rule}`, marginTop: 18 }}>
+      {q.steps.map((st, i, all) => {
+        const txt = plain(st);
+        const at = txt.lastIndexOf('=');
+        const label = at > 0 ? txt.slice(0, at).trim() : txt;
+        const value = at > 0 ? txt.slice(at + 1).trim() : '';
+        return <div key={i} style={{ display: 'flex', alignItems: 'baseline',
+          justifyContent: 'space-between', gap: 16, padding: '12px 0', borderBottom: `1px solid ${color.rule}` }}>
+          <span style={{ fontSize: 17, fontWeight: 600, flex: 1 }}>{label}</span>
+          {!!value && <span style={{ ...numeral(32), flex: 'none',
+            color: i === all.length - 1 ? color.greenDeep : color.ink }}>{value}</span>}
+        </div>;
+      })}
+    </div>
+    : null;
+
+  /* §0f's footer is written for a price answer ("Rang up $9.00. Ava is
+     served."). Said of a judgement whose answer is a sentence it produces "It
+     comes to yes — $0.49/cup", which is not English. The sentence follows the
+     answer's shape, and the customer is always ONE person: "is served". */
+  const who = customer?.name || 'The customer';
+  const footLine = !q
+    ? `${who} will pay ${cents(orderTotal(customer, receipt))}.`
+    : !answered
+      ? (priceish ? `What does ${who} pay?` : `What should ${who} be told?`)
+      : right
+        ? (priceish ? `Rang up ${String(q.ans)}. ${who} is served.` : `That’s it. ${who} is served.`)
+        : (priceish
+          ? `It comes to ${String(q.ans)}. Here’s the sum. ${who} paid that and is served.`
+          : `It was “${String(q.ans)}”. Here’s the working — ${who} is served either way.`);
+
+  const sheet = <div data-counter style={{ ...bBase, background: color.surface, borderRadius: radius.sheet,
+    overflow: 'hidden', boxShadow: '0 1px 2px rgba(35,37,43,.04), 0 10px 28px rgba(35,37,43,.06)' }}>
+    <div style={{ padding: phone ? '20px 18px' : '40px 40px 28px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        <span style={{ width: phone ? 44 : 56, height: phone ? 44 : 56, flex: 'none', borderRadius: radius.full,
+          background: color.fill, display: 'grid', placeItems: 'center', overflow: 'hidden' }}>
+          <Blob name={customer?.blob || 'Selfie'} size={phone ? 32 : 40} dir={blobDir} /></span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 17, fontWeight: 700 }}>{customer?.name || 'A customer'}</div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: color.muted }}>
+            {customer?.isRegular ? 'Regular' : 'New face'}</div>
+        </div>
+        {/* Hear it. Nothing waits on it. */}
+        {onHear && <button data-hear onClick={() => onHear(said)} style={{ ...bBase, border: 'none', cursor: 'pointer',
+          display: 'inline-flex', alignItems: 'center', gap: 9, flex: 'none',
+          background: color.fill, borderRadius: radius.full, padding: '6px 14px 6px 6px',
+          fontSize: 13.5, fontWeight: 700 }}>
+          <span style={{ width: 32, height: 32, borderRadius: radius.full, background: color.ink, color: '#fff',
+            display: 'grid', placeItems: 'center', fontSize: 11 }}>{speaking ? '❚❚' : '▶'}</span>
+          Hear {customer?.name || 'them'}</button>}
+      </div>
+
+      <div style={{ fontSize: phone ? 24 : 44, fontWeight: 600, letterSpacing: '-.02em', lineHeight: 1.2,
+        margin: phone ? '16px 0 0' : '26px 0 0', textWrap: 'pretty' }}>{said}</div>
+      <OrderChips chips={orderChips(customer, q, receipt)} />
+
+      {q && <>
+        <Kicker style={{ margin: phone ? '18px 0 0' : '26px 0 0' }}>Ring it up</Kicker>
+        {keys}
+      </>}
+      {sum}
+    </div>
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+      padding: phone ? '16px 18px' : '20px 40px', borderTop: `1px solid ${color.rule}` }}>
+      <span style={{ flex: 1, minWidth: 200, fontSize: 16, fontWeight: 600, color: color.muted }}>{footLine}</span>
+      {(!q || answered) && <Button variant="ink" onClick={onServe}>
+        {q ? 'Next customer →' : `Serve ${customer?.name || 'them'} · ${cents(orderTotal(customer, receipt))}`}</Button>}
+    </div>
+  </div>;
+
+  /* Progress, not a crowd: one dot per customer and no waiting count. */
+  const dots = of > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+    margin: '16px 4px 0' }}>
+    <span style={{ fontSize: 14.5, fontWeight: 700 }}>
+      {at < of ? `Customer ${at + 1} of ${of}` : `${served} of ${of} served`}</span>
+    <div data-queue-dots style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1, minWidth: 120 }}>
+      {Array.from({ length: of }, (_, i) => {
+        const state = i < served ? 'served' : (i === at && at < of ? 'current' : 'todo');
+        return <span key={i} data-customer={i + 1} data-state={state} style={{ width: 10, height: 10,
+          borderRadius: radius.full, boxSizing: 'border-box',
+          background: state === 'served' ? color.green : state === 'current' ? color.surface : color.todo,
+          border: state === 'current' ? `2.5px solid ${color.ink}` : 'none' }} />;
+      })}
+    </div>
+    <span style={{ fontSize: 14.5, fontWeight: 600, color: color.muted }}>No rush. The line waits.</span>
+  </div>;
+
+  const header = <div style={{ display: 'flex', alignItems: 'flex-end', gap: 20, flexWrap: 'wrap', marginBottom: 20 }}>
+    <div style={{ flex: phone ? 1 : 'none', width: phone ? 'auto' : 340 }}>
+      <Kicker>Sales today</Kicker>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+        <span style={{ ...mono, fontSize: 34, fontWeight: 600, color: color.greenDeep }}>{cents(takings)}</span>
+        {/* The payoff arrives beside the takings the moment someone is served. */}
+        {lastPaid != null && <span key={served} data-paid style={{ ...bBase, background: color.greenTint,
+          color: color.greenDeep, borderRadius: radius.full, padding: '4px 10px', fontSize: 13, fontWeight: 800 }}>
+          +{cents(lastPaid)}</span>}
+      </div>
+    </div>
+    {!phone && <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 220 }}>
+      <span style={{ width: 56, height: 56, flex: 'none' }}><Blob name="Startup" size={56} dir={blobDir} /></span>
+      <div>
+        <Kicker>Your stand · open</Kicker>
+        <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: '-.025em', marginTop: 2 }}>{bizName}</div>
+      </div>
+    </div>}
+  </div>;
+
+  /* Phone is NOT drawn in §0f. The receipt is the reference she consults while
+     she works, so on one column it goes BELOW the counter rather than above it:
+     above, it would push the person asking off the screen. */
+  return <div>
+    {header}
+    {phone
+      ? <>{sheet}{dots}<div style={{ marginTop: 20 }}>
+        <Receipt receipt={receipt} name={bizName} date={date} mark={mark} phone /></div></>
+      : <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 48, alignItems: 'start' }}>
+        <Receipt receipt={receipt} name={bizName} date={date} mark={mark} />
+        <div>{sheet}{dots}</div>
+      </div>}
+  </div>;
+}
+
+/* What a customer with no question says, and what they pay. The engine gives an
+   order in cups; the words are the stand's, not a template a kid would notice. */
+function orderTotal(customer, receipt) {
+  return (customer?.order?.cups || 1) * (receipt?.sells || 0);
+}
+function customerLine(customer, receipt) {
+  const n = customer?.order?.cups || 1;
+  return n === 1 ? 'One cup, please.' : `${n} cups, please.`;
+}
+/* The numbers in the request, as pills. Only numbers that are actually IN what
+   they said — a chip for something unmentioned is a second thing to reconcile. */
+function orderChips(customer, q, receipt) {
+  const n = customer?.order?.cups || 0;
+  const said = String(q?.q ?? '').replace(/<[^>]*>/g, '');
+  const chips = [];
+  if (n > 1) chips.push(`${n} cups`);
+  if (receipt?.sells) chips.push(`$${(receipt.sells / 100).toFixed(2)} each`);
+  const pct = said.match(/(\d+)\s*%/);
+  if (pct) chips.push(`${pct[1]}% off`);
+  return chips;
+}
+
 function OpenDay({ queue, counters, onServe, onServeRest, onClose, moment, onMomentAnswer, onMomentDone, blobDir, phone }) {
   const done = queue.every(q => q.status && q.status !== 'next' && q.status !== 'waiting');
   return <>
@@ -318,6 +598,42 @@ export function BusinessScreen({ data, blobDir = '/blobs/', muted = false, onEve
   const phases = PHASES.filter(([id]) => id !== 'grow' || u.ladder);
   const strip = asked ? (d.askKarla || { line: 'Looking good. Open when you’re ready.' }) : d.karla;
 
+  /* OPEN DAY IS ITS OWN SCREEN (§0f). Not a tab inside the business frame: the
+     phase tabs, the bank, the reputation column and the Karla strip all leave,
+     because the counter is one person waiting to be served and everything else
+     is something else competing for the same look. Prep and the ledger keep the
+     frame they had. */
+  if (phase === 'open') {
+    const cur = (d.queue || [])[d.counter?.at ?? -1] || null;
+    // A line that never formed is not a line that has been served.
+    const of = d.counter?.of ?? 0;
+    const done = of > 0 && (d.counter?.at ?? 0) >= of;
+    return <div ref={ref} style={{ ...bBase, background: color.ground, minHeight: '100%',
+      padding: phone ? '20px 16px 40px' : '36px 48px 56px' }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto' }}>
+        {done
+          ? <div style={{ background: color.surface, borderRadius: radius.sheet, padding: phone ? 24 : 40 }}>
+            <Kicker style={{ marginBottom: 10 }}>The line is done</Kicker>
+            <h2 style={{ fontSize: phone ? 26 : 34, fontWeight: 600, letterSpacing: '-.025em', margin: '0 0 18px' }}>
+              Everyone has been served.</h2>
+            <Button variant="ink" onClick={() => { setPhase('ledger'); onEvent('close_books', {}); }}>
+              Close the books →</Button>
+          </div>
+          : <Counter customer={cur} moment={cur?.moment && !cur?.momentDone ? cur.moment : null}
+            receipt={d.receipt} bizName={biz.name} date={d.date}
+            at={d.counter?.at || 0} of={d.counter?.of || 0} served={d.counter?.served || 0}
+            takings={d.takings || 0} lastPaid={d.lastPaid ?? null}
+            blobDir={blobDir} phone={phone}
+            onHear={(line) => onEvent('hear_customer', { line })}
+            onAnswer={(right) => onEvent('moment_answer', { right, skill: cur?.moment?.skill })}
+            /* One button moves the line, whichever kind of customer it is: a
+               question is CLOSED by serving them, never by a second tap. */
+            onServe={() => onEvent(cur?.moment && !cur?.momentDone ? 'moment_done' : 'serve_next',
+              { at: d.counter?.at })} />}
+      </div>
+    </div>;
+  }
+
   return <div ref={ref} style={{ ...bBase, background: color.ground, minHeight: '100%', padding: phone ? '20px 16px 40px' : '36px 48px 48px' }}>
     <div style={{ maxWidth: 1280, margin: '0 auto' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 26 }}>
@@ -363,12 +679,6 @@ export function BusinessScreen({ data, blobDir = '/blobs/', muted = false, onEve
               onPrice={(p) => onEvent('price', p)} onStock={(k, delta) => onEvent('stock', { key: k, delta })}
               onPromo={(p) => onEvent('promo', p)} onLesson={() => onEvent('start_lesson', {})}
               onOpen={() => { setPhase('open'); onEvent('open_day', {}); }} phone={phone} />}
-            {phase === 'open' && <OpenDay queue={d.queue || []} counters={d.counters || { served: 0, missed: 0, left: 0 }}
-              onServe={() => onEvent('serve_next', {})} onServeRest={() => onEvent('serve_rest', {})}
-              moment={d.moment}
-              onMomentAnswer={(right) => onEvent('moment_answer', { right, skill: d.moment?.moment?.skill })}
-              onMomentDone={() => onEvent('moment_done', {})}
-              onClose={() => { setPhase('ledger'); onEvent('close_books', {}); }} blobDir={blobDir} phone={phone} />}
             {phase === 'ledger' && <Ledger result={d.result} phone={phone} muted={muted} />}
             {phase === 'grow' && <Grow ladder={d.ladder} phone={phone} />}
           </div>

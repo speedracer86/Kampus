@@ -1093,3 +1093,62 @@ heading changing now, not on the clock.
 
 Mutation-checked: every unit dot current, the footer printing the epoch key, and
 the phone keeping four stacked rows each fail their own check.
+
+### The counter: open day is one person at a time (§0f, Nov 2026)
+
+What stood here was a LIST — served/missed/left counters, the whole queue as
+rows, "Serve next" and "Serve the rest" underneath. The day was a thing she
+processed. The counter is the day as she would live it: one person in front of
+her, the one-cup receipt beside her, and the maths being the job rather than a
+quiz laid over the top of it.
+
+**Open day is its own screen.** Not a tab inside the business frame: the phase
+tabs, the bank, the reputation column and the Karla strip all leave, because the
+counter is one person waiting to be served and everything else is competing for
+the same look. Prep and the ledger keep the frame they had.
+
+- **The receipt** is the whole economics of her stand on one slip — what a cup
+  sells for, what it costs to make, what she keeps, what is on the shelf. Square
+  corners and a torn foot, in the mono the Rewards receipt uses, so it reads as
+  paper rather than as another card. The line this customer depends on takes a
+  gold marker; one at a time.
+- **Attention rules**: the numbers in what they said repeat as pills so she is
+  not holding them in her head, a "Hear them" pill plays the line and nothing
+  waits on it, and the payment lands beside Sales today the moment she serves.
+- **Progress, not a crowd**: one dot per customer and "Customer 3 of 14". No
+  waiting count, no timer, and "No rush. The line waits."
+- The seam gained `receipt`, `counter`, `takings` and `lastPaid`; `RECIPE` and
+  the market's prices belong to the engine, so the component takes none of it.
+
+**Where the drawing and the bank disagree.** §0f draws four PRICE keys and
+writes the footer for a price answer ("Rang up $9.00. Ava is served."). The
+bank's business moments are not all that shape — some are judgements whose
+answers are sentences — and rendering those literally produced display numerals
+reading "can't tell without more info", "It comes to yes — $0.49/cup", and
+"Tom paid that and ARE served". Each now takes the shape of its own content:
+numbers get the numerals and four columns, prose gets prose and three; the
+footer has a sentence for each case; a step with no `=` takes the whole row
+instead of leaving an empty numeral slot. **Making the drawing literally true
+would mean rewriting the business-moment bank, which is the owner's call, not a
+redraw.**
+
+**Not built**: 43c, Karla's swap — it is the market's offer flow rather than the
+counter's, and §0f leaves "the swap she cannot cover" undrawn. Phone is not in
+§0f either; the receipt goes BELOW the counter there, because above it would
+push the person asking off the screen.
+
+**The specs had to be restated, not retuned.** Eight checks were written against
+the list. "Serve the rest cannot skip past an open moment" became **there is no
+way to serve past an open question** — the same law from the other side, since
+the only button on the counter answers it. "The moment is above the queue, not
+below the fold" became **the question is the biggest thing on the counter**,
+measured rather than positional. And a new one carries §0f's central claim,
+which nothing checked before: **the counter shows only the counter**.
+
+`workTheLine` replaces "Serve the rest" in the harness. It walks the day one
+customer at a time and reports how many questions it met — a day that skipped
+the maths would otherwise look exactly like a day that had none.
+
+Mutation-checked: putting the bank back on the counter, offering a button that
+serves past an open question, and marking every dot current each fail their own
+check.

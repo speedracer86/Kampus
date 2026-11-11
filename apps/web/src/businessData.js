@@ -110,6 +110,49 @@ export function businessData(state) {
       return q?.moment ? { moment: q.moment, customer: q } : null;
     })(),
     counters: state.dayCounters || { served: 0, missed: 0, left: 0 },
+
+    /* THE ONE-CUP RECEIPT (§0f). What one cup sells for, what it costs to make
+       it, what she keeps — the whole economics of her stand on one slip, beside
+       the customer asking for it. Derived here rather than in the component,
+       because RECIPE and the market's prices belong to the engine and the UI
+       takes no engine dependency. */
+    receipt: (() => {
+      const prices = biz.marketPrices || BASE_PRICES;
+      const lines = Object.entries(RECIPE).map(([key, qty]) => ({
+        key,
+        label: key === 'sugar' ? `${qty} scoop sugar` : `${qty} ${key.replace(/s$/, '')}${qty === 1 ? '' : 's'}`,
+        cents: Math.round((prices[key] || 0) * qty * 100),
+      }));
+      const subtotal = lines.reduce((n, l) => n + l.cents, 0);
+      const sells = Math.round((biz.price || 0) * 100);
+      return {
+        sells, lines, subtotal, keep: sells - subtotal,
+        shelf: [
+          { key: 'lemons', label: 'Lemons', n: lemonCount(biz) },
+          { key: 'sugar', label: 'Sugar, scoops', n: biz.sugar || 0 },
+          { key: 'cups', label: 'Cups you can pour', n: Math.min(lemonCount(biz), biz.sugar || 0, biz.cups || 0) },
+        ],
+      };
+    })(),
+
+    /* The running total at the counter, and the one payment that just landed.
+       Served cups at today's price: the ledger does the real arithmetic at
+       close, and this is the number rising in front of her while she works. */
+    takings: ((state.dayQueue || []).filter(c => c.status === 'served').length)
+      * Math.round((biz.price || 0) * 100),
+    lastPaid: ((state.dayQueue || []).some(c => c.status === 'served')
+      ? Math.round((biz.price || 0) * 100) * ((state.dayQueue || [])
+        .filter(c => c.status === 'served').slice(-1)[0]?.order?.cups || 1)
+      : null),
+
+    /* Where the line is, for the counter's progress dots. Not a crowd and not a
+       countdown: one dot per customer, and the one she is on. */
+    counter: (() => {
+      const q = state.dayQueue || [];
+      const servedOrPast = q.filter(c => c.status && c.status !== 'next' && c.status !== 'waiting').length;
+      const at = q.findIndex(c => !c.status || c.status === 'next' || c.status === 'waiting');
+      return { of: q.length, served: servedOrPast, at: at < 0 ? q.length : at };
+    })(),
     result: biz.ledger?.[biz.ledger.length - 1] || null,
   };
 }

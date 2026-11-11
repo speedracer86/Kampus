@@ -9,7 +9,7 @@
      3. the Grown-ups mute switch is honoured
 
    Part of the end-to-end suite — run via `npm run test:webapp`. */
-import { open, text, clickText, answerMoment, sitPaper, openPaper, driveToTeach } from './harness.mjs';
+import { answerMoment, clickText, driveToTeach, open, openPaper, sitPaper, text, workTheLine } from './harness.mjs';
 
 /**
  * Did confetti EVER appear? Not "is it on screen now".
@@ -59,15 +59,14 @@ const listenForSound = (page) => page.addInitScript(() => {
   };
 });
 
-/** Play a business day to the ledger, answering any moment that stops the line. */
+/** Play a business day to the ledger, answering any question that comes up.
+
+    §0f took "Serve the rest" away: open day is the counter, one person at a
+    time, so getting to the ledger means working the line. */
 async function closeTheBooks(page) {
   await clickText(page, 'Open for the day');
   await page.waitForTimeout(500);
-  for (let i = 0; i < 8; i++) {
-    await clickText(page, 'Serve the rest');
-    await page.waitForTimeout(320);
-    if (!await answerMoment(page)) break;
-  }
+  await workTheLine(page);
   await clickText(page, 'Close the books');
   await page.waitForTimeout(700);
 }

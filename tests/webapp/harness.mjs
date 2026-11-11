@@ -276,9 +276,17 @@ export const bizSnapshot = (page) => page.evaluate(() => {
     options by their real labels. */
 export const openMoment = (page) => page.evaluate(() => {
   const s = JSON.parse(localStorage.getItem('kampus_v1_local') || '{}');
-  const c = (s.dayQueue || [])[s.dayMomentAt ?? -1];
-  return c?.moment ? { q: c.moment.q, ans: String(c.moment.ans), wrongs: (c.moment.wrongs || []).map(String),
-    skill: c.moment.skill, name: c.name } : null;
+  const q = s.dayQueue || [];
+  /* §0f: the counter serves ONE customer at a time and never sets dayMomentAt,
+     so the moment that is open is the one belonging to the customer at the
+     head of the line. The old marker still answers for the list-shaped path. */
+  const at = s.dayMomentAt ?? -1;
+  const head = q.findIndex(x => !x.status || x.status === 'next' || x.status === 'waiting');
+  const c = q[at >= 0 ? at : head];
+  return c?.moment && !c.momentDone
+    ? { q: c.moment.q, ans: String(c.moment.ans), wrongs: (c.moment.wrongs || []).map(String),
+      skill: c.moment.skill, name: c.name }
+    : null;
 });
 
 /** Answer whatever moment is open — `right: false` picks a real wrong on purpose. */
@@ -288,9 +296,39 @@ export async function answerMoment(page, { right = false } = {}) {
   const label = right ? m.ans : m.wrongs[0];
   await page.evaluate((l) => [...document.querySelectorAll('button')].find(b => b.innerText.trim() === l)?.click(), label);
   await page.waitForTimeout(220);
-  await page.evaluate(() => [...document.querySelectorAll('button')].find(b => /Serve them/.test(b.innerText))?.click());
+  // The counter closes a question by serving them; the old card had its own button.
+  await page.evaluate(() => [...document.querySelectorAll('button')]
+    .find(b => /Serve them|Next customer|^Serve /.test(b.innerText.trim()))?.click());
   await page.waitForTimeout(280);
   return m;
+}
+
+/* Work the whole line at the counter (§0f).
+
+   There is no "Serve the rest" any more: open day is one person at a time, so a
+   driver that wants the day finished walks it. Returns how many questions it
+   met, which is how a caller checks the maths was actually reached rather than
+   skipped past.
+
+   It stops when the line is done or when nothing moved — never on a fixed count,
+   because a day is as long as the engine made it. */
+export async function workTheLine(page, { answerRight = true, cap = 60 } = {}) {
+  let asked = 0, served = 0;
+  for (let i = 0; i < cap; i++) {
+    if (await openMoment(page)) {
+      if (await answerMoment(page, { right: answerRight })) { asked++; served++; continue; }
+    }
+    const moved = await page.evaluate(() => {
+      const b = [...document.querySelectorAll('button')]
+        .find(x => /^Serve |^Next customer/.test(x.innerText.trim()));
+      if (b) { b.click(); return true; }
+      return false;
+    });
+    if (!moved) break;
+    served++;
+    await page.waitForTimeout(90);
+  }
+  return { asked, served };
 }
 
 /* ---------------------------------------------------------------------------

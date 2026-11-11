@@ -600,7 +600,11 @@ export function App() {
             append(studentId, { type: 'business_moment', payload: { right: !!payload?.right, skill: payload?.skill } });
           }
           if (type === 'moment_done') update(s => {
-            const i = s.dayMomentAt ?? -1;
+            /* The counter (§0f) serves one customer at a time and never ran
+               serve_next past this one, so dayMomentAt was never set. It says
+               which customer it means; the old marker is the fallback for the
+               list-shaped path that set it. */
+            const i = payload?.at ?? s.dayMomentAt ?? -1;
             if (i < 0) return s;
             const q = [...(s.dayQueue || [])];
             q[i] = { ...q[i], momentDone: true };
