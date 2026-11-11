@@ -1193,10 +1193,20 @@ me out of the help box into the sheet, with the question at 24/600 and the walk
 rows under the stage. That is a structural change to where Teach me lives rather
 than a wiring job, so it is left whole rather than half-done.
 
-### CI: a DNS blip is not a failing commit
+### CI: a mirror outage is not a failing commit — and retrying it was wrong
 
 `playwright install-deps` fetches apt packages and cannot be cached the way the
 browser binary above it is. Two runs of a green commit failed on "Temporary
-failure resolving archive.ubuntu.com" in one afternoon — which is the kind of
-red that teaches people to ignore red. Three attempts, then fail for real: a
-genuinely missing dependency still breaks the build.
+failure resolving archive.ubuntu.com" in one afternoon — the kind of red that
+teaches people to ignore red.
+
+The first fix was to retry three times, and it was the wrong one. The step does
+not FAIL when DNS is down, it TIMES OUT — about ten minutes of apt retrying on
+its own — so three attempts turned an eleven-minute red into a thirty-minute
+one, and the run had to be cancelled by hand. The evidence was there to read
+before writing it: two failures ten minutes apart, both total resolution
+failure, which is a sustained outage and not a blip.
+
+So: ask DNS first, and fail in a second with the reason. A mirror outage now
+says so in one line and costs nothing; a genuinely missing dependency still
+breaks the build.

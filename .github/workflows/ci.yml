@@ -56,17 +56,18 @@ jobs:
 
       - name: Install Chromium (system packages)
         # The browser binary is cached above; these are apt packages and cannot
-        # be. A DNS blip on the runner ("Temporary failure resolving
-        # archive.ubuntu.com") failed a whole green commit twice in one
-        # afternoon, which is the kind of red that teaches people to ignore red.
-        # Three tries, then fail for real — a genuinely missing dep still fails.
+        # be. When the runner cannot resolve the Ubuntu mirrors this step does
+        # not fail, it TIMES OUT — about ten minutes of apt retrying DNS — and
+        # wrapping it in retries only multiplies that: three attempts turned an
+        # eleven-minute red into a thirty-minute one. Ask DNS first instead, and
+        # fail in a second with the reason, so a mirror outage is never mistaken
+        # for a problem with the commit.
         run: |
-          for i in 1 2 3; do
-            npx playwright install-deps chromium && exit 0
-            echo "apt attempt $i failed; retrying in 20s"
-            sleep 20
-          done
-          exit 1
+          if ! getent hosts archive.ubuntu.com > /dev/null 2>&1; then
+            echo "::error::The runner cannot resolve archive.ubuntu.com. The Ubuntu mirrors are unreachable from this runner — this is not a problem with the commit. Re-run when it clears."
+            exit 1
+          fi
+          npx playwright install-deps chromium
       - name: E2E against the built bundle
         run: node tests/test_webapp.mjs
 
