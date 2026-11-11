@@ -499,7 +499,10 @@ export default async function run(check) {
     await pl.waitForTimeout(600);
     await clickText(pl, 'Start');
     await pl.waitForTimeout(600);
-    const onPlacement = /FINDING YOUR LEVEL|of 24/i.test(await text(pl));
+    /* §0e took away both things this used to look for: the progress bar ("of
+       24") is gone and the title is phone-only. The four world cells are what
+       the runner is now, on every width, so they are what identifies it. */
+    const onPlacement = await pl.evaluate(() => document.querySelectorAll('[data-world-cell]').length === 4);
     if (onPlacement) {
       await pl.evaluate(() => document.querySelector('[data-voice-play]')?.click());
       let sawWords = 0;

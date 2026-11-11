@@ -66,6 +66,27 @@ try {
     // Nothing may overflow the viewport sideways — the phone pass is the real test.
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     check(`${vp.name}: no horizontal overflow`, overflow <= 1, `${overflow}px`);
+
+    /* The placement runner changes shape rather than shrinking: four named
+       world cells on desktop, four segments plus one named chip on a phone.
+       Four 14px dots with names beside them do not fit 390px, and squeezing
+       them is how the bar would become unreadable instead of becoming phone. */
+    const pl = await page.evaluate(() => {
+      const sec = document.querySelector('section[data-placement="start"]');
+      if (!sec) return null;
+      const cells = [...sec.querySelectorAll('[data-world-cell]')];
+      return { cells: cells.length, named: cells.filter(c => (c.innerText || '').trim()).length,
+        text: sec.innerText };
+    });
+    check(`${vp.name}: the runner shows all four worlds`, pl?.cells === 4, JSON.stringify(pl?.cells));
+    if (vp.name === 'phone') {
+      check('phone: the worlds are segments, with one named chip, not four labelled cells',
+        pl?.named === 0 && /Looking now/.test(pl?.text || '') && /Finding your level/.test(pl?.text || ''),
+        `${pl?.named} labelled cells`);
+    } else {
+      check('desktop: every world cell carries its own name and status',
+        pl?.named === 4 && /Up next/.test(pl?.text || ''), `${pl?.named} labelled cells`);
+    }
     await page.close();
   }
 
@@ -309,6 +330,78 @@ try {
     check('the first word is held at t=0 and the last at the end',
       sw.firstWord === 0 && sw.lastWord === sw.nWords - 1, `${sw.firstWord} … ${sw.lastWord}`);
     check('the held word never goes backwards', sw.monotonic);
+    await page.close();
+  }
+
+  /* ---------- the placement check (§0e) ---------- */
+  {
+    const page = await browser.newPage();
+    page.on('pageerror', e => errors.push(String(e)));
+    await page.setViewportSize({ width: 1340, height: 1000 });
+    await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle' });
+
+    const read = (sel) => page.evaluate((s) => {
+      const el = document.querySelector(s);
+      if (!el) return null;
+      const cells = [...el.querySelectorAll('[data-world-cell]')]
+        .map(c => ({ name: c.dataset.world, status: c.dataset.status }));
+      return { text: el.innerText, cells, discs: el.querySelectorAll('[data-voice-play]').length };
+    }, sel);
+
+    const start = await read('section[data-placement="start"]');
+    check('the runner names all four worlds, not a progress bar',
+      start?.cells.length === 4, JSON.stringify(start?.cells));
+    check('exactly one world is being looked at, the rest are waiting',
+      start?.cells.filter(c => c.status === 'looking').length === 1
+      && start?.cells.filter(c => c.status === 'next').length === 3,
+      JSON.stringify(start?.cells.map(c => c.status)));
+    check('the check says untimed where a test would put a clock',
+      /Untimed/.test(start?.text || ''));
+    /* The ONLY way out, and never a score, a mark, a tally or money — the four
+       things that would turn a start line into an exam. */
+    check('the only way out is Exit', /Exit/.test(start?.text || '')
+      && !/Today|Business|Grades|Rewards/.test(start?.text || ''));
+    check('no score, no tally, no money on the runner',
+      !/\$\d/.test(start?.text || '') && !/\b\d+\s*(of|out of)\s*\d+\b/i.test(start?.text || '')
+      && !/score|right so far|correct/i.test(start?.text || ''),
+      (start?.text || '').match(/\$\d[^\n]*|\b\d+\s*(of|out of)\s*\d+\b/i)?.[0] || '');
+    check('the question is read by one voice bar, in the sheet', start?.discs === 1,
+      String(start?.discs));
+
+    const mid = await read('section[data-placement="midway"]');
+    check('settled worlds read Found, and the search moves on',
+      mid?.cells.filter(c => c.status === 'found').length === 2
+      && mid?.cells.filter(c => c.status === 'looking').length === 1,
+      JSON.stringify(mid?.cells.map(c => c.status)));
+
+    const res = await read('section[data-placement="result"]');
+    check('the result names the world she is ahead in',
+      /already ahead in The Market/.test(res?.text || ''),
+      (res?.text || '').split('\n').slice(0, 9).join(' / '));
+    check('a world above her grade is tagged Ahead, one below Starts earlier',
+      /Ahead/.test(res?.text || '') && /Starts earlier/.test(res?.text || ''));
+    check('and the grade reads as a start line, not a mark',
+      /That is where your lessons begin, not a mark/.test(res?.text || ''));
+    check('no score, no percentage, no money on the result',
+      !/\$\d/.test(res?.text || '') && !/%/.test(res?.text || '')
+      && !/score|out of/i.test(res?.text || ''),
+      (res?.text || '').match(/\$\d[^\n]*|%|out of/i)?.[0] || '');
+
+    /* A kid level across all four has no world to be ahead in, and the first
+       thing this screen says may not be invented. */
+    const level = await read('section[data-placement="level"]');
+    check('a level result names no world it cannot name',
+      /level across all four/.test(level?.text || '') && !/already ahead in/.test(level?.text || ''),
+      (level?.text || '').split('\n').slice(0, 8).join(' / '));
+    check('and tags nothing Ahead or Starts earlier when she is level',
+      !/Ahead/.test(level?.text || '') && !/Starts earlier/.test(level?.text || ''));
+
+    /* Kampus starts at grade 3. A kid placed there has nothing below her, and
+       the footer may not offer her a review shelf that does not exist. */
+    const floor = await read('section[data-placement="floor"]');
+    check('a kid at the floor is not promised a review shelf she does not have',
+      !/Everything below/.test(floor?.text || '') && /where Kampus begins/.test(floor?.text || ''),
+      (floor?.text || '').split('\n').slice(-3).join(' / '));
     await page.close();
   }
 

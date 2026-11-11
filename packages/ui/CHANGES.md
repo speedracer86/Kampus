@@ -980,3 +980,65 @@ twice. The spec had been failing for a reason adjacent to the one it names.
 
 Mutation-checked: removing the bar from the question sheet fails eleven checks
 across the question, Inspection Day, the Snag and the mission.
+
+### The placement check: four searches, not one long test (§0e, Nov 2026)
+
+**The runner (34b / 27d).** What stood here was a single progress bar — one
+stripe filling up, which is the shape of a test, and the one shape a placement
+check must not have. In its place a floating bar above the sheet carries Exit,
+the four worlds and Untimed, and nothing else: there is no nav on this screen by
+design, because placement runs during first-run setup and the only way out is
+Exit.
+
+Each world shows a dot in its colour, its name, and one of three states —
+*Looking now* (ink ring on the dot, ink segment), *Found ✓* (green), *Up next*
+(dimmed). A kid who stalls can see that two of these are already done and that
+this is four short searches rather than one unbroken climb. On a phone the bar
+changes SHAPE rather than shrinking: four 5px segments plus one named chip,
+because four 14px dots with names beside them do not fit 390px and squeezing
+them is how a bar becomes unreadable instead of becoming phone.
+
+**The result (28a / 28d).** The normal top bar returns — the check is over and
+she is in the product again. The grade sits on the GROUND at 200px rather than
+inside the sheet, because it is a fact about her year and not a result the sheet
+is reporting, with "That is where your lessons begin, not a mark." beside it.
+The sheet does the one genuinely nice thing this screen can say: it names the
+world she is already ahead in, then rules four rows — disc, world name over its
+plain-maths area, an "Ahead" or "Starts earlier" tag, her grade.
+
+Three decisions worth keeping:
+
+- **`placementTopics(state)` lives in the engine**, not the component. It is a
+  reading of the state machine, and the component may not know how settling
+  works. Five unit tests, including that a settled world never goes back to
+  looking and that a finished check leaves no world lit.
+- **A kid level across all four has no world to be ahead in.** §0e specifies
+  only the headline that names the strongest world; when every world matches,
+  "You're already ahead in The Kitchen" would be the first thing this screen
+  says being untrue. It reads "You start level across all four." instead, and a
+  spec pins it: mutating the headline to always name a world fails.
+- **`Question` gained a `footer` slot.** "Not sure? Pick the one you think is
+  closest" was sitting out on the ground below the sheet; §0e puts it in the
+  sheet's footer row, on the voice bar's own left edge. §0c's 24a wants the same
+  slot, so it is shared rather than special.
+
+`world` in `tokens.js` gained `area` (Fractions · Ratios and money · Negatives ·
+Equations) — one string table, as Task 0 established.
+
+**A guard that earned its keep.** The voice spec identified the placement runner
+by `/FINDING YOUR LEVEL|of 24/`, and §0e removed both: the bar is gone and the
+title is phone-only. Rather than skip, the spec failed — it was written with an
+`else` that reports "placement was reachable to check: false" instead of passing
+vacuously. It looks for the four world cells now, which is what the runner is on
+every width.
+
+**A truth the redraw lost and the walk-through found.** The footer reads
+"Everything below Grade N is yours to review whenever you like." — and Kampus
+starts at grade 3, so for a kid placed at the floor there is nothing below her
+and no shelf to review. The code before the redraw knew this and branched; mine
+did not, and said it to her on the first screen after the check. It branches
+again, and a `floor` panel in the gallery pins it.
+
+All four new UI guards are mutation-checked: inventing a world for a level kid,
+dropping the Ahead/Starts-earlier tags, never switching to the phone shape, and
+promising the floor a review shelf — each fails its own check.

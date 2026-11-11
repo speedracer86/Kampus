@@ -61,11 +61,14 @@ export const purpleFor = (i) => gradePurple[Math.min(Math.max(i, 0), gradePurple
    (POLISH_TASKS Task 0). Keyed by worldId; colors are unchanged from §0, and the
    mascots are the ASSETS.md role assignments. Nothing anywhere should hard-code a
    world name: import `world` or call worldName(). */
+/* `area` is the plain-maths name under the world name (§0e). A world name says
+   where she is; the area says what it is made of, which is the thing a grown-up
+   reading the placement result over her shoulder actually needs. */
 export const world = {
-  fractions: { id: 'fractions', topic: 'frac', color: '#F0AFCE', name: 'The Kitchen', blob: 'Ice_cream' },
-  ratios: { id: 'ratios', topic: 'ratio', color: '#F4BE93', name: 'The Market', blob: 'Cash' },
-  integers: { id: 'integers', topic: 'int', color: '#5E9FE0', name: 'Outside', blob: 'Rain' },
-  equations: { id: 'equations', topic: 'alg', color: '#8F97DE', name: 'The Workshop', blob: 'Learning' },
+  fractions: { id: 'fractions', topic: 'frac', color: '#F0AFCE', name: 'The Kitchen', area: 'Fractions', blob: 'Ice_cream' },
+  ratios: { id: 'ratios', topic: 'ratio', color: '#F4BE93', name: 'The Market', area: 'Ratios and money', blob: 'Cash' },
+  integers: { id: 'integers', topic: 'int', color: '#5E9FE0', name: 'Outside', area: 'Negatives', blob: 'Rain' },
+  equations: { id: 'equations', topic: 'alg', color: '#8F97DE', name: 'The Workshop', area: 'Equations', blob: 'Learning' },
 };
 /** Internal topic code -> worldId. Topic codes are not display names and never were. */
 export const WORLD_BY_TOPIC = Object.fromEntries(Object.values(world).map(w => [w.topic, w]));

@@ -361,7 +361,7 @@ export function Question({
   feedback = null, picked = null, payout = null, help = null, teachConfirm = false, selected = null, snag = false,
   onAnswer = () => {}, onHelp = () => {}, onTeachConfirm = () => {}, onNext,
   onEvent = () => {}, style, worldColor, mode = 'c', voice, blobDir = '/blobs/', muted = false,
-  sweep = null, onRate, onMuted,
+  sweep = null, onRate, onMuted, footer = null, checkLabel = 'Check',
 }) {
   const ref = React.useRef(null);
   const w = useWidth(ref);
@@ -563,7 +563,15 @@ export function Question({
     {onNext && <Button variant="ink" size="sm" onClick={onNext}>Try again</Button>}</div>;
 
   const checkBar = phone && !feedback && <Button variant="ink" size="lg" disabled={sel === null}
-    style={{ width: '100%', marginTop: 16 }} onClick={() => commit(sel)}>Check</Button>;
+    style={{ width: '100%', marginTop: 16 }} onClick={() => commit(sel)}>{checkLabel}</Button>;
+
+  /* A footer row at the sheet's bottom edge, on the bar's own left edge (§0c/§0e).
+     The line that belongs to the whole sheet — "Not sure? Pick the one you think
+     is closest." — is not a caption under the answers; it is the last thing the
+     sheet says, and it was sitting out on the ground below it. */
+  const footerRow = footer && <div style={{ ...qBase, display: 'flex', alignItems: 'center', gap: 16,
+    padding: phone ? '16px' : '20px 40px', borderTop: `1px solid ${color.rule}`,
+    fontSize: 16, fontWeight: 600, color: color.muted }}>{footer}</div>;
 
   return <div ref={ref} style={{ ...qBase, ...style }}>
     {phone
@@ -579,6 +587,7 @@ export function Question({
             {!snag && feedback === 'correct' && <div style={{ marginTop: 18 }}><PayoutLine payout={payout} /></div>}
             {checkBar}
           </div>
+          {footerRow}
         </div>
       </>
       /* The left column only exists when it holds something. A Snag has no
@@ -598,6 +607,7 @@ export function Question({
             {!snag && feedback === 'correct' && <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1px solid ${color.rule}` }}>
               <PayoutLine payout={payout} /></div>}
           </div>
+          {footerRow}
         </div>
       </div>}
   </div>;

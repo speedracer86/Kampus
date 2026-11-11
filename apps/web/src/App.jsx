@@ -8,6 +8,7 @@ import { toQuizQuestion, recordAnswer, GRADE_WORLDS, bonusPct, payout,
   firstReview, review, dayNumber, problemsForSkill, unitTopic, hasGenerator,
   awayFeed, buildStage, seasonFor, unlocks as bizUnlocks, gradeStates, foldGradeStack, wishTile, storeNameOf,
   startPlacement, nextProbe, recordProbe, placementDone, placementProgress, placementResult, placementQuestion,
+  placementTopics,
   weekPlan, weekHeader, comingUp, weekOffsetFor,
   approveEarning, deferEarning, undoEarning, approveAllEarned, pendingEarnings, earnedThisWeek, approve as approveAsk, RATES } from '@kampus/engine';
 import { color } from '@kampus/ui/tokens';
@@ -503,6 +504,7 @@ export function App() {
       voice={VOICE} mode={voiceMode(state.grade)} blobDir={BLOB_DIR} muted={muted}
       onRate={setVoiceRate} onMuted={setMuted}
       progress={placementProgress(placement.machine)}
+      topics={placementTopics(placement.machine)}
       onExit={() => {
         // She chose to stop. Clear the flag rather than re-offering on every load.
         update(s => { s.placementQueued = false; return s; });

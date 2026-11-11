@@ -12,6 +12,7 @@ import { ReteachView } from '@kampus/ui/lesson';
 import { rich, plainSpeech } from '@kampus/ui/question';
 import { sweepPlan, wordAt, rateFor, SLOWER_RATE } from '@kampus/ui/say-it-show-it';
 import { color } from '@kampus/ui/tokens';
+import { PlacementRunner, PlacementResult } from '@kampus/ui/placement';
 
 // The library reads React off the global, exactly as the app's jsxInject supplies it.
 window.React = React;
@@ -169,6 +170,49 @@ function sweepProbe() {
   };
 }
 
+/* THE PLACEMENT CHECK (§0e), in the three states the bar can be in and the one
+   result shape that is hard to reach by playing: a kid who placed unevenly.
+   Driving the real engine to a spread takes two dozen right answers in the
+   right order, so the states are mounted directly instead. */
+const PROBE = {
+  text: 'A recipe needs 3/4 cup of sugar. You are making half the recipe. How much sugar?',
+  answers: ['3/8 cup', '1/4 cup', '1 1/2 cups', '3/2 cups'], correct: 0, mode: 'choice',
+};
+const BAR_STATES = [
+  { key: 'start', topics: [
+    { topic: 'frac', status: 'looking' }, { topic: 'ratio', status: 'next' },
+    { topic: 'int', status: 'next' }, { topic: 'alg', status: 'next' }] },
+  { key: 'midway', topics: [
+    { topic: 'frac', status: 'found' }, { topic: 'ratio', status: 'found' },
+    { topic: 'int', status: 'looking' }, { topic: 'alg', status: 'next' }] },
+];
+
+function PlacementPanels({ phone }) {
+  return <>
+    {BAR_STATES.map(b => <section key={b.key} data-placement={b.key} style={{ marginBottom: 28 }}>
+      <PlacementRunner question={PROBE} topics={b.topics} mode="c" muted
+        onAnswer={() => {}} onExit={() => {}} />
+    </section>)}
+    {/* Uneven: ahead in one world, behind in another, level in two. */}
+    <section data-placement="result" style={{ marginBottom: 28 }}>
+      <PlacementResult name="Maya" onStart={() => {}}
+        result={{ grade: 6, perTopic: { frac: 5, ratio: 7, int: 6, alg: 6 }, strongest: 'ratio', spread: 2 }} />
+    </section>
+    {/* Level across all four: there is no world to name, and the headline may
+        not invent one. */}
+    <section data-placement="level" style={{ marginBottom: 28 }}>
+      <PlacementResult name="Maya" onStart={() => {}}
+        result={{ grade: 4, perTopic: { frac: 4, ratio: 4, int: 4, alg: 4 }, strongest: 'frac', spread: 0 }} />
+    </section>
+    {/* The floor: Kampus starts at grade 3, so there is no review shelf below
+        her and the footer may not promise one. */}
+    <section data-placement="floor" style={{ marginBottom: 28 }}>
+      <PlacementResult name="Maya" onStart={() => {}}
+        result={{ grade: 3, perTopic: { frac: 3, ratio: 3, int: 4, alg: 3 }, strongest: 'int', spread: 1 }} />
+    </section>
+  </>;
+}
+
 function Gallery() {
   const phone = window.innerWidth < 860;
   return <div style={{ background: color.ground, minHeight: '100vh', padding: phone ? 16 : 40,
@@ -176,6 +220,7 @@ function Gallery() {
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
       {PANELS.map(p => <Panel key={p.layout} {...p} phone={phone} />)}
       <ReteachPanels phone={phone} />
+      <PlacementPanels phone={phone} />
       <RichCases />
     </div>
   </div>;

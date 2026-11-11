@@ -93,6 +93,31 @@ export function recordProbe(state, right) {
 /** Has every topic settled? */
 export const placementDone = (state) => nextProbe(state) === null;
 
+/**
+ * The four worlds and where the check is with each — the runner's floating bar
+ * (§0e). One place she can look to see that this is four short searches and not
+ * one long test, and that two of them are already done.
+ *
+ * `looking` is the ONE topic the next question comes from, `found` is settled,
+ * `next` is waiting. Exactly one topic is `looking` until every topic is found,
+ * and then none is — so a finished check never leaves a dot lit.
+ *
+ * It lives here rather than in the component because it is a reading of the
+ * state machine, and the component may not know how settling works.
+ */
+export function placementTopics(state) {
+  const probe = nextProbe(state);
+  return state.order.map((topic) => {
+    const t = state.topics[topic];
+    return {
+      topic,
+      status: settled(t) ? 'found' : (probe && probe.topic === topic ? 'looking' : 'next'),
+      // Where the search has got to: the lowest grade not yet ruled out.
+      grade: Math.max(PLACEMENT_MIN_GRADE, Math.min(t.lo, PLACEMENT_MAX_GRADE)),
+    };
+  });
+}
+
 /** How far through, for a progress bar that is not a countdown. */
 export const placementProgress = (state) => ({
   asked: state.asked,

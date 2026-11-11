@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   startPlacement, nextProbe, recordProbe, placementDone, placementProgress,
-  placementResult, placementQuestion,
+  placementResult, placementQuestion, placementTopics,
   PLACEMENT_MIN_GRADE, PLACEMENT_MAX_GRADE, PLACEMENT_LENGTH, PLACEMENT_REWARD_CENTS,
   QUESTIONS_PER_RUNG, RUNGS_PER_TOPIC,
 } from '../src/placement.js';
@@ -180,6 +180,61 @@ describe('the ADHD laws hold here too', () => {
     // Her floor never drops below the minimum, and nothing else exists to lose.
     expect(after.perTopic[Object.keys(after.perTopic)[0]]).toBeGreaterThanOrEqual(PLACEMENT_MIN_GRADE);
     expect(Object.keys(after)).toEqual(Object.keys(before));
+  });
+
+  /* The runner's floating bar (§0e) reads these. The bar is the only thing on
+     the screen that says the check has a shape, so it must never lie about
+     where the search is. */
+  describe('the four worlds, as the bar shows them', () => {
+    it('lights exactly one world at the start, and the rest are waiting', () => {
+      const t = placementTopics(startPlacement());
+      expect(t).toHaveLength(TOPIC_ORDER.length);
+      expect(t.filter(x => x.status === 'looking')).toHaveLength(1);
+      expect(t.filter(x => x.status === 'next')).toHaveLength(TOPIC_ORDER.length - 1);
+      expect(t.filter(x => x.status === 'found')).toHaveLength(0);
+    });
+
+    it('lights the world the next question actually comes from', () => {
+      let s = startPlacement();
+      for (let i = 0; i < 7; i++) {
+        const probe = nextProbe(s);
+        const looking = placementTopics(s).find(x => x.status === 'looking');
+        expect(looking?.topic).toBe(probe.topic);
+        s = recordProbe(s, i % 2 === 0);
+      }
+    });
+
+    it('a settled world reads found, and never goes back to looking', () => {
+      // A kid who misses everything settles each topic at the floor, fast.
+      let s = startPlacement(), everFound = new Set(), guard = 0;
+      while (!placementDone(s) && guard++ < 200) {
+        placementTopics(s).forEach(x => { if (x.status === 'found') everFound.add(x.topic); });
+        // Nothing that was found may be looking again.
+        placementTopics(s).filter(x => x.status === 'looking')
+          .forEach(x => expect(everFound.has(x.topic)).toBe(false));
+        s = recordProbe(s, false);
+      }
+      expect(placementDone(s)).toBe(true);
+    });
+
+    it('a finished check leaves no world lit', () => {
+      let s = startPlacement(), guard = 0;
+      while (!placementDone(s) && guard++ < 200) s = recordProbe(s, false);
+      const t = placementTopics(s);
+      expect(t.every(x => x.status === 'found')).toBe(true);
+      expect(t.filter(x => x.status === 'looking')).toHaveLength(0);
+    });
+
+    it('never reports a grade outside the range the check can place her in', () => {
+      let s = startPlacement(), guard = 0;
+      while (!placementDone(s) && guard++ < 200) {
+        placementTopics(s).forEach(x => {
+          expect(x.grade).toBeGreaterThanOrEqual(PLACEMENT_MIN_GRADE);
+          expect(x.grade).toBeLessThanOrEqual(PLACEMENT_MAX_GRADE);
+        });
+        s = recordProbe(s, true);
+      }
+    });
   });
 
   it('asks nothing about time', async () => {
